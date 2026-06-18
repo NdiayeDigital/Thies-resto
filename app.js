@@ -548,9 +548,29 @@ function stopOrderPolling() {
 
 // ---------- SCROLL HELPERS ----------
 function scrollToHowItWorks() {
-    const el = document.getElementById('how-it-works-section');
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
-    else router.navigate('/');
+    if (window.location.hash && window.location.hash !== '#/') {
+        router.navigate('/');
+        setTimeout(() => {
+            const el = document.getElementById('how-it-works-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+    } else {
+        const el = document.getElementById('how-it-works-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToCatalog() {
+    if (window.location.hash && window.location.hash !== '#/') {
+        router.navigate('/');
+        setTimeout(() => {
+            const el = document.getElementById('catalog-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+    } else {
+        const el = document.getElementById('catalog-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 // ---------- SLUG AVAILABILITY CHECK ----------
@@ -710,152 +730,114 @@ router.add('#/', () => {
     }
 
     container.innerHTML = `
+        <!-- ========== HERO SECTION ========== -->
         <section class="hero-section">
             <div class="hero-split-container">
-                <!-- Left Column: Animated illustration -->
+                <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col">
-                    <div class="animated-hero-illustration">
-                        <div class="illustration-main-circle">
-                            <span class="main-dish-emoji">🍲</span>
-                        </div>
-                        <div class="orbiting-item orbit-1">🔥 Dibi</div>
-                        <div class="orbiting-item orbit-2">🍛 Thieb</div>
-                        <div class="orbiting-item orbit-3">💬 WhatsApp</div>
-                        <div class="orbiting-item orbit-4">⭐ 4.8</div>
-                        <div class="floating-ring ring-1"></div>
-                        <div class="floating-ring ring-2"></div>
+                    <h1 class="hero-title">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
+                    <p class="hero-subtitle">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+                    
+                    <div class="search-container" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px;">
+                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant (dibi, yassa, pastel...)" oninput="applyFilters()">
+                        <button class="search-btn">🔍</button>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="scrollToCatalog()">Explorer nos Menus 🍽️</button>
+                        <button class="btn btn-secondary" onclick="router.navigate('/auth')">Espace Restaurateur 🤝</button>
                     </div>
                 </div>
                 
-                <!-- Right Column: Content and search bar -->
+                <!-- Right: Large Gourmet Plate Image -->
                 <div class="hero-right-col">
-                    <h1 class="hero-title">Découvrez les meilleures tables de <span>Thiès</span></h1>
-                    <p class="hero-subtitle">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
-                    <div class="search-container">
-                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant (dibi, pastel, thieb...)" oninput="applyFilters()">
-                        <button class="search-btn">🔍</button>
-                    </div>
-                    
-                    <div class="stats-strip">
-                        <div class="stat-item">
-                            <div class="stat-number" id="stats-total-active">${activeRestos.length}</div>
-                            <div class="stat-label">Partenaires Actifs</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">${totalOrders + totalReservations}+</div>
-                            <div class="stat-label">Commandes & Réservations</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">0 FCFA</div>
-                            <div class="stat-label">Frais de Service</div>
-                        </div>
-                    </div>
-                    
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start; width: 100%;">
-                        <button class="btn btn-primary" onclick="router.navigate('/auth')">🤝 Rejoindre le Réseau (S'inscrire)</button>
-                        <button class="btn btn-secondary" onclick="scrollToCatalog()">Voir le Catalogue 👇</button>
+                    <div class="hero-food-plate-container">
+                        <img class="hero-food-plate" src="https://images.unsplash.com/photo-1544025162-d76694265947?w=700&auto=format&fit=crop&q=80" alt="Dibi d'Agneau Thiès">
+                        <div class="glow-effect"></div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- PRESENTATION RAPPORT ETUDES THIES -->
-        <section class="presentation-section">
-            <h2 class="section-title" style="text-align:center; margin-bottom:0.5rem;">Pourquoi THIES Resto ?</h2>
-            <p style="color: var(--text-secondary); max-width:650px; margin:0 auto 1.5rem; font-size:0.95rem; line-height:1.6;">
-                Selon notre étude de terrain menée auprès des établissements de Thiès, <strong>95% des restaurants n'ont aucune présence numérique active</strong>. Les commandes se font encore par appels téléphoniques classiques, les menus du jour changent sans mise à jour web, et les réservations de tables restent informelles. <strong>THIES Resto</strong> offre une vitrine digitale moderne gratuite et accessible sans aucune barrière technique ni inscription obligatoire pour les clients.
-            </p>
+        <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
+        <section class="presentation-section" style="padding: 1rem 0 0 0;">
+            <div class="reference-row-cards">
+                <!-- Left Card: Zero Account -->
+                <div class="ref-card-text">
+                    <div class="ref-card-icon-circle">🚫</div>
+                    <h3>Zéro Inscription</h3>
+                    <p>Commandez et réservez sans jamais avoir besoin de créer un compte. Aucun mot de passe à retenir.</p>
+                </div>
+                
+                <!-- Middle Card: Premium Dish Image -->
+                <div class="ref-card-image-box">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80" alt="Gourmet Bowl">
+                </div>
+                
+                <!-- Right Card: Direct WhatsApp -->
+                <div class="ref-card-text">
+                    <div class="ref-card-icon-circle">💬</div>
+                    <h3>Direct WhatsApp</h3>
+                    <p>Votre panier est transformé en un message structuré envoyé en un clic au restaurateur pour confirmation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== PRESENTATION SECTION (Side by Side: Image Left, Text Right) ========== -->
+        <section class="side-by-side-section">
+            <div class="side-img-box">
+                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=700&auto=format&fit=crop&q=80" alt="Plat Traditionnel Sénégalais">
+            </div>
             
-            <!-- Animated Statistical Chart and Mini Stats -->
-            <div class="stats-dashboard-container">
-                <div class="stats-dashboard-left">
-                    <div class="stat-mini-card">
-                        <span class="stat-mini-val">20</span>
-                        <span class="stat-mini-label">Établissements Audités à Thiès</span>
+            <div class="side-content">
+                <h2 style="font-family: var(--font-serif); font-weight: 400; color: #ffffff;">Une Plateforme Commune & Solidaire</h2>
+                <p>Né d'une étude sur le terrain à Thiès, ce projet répond au constat que 95% des restaurateurs de la ville ne disposent d'aucun outil numérique propre. Nous réunissons les 20 tables les mieux notées sous un même toit virtuel pour leur offrir une présence en ligne immédiate et gratuite.</p>
+                <div style="display: flex; gap: 2rem;">
+                    <div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary); font-family: var(--font-serif);">95%</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Établissements sans site</div>
                     </div>
-                    <div class="stat-mini-card">
-                        <span class="stat-mini-val">95%</span>
-                        <span class="stat-mini-label">Sans Site Web Ni Outils Propres</span>
+                    <div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary); font-family: var(--font-serif);">20+</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Tables Partenaires</div>
                     </div>
-                    <div class="stat-mini-card">
-                        <span class="stat-mini-val">2 500+</span>
-                        <span class="stat-mini-label">Avis Clients Locaux Analysés</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== SIGNATURE MENU SECTION (List Left, Big Image Right) ========== -->
+        <section class="signature-section">
+            <div class="sig-list">
+                <h2 style="font-family: var(--font-serif); font-weight: 400; color: #ffffff; font-size: 2.25rem; margin-bottom: 0.5rem;">Les Saveurs Emblématiques de Thiès</h2>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.6;">Découvrez notre sélection de plats phares issus des cartes de nos restaurants partenaires.</p>
+                
+                <div class="sig-item">
+                    <div class="sig-item-num">01</div>
+                    <div class="sig-item-body">
+                        <h4>Thiéboudiène Traditionnel</h4>
+                        <p>Le riz au poisson emblématique du Sénégal, cuisiné avec du poisson frais du jour et ses légumes de saison.</p>
                     </div>
                 </div>
                 
-                <div class="stats-dashboard-chart">
-                    <h4 style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:1rem; text-align:left; font-weight: 700;">📈 Volume Mensuel de Commandes Estimé</h4>
-                    <div class="svg-chart-container">
-                        <svg viewBox="0 0 500 200" class="animated-svg-chart">
-                            <defs>
-                                <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.4"/>
-                                    <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.0"/>
-                                </linearGradient>
-                            </defs>
-                            <!-- Grid Lines -->
-                            <line x1="50" y1="20" x2="480" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
-                            <line x1="50" y1="70" x2="480" y2="70" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
-                            <line x1="50" y1="120" x2="480" y2="120" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
-                            <line x1="50" y1="170" x2="480" y2="170" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
-                            
-                            <!-- Chart Line -->
-                            <path d="M 50 170 Q 120 150 180 90 T 310 110 T 440 30" 
-                                  fill="none" 
-                                  stroke="var(--primary)" 
-                                  stroke-width="4" 
-                                  stroke-linecap="round"
-                                  class="chart-line-path"/>
-                                  
-                            <!-- Gradient Area under path -->
-                            <path d="M 50 170 Q 120 150 180 90 T 310 110 T 440 30 L 440 170 L 50 170 Z" 
-                                  fill="url(#chart-grad)"
-                                  class="chart-area-path" />
-
-                            <!-- Scintillating points on the curve -->
-                            <circle cx="440" cy="30" r="6" fill="#fff" class="chart-point" />
-                            <circle cx="440" cy="30" r="12" fill="var(--primary)" opacity="0.4" class="chart-point-ring" />
-                            
-                            <!-- Labels -->
-                            <text x="50" y="190" fill="var(--text-secondary)" font-size="10">Jan</text>
-                            <text x="147.5" y="190" fill="var(--text-secondary)" font-size="10">Mar</text>
-                            <text x="245" y="190" fill="var(--text-secondary)" font-size="10">Mai</text>
-                            <text x="342.5" y="190" fill="var(--text-secondary)" font-size="10">Juil</text>
-                            <text x="440" y="190" fill="var(--text-secondary)" font-size="10">Actuel</text>
-
-                            <text x="25" y="25" fill="var(--text-secondary)" font-size="10">5K</text>
-                            <text x="25" y="75" fill="var(--text-secondary)" font-size="10">3K</text>
-                            <text x="25" y="125" fill="var(--text-secondary)" font-size="10">1K</text>
-                        </svg>
+                <div class="sig-item">
+                    <div class="sig-item-num">02</div>
+                    <div class="sig-item-body">
+                        <h4>Dibi d'Agneau au Feu de Bois</h4>
+                        <p>De tendres morceaux de viande grillés façon dibiterie, relevés d'oignons caramélisés et de moutarde.</p>
+                    </div>
+                </div>
+                
+                <div class="sig-item">
+                    <div class="sig-item-num">03</div>
+                    <div class="sig-item-body">
+                        <h4>Pastels Dorés Croustillants</h4>
+                        <p>De savoureux beignets farcis au poisson épicé ou à la viande, accompagnés d'une sauce tomate piquante maison.</p>
                     </div>
                 </div>
             </div>
             
-            <!-- client benefits list -->
-            <div class="client-benefits-header">
-                <h3 style="text-align:center; margin-top:3.5rem; margin-bottom:1.5rem; font-size:1.3rem; font-weight:700;">✨ Ce que THIES Resto facilite pour vous (Client Final)</h3>
-            </div>
-            <div class="client-benefits-grid">
-                <div class="benefit-card">
-                    <div class="benefit-icon">🚫📱</div>
-                    <h4>Zéro Inscription</h4>
-                    <p>Commandez et réservez sans jamais créer de compte. Pas d'e-mail ni de mot de passe requis.</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="benefit-icon">💬🚀</div>
-                    <h4>Direct WhatsApp</h4>
-                    <p>Votre commande est préparée sous forme de message structuré et validée directement avec le restaurant sur WhatsApp.</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="benefit-icon">💵💯</div>
-                    <h4>Zéro Commission</h4>
-                    <p>Les prix affichés sont les prix réels en salle. Aucun frais caché ni commission additionnelle.</p>
-                </div>
-                <div class="benefit-card">
-                    <div class="benefit-icon">👥🔗</div>
-                    <h4>Commandes Groupées</h4>
-                    <p>Partagez un simple lien pour composer un panier commun en famille ou entre collègues de bureau.</p>
-                </div>
+            <div class="sig-img-container">
+                <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=700&auto=format&fit=crop&q=80" alt="Mijoté Mafé Sénégalais">
             </div>
         </section>
 
@@ -3733,6 +3715,20 @@ function exportReservationsToCSV() {
     link.click();
     document.body.removeChild(link);
     showToast("Fichier CSV des réservations téléchargé !", "success");
+}
+
+// ----------------------------------------------------
+// Hamburger & Drawer Logic
+// ----------------------------------------------------
+function toggleMobileMenu() {
+    const drawer = document.getElementById('mobile-drawer');
+    const backdrop = document.getElementById('drawer-backdrop');
+    const btn = document.getElementById('hamburger-btn');
+    if (drawer && backdrop) {
+        drawer.classList.toggle('active');
+        backdrop.classList.toggle('active');
+        btn.classList.toggle('active');
+    }
 }
 
 // ----------------------------------------------------

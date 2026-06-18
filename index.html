@@ -45,13 +45,47 @@
     <div class="app-container">
         <!-- ========== NAVIGATION BAR ========== -->
         <header class="navbar" id="main-navbar">
+            <!-- Left: Burger & Navigation links (Desktop) -->
+            <div class="nav-left">
+                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+                <div class="nav-desktop-links">
+                    <a href="#" onclick="router.navigate('/'); return false;">Accueil</a>
+                    <a href="#" onclick="scrollToHowItWorks(); return false;">Concept</a>
+                    <a href="#" onclick="scrollToCatalog(); return false;">Restaurants</a>
+                </div>
+            </div>
+
+            <!-- Center: Logo -->
             <div class="logo-container" onclick="router.navigate('/')">
                 <span class="logo-icon">🍲</span>
                 <span class="logo-text">THIES Resto</span>
             </div>
+
+            <!-- Right: Session Actions -->
             <nav class="nav-links" id="nav-actions">
                 <!-- Dynamic actions populated by JS -->
             </nav>
+
+            <!-- Mobile Drawer Overlay -->
+            <div class="mobile-drawer" id="mobile-drawer">
+                <div class="drawer-header">
+                    <span class="logo-icon">🍲</span>
+                    <span class="logo-text">THIES Resto</span>
+                    <button class="close-drawer-btn" onclick="toggleMobileMenu()">✕</button>
+                </div>
+                <div class="drawer-links">
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
+                    <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
+                    <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/auth'); return false;">Espace Restaurateur</a>
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin-login'); return false;">Super-Admin Console</a>
+                </div>
+            </div>
+            <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>
         </header>
 
         <!-- ========== MAIN WORKSPACE ========== -->

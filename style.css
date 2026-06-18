@@ -1903,4 +1903,438 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     margin-right: 0.25rem;
 }
 
+/* ========== NAVBAR & HERO RE-DESIGN (Inspiration Reference) ========== */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.85rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--glass-bg);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.nav-desktop-links {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.nav-desktop-links a {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    transition: var(--transition-smooth);
+}
+
+.nav-desktop-links a:hover {
+    color: var(--primary);
+}
+
+/* Logo placement at center on desktop */
+@media (min-width: 769px) {
+    .logo-container {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
+
+.hamburger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 22px;
+    height: 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 102;
+}
+
+.hamburger-btn .bar {
+    width: 100%;
+    height: 2px;
+    background-color: var(--text-primary);
+    border-radius: 1px;
+    transition: var(--transition-smooth);
+}
+
+/* Mobile Drawer */
+.mobile-drawer {
+    position: fixed;
+    top: 0;
+    left: -290px;
+    width: 290px;
+    height: 100vh;
+    background: var(--bg-secondary);
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1.5rem;
+    box-shadow: 10px 0 35px rgba(0, 0, 0, 0.7);
+    transition: var(--transition-smooth);
+}
+
+.mobile-drawer.active {
+    left: 0;
+}
+
+.close-drawer-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-size: 1.35rem;
+    cursor: pointer;
+}
+
+.drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+}
+
+.drawer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.drawer-links a {
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-family: var(--font-serif);
+    transition: var(--transition-smooth);
+}
+
+.drawer-links a:hover {
+    color: var(--primary);
+    padding-left: 5px;
+}
+
+.drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(4, 16, 10, 0.75);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    display: none;
+    transition: var(--transition-smooth);
+}
+
+.drawer-backdrop.active {
+    display: block;
+}
+
+/* ========== HERO SPLIT LAYOUT ========== */
+.hero-split-container {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 2.5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: center;
+    text-align: left;
+}
+
+.hero-left-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.hero-right-col {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.hero-food-plate-container {
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    position: relative;
+    padding: 8px;
+    background: radial-gradient(circle, rgba(207, 168, 83, 0.25) 0%, transparent 70%);
+}
+
+.hero-food-plate {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--primary);
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.6);
+    animation: rotateSlowly 30s linear infinite;
+}
+
+@keyframes rotateSlowly {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.glow-effect {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 50%;
+    box-shadow: inset 0 0 40px rgba(207, 168, 83, 0.3);
+    pointer-events: none;
+}
+
+/* ========== REFERENCE PAGE SECTIONS LAYOUTS ========== */
+/* A Row of 3 Cards (Middle Card is an Image) */
+.reference-row-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+    max-width: 1000px;
+    margin: 3.5rem auto;
+    padding: 0 1.5rem;
+}
+
+.ref-card-text {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: var(--transition-smooth);
+}
+
+.ref-card-text:hover {
+    border-color: var(--primary);
+    transform: translateY(-4px);
+}
+
+.ref-card-icon-circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 1px solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    margin-bottom: 1.25rem;
+    color: var(--primary);
+    background: rgba(207, 168, 83, 0.05);
+}
+
+.ref-card-text h3 {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    margin-bottom: 0.75rem;
+    color: #ffffff;
+}
+
+.ref-card-text p {
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.ref-card-image-box {
+    border-radius: 16px;
+    overflow: hidden;
+    height: 100%;
+    min-height: 250px;
+    position: relative;
+    border: 1px solid var(--border);
+}
+
+.ref-card-image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: var(--transition-smooth);
+}
+
+.ref-card-image-box:hover img {
+    transform: scale(1.06);
+}
+
+/* Side by Side layout: Image left, content right */
+.side-by-side-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    max-width: 1000px;
+    margin: 4.5rem auto;
+    padding: 0 1.5rem;
+    align-items: center;
+}
+
+.side-img-box {
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    height: 320px;
+    box-shadow: var(--shadow);
+}
+
+.side-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.side-content {
+    text-align: left;
+}
+
+.side-content h2 {
+    font-size: 2.25rem;
+    margin-bottom: 1.25rem;
+    line-height: 1.2;
+}
+
+.side-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+}
+
+/* Section Signature: List Left, Big Dish Picture Right */
+.signature-section {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 3.5rem;
+    max-width: 1000px;
+    margin: 5rem auto;
+    padding: 0 1.5rem;
+    align-items: center;
+}
+
+.sig-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: left;
+}
+
+.sig-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    transition: var(--transition-smooth);
+}
+
+.sig-item:hover {
+    border-color: var(--primary);
+    transform: translateX(5px);
+}
+
+.sig-item-num {
+    font-family: var(--font-serif);
+    font-size: 1.5rem;
+    color: var(--primary);
+    line-height: 1;
+}
+
+.sig-item-body h4 {
+    font-size: 1.05rem;
+    margin-bottom: 0.35rem;
+    color: #ffffff;
+}
+
+.sig-item-body p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.sig-img-container {
+    height: 360px;
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+
+.sig-img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Mobile Media Queries adjustments */
+@media (max-width: 768px) {
+    .nav-desktop-links {
+        display: none;
+    }
+    
+    .hamburger-btn {
+        display: flex;
+    }
+    
+    .logo-container {
+        position: static;
+        transform: none;
+    }
+    
+    .hero-split-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        text-align: center;
+    }
+    
+    .hero-left-col {
+        align-items: center;
+    }
+    
+    .hero-food-plate-container {
+        width: 250px;
+        height: 250px;
+    }
+    
+    .reference-row-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .side-by-side-section {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .side-img-box {
+        order: -1;
+        height: 240px;
+    }
+    
+    .signature-section {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .sig-img-container {
+        height: 240px;
+    }
+}
+
 
