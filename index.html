@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description"
+        content="THIES Resto — La plateforme commune de restauration à Thiès, Sénégal. Commandez vos plats du jour, réservez des tables et passez des commandes de groupe dans les 20 meilleurs restaurants partenaires. Confirmation WhatsApp, paiement espèces, zéro inscription.">
+    <meta name="theme-color" content="#ff6b35">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta property="og:title" content="THIES Resto — Plateforme de Restauration à Thiès">
+    <meta property="og:description"
+        content="Commandez en ligne, réservez et recevez vos plats à Thiès, Sénégal. 20 restaurants partenaires, confirmation WhatsApp.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_SN">
+
+    <title>THIES Resto — Plateforme de Restauration Commune à Thiès, Sénégal</title>
+
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>"
+        type="image/svg+xml">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- ========== LOADING OVERLAY ========== -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner-ring"></div>
+            <span class="spinner-logo">🍲</span>
+        </div>
+        <p class="loading-text">Chargement de THIES Resto…</p>
+    </div>
+
+    <div class="app-container">
+        <!-- ========== NAVIGATION BAR ========== -->
+        <header class="navbar" id="main-navbar">
+            <div class="logo-container" onclick="router.navigate('/')">
+                <span class="logo-icon">🍲</span>
+                <span class="logo-text">THIES Resto</span>
+            </div>
+            <nav class="nav-links" id="nav-actions">
+                <!-- Dynamic actions populated by JS -->
+            </nav>
+        </header>
+
+        <!-- ========== MAIN WORKSPACE ========== -->
+        <main id="main-content">
+            <!-- Dynamic views will be injected here by app.js -->
+        </main>
+
+        <!-- ========== FLOATING CART BAR ========== -->
+        <div id="floating-cart-bar" class="floating-cart-bar" style="display: none;" onclick="openCartTab()">
+            <div class="floating-cart-info">
+                <span id="floating-cart-qty" class="floating-cart-qty">0 articles</span>
+                <span id="floating-cart-total" class="floating-cart-total">0 FCFA</span>
+            </div>
+            <button class="btn btn-primary btn-sm" id="floating-cart-btn">
+                Voir le Panier 🛒
+            </button>
+        </div>
+
+        <!-- ========== TOAST NOTIFICATION ========== -->
+        <div id="toast-notification" class="toast-notification" style="display: none;">
+            <!-- Content filled dynamically -->
+        </div>
+
+        <!-- ========== NOTIFICATION SOUND ========== -->
+        <audio id="notification-sound" preload="auto">
+            <source
+                src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f39/f39/f4B/f39/f3+Af39/f3+AgICBgYKDhIWGiImKi4yNjo+QkZKTlJWVlZWUk5KRkI+OjYyLiomIh4aFhIOCgYB/f35+fX19fHx8fHx8fX1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpqbm5ycnJ2dnZ2dnZycm5uampmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAf359fHt6"
+                type="audio/wav">
+        </audio>
+
+        <!-- ========== FOOTER ========== -->
+        <footer id="main-footer">
+            <div class="footer-grid">
+                <!-- About Column -->
+                <div class="footer-col">
+                    <div class="footer-brand">
+                        <span class="logo-icon" style="font-size: 1.5rem;">🍲</span>
+                        <span class="logo-text" style="font-size: 1rem;">THIES Resto</span>
+                    </div>
+                    <p class="footer-about-text">
+                        La première plateforme de restauration commune à Thiès, Sénégal. Née d'une étude de terrain sur
+                        les 20 restaurants les mieux notés de la ville, elle centralise les menus, commandes et
+                        réservations en un seul endroit.
+                    </p>
+                </div>
+
+                <!-- Links Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Navigation</h4>
+                    <a href="#" onclick="router.navigate('/'); return false;">Accueil</a>
+                    <a href="#" onclick="scrollToHowItWorks(); return false;">Comment ça marche ?</a>
+                    <a href="#" onclick="router.navigate('/auth'); return false;">Espace Restaurant</a>
+                    <a href="#" onclick="router.navigate('/admin-login'); return false;">Super-Admin</a>
+                </div>
+
+                <!-- Contact Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Contact & Réseaux</h4>
+                    <a href="https://wa.me/221770000000" target="_blank">💬 WhatsApp</a>
+                    <a href="https://www.instagram.com/" target="_blank">📸 Instagram</a>
+                    <a href="https://www.tiktok.com/" target="_blank">🎵 TikTok</a>
+                    <a href="mailto:contact@thiesresto.sn">✉️ contact@thiesresto.sn</a>
+                </div>
+
+                <!-- Theme Toggle Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Apparence</h4>
+                    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()">
+                        <span id="theme-toggle-icon">☀️</span>
+                        <span id="theme-toggle-label">Mode Clair</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 THIES Resto. Fait avec ❤️ pour la Teranga Sénégalaise. Paiement en espèces uniquement.
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ========== JSON-LD STRUCTURED DATA ========== -->
+    <script id="json-ld-data" type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "THIES Resto",
+        "description": "Plateforme commune de restauration pour les restaurants de Thiès, Sénégal",
+        "url": "https://thiesresto.sn",
+        "applicationCategory": "FoodService",
+        "operatingSystem": "Web",
+        "areaServed": {
+            "@type": "City",
+            "name": "Thiès",
+            "containedInPlace": {
+                "@type": "Country",
+                "name": "Sénégal"
+            }
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "XOF",
+            "description": "Commande et réservation gratuites pour les clients"
+        }
+    }
+    </script>
+
+    <!-- App Logic -->
+    <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,3752 @@
+// ----------------------------------------------------
+// THIES Resto - Core JavaScript Application
+// ----------------------------------------------------
+
+// Cover images by category (real restaurant-style photos)
+const COVER_IMAGES = {
+    "Traditionnel": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60",
+    "Grillades / Dibi": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=60",
+    "Fast Food": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600&auto=format&fit=crop&q=60",
+    "Pâtisserie": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=600&auto=format&fit=crop&q=60",
+    "Gastronomique": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&auto=format&fit=crop&q=60"
+};
+
+// Unique cover per restaurant (alternating within categories)
+const RESTAURANT_COVERS = {
+    "r1": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=60",
+    "r2": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=60",
+    "r3": "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&auto=format&fit=crop&q=60",
+    "r4": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&auto=format&fit=crop&q=60",
+    "r5": "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600&auto=format&fit=crop&q=60",
+    "r6": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop&q=60",
+    "r7": "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&auto=format&fit=crop&q=60",
+    "r8": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600&auto=format&fit=crop&q=60",
+    "r9": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&auto=format&fit=crop&q=60",
+    "r10": "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&auto=format&fit=crop&q=60",
+    "r11": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=600&auto=format&fit=crop&q=60",
+    "r12": "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=600&auto=format&fit=crop&q=60",
+    "r13": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=60",
+    "r14": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60",
+    "r15": "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?w=600&auto=format&fit=crop&q=60",
+    "r16": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=600&auto=format&fit=crop&q=60",
+    "r17": "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=60",
+    "r18": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&auto=format&fit=crop&q=60",
+    "r19": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=60",
+    "r20": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&auto=format&fit=crop&q=60"
+};
+
+// Dish image options for admin image selector
+const DISH_IMAGE_OPTIONS = [
+    { label: "Thiéboudiène / Poisson", url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60" },
+    { label: "Yassa / Poulet", url: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&auto=format&fit=crop&q=60" },
+    { label: "Mafé / Ragoût", url: "https://images.unsplash.com/photo-1547592180-85f173990554?w=500&auto=format&fit=crop&q=60" },
+    { label: "Grillades / Dibi", url: "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60" },
+    { label: "Poulet Grillé", url: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&auto=format&fit=crop&q=60" },
+    { label: "Brochettes", url: "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=500&auto=format&fit=crop&q=60" },
+    { label: "Burger", url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60" },
+    { label: "Chawarma / Wrap", url: "https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60" },
+    { label: "Frites", url: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60" },
+    { label: "Pizza", url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60" },
+    { label: "Salade", url: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500&auto=format&fit=crop&q=60" },
+    { label: "Poisson Grillé", url: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop&q=60" },
+    { label: "Croissant / Pâtisserie", url: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&auto=format&fit=crop&q=60" },
+    { label: "Pain au Chocolat", url: "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=500&auto=format&fit=crop&q=60" },
+    { label: "Petit-Déjeuner", url: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&auto=format&fit=crop&q=60" },
+    { label: "Dessert / Chocolat", url: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop&q=60" },
+    { label: "Boisson / Jus", url: "https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&auto=format&fit=crop&q=60" },
+    { label: "Jus de Bouye", url: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60" },
+    { label: "Riz Sénégalais", url: "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=500&auto=format&fit=crop&q=60" },
+    { label: "URL personnalisée", url: "" }
+];
+
+// Default Menu templates by Category
+const MENU_TEMPLATES = {
+    "Traditionnel": [
+        { id: 'dish_1', name: 'Thiéboudiène Penda Mbaye', description: 'Riz au poisson rouge traditionnel sénégalais, légumes frais (chou, manioc, carotte) et sauce tamarin douce.', price: 2500, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_2', name: 'Yassa Poulet au Feu de Bois', description: 'Poulet mariné au citron vert, moutarde et oignons caramélisés fondants, servi avec riz blanc brisé.', price: 2200, image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_3', name: 'Mafé Viande de Bœuf', description: 'Mijoté de bœuf tendre dans une sauce onctueuse à base de pâte d\'arachide locale, riz blanc.', price: 2000, image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_4', name: 'Jus de Bissap Glacé', description: 'Boisson rafraîchissante maison à base d\'infusion de fleurs d\'hibiscus séchées, menthe et sucre.', price: 500, image: 'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_5', name: 'Jus de Bouye (Pain de Singe)', description: 'Jus local onctueux à base de pulpe de fruits de baobab et de lait concentré sucré.', price: 500, image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60' }
+    ],
+    "Grillades / Dibi": [
+        { id: 'dish_6', name: 'Dibi d\'Agneau Traditionnel (Portion)', description: 'Viande d\'agneau coupée en morceaux, marinée et grillée façon dibiterie, servie avec oignons et piment.', price: 4500, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_7', name: 'Dibi de Poulet (Demi Poulet)', description: 'Demi-poulet mariné aux épices locales et grillé lentement, accompagné d\'oignons émincés.', price: 3500, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_8', name: 'Merguez Braisées de Thiès', description: 'Brochettes de merguez maison grillées, servies avec frites croustillantes.', price: 2500, image: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_4', name: 'Jus de Bissap Glacé', description: 'Infusion de fleurs d\'hibiscus séchées parfumée à la menthe.', price: 500, image: 'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&auto=format&fit=crop&q=60' }
+    ],
+    "Fast Food": [
+        { id: 'dish_9', name: 'Burger Teranga Double Cheese', description: 'Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison.', price: 2000, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_10', name: 'Chawarma Poulet Fromage', description: 'Pain libanais roulé garni de poulet émincé grillé, frites maison, crème d\'ail et fromage.', price: 1500, image: 'https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_11', name: 'Frites Maison (Portion XXL)', description: 'Pommes de terre fraîches coupées à la main et frites dorées aux herbes aromatiques.', price: 800, image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_5', name: 'Jus de Bouye', description: 'Jus onctueux à base de fruit de baobab.', price: 500, image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60' }
+    ],
+    "Pâtisserie": [
+        { id: 'dish_12', name: 'Croissant Beurre Français', description: 'Feuilletage croustillant pur beurre, doré à souhait.', price: 500, image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_13', name: 'Pain au Chocolat (Chocolatine)', description: 'Viennoiserie feuilletée avec deux barres de chocolat noir.', price: 600, image: 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_14', name: 'Formule Petit-Déjeuner Express', description: 'Un café Touba ou expresso, un croissant, et un verre de jus frais d\'orange.', price: 1500, image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&auto=format&fit=crop&q=60' }
+    ],
+    "Gastronomique": [
+        { id: 'dish_15', name: 'Lotte rôtie sauce vanille de Casamance', description: 'Médaillon de lotte poêlé, purée fine de patate douce et émulsion à la vanille.', price: 7500, image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_16', name: 'Filet de Bœuf braisé au Café Touba', description: 'Filet tendre de bœuf du pays, sauce corsée infusée au café Touba et poivre de Selim, petits légumes.', price: 8000, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_17', name: 'Moelleux au Chocolat & Coulis Bissap', description: 'Dessert gourmand au cœur coulant, parfumé d\'un coulis acidulé au bissap rouge.', price: 2500, image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop&q=60' }
+    ]
+};
+
+// Seeding standard reviews
+const SAMPLE_REVIEWS = [
+    { author: "Abdoulaye Diallo", rating: 5, comment: "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement.", date: "2026-06-10", reply: "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes." },
+    { author: "Khadija Fall", rating: 4, comment: "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison.", date: "2026-06-12", reply: null },
+    { author: "Michel Dupont", rating: 5, comment: "Un trésor caché à Thiès. Le service Teranga est excellent.", date: "2026-06-14", reply: "Merci Michel ! Heureux de vous avoir accueilli." }
+];
+
+// Complete Seed Data from rapport_restaurants_thies
+const SEED_RESTAURANTS = [
+    { id: "r1", name: "Croissant Magique", slug: "croissant-magique", rating: 3.9, reviewsCount: 999, category: "Pâtisserie", address: "Avenue Léopold Sédar Senghor, Thiès", whatsapp: "+221776543210", openHours: "07:00 - 22:00", closedDays: [], isOpenManual: true, status: "suspended" },
+    { id: "r2", name: "Café du Rail", slug: "cafe-du-rail", rating: 4.7, reviewsCount: 679, category: "Traditionnel", address: "Près de la Gare ferroviaire de Thiès", whatsapp: "+221774321098", openHours: "08:00 - 23:00", closedDays: [1], isOpenManual: true, status: "active" },
+    { id: "r3", name: "Restaurant Madiba", slug: "restaurant-madiba", rating: 4.3, reviewsCount: 312, category: "Traditionnel", address: "Quartier Escale, Thiès", whatsapp: "+221775432109", openHours: "11:30 - 23:00", closedDays: [], isOpenManual: true, status: "active" },
+    { id: "r4", name: "Chez Aminata", slug: "chez-aminata", rating: 4.1, reviewsCount: 187, category: "Traditionnel", address: "Quartier Mbour 1, Thiès", whatsapp: "+221776123456", openHours: "12:00 - 22:00", closedDays: [1], isOpenManual: true, status: "active" },
+    { id: "r5", name: "Le Baobab Gourmand", slug: "le-baobab-gourmand", rating: 4.0, reviewsCount: 143, category: "Traditionnel", address: "Cité Malick Sy, Thiès", whatsapp: "+221776549870", openHours: "12:00 - 23:00", closedDays: [], isOpenManual: true, status: "active" },
+    { id: "r6", name: "Pizza Palace Thiès", slug: "pizza-palace-thies", rating: 3.7, reviewsCount: 98, category: "Fast Food", address: "Avenue Houphouët Boigny, Thiès", whatsapp: "+221772109876", openHours: "17:00 - 00:00", closedDays: [2], isOpenManual: true, status: "active" },
+    { id: "r7", name: "La Terrasse du Rail", slug: "la-terrasse-du-rail", rating: 4.4, reviewsCount: 76, category: "Traditionnel", address: "Boulevard de la Gare, Thiès", whatsapp: "+221773210987", openHours: "15:00 - 23:30", closedDays: [], isOpenManual: true, status: "active" },
+    { id: "r8", name: "Fast Food Dakar-Thiès", slug: "fast-food-dakar-thies", rating: 3.5, reviewsCount: 65, category: "Fast Food", address: "Arrêt bus Cité Malick Sy, Thiès", whatsapp: "+221779876543", openHours: "10:00 - 01:00", closedDays: [], isOpenManual: true, status: "active" },
+    { id: "r9", name: "Le Gourmet Sénégalais", slug: "le-gourmet-senegalais", rating: 4.2, reviewsCount: 54, category: "Traditionnel", address: "Quartier Carrière, Thiès", whatsapp: "+221774567890", openHours: "12:00 - 22:30", closedDays: [1], isOpenManual: true, status: "active" },
+    { id: "r10", name: "Snack Fatima", slug: "snack-fatima", rating: 4.0, reviewsCount: 42, category: "Fast Food", address: "Rond-point Nguinthe, Thiès", whatsapp: "+221773456789", openHours: "11:00 - 23:00", closedDays: [], isOpenManual: true, status: "active" },
+    { id: "r11", name: "Restaurant Central", slug: "restaurant-central", rating: 3.8, reviewsCount: 38, category: "Traditionnel", address: "Centre-ville face Préfecture, Thiès", whatsapp: "+221777654321", openHours: "12:00 - 22:00", closedDays: [1], isOpenManual: true, status: "active" },
+    { id: "r12", name: "La Bonne Table", slug: "la-bonne-table", rating: 4.3, reviewsCount: 35, category: "Gastronomique", address: "Quartier Dixième, Thiès", whatsapp: "+221778901234", openHours: "12:00 - 23:00", closedDays: [], isOpenManual: true, status: "active" },
+    { id: "r13", name: "Dibi Palace", slug: "dibi-palace", rating: 4.5, reviewsCount: 32, category: "Grillades / Dibi", address: "Route de Tivaouane, Thiès", whatsapp: "+221779012345", openHours: "18:00 - 02:00", closedDays: [], isOpenManual: true, status: "active" },
+    { id: "r14", name: "Le Festin Africain", slug: "le-festin-africain", rating: 4.1, reviewsCount: 28, category: "Traditionnel", address: "Près du Stade Lat Dior, Thiès", whatsapp: "+221770123456", openHours: "12:00 - 22:00", closedDays: [], isOpenManual: true, status: "active" },
+    { id: "r15", name: "Snack du Marché", slug: "snack-du-marche", rating: 3.6, reviewsCount: 22, category: "Fast Food", address: "Marché Central de Thiès", whatsapp: "+221771234567", openHours: "09:00 - 19:00", closedDays: [7], isOpenManual: true, status: "active" },
+    { id: "r16", name: "La Casablancaise", slug: "la-casablancaise", rating: 4.7, reviewsCount: 19, category: "Gastronomique", address: "Quartier Som, Thiès", whatsapp: "+221772345678", openHours: "12:00 - 23:00", closedDays: [1], isOpenManual: true, status: "active" },
+    { id: "r17", name: "La Table des Gourmets", slug: "la-table-des-gourmets", rating: 5.0, reviewsCount: 14, category: "Gastronomique", address: "Quartier Grand-Thiès", whatsapp: "+221773456789", openHours: "19:00 - 23:30", closedDays: [1, 2], isOpenManual: true, status: "active" },
+    { id: "r18", name: "La Licorne", slug: "la-licorne", rating: 4.8, reviewsCount: 11, category: "Gastronomique", address: "Zone Résidentielle Escale, Thiès", whatsapp: "+221774567890", openHours: "12:00 - 23:00", closedDays: [1], isOpenManual: true, status: "active" },
+    { id: "r19", name: "Biba Food", slug: "biba-food", rating: 5.0, reviewsCount: 9, category: "Fast Food", address: "Quartier Cité Lamy, Thiès", whatsapp: "+221775678901", openHours: "17:00 - 23:00", closedDays: [], isOpenManual: true, status: "pending" },
+    { id: "r20", name: "Le Jardin des Saveurs", slug: "le-jardin-des-saveurs", rating: 4.6, reviewsCount: 7, category: "Traditionnel", address: "Près de la Manufacture des Arts Décoratifs, Thiès", whatsapp: "+221776789012", openHours: "12:00 - 22:00", closedDays: [1], isOpenManual: true, status: "pending" }
+];
+
+// App Local Database state manager
+class Store {
+    constructor() {
+        this.key = 'THIES_RESTO_DB_V1';
+        this.data = this.load();
+        if (!this.data) {
+            this.seed();
+        }
+    }
+
+    load() {
+        try {
+            const val = localStorage.getItem(this.key);
+            return val ? JSON.parse(val) : null;
+        } catch (e) {
+            console.error("Failed to load local DB", e);
+            return null;
+        }
+    }
+
+    save() {
+        try {
+            localStorage.setItem(this.key, JSON.stringify(this.data));
+        } catch (e) {
+            console.error("Failed to save local DB", e);
+        }
+    }
+
+    seed() {
+        // Initialize base structure
+        const restaurants = SEED_RESTAURANTS.map(r => {
+            // Pick a matching menu template based on category
+            const menuType = MENU_TEMPLATES[r.category] ? r.category : "Traditionnel";
+            const menu = JSON.parse(JSON.stringify(MENU_TEMPLATES[menuType]));
+            
+            // Generate reviews list
+            const reviews = SAMPLE_REVIEWS.map((rev, index) => ({
+                id: `rev_${r.id}_${index}`,
+                author: rev.author,
+                rating: rev.rating,
+                comment: rev.comment,
+                date: rev.date,
+                reply: rev.reply
+            }));
+
+            return {
+                ...r,
+                username: r.slug,
+                password: "resto123",
+                coverImage: RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category] || COVER_IMAGES["Traditionnel"],
+                menu,
+                reviews
+            };
+        });
+
+        // Initialize orders
+        const orders = [
+            {
+                id: "ORD-9821",
+                restaurantId: "r18",
+                customerName: "Moussa Ndiaye",
+                customerPhone: "+221776541234",
+                mode: "Livraison",
+                address: "Cité Lamy, Villa 104, Thiès",
+                items: [
+                    { name: 'Lotte rôtie sauce vanille de Casamance', price: 7500, qty: 1 },
+                    { name: 'Moelleux au Chocolat & Coulis Bissap', price: 2500, qty: 2 }
+                ],
+                total: 12500,
+                note: "Sans piment s'il vous plaît",
+                status: "Confirmée",
+                date: "2026-06-18",
+                time: "14:15"
+            },
+            {
+                id: "ORD-1204",
+                restaurantId: "r18",
+                customerName: "Awa Diop",
+                customerPhone: "+221768884422",
+                mode: "A emporter",
+                address: "",
+                items: [
+                    { name: 'Filet de Bœuf braisé au Café Touba', price: 8000, qty: 1 }
+                ],
+                total: 8000,
+                note: "",
+                status: "Reçue",
+                date: "2026-06-18",
+                time: "17:05"
+            }
+        ];
+
+        // Initialize reservations
+        const reservations = [
+            {
+                id: "RES-4482",
+                restaurantId: "r18",
+                customerName: "Babacar Sy",
+                customerPhone: "+221774443322",
+                date: "2026-06-20",
+                time: "20:30",
+                guests: 4,
+                note: "Table en terrasse si possible",
+                status: "Confirmée"
+            }
+        ];
+
+        this.data = {
+            restaurants,
+            orders,
+            reservations,
+            groupOrders: []
+        };
+        this.save();
+    }
+
+    getRestaurants() {
+        return this.data.restaurants;
+    }
+
+    getRestaurantBySlug(slug) {
+        return this.data.restaurants.find(r => r.slug === slug);
+    }
+
+    getRestaurantById(id) {
+        return this.data.restaurants.find(r => r.id === id);
+    }
+
+    updateRestaurant(id, fields) {
+        const idx = this.data.restaurants.findIndex(r => r.id === id);
+        if (idx !== -1) {
+            this.data.restaurants[idx] = { ...this.data.restaurants[idx], ...fields };
+            this.save();
+            return this.data.restaurants[idx];
+        }
+        return null;
+    }
+
+    addRestaurant(resto) {
+        this.data.restaurants.push(resto);
+        this.save();
+    }
+
+    deleteRestaurant(id) {
+        this.data.restaurants = this.data.restaurants.filter(r => r.id !== id);
+        this.save();
+    }
+
+    getOrdersByRestaurant(restaurantId) {
+        return this.data.orders.filter(o => o.restaurantId === restaurantId);
+    }
+
+    addOrder(order) {
+        this.data.orders.unshift(order);
+        this.save();
+    }
+
+    updateOrderStatus(orderId, status) {
+        const order = this.data.orders.find(o => o.id === orderId);
+        if (order) {
+            order.status = status;
+            this.save();
+        }
+    }
+
+    getReservationsByRestaurant(restaurantId) {
+        return this.data.reservations.filter(r => r.restaurantId === restaurantId);
+    }
+
+    addReservation(res) {
+        this.data.reservations.unshift(res);
+        this.save();
+    }
+
+    updateReservationStatus(resId, status) {
+        const res = this.data.reservations.find(r => r.id === resId);
+        if (res) {
+            res.status = status;
+            this.save();
+        }
+    }
+}
+
+const store = new Store();
+
+// ----------------------------------------------------
+// Global Router
+// ----------------------------------------------------
+class Router {
+    constructor() {
+        this.routes = {};
+        window.addEventListener('hashchange', () => this.resolve());
+        window.addEventListener('load', () => this.resolve());
+    }
+
+    add(path, handler) {
+        this.routes[path] = handler;
+    }
+
+    navigate(path) {
+        window.location.hash = path;
+    }
+
+    resolve() {
+        const hash = window.location.hash || '#/';
+        
+        const container = document.getElementById('main-content');
+        if (container) {
+            container.classList.remove('page-transition');
+            void container.offsetWidth; // Force reflow
+            container.classList.add('page-transition');
+        }
+        
+        // Parse params for restaurant view: #/r/la-licorne
+        let matched = false;
+        
+        // Match group route first: #/r/:slug/group/:groupId
+        const groupMatch = hash.match(/^#\/r\/([^/]+)\/group\/([^/]+)$/);
+        if (groupMatch) {
+            const slug = groupMatch[1];
+            const groupId = groupMatch[2];
+            if (this.routes['#/r/:slug']) {
+                this.routes['#/r/:slug'](slug, 'group', groupId);
+                matched = true;
+            }
+        }
+        
+        if (!matched) {
+            const restoMatch = hash.match(/^#\/r\/([^/]+)$/);
+            if (restoMatch) {
+                const slug = restoMatch[1];
+                if (this.routes['#/r/:slug']) {
+                    this.routes['#/r/:slug'](slug, 'menu');
+                    matched = true;
+                }
+            }
+        }
+
+        if (!matched) {
+            const handler = this.routes[hash] || this.routes['#/404'];
+            if (handler) {
+                handler();
+            } else {
+                this.navigate('/');
+            }
+        }
+        
+        // Refresh Navbar State
+        updateNavbar();
+    }
+}
+
+const router = new Router();
+
+// ----------------------------------------------------
+// Global State
+// ----------------------------------------------------
+let cart = {
+    restaurantId: null,
+    items: [],
+    total: 0
+};
+
+// Current Session (with safe storage check for file:// protocol support)
+let currentRestaurantSession = null;
+let isSuperAdminSession = false;
+try {
+    const sessionStr = sessionStorage.getItem('resto_session');
+    if (sessionStr) {
+        currentRestaurantSession = JSON.parse(sessionStr);
+    }
+    isSuperAdminSession = sessionStorage.getItem('admin_session') === 'true';
+} catch (e) {
+    console.warn("sessionStorage is not accessible (e.g. running locally via file:// protocol). Session data will be held in memory only.", e);
+}
+
+// Temporary Group Order object in memory
+let activeGroupOrder = null;
+
+// Active category filter
+let activeFilter = 'Tous';
+let activeSortBy = 'default';
+
+// ---------- LOADING STATE ----------
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) {
+        overlay.classList.add('hidden');
+        setTimeout(() => overlay.remove(), 600);
+    }
+}
+
+// ---------- THEME TOGGLE ----------
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('THIES_THEME', next); } catch(e) {}
+    updateThemeToggleUI(next);
+}
+function updateThemeToggleUI(theme) {
+    const icon = document.getElementById('theme-toggle-icon');
+    const label = document.getElementById('theme-toggle-label');
+    if (icon) icon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    if (label) label.textContent = theme === 'dark' ? 'Mode Clair' : 'Mode Sombre';
+}
+function loadSavedTheme() {
+    try {
+        const saved = localStorage.getItem('THIES_THEME');
+        if (saved) {
+            document.documentElement.setAttribute('data-theme', saved);
+            updateThemeToggleUI(saved);
+        }
+    } catch(e) {}
+}
+
+// ---------- CART PERSISTENCE ----------
+function saveCart() {
+    try { localStorage.setItem('THIES_CART', JSON.stringify(cart)); } catch(e) {}
+}
+function loadCart() {
+    try {
+        const saved = localStorage.getItem('THIES_CART');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.items && parsed.items.length > 0) {
+                cart = parsed;
+            }
+        }
+    } catch(e) {}
+}
+
+function pulseCartBar() {
+    const bar = document.getElementById('floating-cart-bar');
+    const qty = document.getElementById('floating-cart-qty');
+    const btn = document.getElementById('floating-cart-btn');
+    
+    [bar, qty, btn].forEach(el => {
+        if (el) {
+            el.classList.remove('cart-pulse');
+            void el.offsetWidth; // Trigger reflow
+            el.classList.add('cart-pulse');
+        }
+    });
+}
+
+// ---------- REALTIME SLUG VALIDATION ----------
+function checkSlugAvailabilityRealtime(val) {
+    const badge = document.getElementById('slug-availability-badge');
+    if (!badge) return;
+    const cleanVal = val.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (!cleanVal) {
+        badge.innerHTML = '';
+        return;
+    }
+    const exists = store.getRestaurants().some(r => r.username === cleanVal || r.slug === cleanVal);
+    if (exists) {
+        badge.className = 'slug-status taken';
+        badge.innerHTML = '❌ Cet identifiant est déjà pris';
+    } else {
+        badge.className = 'slug-status available';
+        badge.innerHTML = '✅ Cet identifiant est disponible';
+    }
+}
+
+// ---------- CLIENT ORDER HISTORY ----------
+function saveOrderToHistory(order, restaurantName) {
+    try {
+        let history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+        history.unshift({ ...order, restaurantName, savedAt: new Date().toISOString() });
+        if (history.length > 20) history = history.slice(0, 20);
+        localStorage.setItem('THIES_ORDER_HISTORY', JSON.stringify(history));
+    } catch(e) {}
+}
+function getOrderHistory() {
+    try {
+        return JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+    } catch(e) { return []; }
+}
+
+// ---------- NOTIFICATION SOUND ----------
+function playNotificationSound() {
+    try {
+        let audio = document.getElementById('notification-sound');
+        if (!audio) {
+            audio = document.createElement('audio');
+            audio.id = 'notification-sound';
+            audio.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav';
+            document.body.appendChild(audio);
+        }
+        audio.currentTime = 0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.warn("Notification audio blocked by browser autoplay settings:", error);
+            });
+        }
+    } catch(e) {
+        console.warn("Failed to play notification sound:", e);
+    }
+}
+
+// ---------- ORDER POLLING (for restaurant dashboard) ----------
+let lastKnownOrderCount = 0;
+let pollingInterval = null;
+function startOrderPolling(restaurantId) {
+    stopOrderPolling();
+    lastKnownOrderCount = store.getOrdersByRestaurant(restaurantId).length;
+    pollingInterval = setInterval(() => {
+        const current = store.getOrdersByRestaurant(restaurantId).length;
+        if (current > lastKnownOrderCount) {
+            playNotificationSound();
+            showToast(`🔔 Nouvelle commande reçue !`, 'success');
+            lastKnownOrderCount = current;
+        }
+    }, 30000);
+}
+function stopOrderPolling() {
+    if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+}
+
+
+// ---------- SCROLL HELPERS ----------
+function scrollToHowItWorks() {
+    const el = document.getElementById('how-it-works-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    else router.navigate('/');
+}
+
+// ---------- SLUG AVAILABILITY CHECK ----------
+function checkSlugAvailability() {
+    const input = document.getElementById('reg-username');
+    const badge = document.getElementById('slug-availability-badge');
+    if (!input || !badge) return;
+    const slug = input.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    if (slug.length < 3) { badge.innerHTML = ''; return; }
+    const exists = store.getRestaurants().find(r => r.username === slug || r.slug === slug);
+    if (exists) {
+        badge.innerHTML = '<span class="slug-status taken">❌ Identifiant déjà pris</span>';
+    } else {
+        badge.innerHTML = '<span class="slug-status available">✅ Disponible</span>';
+    }
+}
+
+// Helper to show modern notification toast
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast-notification');
+    toast.innerText = message;
+    toast.style.display = 'block';
+    
+    // Color schemes
+    if (type === 'success') {
+        toast.style.backgroundColor = '#10b981';
+        toast.style.color = 'white';
+    } else if (type === 'danger') {
+        toast.style.backgroundColor = '#ef4444';
+        toast.style.color = 'white';
+    } else if (type === 'warning') {
+        toast.style.backgroundColor = '#f7b731';
+        toast.style.color = 'black';
+    } else {
+        toast.style.backgroundColor = '#ff6b35';
+        toast.style.color = 'white';
+    }
+    
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 4000);
+}
+
+// Format Phone Numbers +221 7X XXX XX XX
+function cleanPhoneNumber(phone) {
+    let cleaned = phone.replace(/\s+/g, '');
+    if (!cleaned.startsWith('+221') && !cleaned.startsWith('221')) {
+        if (cleaned.length === 9) {
+            cleaned = '+221' + cleaned;
+        }
+    }
+    if (cleaned.startsWith('221') && !cleaned.startsWith('+')) {
+        cleaned = '+' + cleaned;
+    }
+    return cleaned;
+}
+
+// ----------------------------------------------------
+// Navbar population
+// ----------------------------------------------------
+function updateNavbar() {
+    const navActions = document.getElementById('nav-actions');
+    let html = '';
+    
+    if (isSuperAdminSession) {
+        if (currentRestaurantSession) {
+            html = `
+                <span class="badge badge-danger">👑 Admin (${currentRestaurantSession.name})</span>
+                <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
+                <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()">Console Admin 🔐</button>
+            `;
+        } else {
+            html = `
+                <span class="badge badge-danger">Super-Admin</span>
+                <button class="btn btn-primary btn-sm" onclick="router.navigate('/admin')">Console Admin 📊</button>
+                <button class="btn btn-secondary btn-sm" onclick="logoutAdmin()">Déconnexion</button>
+            `;
+        }
+    } else if (currentRestaurantSession) {
+        html = `
+            <span class="badge badge-success">${currentRestaurantSession.name}</span>
+            <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
+            <button class="btn btn-secondary btn-sm" onclick="logoutRestaurant()">Déconnexion</button>
+        `;
+    } else {
+        html = `
+            <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')">Espace Resto</button>
+        `;
+    }
+    navActions.innerHTML = html;
+}
+
+function logoutRestaurant() {
+    try {
+        sessionStorage.removeItem('resto_session');
+    } catch (e) {
+        console.warn("Failed to clear resto_session from sessionStorage", e);
+    }
+    currentRestaurantSession = null;
+    showToast("Session restaurant déconnectée", "success");
+    router.navigate('/');
+}
+
+function logoutAdmin() {
+    try {
+        sessionStorage.removeItem('admin_session');
+    } catch (e) {
+        console.warn("Failed to clear admin_session from sessionStorage", e);
+    }
+    isSuperAdminSession = false;
+    showToast("Session administrateur déconnectée", "success");
+    router.navigate('/');
+}
+
+// ----------------------------------------------------
+// Page: LANDING PAGE (catalog)
+// ----------------------------------------------------
+router.add('#/', () => {
+    // Hide cart bar
+    document.getElementById('floating-cart-bar').style.display = 'none';
+    stopOrderPolling();
+    loadCart();
+    
+    const container = document.getElementById('main-content');
+    
+    const activeRestos = store.getRestaurants().filter(r => r.status === 'active');
+    const totalOrders = store.data.orders ? store.data.orders.length : 0;
+    const totalReservations = store.data.reservations ? store.data.reservations.length : 0;
+
+    // Load order history
+    const history = getOrderHistory();
+    let historyHtml = '';
+    if (history.length > 0) {
+        let itemsHtml = '';
+        history.slice(0, 5).forEach(h => {
+            itemsHtml += `
+                <div class="history-item">
+                    <div>
+                        <strong>${h.id}</strong> — ${h.restaurantName || 'Restaurant'}
+                        <div class="history-item-meta">${h.items.map(i => i.name).join(', ')}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <strong style="color:var(--primary)">${h.total} FCFA</strong>
+                        <div class="history-item-meta">${h.date}</div>
+                    </div>
+                </div>
+            `;
+        });
+        historyHtml = `
+            <section class="history-mini">
+                <div class="section-header">
+                    <h2 class="section-title">Vos Dernières Commandes (Persistant)</h2>
+                </div>
+                ${itemsHtml}
+            </section>
+        `;
+    }
+
+    container.innerHTML = `
+        <section class="hero-section">
+            <div class="hero-split-container">
+                <!-- Left Column: Animated illustration -->
+                <div class="hero-left-col">
+                    <div class="animated-hero-illustration">
+                        <div class="illustration-main-circle">
+                            <span class="main-dish-emoji">🍲</span>
+                        </div>
+                        <div class="orbiting-item orbit-1">🔥 Dibi</div>
+                        <div class="orbiting-item orbit-2">🍛 Thieb</div>
+                        <div class="orbiting-item orbit-3">💬 WhatsApp</div>
+                        <div class="orbiting-item orbit-4">⭐ 4.8</div>
+                        <div class="floating-ring ring-1"></div>
+                        <div class="floating-ring ring-2"></div>
+                    </div>
+                </div>
+                
+                <!-- Right Column: Content and search bar -->
+                <div class="hero-right-col">
+                    <h1 class="hero-title">Découvrez les meilleures tables de <span>Thiès</span></h1>
+                    <p class="hero-subtitle">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+                    <div class="search-container">
+                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant (dibi, pastel, thieb...)" oninput="applyFilters()">
+                        <button class="search-btn">🔍</button>
+                    </div>
+                    
+                    <div class="stats-strip">
+                        <div class="stat-item">
+                            <div class="stat-number" id="stats-total-active">${activeRestos.length}</div>
+                            <div class="stat-label">Partenaires Actifs</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">${totalOrders + totalReservations}+</div>
+                            <div class="stat-label">Commandes & Réservations</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">0 FCFA</div>
+                            <div class="stat-label">Frais de Service</div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start; width: 100%;">
+                        <button class="btn btn-primary" onclick="router.navigate('/auth')">🤝 Rejoindre le Réseau (S'inscrire)</button>
+                        <button class="btn btn-secondary" onclick="scrollToCatalog()">Voir le Catalogue 👇</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PRESENTATION RAPPORT ETUDES THIES -->
+        <section class="presentation-section">
+            <h2 class="section-title" style="text-align:center; margin-bottom:0.5rem;">Pourquoi THIES Resto ?</h2>
+            <p style="color: var(--text-secondary); max-width:650px; margin:0 auto 1.5rem; font-size:0.95rem; line-height:1.6;">
+                Selon notre étude de terrain menée auprès des établissements de Thiès, <strong>95% des restaurants n'ont aucune présence numérique active</strong>. Les commandes se font encore par appels téléphoniques classiques, les menus du jour changent sans mise à jour web, et les réservations de tables restent informelles. <strong>THIES Resto</strong> offre une vitrine digitale moderne gratuite et accessible sans aucune barrière technique ni inscription obligatoire pour les clients.
+            </p>
+            
+            <!-- Animated Statistical Chart and Mini Stats -->
+            <div class="stats-dashboard-container">
+                <div class="stats-dashboard-left">
+                    <div class="stat-mini-card">
+                        <span class="stat-mini-val">20</span>
+                        <span class="stat-mini-label">Établissements Audités à Thiès</span>
+                    </div>
+                    <div class="stat-mini-card">
+                        <span class="stat-mini-val">95%</span>
+                        <span class="stat-mini-label">Sans Site Web Ni Outils Propres</span>
+                    </div>
+                    <div class="stat-mini-card">
+                        <span class="stat-mini-val">2 500+</span>
+                        <span class="stat-mini-label">Avis Clients Locaux Analysés</span>
+                    </div>
+                </div>
+                
+                <div class="stats-dashboard-chart">
+                    <h4 style="font-size:0.9rem; color:var(--text-secondary); margin-bottom:1rem; text-align:left; font-weight: 700;">📈 Volume Mensuel de Commandes Estimé</h4>
+                    <div class="svg-chart-container">
+                        <svg viewBox="0 0 500 200" class="animated-svg-chart">
+                            <defs>
+                                <linearGradient id="chart-grad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.4"/>
+                                    <stop offset="100%" stop-color="var(--primary)" stop-opacity="0.0"/>
+                                </linearGradient>
+                            </defs>
+                            <!-- Grid Lines -->
+                            <line x1="50" y1="20" x2="480" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                            <line x1="50" y1="70" x2="480" y2="70" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                            <line x1="50" y1="120" x2="480" y2="120" stroke="rgba(255,255,255,0.05)" stroke-width="1" />
+                            <line x1="50" y1="170" x2="480" y2="170" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" />
+                            
+                            <!-- Chart Line -->
+                            <path d="M 50 170 Q 120 150 180 90 T 310 110 T 440 30" 
+                                  fill="none" 
+                                  stroke="var(--primary)" 
+                                  stroke-width="4" 
+                                  stroke-linecap="round"
+                                  class="chart-line-path"/>
+                                  
+                            <!-- Gradient Area under path -->
+                            <path d="M 50 170 Q 120 150 180 90 T 310 110 T 440 30 L 440 170 L 50 170 Z" 
+                                  fill="url(#chart-grad)"
+                                  class="chart-area-path" />
+
+                            <!-- Scintillating points on the curve -->
+                            <circle cx="440" cy="30" r="6" fill="#fff" class="chart-point" />
+                            <circle cx="440" cy="30" r="12" fill="var(--primary)" opacity="0.4" class="chart-point-ring" />
+                            
+                            <!-- Labels -->
+                            <text x="50" y="190" fill="var(--text-secondary)" font-size="10">Jan</text>
+                            <text x="147.5" y="190" fill="var(--text-secondary)" font-size="10">Mar</text>
+                            <text x="245" y="190" fill="var(--text-secondary)" font-size="10">Mai</text>
+                            <text x="342.5" y="190" fill="var(--text-secondary)" font-size="10">Juil</text>
+                            <text x="440" y="190" fill="var(--text-secondary)" font-size="10">Actuel</text>
+
+                            <text x="25" y="25" fill="var(--text-secondary)" font-size="10">5K</text>
+                            <text x="25" y="75" fill="var(--text-secondary)" font-size="10">3K</text>
+                            <text x="25" y="125" fill="var(--text-secondary)" font-size="10">1K</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- client benefits list -->
+            <div class="client-benefits-header">
+                <h3 style="text-align:center; margin-top:3.5rem; margin-bottom:1.5rem; font-size:1.3rem; font-weight:700;">✨ Ce que THIES Resto facilite pour vous (Client Final)</h3>
+            </div>
+            <div class="client-benefits-grid">
+                <div class="benefit-card">
+                    <div class="benefit-icon">🚫📱</div>
+                    <h4>Zéro Inscription</h4>
+                    <p>Commandez et réservez sans jamais créer de compte. Pas d'e-mail ni de mot de passe requis.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">💬🚀</div>
+                    <h4>Direct WhatsApp</h4>
+                    <p>Votre commande est préparée sous forme de message structuré et validée directement avec le restaurant sur WhatsApp.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">💵💯</div>
+                    <h4>Zéro Commission</h4>
+                    <p>Les prix affichés sont les prix réels en salle. Aucun frais caché ni commission additionnelle.</p>
+                </div>
+                <div class="benefit-card">
+                    <div class="benefit-icon">👥🔗</div>
+                    <h4>Commandes Groupées</h4>
+                    <p>Partagez un simple lien pour composer un panier commun en famille ou entre collègues de bureau.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ONBOARDING COMMENT CA MARCHE -->
+        <section class="how-it-works" id="how-it-works-section">
+            <h2 class="section-title" style="text-align:center;">Comment ça marche ?</h2>
+            <div class="how-it-works-grid">
+                <div class="how-step">
+                    <div class="how-step-icon">🍽️</div>
+                    <div class="how-step-num">1</div>
+                    <h3>Choisissez votre resto</h3>
+                    <p>Parcourez la liste, filtrez par cuisine et explorez le menu complet mis à jour en temps réel.</p>
+                </div>
+                <div class="how-step">
+                    <div class="how-step-icon">🛒</div>
+                    <div class="how-step-num">2</div>
+                    <h3>Validez sans inscription</h3>
+                    <p>Remplissez votre panier, indiquez vos détails de livraison et validez. Aucun mot de passe requis.</p>
+                </div>
+                <div class="how-step">
+                    <div class="how-step-icon">🛵</div>
+                    <div class="how-step-num">3</div>
+                    <h3>Paiement à la livraison</h3>
+                    <p>Votre commande est envoyée directement par WhatsApp pour confirmation. Payez à la livraison.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- VOS DERNIERES COMMANDES PERSISTANT -->
+        ${historyHtml}
+
+        <section id="catalog-section">
+            <div class="section-header">
+                <h2 class="section-title">Les Restaurants Partenaires</h2>
+            </div>
+
+            <!-- FILTERS BAR -->
+            <div class="filter-bar" id="filter-bar">
+                <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')">Tous</button>
+                <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')">🍲 Traditionnel</button>
+                <button class="filter-btn ${activeFilter === 'Fast Food' ? 'active' : ''}" onclick="setFilter('Fast Food')">🍔 Fast Food</button>
+                <button class="filter-btn ${activeFilter === 'Grillades / Dibi' ? 'active' : ''}" onclick="setFilter('Grillades / Dibi')">🔥 Grillades</button>
+                <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')">✨ Gastronomique</button>
+                <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')">🥐 Pâtisserie</button>
+            </div>
+
+            <!-- SORTING BAR -->
+            <div class="sort-bar">
+                <label for="sort-select">Trier par :</label>
+                <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
+                    <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
+                    <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
+                    <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
+                    <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
+                </select>
+            </div>
+            
+            <div class="restaurant-grid" id="restaurants-list-grid"></div>
+        </section>
+    `;
+
+    applyFilters();
+    hideLoadingOverlay();
+});
+
+function scrollToCatalog() {
+    const el = document.getElementById('catalog-section');
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function setFilter(category) {
+    activeFilter = category;
+    const filterBar = document.getElementById('filter-bar');
+    if (filterBar) {
+        filterBar.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.textContent.includes(category === 'Tous' ? 'Tous' : category.split(' ')[0])) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+    applyFilters();
+}
+
+function applyFilters() {
+    const searchInput = document.getElementById('search-input-field');
+    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+    const grid = document.getElementById('restaurants-list-grid');
+    if (!grid) return;
+
+    let restos = store.getRestaurants().filter(r => r.status === 'active');
+
+    // 1. Filter by category
+    if (activeFilter !== 'Tous') {
+        restos = restos.filter(r => r.category === activeFilter);
+    }
+
+    // 2. Filter by search query
+    if (query) {
+        restos = restos.filter(r => {
+            return r.name.toLowerCase().includes(query) || 
+                   r.category.toLowerCase().includes(query) || 
+                   r.address.toLowerCase().includes(query) ||
+                   r.menu.some(m => m.name.toLowerCase().includes(query) || m.description.toLowerCase().includes(query));
+        });
+    }
+
+    // 3. Sort
+    if (activeSortBy === 'rating') {
+        restos.sort((a, b) => b.rating - a.rating);
+    } else if (activeSortBy === 'reviews') {
+        restos.sort((a, b) => b.reviewsCount - a.reviewsCount);
+    } else if (activeSortBy === 'name') {
+        restos.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    // Render cards
+    if (restos.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem 0;">Aucun restaurant ne correspond à vos critères.</div>`;
+        return;
+    }
+
+    let cardsHtml = '';
+    restos.forEach(r => {
+        const isCurrentlyOpen = isRestaurantOpenNow(r);
+        const statusBadge = isCurrentlyOpen 
+            ? `<span class="badge badge-success restaurant-card-badge">Ouvert</span>` 
+            : `<span class="badge badge-danger restaurant-card-badge">Fermé</span>`;
+        
+        const coverUrl = r.coverImage || RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category] || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
+            
+        cardsHtml += `
+            <div class="restaurant-card" onclick="router.navigate('/r/${r.slug}')">
+                <div class="restaurant-card-header">
+                    <img src="${coverUrl}" class="restaurant-card-cover" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
+                    ${statusBadge}
+                </div>
+                <div class="restaurant-card-body">
+                    <h3 class="restaurant-card-name">${r.name}</h3>
+                    <div class="restaurant-card-meta">
+                        <span class="stars-rating">★ ${r.rating.toFixed(1)}</span>
+                        <span>(${r.reviewsCount} avis)</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                        📍 ${r.address}
+                    </p>
+                    <span class="restaurant-card-cuisine">${r.category}</span>
+                </div>
+            </div>
+        `;
+    });
+    grid.innerHTML = cardsHtml;
+}
+
+function filterRestaurantsList() {
+    applyFilters();
+}
+
+
+// ----------------------------------------------------
+// Restaurant Open Hours Logic
+// ----------------------------------------------------
+function isRestaurantOpenNow(restaurant) {
+    if (restaurant.isOpenManual === false) return false;
+    if (restaurant.isOpenManual === true) {
+        // Double check closed days
+        const now = new Date();
+        // JavaScript day is 0=Sunday, 1=Monday... 7 is not used, so let's map it.
+        let day = now.getDay();
+        if (day === 0) day = 7; // Map Sunday to 7
+        if (restaurant.closedDays.includes(day)) {
+            return false;
+        }
+        
+        // Hours check
+        try {
+            const hoursStr = restaurant.openHours; // e.g. "12:00 - 23:00"
+            const parts = hoursStr.split('-');
+            if (parts.length === 2) {
+                const openParts = parts[0].trim().split(':');
+                const closeParts = parts[1].trim().split(':');
+                
+                const openHour = parseInt(openParts[0]);
+                const openMin = parseInt(openParts[1]);
+                const closeHour = parseInt(closeParts[0]);
+                const closeMin = parseInt(closeParts[1]);
+                
+                const currentHour = now.getHours();
+                const currentMin = now.getMinutes();
+                
+                const openTime = openHour * 60 + openMin;
+                const closeTime = closeHour * 60 + closeMin;
+                const currentTime = currentHour * 60 + currentMin;
+                
+                if (closeTime > openTime) {
+                    return currentTime >= openTime && currentTime <= closeTime;
+                } else {
+                    // Over midnight hours, e.g. 18:00 - 02:00
+                    return currentTime >= openTime || currentTime <= closeTime;
+                }
+            }
+        } catch (e) {
+            return true;
+        }
+        return true;
+    }
+    return false;
+}
+
+// Get string name for day
+function getDayName(dayNum) {
+    const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+    return days[dayNum - 1] || "";
+}
+
+// ----------------------------------------------------
+// Page: RESTAURANT PAGE (client view with tabs)
+// ----------------------------------------------------
+router.add('#/r/:slug', (slug, startTab = 'menu', groupId = null) => {
+    const r = store.getRestaurantBySlug(slug);
+    if (!r) {
+        document.getElementById('main-content').innerHTML = `
+            <div style="text-align: center; padding: 5rem 1.5rem;">
+                <h2>Restaurant non trouvé</h2>
+                <p style="color: var(--text-secondary); margin: 1rem 0;">Le restaurant "${slug}" n'existe pas ou n'est plus actif.</p>
+                <button class="btn btn-primary" onclick="router.navigate('/')">Retour à l'accueil</button>
+            </div>
+        `;
+        return;
+    }
+
+    // Hide loading overlay if visible
+    hideLoadingOverlay();
+    stopOrderPolling();
+
+    // Load persistent cart if any
+    loadCart();
+
+    // Associate cart with current restaurant if empty
+    if (!cart.items || cart.items.length === 0) {
+        cart.restaurantId = r.id;
+        saveCart();
+    }
+
+    // Handle group order load from link
+    if (startTab === 'group' && groupId) {
+        if (!activeGroupOrder || activeGroupOrder.id !== groupId) {
+            activeGroupOrder = {
+                id: groupId,
+                restaurantId: r.id,
+                creator: "Coordinateur",
+                participants: [
+                    { name: "Mariama (Créateur)", items: [] }
+                ]
+            };
+        }
+    }
+
+    // Dynamic SEO / JSON-LD Injection
+    let seoScript = document.getElementById('dynamic-jsonld');
+    if (!seoScript) {
+        seoScript = document.createElement('script');
+        seoScript.id = 'dynamic-jsonld';
+        seoScript.type = 'application/ld+json';
+        document.head.appendChild(seoScript);
+    }
+    const jsonLdData = {
+        "@context": "https://schema.org",
+        "@type": "Restaurant",
+        "name": r.name,
+        "image": r.coverImage || RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category],
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": r.address,
+            "addressLocality": "Thiès",
+            "addressCountry": "SN"
+        },
+        "telephone": r.whatsapp,
+        "priceRange": "1500 - 8000 FCFA",
+        "servesCuisine": r.category,
+        "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": r.rating.toString(),
+            "reviewCount": r.reviewsCount.toString()
+        }
+    };
+    seoScript.text = JSON.stringify(jsonLdData);
+
+    // Update document title for SEO
+    document.title = `${r.name} - Commander en Ligne à Thiès | THIES Resto`;
+
+    renderRestaurantView(r, startTab, groupId);
+});
+
+function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
+    const container = document.getElementById('main-content');
+    
+    // Status Badge
+    const isCurrentlyOpen = isRestaurantOpenNow(r);
+    const statusBadge = isCurrentlyOpen 
+        ? `<span class="badge badge-success">Ouvert</span>` 
+        : `<span class="badge badge-danger">Fermé</span>`;
+
+    // Map URL
+    const mapQuery = encodeURIComponent(`${r.name}, Thiès, Sénégal`);
+    const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
+
+    // Closed days description
+    let closedDaysText = '';
+    if (r.closedDays.length > 0) {
+        closedDaysText = ` (Fermé : ${r.closedDays.map(d => getDayName(d)).join(', ')})`;
+    }
+
+    // Render Base Page Structure with ← Back Button above header
+    container.innerHTML = `
+        <button class="back-btn" onclick="router.navigate('/')">
+            ← Retour aux restaurants
+        </button>
+
+        <div class="restaurant-details-header">
+            <div class="restaurant-logo-large">🍽️</div>
+            <h1 class="restaurant-name-title">${r.name}</h1>
+            
+            <div class="restaurant-status-row">
+                ${statusBadge}
+                <span class="stars-rating">★ ${r.rating.toFixed(1)}</span>
+                <span style="color: var(--text-secondary)">(${r.reviewsCount} avis)</span>
+            </div>
+            
+            <p class="restaurant-meta-info">
+                🕒 Horaires : ${r.openHours}${closedDaysText} | 📍 ${r.address}
+            </p>
+            
+            <div class="restaurant-meta-actions">
+                <a href="${googleMapsLink}" target="_blank" class="btn btn-secondary btn-sm">
+                    🗺️ S'y rendre (Google Maps)
+                </a>
+                <a href="https://wa.me/${r.whatsapp.replace(/\+/g, '')}" target="_blank" class="btn btn-outline btn-sm">
+                    💬 Contacter WhatsApp
+                </a>
+            </div>
+        </div>
+
+        <nav class="tabs-nav">
+            <button class="tab-btn ${activeTab === 'menu' ? 'active' : ''}" onclick="switchRestoTab('menu')">Menu du Jour 🍕</button>
+            <button class="tab-btn ${activeTab === 'checkout' ? 'active' : ''}" id="tab-checkout-btn" onclick="switchRestoTab('checkout')">Commander 🛒</button>
+            <button class="tab-btn ${activeTab === 'group' ? 'active' : ''}" onclick="switchRestoTab('group')">Commande de Groupe 👥</button>
+            <button class="tab-btn ${activeTab === 'booking' ? 'active' : ''}" onclick="switchRestoTab('booking')">Réserver une Table 📅</button>
+            <button class="tab-btn ${activeTab === 'reviews' ? 'active' : ''}" onclick="switchRestoTab('reviews')">Avis Clients (${r.reviews.length}) 💬</button>
+        </nav>
+
+        <div class="tab-content">
+            <!-- PANEL: MENU -->
+            <div class="tab-panel ${activeTab === 'menu' ? 'active' : ''}" id="panel-menu">
+                <div class="dishes-grid" id="dishes-list-grid"></div>
+            </div>
+
+            <!-- PANEL: CHECKOUT -->
+            <div class="tab-panel ${activeTab === 'checkout' ? 'active' : ''}" id="panel-checkout">
+                <div id="checkout-content-container"></div>
+            </div>
+
+            <!-- PANEL: GROUP ORDER -->
+            <div class="tab-panel ${activeTab === 'group' ? 'active' : ''}" id="panel-group">
+                <div id="group-content-container"></div>
+            </div>
+
+            <!-- PANEL: BOOKING -->
+            <div class="tab-panel ${activeTab === 'booking' ? 'active' : ''}" id="panel-booking">
+                <div id="booking-content-container"></div>
+            </div>
+
+            <!-- PANEL: REVIEWS -->
+            <div class="tab-panel ${activeTab === 'reviews' ? 'active' : ''}" id="panel-reviews">
+                <div id="reviews-content-container"></div>
+            </div>
+        </div>
+    `;
+
+    // Render Tab Panel Contents
+    renderDishesTab(r);
+    renderCheckoutTab(r);
+    renderGroupTab(r, groupId);
+    renderBookingTab(r);
+    renderReviewsTab(r);
+    
+    // Update floating cart visibility
+    updateFloatingCartBar(r);
+}
+
+function switchRestoTab(tabName) {
+    const btns = document.querySelectorAll('.tab-btn');
+    const panels = document.querySelectorAll('.tab-panel');
+    
+    btns.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.innerText.toLowerCase().includes(tabName === 'checkout' ? 'commander' : tabName === 'booking' ? 'réserver' : tabName === 'group' ? 'groupe' : tabName === 'reviews' ? 'avis' : 'menu')) {
+            btn.classList.add('active');
+        }
+    });
+
+    panels.forEach(p => p.classList.remove('active'));
+    const panel = document.getElementById(`panel-${tabName}`);
+    if (panel) panel.classList.add('active');
+    
+    const r = store.getRestaurantById(cart.restaurantId);
+    if (r) {
+        updateFloatingCartBar(r);
+        if (tabName === 'checkout') renderCheckoutTab(r);
+    }
+    
+    // Window scroll to top of tabs smoothly
+    const tabsNav = document.querySelector('.tabs-nav');
+    if (tabsNav) tabsNav.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function openCartTab() {
+    switchRestoTab('checkout');
+}
+
+
+// ----------------------------------------------------
+// Restaurant View - Tab Panels Renderers
+// ----------------------------------------------------
+
+// 1. Menu Panel
+function renderDishesTab(r) {
+    const grid = document.getElementById('dishes-list-grid');
+    let html = '';
+    
+    if (r.menu.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem 0;">Aucun plat du jour disponible aujourd'hui.</div>`;
+        return;
+    }
+
+    r.menu.forEach(d => {
+        const isCurrentlyOpen = isRestaurantOpenNow(r);
+        const actionBtn = isCurrentlyOpen
+            ? `<button class="btn btn-primary btn-block" onclick="addToCart('${r.id}', '${d.id}')">Ajouter au Panier 🛒</button>`
+            : `<button class="btn btn-secondary btn-block" disabled>Fermé temporairement</button>`;
+
+        html += `
+            <div class="dish-card">
+                <div class="dish-img-container">
+                    <img src="${d.image}" class="dish-image" alt="${d.name}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'">
+                    <span class="dish-price-tag">${d.price} FCFA</span>
+                </div>
+                <div class="dish-body">
+                    <h3 class="dish-title">${d.name}</h3>
+                    <p class="dish-desc">${d.description}</p>
+                    ${actionBtn}
+                </div>
+            </div>
+        `;
+    });
+    grid.innerHTML = html;
+}
+
+// Cart updates
+function addToCart(restaurantId, dishId) {
+    const r = store.getRestaurantById(restaurantId);
+    const dish = r.menu.find(d => d.id === dishId);
+    if (!dish) return;
+    
+    // Check for multi-restaurant cart safety
+    if (cart.restaurantId && cart.restaurantId !== restaurantId && cart.items.length > 0) {
+        const oldResto = store.getRestaurantById(cart.restaurantId);
+        const oldName = oldResto ? oldResto.name : "un autre restaurant";
+        const confirmClear = confirm(`Votre panier contient déjà des plats de "${oldName}". Voulez-vous vider votre panier actuel pour commander chez "${r.name}" ?`);
+        if (!confirmClear) {
+            return;
+        }
+        // User confirmed: clear cart and switch restaurant
+        cart = {
+            restaurantId: restaurantId,
+            items: [],
+            total: 0
+        };
+    }
+    
+    // Set restaurant ID if cart was empty or reset
+    cart.restaurantId = restaurantId;
+    
+    const existing = cart.items.find(item => item.id === dishId);
+    if (existing) {
+        existing.qty += 1;
+    } else {
+        cart.items.push({
+            id: dish.id,
+            name: dish.name,
+            price: dish.price,
+            qty: 1
+        });
+    }
+    
+    recalculateCart();
+    saveCart();
+    updateFloatingCartBar(r);
+    pulseCartBar();
+    renderCheckoutTab(r); // update checkout page too
+    showToast(`${dish.name} ajouté !`, "success");
+}
+
+function updateCartQty(dishId, change) {
+    const r = store.getRestaurantById(cart.restaurantId);
+    const idx = cart.items.findIndex(item => item.id === dishId);
+    if (idx !== -1) {
+        cart.items[idx].qty += change;
+        if (cart.items[idx].qty <= 0) {
+            cart.items.splice(idx, 1);
+        }
+        recalculateCart();
+        saveCart();
+        updateFloatingCartBar(r);
+        renderCheckoutTab(r);
+    }
+}
+
+function recalculateCart() {
+    cart.total = cart.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+}
+
+function updateFloatingCartBar(r) {
+    const bar = document.getElementById('floating-cart-bar');
+    const totalQty = cart.items.reduce((sum, item) => sum + item.qty, 0);
+    
+    const activePanel = document.querySelector('.tab-panel.active');
+    const isCheckoutActive = activePanel && activePanel.id === 'panel-checkout';
+
+    // Show floating bar only if cart has items AND restaurant is open AND we are not already on the checkout tab
+    if (totalQty > 0 && isRestaurantOpenNow(r) && !isCheckoutActive) {
+        document.getElementById('floating-cart-qty').innerText = `${totalQty} article${totalQty > 1 ? 's' : ''}`;
+        document.getElementById('floating-cart-total').innerText = `${cart.total} FCFA`;
+        bar.style.display = 'flex';
+    } else {
+        bar.style.display = 'none';
+    }
+}
+
+// 2. Checkout Panel
+function renderCheckoutTab(r) {
+    const container = document.getElementById('checkout-content-container');
+    
+    if (cart.items.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 4rem 1rem;">
+                <span style="font-size: 3rem;">🛒</span>
+                <h3 style="margin-top: 1rem;">Votre panier est vide</h3>
+                <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">Parcourez notre menu du jour et ajoutez des délices !</p>
+                <button class="btn btn-primary" onclick="switchRestoTab('menu')">Voir le Menu</button>
+            </div>
+        `;
+        return;
+    }
+
+    let itemsHtml = '';
+    cart.items.forEach(item => {
+        itemsHtml += `
+            <div class="cart-item">
+                <div class="cart-item-info">
+                    <div class="cart-item-title">${item.name}</div>
+                    <div class="cart-item-price">${item.price} FCFA</div>
+                </div>
+                <div class="cart-item-qty">
+                    <button class="qty-btn" onclick="updateCartQty('${item.id}', -1)">-</button>
+                    <span class="qty-val">${item.qty}</span>
+                    <button class="qty-btn" onclick="updateCartQty('${item.id}', 1)">+</button>
+                </div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = `
+        <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Votre Commande</h2>
+        <div class="cart-list">
+            ${itemsHtml}
+        </div>
+        
+        <div class="cart-total-box">
+            <span>Total à payer :</span>
+            <span class="cart-total-price">${cart.total} FCFA</span>
+        </div>
+        
+        <form id="checkout-form" onsubmit="submitSimpleOrder(event, '${r.id}')" style="background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border);">
+            <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem;">Informations de Livraison / Récupération</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Prénom <span class="required">*</span></label>
+                    <input type="text" id="order-firstname" class="form-control" placeholder="Awa" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom <span class="required">*</span></label>
+                    <input type="text" id="order-lastname" class="form-control" placeholder="Diop" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Numéro WhatsApp <span class="required">*</span></label>
+                <input type="tel" id="order-phone" class="form-control" placeholder="+221 77 123 45 67" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Mode de Récupération <span class="required">*</span></label>
+                <div class="delivery-options">
+                    <label class="delivery-radio-card">
+                        <input type="radio" name="order-mode" value="Sur place" onchange="toggleAddressField(false)">
+                        <div class="delivery-card-content">
+                            <span class="delivery-icon">🍽️</span>
+                            <span>Sur Place</span>
+                        </div>
+                    </label>
+                    <label class="delivery-radio-card">
+                        <input type="radio" name="order-mode" value="A emporter" checked onchange="toggleAddressField(false)">
+                        <div class="delivery-card-content">
+                            <span class="delivery-icon">🛍️</span>
+                            <span>A Emporter</span>
+                        </div>
+                    </label>
+                    <label class="delivery-radio-card">
+                        <input type="radio" name="order-mode" value="Livraison" onchange="toggleAddressField(true)">
+                        <div class="delivery-card-content">
+                            <span class="delivery-icon">🛵</span>
+                            <span>Livraison</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="form-group" id="delivery-address-group" style="display: none;">
+                <label class="form-label">Adresse de Livraison (Thiès) <span class="required">*</span></label>
+                <input type="text" id="order-address" class="form-control" placeholder="Quartier Mbour 1, en face de la mosquée, Thiès">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Notes Spéciales / Allergies (Optionnel)</label>
+                <textarea id="order-notes" class="form-control" placeholder="Sans piment, sauce à part..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+                Envoyer ma commande au restaurant 🛵
+            </button>
+        </form>
+    `;
+}
+
+function toggleAddressField(show) {
+    const group = document.getElementById('delivery-address-group');
+    const input = document.getElementById('order-address');
+    if (show) {
+        group.style.display = 'block';
+        input.required = true;
+    } else {
+        group.style.display = 'none';
+        input.required = false;
+        input.value = '';
+    }
+}
+
+// Submission of client order
+function submitSimpleOrder(e, restaurantId) {
+    e.preventDefault();
+    
+    const r = store.getRestaurantById(restaurantId);
+    
+    const firstname = document.getElementById('order-firstname').value.trim();
+    const lastname = document.getElementById('order-lastname').value.trim();
+    const phone = cleanPhoneNumber(document.getElementById('order-phone').value.trim());
+    const mode = document.querySelector('input[name="order-mode"]:checked').value;
+    const address = document.getElementById('order-address').value.trim();
+    const notes = document.getElementById('order-notes').value.trim();
+    
+    // Validate phone number
+    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(phone.replace(/\s+/g, ''))) {
+        showToast("Numéro de téléphone sénégalais invalide (ex: +221 77 XXX XX XX)", "danger");
+        return;
+    }
+    
+    const orderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
+    const date = new Date().toISOString().split('T')[0];
+    const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    
+    const order = {
+        id: orderId,
+        restaurantId: r.id,
+        customerName: `${firstname} ${lastname}`,
+        customerPhone: phone,
+        mode,
+        address,
+        items: cart.items.map(item => ({ name: item.name, price: item.price, qty: item.qty })),
+        total: cart.total,
+        note: notes,
+        status: "Reçue",
+        date,
+        time
+    };
+
+    store.addOrder(order);
+    saveOrderToHistory(order, r.name);
+    
+    // Format WhatsApp message
+    const formattedItems = cart.items.map(i => `${i.name} x${i.qty}`).join(', ');
+    const waText = `Bonjour ${r.name}, je viens de passer la commande n°*${orderId}* sur THIES Resto de la part de *${firstname} ${lastname}* (${phone}).
+ 
+🛍️ *Détail de la commande* :
+${formattedItems}
+💰 *Total* : ${cart.total} FCFA
+🛵 *Mode* : ${mode}
+${address ? `📍 *Adresse* : ${address}` : ''}
+${notes ? `📝 *Note* : ${notes}` : ''}
+ 
+Merci de confirmer la réception !`;
+
+    const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+    
+    // Reset Cart
+    cart = {
+        restaurantId: null,
+        items: [],
+        total: 0
+    };
+    saveCart();
+    updateFloatingCartBar(r);
+
+    // Show Confirmation screen
+    const container = document.getElementById('checkout-content-container');
+    container.innerHTML = `
+        <div class="confirmation-screen">
+            <div class="confirmation-icon">✅</div>
+            <h2>Commande envoyée !</h2>
+            <p style="color: var(--text-secondary); margin: 1rem 0;">Votre commande n° <strong>${orderId}</strong> a bien été enregistrée par le restaurant.</p>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
+                <strong>Récapitulatif :</strong><br>
+                Client : ${firstname} ${lastname}<br>
+                Mode : ${mode}<br>
+                Montant : <strong>${order.total} FCFA</strong> (espèces à la livraison/réception)
+            </div>
+            <p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate par le gérant, veuillez également envoyer le récapitulatif par WhatsApp via le bouton ci-dessous.</p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="${waLink}" target="_blank" class="btn btn-success">
+                    💬 Confirmer aussi par WhatsApp
+                </a>
+                <button class="btn btn-secondary" onclick="router.navigate('/')">
+                    Retourner à l'accueil
+                </button>
+            </div>
+        </div>
+    `;
+    
+    showToast("Commande enregistrée avec succès !", "success");
+}
+
+// 3. Commande de Groupe Panel
+function renderGroupTab(r, groupId = null) {
+    const container = document.getElementById('group-content-container');
+    
+    if (!groupId && !activeGroupOrder) {
+        // No group order active yet, show setup screen
+        container.innerHTML = `
+            <div class="group-setup">
+                <div class="group-setup-icon">👥</div>
+                <h3 style="margin-bottom: 0.75rem;">Commande de Groupe</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                    Commandez avec vos collègues ou amis ! Créez un panier partagé, envoyez le lien sur WhatsApp, et laissez chacun choisir son plat en direct.
+                </p>
+                <div class="form-group" style="text-align: left; max-width: 400px; margin: 0 auto 1.5rem auto;">
+                    <label class="form-label">Votre Prénom/Nom (Organisateur) <span class="required">*</span></label>
+                    <input type="text" id="group-creator-name" class="form-control" placeholder="Mariama Diop" required>
+                </div>
+                <button class="btn btn-primary" onclick="createGroupOrder('${r.slug}')">
+                    Lancer une commande de groupe 🚀
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    // A group order is active
+    const groupLink = `${window.location.origin}${window.location.pathname}#/r/${r.slug}/group/${activeGroupOrder.id}`;
+    
+    const waText = `Bonjour ! Rejoignez ma commande de groupe chez *${r.name}* sur THIES Resto pour ajouter vos plats en un clic : ${groupLink}`;
+    const waShareLink = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+
+    // Build participants table
+    let participantsHtml = '';
+    let grandTotal = 0;
+    
+    activeGroupOrder.participants.forEach((p, pIdx) => {
+        let pItemsText = '';
+        let pSubtotal = 0;
+        
+        if (p.items.length === 0) {
+            pItemsText = `<span style="font-style: italic; color: var(--text-secondary);">Aucun plat sélectionné</span>`;
+        } else {
+            pItemsText = p.items.map(item => `${item.name} (x${item.qty})`).join(', ');
+            pSubtotal = p.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            grandTotal += pSubtotal;
+        }
+
+        participantsHtml += `
+            <div class="participant-row">
+                <div>
+                    <div class="participant-name">${p.name}</div>
+                    <div class="participant-choice">${pItemsText}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 700; color: var(--primary);">${pSubtotal} FCFA</div>
+                    <button class="btn btn-danger btn-sm btn-icon" style="padding: 0.15rem 0.35rem; font-size: 0.7rem; margin-top: 0.25rem;" onclick="removeParticipant(${pIdx}, '${r.slug}', '${groupId}')">❌</button>
+                </div>
+            </div>
+        `;
+    });
+
+    // Dishes dropdown options
+    let dishesOptions = '<option value="">-- Sélectionner un plat --</option>';
+    r.menu.forEach(d => {
+        dishesOptions += `<option value="${d.id}">${d.name} (${d.price} FCFA)</option>`;
+    });
+
+    container.innerHTML = `
+        <div class="group-active-panel">
+            <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.25rem; border-radius: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h3 style="font-size: 1.15rem;">Groupe Actif : Commandes en cours</h3>
+                    <span class="badge badge-info">ID : ${activeGroupOrder.id}</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">Créé par : <strong>${activeGroupOrder.creator}</strong></p>
+            </div>
+            
+            <div class="group-share-box">
+                <div style="flex-grow: 1; overflow: hidden;">
+                    <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 0.25rem;">Lien à partager aux collègues :</div>
+                    <div class="group-share-link" id="group-link-display">${groupLink}</div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="copyGroupLink()">Copier 📋</button>
+                <a href="${waShareLink}" target="_blank" class="btn btn-success btn-sm">Partager 💬</a>
+            </div>
+
+            <!-- SIMULATION FORM FOR MULTIPLE USERS ON SAME MACHINE -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.25rem; border-radius: 16px;">
+                <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem;">Ajouter un participant ou votre choix</h4>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Nom du participant <span class="required">*</span></label>
+                        <input type="text" id="part-name" class="form-control" placeholder="Aline, Omar..." required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Plat choisi <span class="required">*</span></label>
+                        <select id="part-dish-select" class="form-control" required>
+                            ${dishesOptions}
+                        </select>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-block btn-sm" onclick="addParticipantAction('${r.slug}', '${groupId}')">
+                    Ajouter ce choix au panier commun ➕
+                </button>
+            </div>
+
+            <div class="group-participants">
+                <h4 style="font-size: 0.95rem;">Membres du Groupe</h4>
+                ${participantsHtml}
+            </div>
+
+            <div class="cart-total-box">
+                <span>Total de groupe :</span>
+                <span class="cart-total-price">${grandTotal} FCFA</span>
+            </div>
+
+            <form id="group-final-form" onsubmit="submitGroupOrder(event, '${r.id}', '${grandTotal}')" style="background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border);">
+                <h3 style="font-size: 1.05rem; margin-bottom: 1rem;">Validation & Livraison Globale</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Responsable du Paiement <span class="required">*</span></label>
+                    <input type="text" id="group-payee-name" class="form-control" value="${activeGroupOrder.creator}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Numéro WhatsApp du Responsable <span class="required">*</span></label>
+                    <input type="tel" id="group-phone" class="form-control" placeholder="+221 77 123 45 67" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Mode de Récupération <span class="required">*</span></label>
+                    <div class="delivery-options">
+                        <label class="delivery-radio-card">
+                            <input type="radio" name="group-mode" value="Sur place" onchange="toggleGroupAddressField(false)">
+                            <div class="delivery-card-content">
+                                <span class="delivery-icon">🍽️</span>
+                                <span>Sur Place</span>
+                            </div>
+                        </label>
+                        <label class="delivery-radio-card">
+                            <input type="radio" name="group-mode" value="A emporter" checked onchange="toggleGroupAddressField(false)">
+                            <div class="delivery-card-content">
+                                <span class="delivery-icon">🛍️</span>
+                                <span>A Emporter</span>
+                            </div>
+                        </label>
+                        <label class="delivery-radio-card">
+                            <input type="radio" name="group-mode" value="Livraison" onchange="toggleGroupAddressField(true)">
+                            <div class="delivery-card-content">
+                                <span class="delivery-icon">🛵</span>
+                                <span>Livraison</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" id="group-address-group" style="display: none;">
+                    <label class="form-label">Adresse Unique de Livraison (Thiès) <span class="required">*</span></label>
+                    <input type="text" id="group-address" class="form-control" placeholder="Adresse du bureau, service, Thiès">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" ${grandTotal === 0 ? 'disabled' : ''}>
+                    Valider et envoyer la commande groupée (${grandTotal} FCFA) 👥
+                </button>
+            </form>
+        </div>
+    `;
+}
+
+function toggleGroupAddressField(show) {
+    const group = document.getElementById('group-address-group');
+    const input = document.getElementById('group-address');
+    if (show) {
+        group.style.display = 'block';
+        input.required = true;
+    } else {
+        group.style.display = 'none';
+        input.required = false;
+        input.value = '';
+    }
+}
+
+function createGroupOrder(slug) {
+    const creator = document.getElementById('group-creator-name').value.trim();
+    if (!creator) {
+        showToast("Veuillez saisir le nom de l'organisateur", "danger");
+        return;
+    }
+    
+    const r = store.getRestaurantBySlug(slug);
+    const groupId = "GRP-" + Math.floor(100000 + Math.random() * 900000);
+    
+    activeGroupOrder = {
+        id: groupId,
+        restaurantId: r.id,
+        creator: creator,
+        participants: [
+            { name: `${creator} (Créateur)`, items: [] }
+        ]
+    };
+    
+    showToast("Commande de groupe lancée !", "success");
+    router.navigate(`/r/${slug}/group/${groupId}`);
+}
+
+function addParticipantAction(slug, groupId) {
+    const name = document.getElementById('part-name').value.trim();
+    const dishId = document.getElementById('part-dish-select').value;
+    
+    if (!name || !dishId) {
+        showToast("Veuillez remplir le nom et choisir un plat", "danger");
+        return;
+    }
+    
+    const r = store.getRestaurantBySlug(slug);
+    const dish = r.menu.find(d => d.id === dishId);
+    
+    // Check if participant already exists in the group order
+    let p = activeGroupOrder.participants.find(part => part.name.toLowerCase() === name.toLowerCase());
+    
+    if (p) {
+        // add to existing
+        const item = p.items.find(i => i.id === dishId);
+        if (item) {
+            item.qty += 1;
+        } else {
+            p.items.push({ id: dish.id, name: dish.name, price: dish.price, qty: 1 });
+        }
+    } else {
+        // create new
+        activeGroupOrder.participants.push({
+            name: name,
+            items: [{ id: dish.id, name: dish.name, price: dish.price, qty: 1 }]
+        });
+    }
+
+    // Reset inputs
+    document.getElementById('part-name').value = '';
+    document.getElementById('part-dish-select').value = '';
+    
+    showToast(`Plat ajouté pour ${name}`, "success");
+    renderGroupTab(r, groupId);
+}
+
+function removeParticipant(idx, slug, groupId) {
+    activeGroupOrder.participants.splice(idx, 1);
+    const r = store.getRestaurantBySlug(slug);
+    renderGroupTab(r, groupId);
+    showToast("Choix supprimé", "info");
+}
+
+function copyGroupLink() {
+    const display = document.getElementById('group-link-display');
+    navigator.clipboard.writeText(display.innerText).then(() => {
+        showToast("Lien copié dans le presse-papiers !", "success");
+    }).catch(err => {
+        showToast("Échec de la copie du lien", "danger");
+    });
+}
+
+function submitGroupOrder(e, restaurantId, grandTotal) {
+    e.preventDefault();
+    
+    const r = store.getRestaurantById(restaurantId);
+    const payeeName = document.getElementById('group-payee-name').value.trim();
+    const phone = cleanPhoneNumber(document.getElementById('group-phone').value.trim());
+    const mode = document.querySelector('input[name="group-mode"]:checked').value;
+    const address = document.getElementById('group-address').value.trim();
+    
+    // Validate phone number
+    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(phone.replace(/\s+/g, ''))) {
+        showToast("Numéro de téléphone sénégalais invalide (ex: +221 77 XXX XX XX)", "danger");
+        return;
+    }
+    
+    const orderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
+    const date = new Date().toISOString().split('T')[0];
+    const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    
+    // Build combined items for order tracking
+    const itemsMap = {};
+    activeGroupOrder.participants.forEach(p => {
+        p.items.forEach(i => {
+            if (itemsMap[i.name]) {
+                itemsMap[i.name].qty += i.qty;
+            } else {
+                itemsMap[i.name] = { name: i.name, price: i.price, qty: i.qty };
+            }
+        });
+    });
+    const combinedItems = Object.values(itemsMap);
+    
+    // String formatted participants for notes
+    const participantsDetail = activeGroupOrder.participants.map(p => {
+        const pItems = p.items.map(i => `${i.name} x${i.qty}`).join(', ');
+        return `${p.name} : ${pItems}`;
+    }).join(' | ');
+
+    const order = {
+        id: orderId,
+        restaurantId: r.id,
+        customerName: `[GROUPE] ${payeeName}`,
+        customerPhone: phone,
+        mode,
+        address,
+        items: combinedItems,
+        total: parseInt(grandTotal),
+        note: `Commande de groupe (${activeGroupOrder.id}). Détails : ${participantsDetail}`,
+        status: "Reçue",
+        date,
+        time
+    };
+
+    store.addOrder(order);
+    
+    // Format WhatsApp message
+    let partListStr = '';
+    activeGroupOrder.participants.forEach(p => {
+        if (p.items.length > 0) {
+            const pItems = p.items.map(i => `${i.name} x${i.qty}`).join(', ');
+            partListStr += `• *${p.name}* : ${pItems}\n`;
+        }
+    });
+
+    const waText = `Bonjour ${r.name}, voici la commande de groupe n°*${orderId}* (ID Groupe: ${activeGroupOrder.id}) sur THIES Resto de la part de *${payeeName}* (${phone}).
+
+👥 *Détails des participants* :
+${partListStr}
+💰 *Total cumulé* : ${grandTotal} FCFA
+🛵 *Mode* : ${mode}
+${address ? `📍 *Adresse de livraison* : ${address}` : ''}
+
+Merci de nous confirmer la réception et le départ en préparation !`;
+
+    const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+    
+    // Clear active group order
+    activeGroupOrder = null;
+    
+    // Show confirmation
+    const container = document.getElementById('group-content-container');
+    container.innerHTML = `
+        <div class="confirmation-screen">
+            <div class="confirmation-icon">👥✅</div>
+            <h2>Commande de Groupe validée !</h2>
+            <p style="color: var(--text-secondary); margin: 1rem 0;">La commande groupée n° <strong>${orderId}</strong> a été enregistrée.</p>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
+                <strong>Responsable de groupe :</strong> ${payeeName}<br>
+                <strong>Montant total cumulé :</strong> ${grandTotal} FCFA
+            </div>
+            <p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate, veuillez transmettre le récapitulatif groupé par WhatsApp.</p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="${waLink}" target="_blank" class="btn btn-success">
+                    💬 Confirmer par WhatsApp
+                </a>
+                <button class="btn btn-secondary" onclick="router.navigate('/')">
+                    Retourner à l'accueil
+                </button>
+            </div>
+        </div>
+    `;
+    
+    showToast("Commande de groupe validée !", "success");
+}
+
+// 4. Booking Panel (Reservation)
+function renderBookingTab(r) {
+    const container = document.getElementById('booking-content-container');
+    
+    // Calculate hour slots
+    // Supposing hours are "12:00 - 23:00"
+    let hourOptionsHtml = '';
+    try {
+        const parts = r.openHours.split('-');
+        if (parts.length === 2) {
+            const startHour = parseInt(parts[0].trim().split(':')[0]);
+            const endHour = parseInt(parts[1].trim().split(':')[0]);
+            
+            // Generate slots
+            for (let h = startHour; h < (endHour < startHour ? endHour + 24 : endHour); h++) {
+                const displayH = h % 24;
+                const paddedH = String(displayH).padStart(2, '0');
+                hourOptionsHtml += `<option value="${paddedH}:00">${paddedH}:00</option>`;
+                hourOptionsHtml += `<option value="${paddedH}:30">${paddedH}:30</option>`;
+            }
+        }
+    } catch(e) {
+        hourOptionsHtml = `
+            <option value="12:00">12:00</option>
+            <option value="13:00">13:00</option>
+            <option value="19:00">19:00</option>
+            <option value="20:00">20:00</option>
+            <option value="21:00">21:00</option>
+        `;
+    }
+
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    container.innerHTML = `
+        <form id="booking-form" onsubmit="submitBooking(event, '${r.id}')" style="background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border);">
+            <h3 style="font-size: 1.15rem; margin-bottom: 1.25rem;">Réserver une Table</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Prénom <span class="required">*</span></label>
+                    <input type="text" id="booking-firstname" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nom <span class="required">*</span></label>
+                    <input type="text" id="booking-lastname" class="form-control" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Numéro WhatsApp <span class="required">*</span></label>
+                <input type="tel" id="booking-phone" class="form-control" placeholder="+221 77 123 45 67" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Date souhaitée <span class="required">*</span></label>
+                    <input type="date" id="booking-date" class="form-control" min="${todayStr}" onchange="validateBookingDate('${r.id}')" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Heure souhaitée <span class="required">*</span></label>
+                    <select id="booking-time" class="form-control" required>
+                        ${hourOptionsHtml}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Nombre de personnes <span class="required">*</span></label>
+                <input type="number" id="booking-guests" class="form-control" min="1" max="20" value="2" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Demande particulière / Note (Optionnel)</label>
+                <textarea id="booking-note" class="form-control" placeholder="Table calme, anniversaire, chaise haute..."></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+                Réserver ma table 📅
+            </button>
+        </form>
+    `;
+}
+
+function validateBookingDate(restaurantId) {
+    const input = document.getElementById('booking-date');
+    const selectedDate = new Date(input.value);
+    
+    // getDay returns 0=Sunday, 1=Monday... 6=Saturday
+    let day = selectedDate.getDay();
+    if (day === 0) day = 7; // Map Sunday to 7
+    
+    const r = store.getRestaurantById(restaurantId);
+    
+    if (r.closedDays.includes(day)) {
+        showToast(`Désolé, le restaurant est fermé le ${getDayName(day)}. Veuillez choisir une autre date.`, "danger");
+        input.value = '';
+    }
+}
+
+function submitBooking(e, restaurantId) {
+    e.preventDefault();
+    
+    const r = store.getRestaurantById(restaurantId);
+    
+    const firstname = document.getElementById('booking-firstname').value.trim();
+    const lastname = document.getElementById('booking-lastname').value.trim();
+    const phone = cleanPhoneNumber(document.getElementById('booking-phone').value.trim());
+    const date = document.getElementById('booking-date').value;
+    const time = document.getElementById('booking-time').value;
+    const guests = document.getElementById('booking-guests').value;
+    const note = document.getElementById('booking-note').value.trim();
+    
+    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(phone.replace(/\s+/g, ''))) {
+        showToast("Numéro de téléphone sénégalais invalide (ex: +221 77 XXX XX XX)", "danger");
+        return;
+    }
+    
+    const bookingId = "RES-" + Math.floor(1000 + Math.random() * 9000);
+    
+    const res = {
+        id: bookingId,
+        restaurantId: r.id,
+        customerName: `${firstname} ${lastname}`,
+        customerPhone: phone,
+        date,
+        time,
+        guests: parseInt(guests),
+        note,
+        status: "En attente"
+    };
+
+    store.addReservation(res);
+    
+    // Format WhatsApp message
+    const formattedDate = new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const waText = `Bonjour ${r.name}, je souhaite réserver une table pour *${guests} personnes* le *${formattedDate}* à *${time}* au nom de *${firstname} ${lastname}* (${phone}).
+${note ? `📝 *Note particulière* : ${note}` : ''}
+
+Merci de me confirmer la disponibilité !`;
+
+    const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+
+    // Show confirmation
+    const container = document.getElementById('booking-content-container');
+    container.innerHTML = `
+        <div class="confirmation-screen">
+            <div class="confirmation-icon">📅✅</div>
+            <h2>Réservation Enregistrée !</h2>
+            <p style="color: var(--text-secondary); margin: 1rem 0;">Votre demande de réservation n° <strong>${bookingId}</strong> est bien enregistrée.</p>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
+                Nom : ${firstname} ${lastname}<br>
+                Date & Heure : ${formattedDate} à ${time}<br>
+                Couverts : <strong>${guests} personnes</strong>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Le restaurant doit valider votre réservation. Envoyez le récapitulatif par WhatsApp pour bloquer votre table immédiatement.</p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="${waLink}" target="_blank" class="btn btn-success">
+                    💬 Confirmer aussi par WhatsApp
+                </a>
+                <button class="btn btn-secondary" onclick="router.navigate('/')">
+                    Retourner à l'accueil
+                </button>
+            </div>
+        </div>
+    `;
+    
+    showToast("Réservation enregistrée !", "success");
+}
+
+// 5. Reviews Panel
+function renderReviewsTab(r) {
+    const container = document.getElementById('reviews-content-container');
+    
+    // Calculate stats
+    let totalScore = r.reviews.reduce((sum, rev) => sum + rev.rating, 0);
+    let avg = r.reviews.length > 0 ? (totalScore / r.reviews.length).toFixed(1) : "0.0";
+    
+    let listHtml = '';
+    
+    if (r.reviews.length === 0) {
+        listHtml = `<div style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">Aucun avis pour l'instant. Soyez le premier !</div>`;
+    } else {
+        r.reviews.forEach(rev => {
+            const stars = '★'.repeat(rev.rating) + '☆'.repeat(5 - rev.rating);
+            const replyBlock = rev.reply 
+                ? `<div class="review-reply"><div class="review-reply-author">Réponse de ${r.name}</div>${rev.reply}</div>` 
+                : '';
+                
+            listHtml += `
+                <div class="review-item">
+                    <div class="review-header">
+                        <div>
+                            <span class="review-author">${rev.author}</span>
+                            <div class="stars-rating" style="display:block; font-size: 0.8rem;">${stars}</div>
+                        </div>
+                        <span class="review-date">${rev.date}</span>
+                    </div>
+                    <p class="review-comment">${rev.comment}</p>
+                    ${replyBlock}
+                </div>
+            `;
+        });
+    }
+
+    container.innerHTML = `
+        <div class="reviews-summary">
+            <div class="rating-big-box">
+                <div class="rating-big-num">${avg}</div>
+                <div class="stars-rating" style="font-size: 0.9rem;">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5 - Math.round(avg))}</div>
+                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">${r.reviews.length} avis</div>
+            </div>
+            <div style="flex-grow: 1;">
+                <p style="font-size: 0.85rem; color: var(--text-secondary);">
+                    Les avis proviennent de clients ayant commandé sur notre plateforme. Ils alimentent directement la note du restaurant.
+                </p>
+            </div>
+        </div>
+
+        <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Laisser un avis</h3>
+        <form id="review-form" onsubmit="submitReview(event, '${r.id}')" style="background: var(--bg-card); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 2rem;">
+            <div class="form-group">
+                <label class="form-label">Note</label>
+                <div class="stars-selector" id="stars-selector-container">
+                    <span onclick="setStarsSelector(1)">★</span>
+                    <span onclick="setStarsSelector(2)">★</span>
+                    <span onclick="setStarsSelector(3)">★</span>
+                    <span onclick="setStarsSelector(4)">★</span>
+                    <span onclick="setStarsSelector(5)">★</span>
+                </div>
+                <input type="hidden" id="review-rating-val" value="5">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Votre Nom <span class="required">*</span></label>
+                <input type="text" id="review-author-name" class="form-control" placeholder="Seydou Kane" required>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Commentaire <span class="required">*</span></label>
+                <textarea id="review-comment-text" class="form-control" placeholder="Racontez votre expérience..." required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-secondary btn-sm">Publier l'avis</button>
+        </form>
+
+        <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Tous les avis</h3>
+        <div class="reviews-list">
+            ${listHtml}
+        </div>
+    `;
+    
+    // Trigger default star highlights
+    setStarsSelector(5);
+}
+
+let currentSelectedRating = 5;
+function setStarsSelector(num) {
+    currentSelectedRating = num;
+    const input = document.getElementById('review-rating-val');
+    if (input) input.value = num;
+    
+    const stars = document.querySelectorAll('#stars-selector-container span');
+    stars.forEach((s, idx) => {
+        if (idx < num) {
+            s.classList.add('active');
+        } else {
+            s.classList.remove('active');
+        }
+    });
+}
+
+function submitReview(e, restaurantId) {
+    e.preventDefault();
+    
+    const r = store.getRestaurantById(restaurantId);
+    
+    const name = document.getElementById('review-author-name').value.trim();
+    const comment = document.getElementById('review-comment-text').value.trim();
+    const rating = parseInt(document.getElementById('review-rating-val').value);
+    
+    const date = new Date().toISOString().split('T')[0];
+    
+    const newRev = {
+        id: `rev_${r.id}_${Date.now()}`,
+        author: name,
+        rating,
+        comment,
+        date,
+        reply: null
+    };
+    
+    // Add review
+    r.reviews.unshift(newRev);
+    
+    // Recalculate average rating & counts
+    let totalScore = r.reviews.reduce((sum, rev) => sum + rev.rating, 0);
+    r.rating = totalScore / r.reviews.length;
+    r.reviewsCount = r.reviews.length;
+    
+    store.updateRestaurant(r.id, { 
+        reviews: r.reviews,
+        rating: r.rating,
+        reviewsCount: r.reviewsCount
+    });
+
+    showToast("Merci pour votre avis !", "success");
+    
+    // Re-render restaurant view on reviews tab
+    renderRestaurantView(r, 'reviews');
+}
+
+// ----------------------------------------------------
+// Page: RESTAURANT AUTH (Login & Inscription)
+// ----------------------------------------------------
+router.add('#/auth', () => {
+    // Hide cart
+    document.getElementById('floating-cart-bar').style.display = 'none';
+    stopOrderPolling();
+    hideLoadingOverlay();
+    
+    const container = document.getElementById('main-content');
+    
+    container.innerHTML = `
+        <div class="auth-container">
+            <div class="auth-header">
+                <span class="auth-logo">🏪</span>
+                <h2>Espace Partenaire</h2>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Connectez-vous à votre tableau de bord ou demandez l'inscription de votre restaurant.</p>
+            </div>
+            
+            <!-- Tab switches inside auth -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg-secondary); padding: 0.25rem; border-radius: 10px;">
+                <button class="btn btn-sm btn-secondary active" id="auth-tab-login" style="flex:1;" onclick="toggleAuthView('login')">Connexion</button>
+                <button class="btn btn-sm btn-secondary" id="auth-tab-register" style="flex:1;" onclick="toggleAuthView('register')">S'inscrire</button>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="login-form" onsubmit="handleRestaurantLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Identifiant unique (slug)</label>
+                    <input type="text" id="login-username" class="form-control" placeholder="la-licorne" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Se connecter 🔓</button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="register-form" onsubmit="handleRestaurantRegister(event)" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Nom du restaurant <span class="required">*</span></label>
+                    <input type="text" id="reg-name" class="form-control" placeholder="L'Étoile de Thiès" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Adresse physique à Thiès <span class="required">*</span></label>
+                    <input type="text" id="reg-address" class="form-control" placeholder="Avenue de Caen, Thiès" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Catégorie <span class="required">*</span></label>
+                    <select id="reg-category" class="form-control" required>
+                        <option value="Traditionnel">Traditionnel (Thiéb, Yassa, Mafé)</option>
+                        <option value="Grillades / Dibi">Grillades / Dibi (Dibiterie)</option>
+                        <option value="Fast Food">Fast Food (Burgers, Chawarmas)</option>
+                        <option value="Pâtisserie">Pâtisserie / Petit Déjeuner</option>
+                        <option value="Gastronomique">Chic / Gastronomique</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Numéro WhatsApp de contact <span class="required">*</span></label>
+                    <input type="tel" id="reg-whatsapp" class="form-control" placeholder="+221 77 XXX XX XX" required>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Heure d'ouverture <span class="required">*</span></label>
+                        <input type="time" id="reg-open" class="form-control" value="12:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Heure de fermeture <span class="required">*</span></label>
+                        <input type="time" id="reg-close" class="form-control" value="23:00" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Identifiant de connexion souhaité <span class="required">*</span></label>
+                    <input type="text" id="reg-username" class="form-control" placeholder="letoile-thies" required oninput="checkSlugAvailabilityRealtime(this.value)">
+                    <div id="slug-availability-badge" class="slug-status"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Mot de passe souhaité <span class="required">*</span></label>
+                    <input type="password" id="reg-password" class="form-control" placeholder="••••••••" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">Envoyer ma demande d'inscription 🚀</button>
+            </form>
+        </div>
+    `;
+});
+
+function toggleAuthView(view) {
+    const loginForm = document.getElementById('login-form');
+    const regForm = document.getElementById('register-form');
+    const tabLogin = document.getElementById('auth-tab-login');
+    const tabReg = document.getElementById('auth-tab-register');
+    
+    if (view === 'login') {
+        loginForm.style.display = 'block';
+        regForm.style.display = 'none';
+        tabLogin.classList.add('active');
+        tabReg.classList.remove('active');
+    } else {
+        loginForm.style.display = 'none';
+        regForm.style.display = 'block';
+        tabLogin.classList.remove('active');
+        tabReg.classList.add('active');
+    }
+}
+
+function handleRestaurantLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value.trim().toLowerCase();
+    const pass = document.getElementById('login-password').value;
+    
+    const r = store.getRestaurants().find(resto => resto.username === username && resto.password === pass);
+    
+    if (!r) {
+        showToast("Identifiant ou mot de passe incorrect", "danger");
+        return;
+    }
+
+    if (r.status === 'pending') {
+        showToast("Votre compte est en cours de validation par le super-admin.", "warning");
+        return;
+    }
+    
+    if (r.status === 'suspended') {
+        showToast("Votre compte a été suspendu temporairement. Contactez le réseau.", "danger");
+        return;
+    }
+    
+    currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug };
+    try {
+        sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
+    } catch (e) {
+        console.warn("Failed to save resto_session to sessionStorage", e);
+    }
+    showToast(`Bienvenue, ${r.name} !`, "success");
+    router.navigate('/dashboard');
+}
+
+function handleRestaurantRegister(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('reg-name').value.trim();
+    const address = document.getElementById('reg-address').value.trim();
+    const category = document.getElementById('reg-category').value;
+    const whatsapp = cleanPhoneNumber(document.getElementById('reg-whatsapp').value.trim());
+    const openH = document.getElementById('reg-open').value;
+    const closeH = document.getElementById('reg-close').value;
+    const username = document.getElementById('reg-username').value.trim().toLowerCase();
+    const password = document.getElementById('reg-password').value;
+    
+    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(whatsapp.replace(/\s+/g, ''))) {
+        showToast("Numéro WhatsApp invalide (ex: +221 77 XXX XX XX)", "danger");
+        return;
+    }
+
+    // Check availability
+    const exists = store.getRestaurants().find(r => r.username === username || r.slug === username);
+    if (exists) {
+        showToast("Cet identifiant est déjà utilisé", "danger");
+        return;
+    }
+
+    const newId = "r" + (store.getRestaurants().length + 1);
+    const slug = username.replace(/[^a-z0-9]/g, '-');
+    
+    const newResto = {
+        id: newId,
+        name,
+        slug,
+        rating: 5.0,
+        reviewsCount: 0,
+        category,
+        address,
+        whatsapp,
+        openHours: `${openH} - ${closeH}`,
+        closedDays: [],
+        isOpenManual: true,
+        status: "pending",
+        username,
+        password,
+        menu: [],
+        reviews: []
+    };
+
+    store.addRestaurant(newResto);
+    
+    const container = document.querySelector('.auth-container');
+    container.innerHTML = `
+        <div style="text-align: center; padding: 2rem 1rem;">
+            <div style="font-size: 3.5rem; margin-bottom: 1rem;">⏳</div>
+            <h2 style="font-size: 1.25rem;">Demande d'inscription envoyée !</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 1.5rem 0;">
+                Votre dossier pour "<strong>${name}</strong>" a été transmis avec succès.
+            </p>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.85rem; text-align: left; margin-bottom: 1.5rem;">
+                Notre super-administrateur valide les inscriptions sous 10 minutes. Vous recevrez une confirmation et un message d'activation directement sur WhatsApp au <strong>${whatsapp}</strong>.
+            </div>
+            <button class="btn btn-primary btn-block" onclick="router.navigate('/')">Retourner à l'accueil</button>
+        </div>
+    `;
+    
+    showToast("Inscription enregistrée. En attente d'approbation.", "success");
+}
+
+// ----------------------------------------------------
+// Page: RESTAURANT DASHBOARD (Gerer ses donnees)
+// ----------------------------------------------------
+let dashboardActiveTab = 'orders';
+let currentOrderStatusFilter = 'Tous';
+
+router.add('#/dashboard', () => {
+    // Hide cart
+    document.getElementById('floating-cart-bar').style.display = 'none';
+    
+    if (!currentRestaurantSession) {
+        showToast("Veuillez vous connecter pour accéder au tableau de bord.", "danger");
+        router.navigate('/auth');
+        return;
+    }
+    
+    startOrderPolling(currentRestaurantSession.id);
+    hideLoadingOverlay();
+    renderDashboardShell();
+});
+
+function renderDashboardShell() {
+    const container = document.getElementById('main-content');
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    
+    let impersonateBanner = '';
+    if (isSuperAdminSession) {
+        impersonateBanner = `
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); color: white; padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; border-radius: 12px; margin: 1rem 1.5rem 0 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.1);">
+                <span>👑 Mode Super-Admin : Vous gérez actuellement le profil de "<strong>${r.name}</strong>"</span>
+                <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()" style="background: rgba(255,255,255,0.25); border-color: transparent; color: white; font-weight: 700;">
+                    Retourner à la Console 🔐
+                </button>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = `
+        ${impersonateBanner}
+        <div class="dashboard-grid">
+            <aside class="sidebar">
+                <button class="sidebar-btn ${dashboardActiveTab === 'orders' ? 'active' : ''}" onclick="switchDashboardTab('orders')">📦 Commandes</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'reservations' ? 'active' : ''}" onclick="switchDashboardTab('reservations')">📅 Réservations</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'menu' ? 'active' : ''}" onclick="switchDashboardTab('menu')">🍽️ Plats du Jour</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'reviews' ? 'active' : ''}" onclick="switchDashboardTab('reviews')">💬 Avis Clients</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'settings' ? 'active' : ''}" onclick="switchDashboardTab('settings')">⚙️ Paramètres</button>
+            </aside>
+            <main class="dashboard-content" id="dashboard-tab-panel">
+                <!-- Sub tab contents injected here -->
+            </main>
+        </div>
+    `;
+
+    renderDashboardTabContent(r);
+}
+
+function switchDashboardTab(tab) {
+    dashboardActiveTab = tab;
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    
+    const btns = document.querySelectorAll('.sidebar-btn');
+    btns.forEach(b => b.classList.remove('active'));
+    
+    // Highlight active
+    const label = tab === 'orders' ? 'commandes' : tab === 'reservations' ? 'réservations' : tab === 'menu' ? 'plats' : tab === 'reviews' ? 'avis' : 'paramètres';
+    btns.forEach(b => {
+        if (b.innerText.toLowerCase().includes(label)) {
+            b.classList.add('active');
+        }
+    });
+
+    renderDashboardTabContent(r);
+}
+
+function renderDashboardTabContent(r) {
+    const panel = document.getElementById('dashboard-tab-panel');
+    
+    if (dashboardActiveTab === 'orders') {
+        const orders = store.getOrdersByRestaurant(r.id);
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        const todayOrders = orders.filter(o => o.date === todayStr);
+        const todayRevenue = todayOrders.filter(o => o.status === 'Livrée').reduce((sum, o) => sum + o.total, 0);
+        const pendingOrders = orders.filter(o => o.status === 'Reçue').length;
+
+        // Apply filters
+        let filteredOrders = [...orders];
+        if (currentOrderStatusFilter === 'En attente') {
+            filteredOrders = orders.filter(o => o.status === 'Reçue');
+        } else if (currentOrderStatusFilter === 'Confirmées') {
+            filteredOrders = orders.filter(o => o.status === 'Confirmée' || o.status === 'Prête');
+        } else if (currentOrderStatusFilter === 'Livrées') {
+            filteredOrders = orders.filter(o => o.status === 'Livrée');
+        }
+
+        let listHtml = '';
+        if (filteredOrders.length === 0) {
+            listHtml = `
+                <div style="text-align: center; color: var(--text-secondary); padding: 4rem 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;">
+                    <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">📦</span>
+                    Aucune commande ne correspond au filtre <strong>"${currentOrderStatusFilter}"</strong>.
+                </div>
+            `;
+        } else {
+            filteredOrders.forEach(o => {
+                const itemsStr = o.items.map(i => `<span style="background: var(--bg-secondary); padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border); display: inline-block; margin: 0.15rem 0.15rem 0.15rem 0;">${i.name} <strong>x${i.qty}</strong></span>`).join(' ');
+                
+                // Status styles
+                let statusBadge = '';
+                let actionBtns = '';
+                
+                if (o.status === 'Reçue') {
+                    statusBadge = `<span class="badge badge-warning" style="animation: pulseMainCircle 2s infinite;">Reçue</span>`;
+                    actionBtns = `
+                        <button class="btn btn-primary btn-block" onclick="changeOrderStatus('${o.id}', 'Confirmée')" style="font-weight: 700;">
+                            ✅ Accepter la commande & notifier 💬
+                        </button>
+                    `;
+                } else if (o.status === 'Confirmée') {
+                    statusBadge = `<span class="badge badge-info">En Préparation</span>`;
+                    actionBtns = `
+                        <button class="btn btn-success btn-block" onclick="changeOrderStatus('${o.id}', 'Prête')" style="font-weight: 700; background: #007bff; border-color: #007bff;">
+                            🛵 Commande Prête & notifier client 💬
+                        </button>
+                    `;
+                } else if (o.status === 'Prête') {
+                    statusBadge = `<span class="badge badge-success">Prête</span>`;
+                    actionBtns = `
+                        <button class="btn btn-success btn-block" onclick="changeOrderStatus('${o.id}', 'Livrée')" style="font-weight: 700; background: var(--success); border-color: var(--success);">
+                            📦 Marquer comme Livrée / Récupérée 💬
+                        </button>
+                    `;
+                } else {
+                    statusBadge = `<span class="badge badge-success" style="opacity: 0.6">Livrée / Récupérée</span>`;
+                    actionBtns = `<span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: var(--bg-secondary); border-radius: 8px;">✅ Commande traitée et archivée</span>`;
+                }
+
+                listHtml += `
+                    <div class="dashboard-list-item" style="border-left: 4px solid ${o.status === 'Reçue' ? 'var(--accent)' : o.status === 'Livrée' ? 'var(--success)' : 'var(--primary)'}; background: var(--bg-card); border-radius: 16px; padding: 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--shadow);">
+                        <div class="list-item-header" style="border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+                            <div>
+                                <span class="list-item-title" style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">N° ${o.id}</span>
+                                <span style="margin-left: 0.75rem;">${statusBadge}</span>
+                            </div>
+                            <span class="list-item-time" style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 600;">🕒 Le ${o.date} à ${o.time}</span>
+                        </div>
+                        <div class="list-item-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                            <div>
+                                <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">👤 Client :</strong> <span style="font-weight: 700;">${o.customerName}</span></p>
+                                <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">📞 WhatsApp :</strong> <a href="https://wa.me/${o.customerPhone.replace(/\+/g, '')}" target="_blank" class="call-btn" style="margin-left:0.25rem;">💬 Ouvrir WhatsApp (${o.customerPhone})</a></p>
+                                ${o.address ? `<p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">📍 Adresse :</strong> ${o.address}</p>` : ''}
+                            </div>
+                            <div>
+                                <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">🛵 Récupération :</strong> <span class="badge ${o.mode === 'Livraison' ? 'badge-primary' : 'badge-info'}" style="font-weight:700;">${o.mode}</span></p>
+                                <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">💰 Total à payer :</strong> <span style="font-size: 1.1rem; color: var(--primary); font-weight: 800;">${o.total} FCFA</span></p>
+                                ${o.note ? `<p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">📝 Note :</strong> <span style="font-style: italic; color:var(--text-secondary);">"${o.note}"</span></p>` : ''}
+                            </div>
+                        </div>
+                        <div style="background: var(--bg-secondary); padding: 0.75rem 1rem; border-radius: 12px; margin-bottom: 1.25rem; border: 1px solid var(--border);">
+                            <strong style="display: block; font-size: 0.75rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.35rem;">🍳 Plats commandés :</strong>
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+                                ${itemsStr}
+                            </div>
+                        </div>
+                        <div class="list-item-actions" style="margin-top: 1rem;">
+                            ${actionBtns}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        const filterBtnsHtml = ['Tous', 'En attente', 'Confirmées', 'Livrées'].map(f => {
+            const isActive = currentOrderStatusFilter === f;
+            return `
+                <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'}" style="padding: 0.4rem 1rem; font-size: 0.85rem; font-weight: 700; border-radius: 20px;" onclick="filterOrdersDashboard('${f}')">
+                    ${f === 'En attente' ? '⏳ ' : f === 'Confirmées' ? '🍳 ' : f === 'Livrées' ? '✅ ' : '📦 '}${f}
+                </button>
+            `;
+        }).join(' ');
+
+        panel.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="font-size: 1.25rem; margin: 0;">Gestion des Commandes</h2>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                    ${filterBtnsHtml}
+                    <button class="btn btn-secondary" onclick="exportOrdersToCSV()" style="padding: 0.4rem 0.8rem; font-size: 0.85rem; font-weight: 700; border-radius: 20px; margin-left: 0.5rem;">
+                        📥 Exporter CSV
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+                <div class="stat-card" style="border-top: 4px solid var(--primary); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span class="stat-card-title" style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">📅 Commandes du jour</span>
+                    <span class="stat-card-value" style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">${todayOrders.length}</span>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--success); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span class="stat-card-title" style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">💰 Chiffre d'affaires (Jour)</span>
+                    <span class="stat-card-value" style="font-size: 1.75rem; font-weight: 800; color: var(--success);">${todayRevenue} FCFA</span>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--accent); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span class="stat-card-title" style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">⏳ Commandes en attente</span>
+                    <span class="stat-card-value" style="font-size: 1.75rem; font-weight: 800; color: var(--accent);">${pendingOrders}</span>
+                </div>
+            </div>
+
+            <div class="dashboard-list">
+                ${listHtml}
+            </div>
+        `;
+    } 
+    else if (dashboardActiveTab === 'reservations') {
+        const reservations = store.getReservationsByRestaurant(r.id);
+        
+        let listHtml = '';
+        if (reservations.length === 0) {
+            listHtml = `<div style="text-align: center; color: var(--text-secondary); padding: 3rem 0;">Aucune réservation pour le moment.</div>`;
+        } else {
+            reservations.forEach(res => {
+                let statusBadge = '';
+                let actionBtns = '';
+
+                if (res.status === 'En attente') {
+                    statusBadge = `<span class="badge badge-warning">En Attente</span>`;
+                    actionBtns = `
+                        <button class="btn btn-success btn-sm" onclick="changeReservationStatus('${res.id}', 'Confirmée')">
+                            Confirmer & Envoyer WA 💬
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="changeReservationStatus('${res.id}', 'Annulée')">
+                            Annuler & WhatsApp 💬
+                        </button>
+                    `;
+                } else if (res.status === 'Confirmée') {
+                    statusBadge = `<span class="badge badge-success">Confirmée</span>`;
+                    actionBtns = `<span style="font-size: 0.8rem; color: var(--success)">Validée</span>`;
+                } else {
+                    statusBadge = `<span class="badge badge-danger">Annulée</span>`;
+                    actionBtns = `<span style="font-size: 0.8rem; color: var(--danger)">Annulée</span>`;
+                }
+
+                const formattedDate = new Date(res.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+
+                listHtml += `
+                    <div class="dashboard-list-item">
+                        <div class="list-item-header">
+                            <div>
+                                <span class="list-item-title">${res.id} - <strong>${res.customerName}</strong></span>
+                                <span style="margin-left: 0.5rem;">${statusBadge}</span>
+                            </div>
+                            <span class="list-item-time">📅 Prévu le ${formattedDate} à ${res.time}</span>
+                        </div>
+                        <div class="list-item-details">
+                            👥 Personnes : <strong>${res.guests} couverts</strong> <br>
+                            📞 Téléphone : <a href="https://wa.me/${res.customerPhone.replace(/\+/g, '')}" target="_blank" class="call-btn">💬 WhatsApp (${res.customerPhone})</a>
+                            ${res.note ? `<br>📝 Note client : <em>"${res.note}"</em>` : ''}
+                        </div>
+                        <div class="list-item-actions">
+                            ${actionBtns}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        panel.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <h2 style="font-size: 1.25rem; margin: 0;">Réservations de Tables</h2>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-secondary btn-sm" onclick="exportReservationsToCSV()">
+                        📥 Exporter CSV
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="toggleManualReservationForm()">
+                        ➕ Prendre une réservation (Appel)
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Manual Reservation Form -->
+            <div id="manual-reservation-card" style="display: none; background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 20px; margin-bottom: 2rem;">
+                <h3 style="font-size: 1rem; margin-bottom: 1.25rem;">📝 Enregistrer une réservation par téléphone</h3>
+                <form onsubmit="saveManualReservation(event, '${r.id}')">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Nom du client <span class="required">*</span></label>
+                            <input type="text" id="mres-name" class="form-control" placeholder="Modou Diagne" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Téléphone <span class="required">*</span></label>
+                            <input type="tel" id="mres-phone" class="form-control" placeholder="+221 77 123 45 67" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row" style="margin-top: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Date <span class="required">*</span></label>
+                            <input type="date" id="mres-date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Heure <span class="required">*</span></label>
+                            <input type="time" id="mres-time" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Nombre de couverts <span class="required">*</span></label>
+                            <input type="number" id="mres-guests" class="form-control" placeholder="4" min="1" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-top: 1rem;">
+                        <label class="form-label">Note / Commentaires (ex: table extérieure, anniversaire...)</label>
+                        <textarea id="mres-note" class="form-control" placeholder="Demande particulière du client..."></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                        <button type="submit" class="btn btn-primary">Enregistrer la réservation</button>
+                        <button type="button" class="btn btn-secondary" onclick="toggleManualReservationForm()">Annuler</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="dashboard-list">
+                ${listHtml}
+            </div>
+        `;
+    } 
+    else if (dashboardActiveTab === 'menu') {
+        let menuHtml = '';
+        if (r.menu.length === 0) {
+            menuHtml = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem 0;">Aucun plat n'a encore été ajouté. Créez-en un ci-dessous !</div>`;
+        } else {
+            r.menu.forEach(d => {
+                menuHtml += `
+                    <div class="dish-card" style="flex-direction: row; height: auto; align-items: center; padding: 0.75rem; gap: 1rem;">
+                        <img src="${d.image}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'">
+                        <div style="flex-grow: 1;">
+                            <h4 style="font-size: 0.95rem;">${d.name}</h4>
+                            <div style="color: var(--primary); font-weight: 700; font-size: 0.85rem;">${d.price} FCFA</div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.5rem;" onclick="openEditDishForm('${d.id}')">✏️</button>
+                            <button class="btn btn-danger btn-sm" style="padding: 0.35rem 0.5rem;" onclick="deleteDish('${d.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        panel.innerHTML = `
+            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Menu du Jour</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                <!-- Current Dishes List -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.25rem; border-radius: 20px;">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem;">Plats actifs</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        ${menuHtml}
+                    </div>
+                </div>
+
+                <!-- Add/Edit Dish Form -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.25rem; border-radius: 20px;" id="dish-form-card">
+                    <h3 style="font-size: 1rem; margin-bottom: 1rem;" id="dish-form-title">Ajouter un nouveau plat</h3>
+                    <form id="dish-editor-form" onsubmit="saveDish(event)">
+                        <input type="hidden" id="dish-edit-id" value="">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Nom du plat <span class="required">*</span></label>
+                            <input type="text" id="dish-name" class="form-control" placeholder="Yassa Poulet..." required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Description <span class="required">*</span></label>
+                            <textarea id="dish-desc" class="form-control" placeholder="Ingrédients, accompagnements..." required></textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Prix (FCFA) <span class="required">*</span></label>
+                                <input type="number" id="dish-price" class="form-control" placeholder="2500" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Photo du plat (URL ou preset) <span class="required">*</span></label>
+                                <select id="dish-image-select" class="form-control" onchange="document.getElementById('dish-image-custom').value = this.value">
+                                    <option value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">Poisson Rouge / Thieb</option>
+                                    <option value="https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500">Poulet / Yassa</option>
+                                    <option value="https://images.unsplash.com/photo-1544025162-d76694265947?w=500">Grillades / Viandes / Dibi</option>
+                                    <option value="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500">Burger / Sandwich</option>
+                                    <option value="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500">Frites dorées</option>
+                                    <option value="https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500">Boisson / Jus maison</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Ou coller l'URL d'une image (Google, etc.)</label>
+                            <input type="text" id="dish-image-custom" class="form-control" placeholder="https://images.unsplash.com/... (optionnel)">
+                        </div>
+                        
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <label class="form-label">📸 Télécharger depuis votre téléphone / appareil</label>
+                            <input type="file" id="dish-image-file" class="form-control" accept="image/*" onchange="handleDishImageUpload(event)" style="padding: 0.35rem; height: auto;">
+                            <div id="dish-image-preview-container" style="display: none; margin-top: 0.75rem; align-items: center; gap: 0.75rem; background: var(--bg-secondary); padding: 0.5rem; border-radius: 10px; border: 1px solid var(--border);">
+                                <img id="dish-image-preview" src="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                                <span style="font-size: 0.75rem; color: var(--success); font-weight: 600;">Photo sélectionnée avec succès ! ✅</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button type="submit" class="btn btn-primary" style="flex:1;">Enregistrer</button>
+                            <button type="button" class="btn btn-secondary" style="display:none;" id="dish-cancel-edit-btn" onclick="resetDishForm()">Annuler la modification</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+    } 
+    else if (dashboardActiveTab === 'reviews') {
+        let reviewsHtml = '';
+        if (r.reviews.length === 0) {
+            reviewsHtml = `<div style="text-align: center; color: var(--text-secondary); padding: 3rem 0;">Aucun avis reçu pour l'instant.</div>`;
+        } else {
+            r.reviews.forEach(rev => {
+                const stars = '★'.repeat(rev.rating) + '☆'.repeat(5 - rev.rating);
+                
+                const replySection = rev.reply
+                    ? `
+                        <div class="review-reply" style="margin-top: 0.75rem;">
+                            <div class="review-reply-author">Votre réponse publique :</div>
+                            <p>${rev.reply}</p>
+                            <button class="btn btn-secondary btn-sm" style="padding: 0.15rem 0.5rem; font-size: 0.7rem; margin-top: 0.5rem;" onclick="openReplyForm('${rev.id}')">Modifier</button>
+                        </div>
+                    `
+                    : `
+                        <div id="reply-form-container-${rev.id}" style="margin-top: 0.75rem;">
+                            <button class="btn btn-outline btn-sm" onclick="openReplyForm('${rev.id}')">Répondre publiquement</button>
+                        </div>
+                    `;
+
+                reviewsHtml += `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <div>
+                                <span class="review-author">${rev.author}</span>
+                                <span class="stars-rating" style="display: block; font-size: 0.8rem;">${stars}</span>
+                            </div>
+                            <span class="review-date">${rev.date}</span>
+                        </div>
+                        <p class="review-comment">${rev.comment}</p>
+                        ${replySection}
+                        
+                        <div id="reply-input-area-${rev.id}" style="display:none; margin-top: 0.75rem; background: var(--bg-secondary); padding: 0.75rem; border-radius: 8px;">
+                            <label class="form-label" style="font-size: 0.75rem;">Votre réponse :</label>
+                            <textarea id="reply-text-${rev.id}" class="form-control" style="font-size: 0.85rem;" placeholder="Merci pour votre retour...">${rev.reply || ''}</textarea>
+                            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                                <button class="btn btn-primary btn-sm" style="font-size: 0.75rem;" onclick="submitReply('${rev.id}')">Publier</button>
+                                <button class="btn btn-secondary btn-sm" style="font-size: 0.75rem;" onclick="closeReplyForm('${rev.id}')">Annuler</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        panel.innerHTML = `
+            <h2 style="font-size: 1.25rem; margin-bottom: 1.5rem;">Avis Clients</h2>
+            <div class="reviews-list">
+                ${reviewsHtml}
+            </div>
+        `;
+    } 
+    else if (dashboardActiveTab === 'settings') {
+        const clientLink = `${window.location.origin}${window.location.pathname}#/r/${r.slug}`;
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(clientLink)}`;
+
+        // Days checklist
+        let daysHtml = '';
+        for (let i = 1; i <= 7; i++) {
+            const isChecked = r.closedDays.includes(i);
+            daysHtml += `
+                <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; cursor: pointer; font-size: 0.9rem;">
+                    <input type="checkbox" name="closed-day-check" value="${i}" ${isChecked ? 'checked' : ''}>
+                    ${getDayName(i)}
+                </label>
+            `;
+        }
+
+        panel.innerHTML = `
+            <h2 style="font-size: 1.25rem; margin-bottom: 1.5rem;">Paramètres du Restaurant</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+                
+                <!-- Open/Closed Status Switch -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Statut de la Boutique (Temps Réel)</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem;">Indiquez en direct si vous acceptez les commandes aujourd'hui.</p>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span id="settings-status-label" class="badge ${r.isOpenManual ? 'badge-success' : 'badge-danger'}">
+                            ${r.isOpenManual ? 'OUVERT' : 'FERMÉ'}
+                        </span>
+                        <button class="btn ${r.isOpenManual ? 'btn-danger' : 'btn-success'} btn-sm" onclick="toggleStoreOpenStatus('${r.id}')">
+                            ${r.isOpenManual ? 'Fermer Boutique 🔒' : 'Ouvrir Boutique 🔓'}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Info Modification Form -->
+                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 20px;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem;">Coordonnées & Horaires</h3>
+                    <form onsubmit="saveProfileSettings(event, '${r.id}')">
+                        <div class="form-group">
+                            <label class="form-label">Numéro WhatsApp de réception <span class="required">*</span></label>
+                            <input type="tel" id="settings-whatsapp" class="form-control" value="${r.whatsapp}" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Horaires habituels <span class="required">*</span></label>
+                            <input type="text" id="settings-hours" class="form-control" value="${r.openHours}" placeholder="12:00 - 23:00" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Jours de fermeture hebdomadaire</label>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; margin-top: 0.5rem;">
+                                ${daysHtml}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Nouveau mot de passe (Optionnel)</label>
+                            <input type="password" id="settings-password" class="form-control" placeholder="Laisser vide si aucun changement">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                    </form>
+                </div>
+
+                <!-- QR Code Generation -->
+                <div class="qr-container" style="margin: 0 auto;">
+                    <h3 style="font-size: 1.1rem; margin-bottom: 0.5rem;">QR Code de Commande</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 1rem;">Imprimez et posez ce QR Code sur vos tables ou comptoir pour que vos clients scannent et commandent.</p>
+                    <img src="${qrCodeUrl}" class="qr-image" alt="QR Code Link">
+                    <a href="${qrCodeUrl}" target="_blank" download="qrcode-${r.slug}.png" class="btn btn-secondary btn-sm btn-block">
+                        Imprimer / Télécharger 🖨️
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Actions from restaurant dashboard
+function changeOrderStatus(orderId, nextStatus) {
+    const o = store.data.orders.find(ord => ord.id === orderId);
+    if (!o) return;
+    
+    store.updateOrderStatus(orderId, nextStatus);
+    
+    // Create pre-filled WhatsApp notification message templates
+    let waText = '';
+    
+    if (nextStatus === 'Confirmée') {
+        waText = `Bonjour ${o.customerName}, votre commande n°*${o.id}* chez *${currentRestaurantSession.name}* a été validée et part en cuisine ! 🍳`;
+    } else if (nextStatus === 'Prête') {
+        const recoveryMessage = o.mode === 'Livraison' 
+            ? `Notre livreur vient de prendre la route pour vous livrer à l'adresse indiquée.` 
+            : `Vous pouvez dès à présent venir la récupérer au restaurant.`;
+        waText = `Bonjour ${o.customerName}, bonne nouvelle ! Votre commande n°*${o.id}* chez *${currentRestaurantSession.name}* est PRÊTE ! 🛵
+
+${recoveryMessage}`;
+    } else if (nextStatus === 'Livrée') {
+        const clientLink = `${window.location.origin}${window.location.pathname}#/r/${store.getRestaurantById(o.restaurantId).slug}`;
+        waText = `Bonjour ${o.customerName}, votre commande n°*${o.id}* chez *${currentRestaurantSession.name}* a été livrée / récupérée avec succès. Bon appétit ! 😋
+
+Laissez-nous une note sur notre page pour nous aider à nous améliorer : ${clientLink}`;
+    }
+
+    const waLink = `https://wa.me/${o.customerPhone.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+    
+    showToast(`Commande mise à jour vers : ${nextStatus}`, "success");
+    
+    // Reload dashboard list
+    switchDashboardTab('orders');
+    
+    // Automatically trigger WhatsApp notification
+    window.open(waLink, '_blank');
+}
+
+function changeReservationStatus(resId, nextStatus) {
+    const res = store.data.reservations.find(r => r.id === resId);
+    if (!res) return;
+    
+    store.updateReservationStatus(resId, nextStatus);
+    
+    let waText = '';
+    const formattedDate = new Date(res.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    
+    if (nextStatus === 'Confirmée') {
+        waText = `Bonjour ${res.customerName}, nous sommes ravis de vous confirmer votre réservation de table pour *${res.guests} personnes* chez *${currentRestaurantSession.name}* le *${formattedDate} à ${res.time}*. À très bientôt ! 📅`;
+    } else if (nextStatus === 'Annulée') {
+        waText = `Bonjour ${res.customerName}, nous sommes au regret de vous informer que nous ne pouvons donner suite à votre demande de réservation n°*${res.id}* le *${formattedDate}* chez *${currentRestaurantSession.name}* pour cause d'indisponibilité ou d'événement privé. Veuillez nous excuser pour le désagrément.`;
+    }
+    
+    const waLink = `https://wa.me/${res.customerPhone.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+    
+    showToast(`Réservation mise à jour : ${nextStatus}`, "success");
+    switchDashboardTab('reservations');
+    
+    // Automatically open WhatsApp template
+    window.open(waLink, '_blank');
+}
+
+function toggleManualReservationForm() {
+    const card = document.getElementById('manual-reservation-card');
+    if (card) {
+        if (card.style.display === 'none') {
+            card.style.display = 'block';
+            card.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            card.style.display = 'none';
+        }
+    }
+}
+
+function saveManualReservation(e, restaurantId) {
+    e.preventDefault();
+    
+    const name = document.getElementById('mres-name').value.trim();
+    const phone = cleanPhoneNumber(document.getElementById('mres-phone').value.trim());
+    const date = document.getElementById('mres-date').value;
+    const time = document.getElementById('mres-time').value;
+    const guests = parseInt(document.getElementById('mres-guests').value);
+    const note = document.getElementById('mres-note').value.trim();
+    
+    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(phone.replace(/\s+/g, ''))) {
+        showToast("Numéro de téléphone invalide (ex: +221 77 XXX XX XX)", "danger");
+        return;
+    }
+    
+    const newResId = "RES-" + Math.floor(100000 + Math.random() * 900000);
+    const newReservation = {
+        id: newResId,
+        restaurantId,
+        customerName: name,
+        customerPhone: phone,
+        date,
+        time,
+        guests,
+        note,
+        status: 'Confirmée' // Direct confirmation for phone bookings taken by admin
+    };
+    
+    store.addReservation(newReservation);
+    showToast("Réservation enregistrée et confirmée ! ✅", "success");
+    
+    // Switch to reload
+    switchDashboardTab('reservations');
+}
+
+function filterOrdersDashboard(status) {
+    currentOrderStatusFilter = status;
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    renderDashboardTabContent(r);
+}
+
+function deleteDish(dishId) {
+    if (confirm("Voulez-vous vraiment supprimer ce plat du jour ?")) {
+        const r = store.getRestaurantById(currentRestaurantSession.id);
+        r.menu = r.menu.filter(d => d.id !== dishId);
+        store.updateRestaurant(r.id, { menu: r.menu });
+        showToast("Plat supprimé !", "success");
+        switchDashboardTab('menu');
+    }
+}
+
+function openEditDishForm(dishId) {
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    const dish = r.menu.find(d => d.id === dishId);
+    if (!dish) return;
+    
+    document.getElementById('dish-form-title').innerText = "Modifier le plat : " + dish.name;
+    document.getElementById('dish-edit-id').value = dish.id;
+    document.getElementById('dish-name').value = dish.name;
+    document.getElementById('dish-desc').value = dish.description;
+    document.getElementById('dish-price').value = dish.price;
+    
+    const selectImg = document.getElementById('dish-image-select');
+    const customImg = document.getElementById('dish-image-custom');
+    if (Array.from(selectImg.options).some(opt => opt.value === dish.image)) {
+        selectImg.value = dish.image;
+        customImg.value = '';
+    } else {
+        selectImg.selectedIndex = 0;
+        customImg.value = dish.image;
+    }
+    
+    document.getElementById('dish-cancel-edit-btn').style.display = 'block';
+    document.getElementById('dish-form-card').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetDishForm() {
+    document.getElementById('dish-form-title').innerText = "Ajouter un nouveau plat";
+    document.getElementById('dish-edit-id').value = '';
+    document.getElementById('dish-name').value = '';
+    document.getElementById('dish-desc').value = '';
+    document.getElementById('dish-price').value = '';
+    document.getElementById('dish-image-select').selectedIndex = 0;
+    document.getElementById('dish-image-custom').value = '';
+    document.getElementById('dish-cancel-edit-btn').style.display = 'none';
+    
+    const fileInput = document.getElementById('dish-image-file');
+    if (fileInput) fileInput.value = '';
+    
+    const previewContainer = document.getElementById('dish-image-preview-container');
+    if (previewContainer) previewContainer.style.display = 'none';
+}
+
+function handleDishImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Url = e.target.result;
+        // Put the base64 URL in the custom image input so it gets saved on submit
+        document.getElementById('dish-image-custom').value = base64Url;
+        
+        // Show preview
+        const previewImg = document.getElementById('dish-image-preview');
+        const container = document.getElementById('dish-image-preview-container');
+        if (previewImg && container) {
+            previewImg.src = base64Url;
+            container.style.display = 'flex';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function saveDish(e) {
+    e.preventDefault();
+    
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    
+    const dishId = document.getElementById('dish-edit-id').value;
+    const name = document.getElementById('dish-name').value.trim();
+    const desc = document.getElementById('dish-desc').value.trim();
+    const price = parseInt(document.getElementById('dish-price').value);
+    
+    const customImage = document.getElementById('dish-image-custom').value.trim();
+    const image = customImage || document.getElementById('dish-image-select').value;
+    
+    if (dishId) {
+        // Edit mode
+        const dish = r.menu.find(d => d.id === dishId);
+        if (dish) {
+            dish.name = name;
+            dish.description = desc;
+            dish.price = price;
+            dish.image = image;
+            showToast("Plat modifié !", "success");
+        }
+    } else {
+        // Add mode
+        const newDishId = "dish_" + Date.now();
+        r.menu.push({
+            id: newDishId,
+            name,
+            description: desc,
+            price,
+            image
+        });
+        showToast("Plat ajouté au menu du jour !", "success");
+    }
+    
+    store.updateRestaurant(r.id, { menu: r.menu });
+    resetDishForm();
+    switchDashboardTab('menu');
+}
+
+function toggleStoreOpenStatus(restoId) {
+    const r = store.getRestaurantById(restoId);
+    r.isOpenManual = !r.isOpenManual;
+    store.updateRestaurant(r.id, { isOpenManual: r.isOpenManual });
+    showToast(r.isOpenManual ? "Boutique OUVERTE" : "Boutique FERMÉE", "success");
+    switchDashboardTab('settings');
+}
+
+function saveProfileSettings(e, restoId) {
+    e.preventDefault();
+    
+    const r = store.getRestaurantById(restoId);
+    const whatsapp = cleanPhoneNumber(document.getElementById('settings-whatsapp').value.trim());
+    const hours = document.getElementById('settings-hours').value.trim();
+    const newPass = document.getElementById('settings-password').value;
+    
+    // Parse closed days checklist
+    const checkboxes = document.querySelectorAll('input[name="closed-day-check"]:checked');
+    const closedDays = Array.from(checkboxes).map(cb => parseInt(cb.value));
+    
+    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(whatsapp.replace(/\s+/g, ''))) {
+        showToast("Numéro WhatsApp invalide", "danger");
+        return;
+    }
+    
+    const updates = {
+        whatsapp,
+        openHours: hours,
+        closedDays
+    };
+    
+    if (newPass) {
+        updates.password = newPass;
+    }
+    
+    store.updateRestaurant(r.id, updates);
+    showToast("Paramètres enregistrés !", "success");
+    switchDashboardTab('settings');
+}
+
+function openReplyForm(revId) {
+    document.getElementById(`reply-form-container-${revId}`).style.display = 'none';
+    document.getElementById(`reply-input-area-${revId}`).style.display = 'block';
+}
+
+function closeReplyForm(revId) {
+    document.getElementById(`reply-form-container-${revId}`).style.display = 'block';
+    document.getElementById(`reply-input-area-${revId}`).style.display = 'none';
+}
+
+function submitReply(revId) {
+    const text = document.getElementById(`reply-text-${revId}`).value.trim();
+    if (!text) {
+        showToast("La réponse ne peut pas être vide", "danger");
+        return;
+    }
+    
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    const review = r.reviews.find(rev => rev.id === revId);
+    
+    if (review) {
+        review.reply = text;
+        store.updateRestaurant(r.id, { reviews: r.reviews });
+        showToast("Réponse publiée !", "success");
+        switchDashboardTab('reviews');
+    }
+}
+
+// ----------------------------------------------------
+// Page: SUPER-ADMIN LOGIN & PANEL (toi)
+// ----------------------------------------------------
+router.add('#/admin-login', () => {
+    // Hide cart
+    document.getElementById('floating-cart-bar').style.display = 'none';
+    stopOrderPolling();
+    hideLoadingOverlay();
+    
+    const container = document.getElementById('main-content');
+    
+    container.innerHTML = `
+        <div class="auth-container">
+            <div class="auth-header">
+                <span class="auth-logo">🔑</span>
+                <h2>Console Super-Admin</h2>
+                <p style="color: var(--text-secondary); font-size: 0.85rem;">Accès exclusif réservé au gérant du réseau THIES Resto.</p>
+            </div>
+            
+            <form onsubmit="handleAdminLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Nom d'utilisateur</label>
+                    <input type="text" id="admin-user" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mot de passe de sécurité</label>
+                    <input type="password" id="admin-pass" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Ouvrir la Console 🔐</button>
+            </form>
+        </div>
+    `;
+});
+
+function handleAdminLogin(e) {
+    e.preventDefault();
+    const user = document.getElementById('admin-user').value.trim();
+    const pass = document.getElementById('admin-pass').value;
+    
+    if (user === 'admin' && pass === 'adminthies') {
+        isSuperAdminSession = true;
+        try {
+            sessionStorage.setItem('admin_session', 'true');
+        } catch (e) {
+            console.warn("Failed to save admin_session to sessionStorage", e);
+        }
+        showToast("Connexion Super-Admin établie", "success");
+        router.navigate('/admin');
+    } else {
+        showToast("Identifiants de sécurité invalides", "danger");
+    }
+}
+
+let adminActiveTab = 'pending';
+router.add('#/admin', () => {
+    // Hide cart
+    document.getElementById('floating-cart-bar').style.display = 'none';
+    stopOrderPolling();
+    hideLoadingOverlay();
+    
+    if (!isSuperAdminSession) {
+        showToast("Accès refusé. Veuillez vous connecter.", "danger");
+        router.navigate('/admin-login');
+        return;
+    }
+    
+    renderAdminView();
+});
+
+function renderAdminView() {
+    const container = document.getElementById('main-content');
+    
+    // Calculate network figures
+    const restos = store.getRestaurants();
+    const activeRestos = restos.filter(r => r.status === 'active');
+    const pendingCount = restos.filter(r => r.status === 'pending').length;
+    
+    const orders = store.data.orders;
+    const reservations = store.data.reservations;
+    
+    // Estimated Gross Merchandise Volume
+    const totalGmv = orders.reduce((sum, o) => sum + o.total, 0);
+
+    container.innerHTML = `
+        <div style="padding: 2rem 1.5rem; max-width: 1000px; margin: 0 auto;">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 style="font-size: 1.75rem;">Super-Admin Console</h1>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Supervisez l'intégralité du réseau de restauration de Thiès.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <span class="badge badge-danger">Live Monitor</span>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-card-title">Total Restaurants</span>
+                    <span class="stat-card-value">${activeRestos.length} actifs</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-card-title">En attente d'activation</span>
+                    <span class="stat-card-value" style="color: ${pendingCount > 0 ? 'var(--accent)' : 'inherit'}">${pendingCount} demandes</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-card-title">Volume d'affaires généré</span>
+                    <span class="stat-card-value">${totalGmv} FCFA</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-card-title">Commandes / Réservations</span>
+                    <span class="stat-card-value">${orders.length} | ${reservations.length}</span>
+                </div>
+            </div>
+
+            <!-- Tab selections -->
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
+                <button class="btn btn-sm ${adminActiveTab === 'pending' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('pending')">Demandes en attente (${pendingCount})</button>
+                <button class="btn btn-sm ${adminActiveTab === 'active' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('active')">Réseau Actif (${activeRestos.length})</button>
+            </div>
+
+            <div id="admin-table-container">
+                <!-- Tables populated dynamically -->
+            </div>
+        </div>
+    `;
+
+    renderAdminTabTable();
+}
+
+function switchAdminTab(tab) {
+    adminActiveTab = tab;
+    renderAdminView();
+}
+
+function renderAdminTabTable() {
+    const tableContainer = document.getElementById('admin-table-container');
+    const restos = store.getRestaurants();
+    
+    if (adminActiveTab === 'pending') {
+        const pending = restos.filter(r => r.status === 'pending');
+        
+        if (pending.length === 0) {
+            tableContainer.innerHTML = `<div style="text-align: center; background: var(--bg-card); padding: 3rem; border-radius: 16px; color: var(--text-secondary); border: 1px solid var(--border);">Aucune demande d'inscription en attente.</div>`;
+            return;
+        }
+
+        let rowsHtml = '';
+        pending.forEach(r => {
+            rowsHtml += `
+                <tr>
+                    <td><strong>${r.name}</strong></td>
+                    <td>${r.category}</td>
+                    <td>${r.address}</td>
+                    <td><a href="https://wa.me/${r.whatsapp.replace(/\+/g, '')}" target="_blank" class="call-btn">💬 ${r.whatsapp}</a></td>
+                    <td>${r.openHours}</td>
+                    <td>
+                        <button class="btn btn-success btn-sm" onclick="approveRestaurant('${r.id}')">Valider (Activer) ✅</button>
+                        <button class="btn btn-danger btn-sm" onclick="rejectRestaurant('${r.id}')">Refuser ❌</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tableContainer.innerHTML = `
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Catégorie</th>
+                            <th>Adresse</th>
+                            <th>WhatsApp</th>
+                            <th>Horaires</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    } 
+    else if (adminActiveTab === 'active') {
+        const activeOrSuspended = restos.filter(r => r.status === 'active' || r.status === 'suspended');
+        
+        if (activeOrSuspended.length === 0) {
+            tableContainer.innerHTML = `<div style="text-align: center; background: var(--bg-card); padding: 3rem; border-radius: 16px; color: var(--text-secondary);">Aucun restaurant configuré dans le réseau.</div>`;
+            return;
+        }
+
+        let rowsHtml = '';
+        activeOrSuspended.forEach(r => {
+            const rOrders = store.getOrdersByRestaurant(r.id).length;
+            const rReservations = store.getReservationsByRestaurant(r.id).length;
+            const statusLabel = r.status === 'active' 
+                ? `<span class="badge badge-success">Actif</span>` 
+                : `<span class="badge badge-danger">Suspendu</span>`;
+                
+            const actionBtn = r.status === 'active'
+                ? `<button class="btn btn-danger btn-sm" onclick="suspendRestaurant('${r.id}')">Suspendre 🔒</button>`
+                : `<button class="btn btn-success btn-sm" onclick="reactivateRestaurant('${r.id}')">Réactiver 🔓</button>`;
+
+            rowsHtml += `
+                <tr>
+                    <td><strong>${r.name}</strong></td>
+                    <td>${statusLabel}</td>
+                    <td>★ ${r.rating.toFixed(1)} (${r.reviewsCount} avis)</td>
+                    <td>${rOrders} commande(s)</td>
+                    <td>${rReservations} résa(s)</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="impersonateRestaurant('${r.id}')">Gérer ⚙️</button>
+                        ${actionBtn}
+                        <button class="btn btn-secondary btn-sm" onclick="router.navigate('/r/${r.slug}')">Visiter la Page</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        tableContainer.innerHTML = `
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Restaurant</th>
+                            <th>Statut</th>
+                            <th>Note Moyenne</th>
+                            <th>Commandes</th>
+                            <th>Réservations</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rowsHtml}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }
+}
+
+// Admin actions
+function approveRestaurant(id) {
+    const r = store.getRestaurantById(id);
+    if (!r) return;
+    
+    store.updateRestaurant(id, { status: "active" });
+    showToast(`Restaurant ${r.name} activé avec succès !`, "success");
+    
+    // Create WhatsApp confirmation message
+    const waText = `Bonjour ${r.name}, nous avons le plaisir de vous informer que votre inscription sur THIES Resto a été validée par notre équipe ! 🥳
+
+Vous pouvez dès à présent vous connecter à votre Tableau de Bord avec vos identifiants pour gérer vos plats du jour, commandes et réservations.
+
+Lien d'accès : ${window.location.origin}${window.location.pathname}#/auth
+
+Bienvenue dans le réseau !`;
+    const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+    
+    renderAdminView();
+    window.open(waLink, '_blank');
+}
+
+function rejectRestaurant(id) {
+    const r = store.getRestaurantById(id);
+    if (!r) return;
+    
+    if (confirm(`Voulez-vous rejeter et supprimer définitivement la demande de "${r.name}" ?`)) {
+        store.deleteRestaurant(id);
+        showToast("Demande supprimée", "info");
+        renderAdminView();
+    }
+}
+
+function suspendRestaurant(id) {
+    const r = store.getRestaurantById(id);
+    if (!r) return;
+    
+    store.updateRestaurant(id, { status: "suspended" });
+    showToast(`Restaurant ${r.name} suspendu temporairement`, "warning");
+    renderAdminView();
+}
+
+function reactivateRestaurant(id) {
+    const r = store.getRestaurantById(id);
+    if (!r) return;
+    
+    store.updateRestaurant(id, { status: "active" });
+    showToast(`Restaurant ${r.name} réactivé`, "success");
+    renderAdminView();
+}
+
+function impersonateRestaurant(id) {
+    const r = store.getRestaurantById(id);
+    if (!r) return;
+    
+    currentRestaurantSession = r;
+    showToast(`Session administrateur activée pour "${r.name}"`, "success");
+    router.navigate('/dashboard');
+}
+
+function exitImpersonation() {
+    currentRestaurantSession = null;
+    showToast("Retour à la console Super-Admin", "info");
+    router.navigate('/admin');
+}
+
+function exportOrdersToCSV() {
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    if (!r) return;
+    const orders = store.getOrdersByRestaurant(r.id);
+    if (orders.length === 0) {
+        showToast("Aucune commande à exporter", "warning");
+        return;
+    }
+    
+    let csvContent = "\ufeff"; // BOM for Excel UTF-8 support
+    csvContent += "ID Commande;Date;Heure;Client;Telephone;Mode de Recuperation;Total (FCFA);Statut;Plats;Note\n";
+    
+    orders.forEach(o => {
+        const dishesList = o.items.map(i => `${i.name} (x${i.qty})`).join(', ');
+        const client = o.customerName.replace(/"/g, '""');
+        const phone = o.customerPhone;
+        const note = (o.note || '').replace(/"/g, '""').replace(/\n/g, ' ');
+        const row = [
+            o.id,
+            o.date,
+            o.time,
+            `"${client}"`,
+            `"${phone}"`,
+            o.mode,
+            o.total,
+            o.status,
+            `"${dishesList.replace(/"/g, '""')}"`,
+            `"${note}"`
+        ].join(';');
+        csvContent += row + "\n";
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const encodedUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUrl);
+    link.setAttribute("download", `commandes_${r.slug}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Fichier CSV des commandes téléchargé !", "success");
+}
+
+function exportReservationsToCSV() {
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    if (!r) return;
+    const reservations = store.getReservationsByRestaurant(r.id);
+    if (reservations.length === 0) {
+        showToast("Aucune réservation à exporter", "warning");
+        return;
+    }
+    
+    let csvContent = "\ufeff"; // BOM for Excel UTF-8 support
+    csvContent += "ID Reservation;Date;Heure;Client;Telephone;Couverts;Statut;Note\n";
+    
+    reservations.forEach(res => {
+        const client = res.customerName.replace(/"/g, '""');
+        const phone = res.customerPhone;
+        const note = (res.note || '').replace(/"/g, '""').replace(/\n/g, ' ');
+        const row = [
+            res.id,
+            res.date,
+            res.time,
+            `"${client}"`,
+            `"${phone}"`,
+            res.guests,
+            res.status,
+            `"${note}"`
+        ].join(';');
+        csvContent += row + "\n";
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const encodedUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUrl);
+    link.setAttribute("download", `reservations_${r.slug}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Fichier CSV des réservations téléchargé !", "success");
+}
+
+// ----------------------------------------------------
+// 404 View
+// ----------------------------------------------------
+router.add('#/404', () => {
+    document.getElementById('main-content').innerHTML = `
+        <div style="text-align: center; padding: 5rem 1.5rem;">
+            <h2>Page Non Trouvée (404)</h2>
+            <p style="color: var(--text-secondary); margin: 1rem 0;">La page demandée n'existe pas.</p>
+            <button class="btn btn-primary" onclick="router.navigate('/')">Retour à l'accueil</button>
+        </div>
+    `;
+});
+
+// Start application routing
+router.resolve();
