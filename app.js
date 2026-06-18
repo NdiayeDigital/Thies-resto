@@ -2270,7 +2270,7 @@ function submitReview(e, restaurantId) {
 }
 
 // ----------------------------------------------------
-// Page: RESTAURANT AUTH (Login & Inscription)
+// Page: RESTAURANT AUTH (Login uniquement)
 // ----------------------------------------------------
 router.add('#/auth', () => {
     // Hide cart
@@ -2281,47 +2281,71 @@ router.add('#/auth', () => {
     const container = document.getElementById('main-content');
     
     container.innerHTML = `
-        <div class="auth-container">
-            <div class="auth-header">
-                <span class="auth-logo">🏪</span>
-                <h2>Espace Partenaire</h2>
-                <p style="color: var(--text-secondary); font-size: 0.85rem;">Connectez-vous à votre tableau de bord ou demandez l'inscription de votre restaurant.</p>
-            </div>
-            
-            <!-- Tab switches inside auth -->
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg-secondary); padding: 0.25rem; border-radius: 10px;">
-                <button class="btn btn-sm btn-secondary active" id="auth-tab-login" style="flex:1;" onclick="toggleAuthView('login')">Connexion</button>
-                <button class="btn btn-sm btn-secondary" id="auth-tab-register" style="flex:1;" onclick="toggleAuthView('register')">S'inscrire</button>
+        <div class="auth-container" style="max-width: 450px; margin: 3rem auto; padding: 2rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
+            <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🏪</span>
+                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: #fff;">Espace Partenaire</h2>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Connectez-vous à votre tableau de bord restaurant.</p>
             </div>
 
             <!-- LOGIN FORM -->
             <form id="login-form" onsubmit="handleRestaurantLogin(event)">
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label class="form-label">Identifiant unique (slug)</label>
                     <input type="text" id="login-username" class="form-control" placeholder="la-licorne" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="margin-bottom: 1.5rem;">
                     <label class="form-label">Mot de passe</label>
                     <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-block">Se connecter 🔓</button>
+                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Se connecter 🔓</button>
             </form>
 
-            <!-- REGISTER FORM -->
-            <form id="register-form" onsubmit="handleRestaurantRegister(event)" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label">Nom du restaurant <span class="required">*</span></label>
-                    <input type="text" id="reg-name" class="form-control" placeholder="L'Étoile de Thiès" required>
+            <!-- PARTNERSHIP CTA -->
+            <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">Vous souhaitez rejoindre le réseau THIES Resto ?</p>
+                <button class="btn btn-secondary btn-block" onclick="router.navigate('/partnership')" style="width: 100%; font-weight: 700;">Demander un Partenariat 🤝</button>
+            </div>
+        </div>
+    `;
+});
+
+// ----------------------------------------------------
+// Page: DEMANDE DE PARTENARIAT
+// ----------------------------------------------------
+router.add('#/partnership', () => {
+    // Hide cart
+    document.getElementById('floating-cart-bar').style.display = 'none';
+    stopOrderPolling();
+    hideLoadingOverlay();
+    
+    const container = document.getElementById('main-content');
+    
+    container.innerHTML = `
+        <div class="auth-container" style="max-width: 600px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
+            <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🤝</span>
+                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: #fff;">Demande de Partenariat</h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
+                    Rejoignez la première plateforme commune de restauration à Thiès. Remplissez les informations de votre établissement ci-dessous.
+                </p>
+            </div>
+
+            <!-- REGISTRATION FORM -->
+            <form id="register-form" onsubmit="handleRestaurantRegister(event)">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Nom de votre restaurant <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="text" id="reg-name" class="form-control" placeholder="ex: Le Teranga du Rail" required>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Adresse physique à Thiès <span class="required">*</span></label>
-                    <input type="text" id="reg-address" class="form-control" placeholder="Avenue de Caen, Thiès" required>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Adresse physique à Thiès <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="text" id="reg-address" class="form-control" placeholder="ex: Quartier Escale, Thiès" required>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Catégorie <span class="required">*</span></label>
-                    <select id="reg-category" class="form-control" required>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Catégorie de cuisine <span class="required" style="color: var(--accent);">*</span></label>
+                    <select id="reg-category" class="form-control" required style="width: 100%;">
                         <option value="Traditionnel">Traditionnel (Thiéb, Yassa, Mafé)</option>
                         <option value="Grillades / Dibi">Grillades / Dibi (Dibiterie)</option>
                         <option value="Fast Food">Fast Food (Burgers, Chawarmas)</option>
@@ -2329,58 +2353,46 @@ router.add('#/auth', () => {
                         <option value="Gastronomique">Chic / Gastronomique</option>
                     </select>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Numéro WhatsApp de contact <span class="required">*</span></label>
-                    <input type="tel" id="reg-whatsapp" class="form-control" placeholder="+221 77 XXX XX XX" required>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Numéro WhatsApp de réception <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="tel" id="reg-whatsapp" class="form-control" placeholder="ex: +221 77 123 45 67" required>
+                    <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">C'est sur ce numéro que vous recevrez les commandes clients.</small>
                 </div>
-                
-                <div class="form-row">
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
                     <div class="form-group">
-                        <label class="form-label">Heure d'ouverture <span class="required">*</span></label>
-                        <input type="time" id="reg-open" class="form-control" value="12:00" required>
+                        <label class="form-label">Heure d'ouverture <span class="required" style="color: var(--accent);">*</span></label>
+                        <input type="time" id="reg-open" class="form-control" value="08:00" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Heure de fermeture <span class="required">*</span></label>
+                        <label class="form-label">Heure de fermeture <span class="required" style="color: var(--accent);">*</span></label>
                         <input type="time" id="reg-close" class="form-control" value="23:00" required>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Identifiant de connexion souhaité <span class="required">*</span></label>
-                    <input type="text" id="reg-username" class="form-control" placeholder="letoile-thies" required oninput="checkSlugAvailabilityRealtime(this.value)">
-                    <div id="slug-availability-badge" class="slug-status"></div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Identifiant de connexion souhaité (slug) <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="text" id="reg-username" class="form-control" placeholder="ex: le-teranga-rail" required oninput="checkSlugAvailability()">
+                    <div id="slug-availability-badge" style="margin-top: 0.35rem; font-size: 0.8rem; font-weight: 600;"></div>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label">Mot de passe souhaité <span class="required">*</span></label>
+
+                <div class="form-group" style="margin-bottom: 1.75rem;">
+                    <label class="form-label">Mot de passe de connexion <span class="required" style="color: var(--accent);">*</span></label>
                     <input type="password" id="reg-password" class="form-control" placeholder="••••••••" required>
                 </div>
-                
-                <button type="submit" class="btn btn-primary btn-block">Envoyer ma demande d'inscription 🚀</button>
+
+                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Envoyer la demande de partenariat 🚀</button>
             </form>
+
+            <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Vous êtes déjà partenaire ?</p>
+                <button class="btn btn-secondary btn-block" onclick="router.navigate('/auth')" style="width: 100%;">Se connecter à l'espace membre 🔓</button>
+            </div>
         </div>
     `;
 });
 
-function toggleAuthView(view) {
-    const loginForm = document.getElementById('login-form');
-    const regForm = document.getElementById('register-form');
-    const tabLogin = document.getElementById('auth-tab-login');
-    const tabReg = document.getElementById('auth-tab-register');
-    
-    if (view === 'login') {
-        loginForm.style.display = 'block';
-        regForm.style.display = 'none';
-        tabLogin.classList.add('active');
-        tabReg.classList.remove('active');
-    } else {
-        loginForm.style.display = 'none';
-        regForm.style.display = 'block';
-        tabLogin.classList.remove('active');
-        tabReg.classList.add('active');
-    }
-}
 
 function handleRestaurantLogin(e) {
     e.preventDefault();
@@ -3445,7 +3457,9 @@ function renderAdminView() {
             <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
                 <button class="btn btn-sm ${adminActiveTab === 'pending' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('pending')">Demandes en attente (${pendingCount})</button>
                 <button class="btn btn-sm ${adminActiveTab === 'active' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('active')">Réseau Actif (${activeRestos.length})</button>
+                <button class="btn btn-sm ${adminActiveTab === 'create' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('create')">Ajouter un Restaurant ➕</button>
             </div>
+
 
             <div id="admin-table-container">
                 <!-- Tables populated dynamically -->
@@ -3562,10 +3576,119 @@ function renderAdminTabTable() {
                     <tbody>
                         ${rowsHtml}
                     </tbody>
-                </table>
+        `;
+    }
+    else if (adminActiveTab === 'create') {
+        tableContainer.innerHTML = `
+            <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 2rem; border-radius: 24px; max-width: 600px; margin: 0 auto; box-shadow: var(--shadow);">
+                <h3 style="font-family: var(--font-serif); font-size: 1.35rem; margin-bottom: 1.5rem; text-align: center; color: #fff;">Créer un Nouveau Partenaire Restaurant</h3>
+                
+                <form id="admin-create-resto-form" onsubmit="handleAdminCreateRestaurant(event)">
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Nom du restaurant <span class="required">*</span></label>
+                        <input type="text" id="adm-reg-name" class="form-control" placeholder="L'Étoile de Thiès" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Adresse physique à Thiès <span class="required">*</span></label>
+                        <input type="text" id="adm-reg-address" class="form-control" placeholder="Avenue de Caen, Thiès" required>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Catégorie <span class="required">*</span></label>
+                        <select id="adm-reg-category" class="form-control" required>
+                            <option value="Traditionnel">Traditionnel (Thiéb, Yassa, Mafé)</option>
+                            <option value="Grillades / Dibi">Grillades / Dibi (Dibiterie)</option>
+                            <option value="Fast Food">Fast Food (Burgers, Chawarmas)</option>
+                            <option value="Pâtisserie">Pâtisserie / Petit Déjeuner</option>
+                            <option value="Gastronomique">Chic / Gastronomique</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Numéro WhatsApp de contact <span class="required">*</span></label>
+                        <input type="tel" id="adm-reg-whatsapp" class="form-control" placeholder="+221 77 XXX XX XX" required>
+                    </div>
+                    
+                    <div class="form-row" style="margin-bottom: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label">Heure d'ouverture <span class="required">*</span></label>
+                            <input type="time" id="adm-reg-open" class="form-control" value="12:00" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Heure de fermeture <span class="required">*</span></label>
+                            <input type="time" id="adm-reg-close" class="form-control" value="23:00" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label class="form-label">Identifiant de connexion (slug unique) <span class="required">*</span></label>
+                        <input type="text" id="adm-reg-username" class="form-control" placeholder="letoile-thies" required oninput="checkSlugAvailabilityRealtime(this.value)">
+                        <div id="slug-availability-badge" class="slug-status"></div>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 1.5rem;">
+                        <label class="form-label">Mot de passe de connexion <span class="required">*</span></label>
+                        <input type="password" id="adm-reg-password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700;">Ajouter le Restaurant au Réseau 🚀</button>
+                </form>
             </div>
         `;
     }
+}
+
+function handleAdminCreateRestaurant(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('adm-reg-name').value.trim();
+    const address = document.getElementById('adm-reg-address').value.trim();
+    const category = document.getElementById('adm-reg-category').value;
+    const whatsapp = cleanPhoneNumber(document.getElementById('adm-reg-whatsapp').value.trim());
+    const openH = document.getElementById('adm-reg-open').value;
+    const closeH = document.getElementById('adm-reg-close').value;
+    const username = document.getElementById('adm-reg-username').value.trim().toLowerCase();
+    const password = document.getElementById('adm-reg-password').value;
+    
+    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(whatsapp.replace(/\s+/g, ''))) {
+        showToast("Numéro WhatsApp invalide (ex: +221 77 XXX XX XX)", "danger");
+        return;
+    }
+
+    // Check availability
+    const exists = store.getRestaurants().find(r => r.username === username || r.slug === username);
+    if (exists) {
+        showToast("Cet identifiant est déjà utilisé", "danger");
+        return;
+    }
+
+    const newId = "r" + (store.getRestaurants().length + 1);
+    const slug = username.replace(/[^a-z0-9]/g, '-');
+    
+    const newResto = {
+        id: newId,
+        name,
+        slug,
+        rating: 5.0,
+        reviewsCount: 0,
+        category,
+        address,
+        whatsapp,
+        openHours: `${openH} - ${closeH}`,
+        closedDays: [],
+        isOpenManual: true,
+        status: "active",
+        username,
+        password,
+        menu: [],
+        reviews: []
+    };
+
+    store.addRestaurant(newResto);
+    showToast(`Restaurant "${name}" ajouté avec succès dans le réseau !`, "success");
+    
+    switchAdminTab('active');
 }
 
 // Admin actions
