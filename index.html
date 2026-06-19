@@ -18,9 +18,8 @@
     <title>THIES Resto — Plateforme de Restauration Commune à Thiès, Sénégal</title>
 
     <!-- Favicon -->
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>"
-        type="image/svg+xml">
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <link rel="apple-touch-icon" href="logo.jpg">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,7 +36,7 @@
     <div id="loading-overlay" class="loading-overlay">
         <div class="loading-spinner">
             <div class="spinner-ring"></div>
-            <span class="spinner-logo">🍲</span>
+            <img src="logo.jpg" class="spinner-logo" alt="THIES Resto Logo" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin: auto;">
         </div>
         <p class="loading-text">Chargement de THIES Resto…</p>
     </div>
@@ -61,7 +60,7 @@
 
             <!-- Center: Logo -->
             <div class="logo-container" onclick="router.navigate('/')">
-                <span class="logo-icon">🍲</span>
+                <img src="logo.jpg" class="logo-icon" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
                 <span class="logo-text">THIES Resto</span>
             </div>
 
@@ -73,7 +72,7 @@
             <!-- Mobile Drawer Overlay -->
             <div class="mobile-drawer" id="mobile-drawer">
                 <div class="drawer-header">
-                    <span class="logo-icon">🍲</span>
+                    <img src="logo.jpg" class="logo-icon" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
                     <span class="logo-text">THIES Resto</span>
                     <button class="close-drawer-btn" onclick="toggleMobileMenu()">✕</button>
                 </div>
@@ -122,9 +121,9 @@
             <div class="footer-grid">
                 <!-- About Column -->
                 <div class="footer-col">
-                    <div class="footer-brand">
-                        <span class="logo-icon" style="font-size: 1.5rem;">🍲</span>
-                        <span class="logo-text" style="font-size: 1rem;">THIES Resto</span>
+                    <div class="footer-brand" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <img src="logo.jpg" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+                        <span class="logo-text" style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">THIES Resto</span>
                     </div>
                     <p class="footer-about-text">
                         La première plateforme de restauration commune à Thiès, Sénégal. Née d'une étude de terrain sur
