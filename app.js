@@ -126,7 +126,7 @@ const SEED_RESTAURANTS = [
 // App Local Database state manager
 class Store {
     constructor() {
-        this.key = 'THIES_RESTO_DB_V1';
+        this.key = 'THIES_RESTO_DB_V2';
         this.data = this.load();
         if (!this.data) {
             this.seed();
@@ -171,7 +171,7 @@ class Store {
             return {
                 ...r,
                 username: r.slug,
-                password: "resto123",
+                password: `${r.slug}_221`,
                 coverImage: RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category] || COVER_IMAGES["Traditionnel"],
                 menu,
                 reviews
@@ -407,13 +407,65 @@ let activeFilter = 'Tous';
 let activeSortBy = 'default';
 
 // ---------- LOADING STATE ----------
+let isFirstLoad = true;
+let firstLoadTimeoutId = null;
+
 function hideLoadingOverlay() {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) {
-        overlay.classList.add('hidden');
-        setTimeout(() => overlay.remove(), 600);
+    if (isFirstLoad) {
+        if (!firstLoadTimeoutId) {
+            firstLoadTimeoutId = setTimeout(() => {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) {
+                    overlay.classList.add('hidden');
+                    setTimeout(() => overlay.remove(), 600);
+                }
+                isFirstLoad = false;
+            }, 15000);
+        }
+    } else {
+        const overlay = document.getElementById('loading-overlay');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            setTimeout(() => overlay.remove(), 600);
+        }
     }
 }
+
+// Start smooth progress animation for the 15-second load
+(function startLoadingAnimation() {
+    const progressBar = document.getElementById('loading-progress-bar');
+    const loadingText = document.getElementById('loading-text');
+    if (!progressBar) return;
+
+    const messages = [
+        "Chargement de THIES Resto… 🍲",
+        "Connexion avec les restaurants de Thiès… 🏪",
+        "Mise à jour des plats du jour… 🍽️",
+        "Vérification des disponibilités… ⌛",
+        "Presque prêt, préparez vos papilles ! 🧑‍🍳"
+    ];
+
+    let start = null;
+    const duration = 15000;
+
+    function animate(timestamp) {
+        if (!start) start = timestamp;
+        const elapsed = timestamp - start;
+        const progress = Math.min((elapsed / duration) * 100, 100);
+        
+        progressBar.style.width = progress + '%';
+
+        const msgIndex = Math.min(Math.floor((progress / 100) * messages.length), messages.length - 1);
+        if (loadingText) {
+            loadingText.textContent = messages[msgIndex];
+        }
+
+        if (elapsed < duration) {
+            requestAnimationFrame(animate);
+        }
+    }
+    requestAnimationFrame(animate);
+})();
 
 // ---------- THEME TOGGLE ----------
 function toggleTheme() {
@@ -472,7 +524,7 @@ function pulseCartBar() {
 
 // ---------- REALTIME SLUG VALIDATION ----------
 function checkSlugAvailabilityRealtime(val) {
-    const badge = document.getElementById('slug-availability-badge');
+    const badge = document.getElementById('adm-slug-availability-badge') || document.getElementById('slug-availability-badge');
     if (!badge) return;
     const cleanVal = val.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
     if (!cleanVal) {
@@ -570,6 +622,30 @@ function scrollToCatalog() {
     } else {
         const el = document.getElementById('catalog-section');
         if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Helper to automatically generate username and default password when typing restaurant name
+function handleRestaurantNameInput(nameVal, usernameId, passwordId, badgeId) {
+    const usernameInput = document.getElementById(usernameId);
+    const passwordInput = document.getElementById(passwordId);
+    if (!usernameInput || !passwordInput) return;
+    
+    // Normalize and slugify
+    const slug = nameVal.trim().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+        
+    usernameInput.value = slug;
+    passwordInput.value = slug ? `${slug}_221` : '';
+    
+    // Trigger validation badge update
+    if (usernameId === 'reg-username') {
+        checkSlugAvailability();
+    } else {
+        checkSlugAvailabilityRealtime(slug);
     }
 }
 
@@ -2335,7 +2411,7 @@ router.add('#/partnership', () => {
             <form id="register-form" onsubmit="handleRestaurantRegister(event)">
                 <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label class="form-label">Nom de votre restaurant <span class="required" style="color: var(--accent);">*</span></label>
-                    <input type="text" id="reg-name" class="form-control" placeholder="ex: Le Teranga du Rail" required>
+                    <input type="text" id="reg-name" class="form-control" placeholder="ex: Le Teranga du Rail" required oninput="handleRestaurantNameInput(this.value, 'reg-username', 'reg-password', 'slug-availability-badge')">
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1.25rem;">
@@ -2374,12 +2450,14 @@ router.add('#/partnership', () => {
                 <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label class="form-label">Identifiant de connexion souhaité (slug) <span class="required" style="color: var(--accent);">*</span></label>
                     <input type="text" id="reg-username" class="form-control" placeholder="ex: le-teranga-rail" required oninput="checkSlugAvailability()">
+                    <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement (modifiable).</small>
                     <div id="slug-availability-badge" style="margin-top: 0.35rem; font-size: 0.8rem; font-weight: 600;"></div>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1.75rem;">
                     <label class="form-label">Mot de passe de connexion <span class="required" style="color: var(--accent);">*</span></label>
                     <input type="password" id="reg-password" class="form-control" placeholder="••••••••" required>
+                    <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement par défaut (nom_221, modifiable).</small>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Envoyer la demande de partenariat 🚀</button>
@@ -3586,7 +3664,7 @@ function renderAdminTabTable() {
                 <form id="admin-create-resto-form" onsubmit="handleAdminCreateRestaurant(event)">
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label class="form-label">Nom du restaurant <span class="required">*</span></label>
-                        <input type="text" id="adm-reg-name" class="form-control" placeholder="L'Étoile de Thiès" required>
+                        <input type="text" id="adm-reg-name" class="form-control" placeholder="L'Étoile de Thiès" required oninput="handleRestaurantNameInput(this.value, 'adm-reg-username', 'adm-reg-password', 'adm-slug-availability-badge')">
                     </div>
                     
                     <div class="form-group" style="margin-bottom: 1rem;">
@@ -3624,12 +3702,14 @@ function renderAdminTabTable() {
                     <div class="form-group" style="margin-bottom: 1rem;">
                         <label class="form-label">Identifiant de connexion (slug unique) <span class="required">*</span></label>
                         <input type="text" id="adm-reg-username" class="form-control" placeholder="letoile-thies" required oninput="checkSlugAvailabilityRealtime(this.value)">
-                        <div id="slug-availability-badge" class="slug-status"></div>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement (modifiable).</small>
+                        <div id="adm-slug-availability-badge" class="slug-status" style="margin-top: 0.35rem; font-size: 0.8rem; font-weight: 600;"></div>
                     </div>
                     
                     <div class="form-group" style="margin-bottom: 1.5rem;">
                         <label class="form-label">Mot de passe de connexion <span class="required">*</span></label>
                         <input type="password" id="adm-reg-password" class="form-control" placeholder="••••••••" required>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement par défaut (nom_221, modifiable).</small>
                     </div>
                     
                     <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700;">Ajouter le Restaurant au Réseau 🚀</button>
