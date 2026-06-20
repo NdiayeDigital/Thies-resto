@@ -35,8 +35,16 @@ self.addEventListener('activate', e => {
 
 // Fetch Event (Network-first, falling back to cache if offline)
 self.addEventListener('fetch', e => {
-    // Check if it is a GET request and from local origin
-    if (e.request.method !== 'GET' || !e.request.url.startsWith(self.location.origin)) {
+    // Ne pas intercepter les requêtes non-GET ou les appels à l'API Supabase
+    if (e.request.method !== 'GET' || e.request.url.includes('supabase.co')) {
+        return;
+    }
+
+    // Permettre le cache pour le domaine local OU pour les requêtes d'images externes (comme unsplash)
+    const isLocalOrigin = e.request.url.startsWith(self.location.origin);
+    const isImageRequest = e.request.destination === 'image' || e.request.url.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+
+    if (!isLocalOrigin && !isImageRequest) {
         return;
     }
 
