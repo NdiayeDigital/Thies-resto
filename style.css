@@ -2440,26 +2440,22 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     .study-right-col {
         order: 2 !important;
     }
-    .study-carousel-wrapper {
+    .study-carousel-wrapper, .solution-carousel-wrapper {
         display: grid !important;
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 0.75rem !important;
         padding: 0 !important;
         margin-top: 1rem !important;
     }
-    .solution-carousel-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        padding: 0.5rem 0;
-    }
     .study-carousel-wrapper::-webkit-scrollbar, .solution-carousel-wrapper::-webkit-scrollbar {
         display: none;
     }
-    .square-stat-card {
+    .square-stat-card, .solution-feature-card {
         padding: 0.85rem 0.25rem !important;
         border-radius: 12px !important;
         aspect-ratio: 1 / 1 !important;
+        width: auto !important;
+        margin-bottom: 0 !important;
     }
     .square-stat-card .stat-number {
         font-size: 1.3rem !important;
@@ -2468,36 +2464,22 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     .square-stat-card .stat-label {
         font-size: 0.62rem !important;
     }
-    .solution-feature-card {
-        flex: none;
-        width: 100%;
-        margin-bottom: 0.5rem !important;
-        padding: 0.85rem 1rem !important;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.02) !important;
-        border: 1px solid rgba(255, 255, 255, 0.05) !important;
-        border-left: 4px solid #4caf50 !important;
-    }
     .solution-icon {
         font-size: 1.4rem !important;
-        background: rgba(76, 175, 80, 0.1) !important;
-        padding: 0.25rem 0.5rem;
-        border-radius: 8px;
-        display: inline-block;
-        margin-right: 0.5rem;
+        margin-bottom: 0.35rem !important;
+    }
+    .solution-feature-card h3 {
+        font-size: 0.75rem !important;
+        margin-bottom: 0.15rem;
+    }
+    .solution-feature-card p {
+        display: none !important; /* Hide long text on small screens inside square cards */
     }
     .study-metric-text h4 {
         font-size: 0.85rem !important;
         margin-bottom: 0.15rem;
     }
     .study-metric-text p {
-        font-size: 0.75rem !important;
-    }
-    .solution-feature-card h3 {
-        font-size: 0.95rem !important;
-        margin-bottom: 0.15rem;
-    }
-    .solution-feature-card p {
         font-size: 0.75rem !important;
     }
 }
@@ -2737,21 +2719,21 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     font-size: 0.95rem;
 }
 .study-split-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 3rem;
     max-width: 1100px;
     margin: 0 auto 4rem;
-    align-items: start;
+    align-items: stretch;
 }
-.study-left-col {
+.study-left-col, .study-right-col {
     background: var(--bg-card);
     border: 1px solid var(--border);
     padding: 2.5rem;
     border-radius: 28px;
     box-shadow: var(--shadow);
 }
-.study-carousel-wrapper {
+.study-carousel-wrapper, .solution-carousel-wrapper {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.25rem;
@@ -2808,36 +2790,27 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     color: var(--text-secondary);
 }
 
-.study-right-col {
+.solution-feature-card {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-}
-.solution-feature-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    padding: 1.8rem;
-    border-radius: 24px;
-    display: flex;
-    gap: 1.25rem;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem 0.75rem;
+    background: var(--bg-input);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 20px;
     transition: var(--transition-smooth);
-    position: relative;
-}
-.solution-feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; width: 4px; height: 100%;
-    background: var(--success);
-    border-radius: 4px 0 0 4px;
 }
 .solution-feature-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(16, 185, 129, 0.4);
-    box-shadow: 0 10px 25px rgba(16, 185, 129, 0.05);
+    transform: translateY(-5px);
+    border-color: rgba(16, 185, 129, 0.6);
+    background: rgba(16, 185, 129, 0.05);
+    box-shadow: 0 8px 24px rgba(16, 185, 129, 0.1);
 }
 .solution-icon {
     font-size: 2.2rem;
+    margin-bottom: 0.75rem;
 }
 .solution-text h3 {
     font-size: 1.1rem;

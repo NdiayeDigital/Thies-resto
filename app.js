@@ -99,6 +99,35 @@ const SAMPLE_REVIEWS = [
     { author: "Michel Dupont", rating: 5, comment: "Un trésor caché à Thiès. Le service Teranga est excellent.", date: "2026-06-14", reply: "Merci Michel ! Heureux de vous avoir accueilli." }
 ];
 
+// Celebration Animation Helper
+window.triggerCelebration = function() {
+    if (typeof confetti === 'function') {
+        const duration = 3000;
+        const end = Date.now() + duration;
+
+        (function frame() {
+            confetti({
+                particleCount: 5,
+                angle: 60,
+                spread: 55,
+                origin: { x: 0 },
+                colors: ['#ff6b35', '#cfa853', '#4caf50']
+            });
+            confetti({
+                particleCount: 5,
+                angle: 120,
+                spread: 55,
+                origin: { x: 1 },
+                colors: ['#ff6b35', '#cfa853', '#4caf50']
+            });
+
+            if (Date.now() < end) {
+                requestAnimationFrame(frame);
+            }
+        }());
+    }
+};
+
 // Complete Seed Data from rapport_restaurants_thies
 const SEED_RESTAURANTS = [
     { id: "r1", name: "Croissant Magique", slug: "croissant-magique", rating: 3.9, reviewsCount: 999, category: "Pâtisserie", address: "Avenue Léopold Sédar Senghor, Thiès", whatsapp: "+221776543210", openHours: "07:00 - 22:00", closedDays: [], isOpenManual: true, status: "suspended" },
@@ -2143,6 +2172,8 @@ Merci de confirmer la réception !`;
            </div>`
         : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate par le gérant, veuillez également envoyer le récapitulatif par WhatsApp via le bouton ci-dessous.</p>`;
 
+    triggerCelebration();
+
     const container = document.getElementById('checkout-content-container');
     container.innerHTML = `
         <div class="confirmation-screen">
@@ -2544,6 +2575,8 @@ Merci de nous confirmer la réception et le départ en préparation !`;
            </div>`
         : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate, veuillez transmettre le récapitulatif groupé par WhatsApp.</p>`;
 
+    triggerCelebration();
+
     const container = document.getElementById('group-content-container');
     container.innerHTML = `
         <div class="confirmation-screen">
@@ -2725,6 +2758,8 @@ Merci de me confirmer la disponibilité !`;
             🔌 Vous êtes HORS-LIGNE. Veuillez envoyer la demande par SMS classique sécurisé ci-dessous.
            </div>`
         : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Le restaurant doit valider votre réservation. Envoyez le récapitulatif par WhatsApp pour bloquer votre table immédiatement.</p>`;
+
+    triggerCelebration();
 
     const container = document.getElementById('booking-content-container');
     container.innerHTML = `
