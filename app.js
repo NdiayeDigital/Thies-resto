@@ -5054,7 +5054,7 @@ window.addEventListener('offline', () => {
     showToast("🔌 Vous êtes hors-ligne. Vous pouvez toujours commander via l'option SMS classique !", "warning");
 });
 window.addEventListener('online', () => {
-    showToast("📶 Connexion Internet rétablie. WhatsApp est de nouveau actif.", "success");
+    showToast("📶 Connexion Internet rétablie. Thiès à Table est de nouveau connecté au réseau.", "success");
 });
 
 // SMS Link Helper

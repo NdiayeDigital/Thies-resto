@@ -2851,6 +2851,80 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     line-height: 1.5;
 }
 
+/* ========================================= */
+/* Responsive Dashboard Adjustments          */
+/* ========================================= */
+@media (max-width: 768px) {
+    /* Make the dashboard layout a single column */
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+    
+    /* Transform the sidebar into a horizontal scrollable menu */
+    .sidebar {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0.75rem;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        /* Hide scrollbar for a cleaner look */
+        scrollbar-width: none; 
+    }
+    .sidebar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Adjust sidebar buttons for horizontal scroll */
+    .sidebar-btn {
+        flex: 0 0 auto;
+        width: auto;
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+    }
+
+    /* Reduce padding on main dashboard content */
+    .dashboard-content {
+        padding: 1rem;
+    }
+
+    /* Make accounting stats grid single column */
+    .accounting-stats-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+
+    /* Ensure tables can be scrolled horizontally */
+    .table-responsive, .table-responsive-accounting {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-table {
+        min-width: 600px; /* Force table to have min width so it scrolls instead of shrinking text */
+    }
+
+    .admin-table th, .admin-table td {
+        padding: 0.75rem;
+        font-size: 0.8rem;
+    }
+    
+    /* Stack settings toggles or large flex headers */
+    .dashboard-header-actions,
+    .admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .admin-header input {
+        width: 100%;
+    }
+}
+
 
 
 
