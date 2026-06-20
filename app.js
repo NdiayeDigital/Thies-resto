@@ -919,31 +919,109 @@ router.add('#/', () => {
 
         <!-- ONBOARDING COMMENT CA MARCHE -->
         <section class="how-it-works" id="how-it-works-section">
-            <h2 class="section-title" style="text-align:center;">Comment ça marche ?</h2>
-            <div class="how-it-works-grid">
-                <div class="how-step">
-                    <div class="how-step-icon">🍽️</div>
-                    <div class="how-step-num">1</div>
-                    <h3>Choisissez votre resto</h3>
-                    <p>Parcourez la liste, filtrez par cuisine et explorez le menu complet mis à jour en temps réel.</p>
+            <span class="study-title-tag">💡 Mode d'emploi</span>
+            <h2 class="section-title" style="text-align:center; margin-bottom: 0.5rem; color: #fff;">Comment fonctionne la plateforme ?</h2>
+            <p class="study-subtitle">Découvrez la simplicité et la flexibilité de THIES Resto à travers nos trois services phares.</p>
+            
+            <div class="how-it-works-tabs">
+                <button class="hw-tab-btn active" onclick="switchHowItWorksTab('hw-order')">🛍️ Commander un plat</button>
+                <button class="hw-tab-btn" onclick="switchHowItWorksTab('hw-reserve')">📅 Réserver une table</button>
+                <button class="hw-tab-btn" onclick="switchHowItWorksTab('hw-group')">👥 Commande de groupe</button>
+            </div>
+
+            <!-- Tab 1: Commander -->
+            <div class="hw-tab-content active" id="hw-order">
+                <div class="timeline-steps">
+                    <div class="timeline-card">
+                        <div class="timeline-badge">1</div>
+                        <span class="timeline-icon">🏪</span>
+                        <h3>Sélection du restaurant</h3>
+                        <p>Choisissez parmi les meilleurs établissements de Thiès, filtrez par envie et ouvrez la carte du jour.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">2</div>
+                        <span class="timeline-icon">🛒</span>
+                        <h3>Panier instantané</h3>
+                        <p>Ajoutez vos plats préférés, spécifiez vos préférences et validez en un clic, sans création de compte fastidieuse.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">3</div>
+                        <span class="timeline-icon">💬</span>
+                        <h3>Envoi WhatsApp</h3>
+                        <p>Votre commande est transmise de manière ultra-rapide par WhatsApp au restaurant. Payez en espèces ou Wave à la livraison.</p>
+                    </div>
                 </div>
-                <div class="how-step">
-                    <div class="how-step-icon">🛒</div>
-                    <div class="how-step-num">2</div>
-                    <h3>Validez sans inscription</h3>
-                    <p>Remplissez votre panier, indiquez vos détails de livraison et validez. Aucun mot de passe requis.</p>
+            </div>
+
+            <!-- Tab 2: Réserver -->
+            <div class="hw-tab-content" id="hw-reserve">
+                <div class="timeline-steps">
+                    <div class="timeline-card">
+                        <div class="timeline-badge">1</div>
+                        <span class="timeline-icon">📅</span>
+                        <h3>Choix de la date</h3>
+                        <p>Sélectionnez votre restaurant préféré, l'onglet "Réserver", définissez la date, l'heure et le nombre de convives.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">2</div>
+                        <span class="timeline-icon">👤</span>
+                        <h3>Détails du contact</h3>
+                        <p>Entrez vos coordonnées de contact pour que le gérant puisse bloquer et préparer votre table attitrée.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">3</div>
+                        <span class="timeline-icon">✨</span>
+                        <h3>Confirmation reçue</h3>
+                        <p>Le restaurateur valide votre créneau directement sur son tableau de bord et vous envoie une confirmation par message.</p>
+                    </div>
                 </div>
-                <div class="how-step">
-                    <div class="how-step-icon">🛵</div>
-                    <div class="how-step-num">3</div>
-                    <h3>Paiement à la livraison</h3>
-                    <p>Votre commande est envoyée directement par WhatsApp pour confirmation. Payez à la livraison.</p>
+            </div>
+
+            <!-- Tab 3: Commande de Groupe -->
+            <div class="hw-tab-content" id="hw-group">
+                <div class="timeline-steps">
+                    <div class="timeline-card">
+                        <div class="timeline-badge">1</div>
+                        <span class="timeline-icon">👥</span>
+                        <h3>Création du groupe</h3>
+                        <p>Lancez un panier partagé pour vos collègues de bureau ou vos amis en cliquant sur "Commande de Groupe".</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">2</div>
+                        <span class="timeline-icon">🔗</span>
+                        <h3>Partage du lien</h3>
+                        <p>Copiez et envoyez le lien unique généré dans votre discussion de groupe (WhatsApp, Slack, etc.).</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">3</div>
+                        <span class="timeline-icon">🍕</span>
+                        <h3>Choix individuels</h3>
+                        <p>Chaque membre ajoute ses plats préférés depuis son propre appareil. Le restaurant reçoit le tout regroupé et clair !</p>
+                    </div>
                 </div>
             </div>
         </section>
 
         <!-- VOS DERNIERES COMMANDES PERSISTANT -->
         ${historyHtml}
+
+        <!-- ========== LOYALTY CARD SECTION ========== -->
+        <section class="loyalty-checker-section" style="padding: 2.5rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); margin: 2rem auto; max-width: 1200px;">
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <span class="study-title-tag" style="background: rgba(207, 168, 83, 0.1); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(207, 168, 83, 0.2);">🎁 Programme de Fidélisation</span>
+                <h2 style="font-family: var(--font-serif); font-size: 2rem; color: #fff; margin: 0.75rem 0 0.5rem 0;">Consultez votre Statut & Plats Offerts</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">Saisissez votre numéro WhatsApp pour suivre vos points fidélité (10 pts/commande livrée, 5 pts/réservation) et réclamer vos cadeaux.</p>
+                
+                <div style="display: flex; gap: 0.75rem; justify-content: center; max-width: 480px; margin: 0 auto 1.5rem auto;">
+                    <input type="tel" id="loyalty-phone" class="form-control" placeholder="+221 77 123 45 67" style="margin-bottom: 0;">
+                    <button class="btn btn-primary" onclick="checkLoyaltyPoints()" style="white-space: nowrap;">Consulter ➔</button>
+                </div>
+                
+                <div id="loyalty-result-card" style="display: none; margin-top: 1.5rem; animation: fadeIn 0.4s ease;">
+                    <!-- Result card dynamically rendered by checkLoyaltyPoints -->
+                </div>
+            </div>
+        </section>
 
         <section id="catalog-section">
             <div class="section-header">
@@ -972,6 +1050,113 @@ router.add('#/', () => {
             </div>
             
             <div class="restaurant-grid" id="restaurants-list-grid"></div>
+        </section>
+
+        <!-- ========== ÉTUDE DE TERRAIN & NOTRE SOLUTION ========== -->
+        <section class="field-study-section" id="field-study-section">
+            <div style="text-align: center;">
+                <span class="study-title-tag">📊 Analyse & Impact</span>
+                <h2 class="section-title" style="margin-bottom: 0.5rem; color: #fff;">L'Étude de Terrain & Notre Solution</h2>
+                <p class="study-subtitle">Comment THIES Resto répond à la réalité chiffrée de la restauration à Thiès.</p>
+            </div>
+
+            <div class="study-split-grid">
+                <!-- Left: Problems / Metrics -->
+                <div class="study-left-col">
+                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: #fff;">Le Constat Local (Étude Juin 2025)</h3>
+                    
+                    <div class="study-metric-card">
+                        <span class="study-metric-number">85%</span>
+                        <div class="study-metric-text">
+                            <h4>Désert Numérique Complet</h4>
+                            <p>85% des restaurants de Thiès n'ont aucun site internet ni réseaux sociaux actifs pour leurs clients.</p>
+                        </div>
+                    </div>
+
+                    <div class="study-metric-card">
+                        <span class="study-metric-number">0%</span>
+                        <div class="study-metric-text">
+                            <h4>Absence de Contenu Moderne</h4>
+                            <p>Aucun établissement ne met en valeur ses plats signatures ou menus du jour en format vidéo (TikTok/Reels).</p>
+                        </div>
+                    </div>
+
+                    <div class="study-metric-card">
+                        <span class="study-metric-number">90%</span>
+                        <div class="study-metric-text">
+                            <h4>Avis Négatifs Ignorés</h4>
+                            <p>La quasi-totalité des fiches Google Business restent sans réponse, nuisant gravement à l'image des restaurants.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Our Solutions -->
+                <div class="study-right-col">
+                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: #fff;">Les Réponses de THIES Resto</h3>
+
+                    <div class="solution-feature-card">
+                        <span class="solution-icon">✨</span>
+                        <div class="solution-text">
+                            <h3>1. Vitrine Digitale Premium</h3>
+                            <p>Chaque partenaire bénéficie d'une page personnalisée, moderne, rapide et optimisée pour le référencement local à Thiès.</p>
+                        </div>
+                    </div>
+
+                    <div class="solution-feature-card">
+                        <span class="solution-icon">⚡</span>
+                        <div class="solution-text">
+                            <h3>2. Précommande Réduisant l'Attente</h3>
+                            <p>Les clients commandent et réservent à l'avance, ce qui réduit de moitié les temps d'attente souvent pointés du doigt.</p>
+                        </div>
+                    </div>
+
+                    <div class="solution-feature-card">
+                        <span class="solution-icon">📶</span>
+                        <div class="solution-text">
+                            <h3>3. Mode Hybride (SMS en Secours)</h3>
+                            <p>En cas de coupure ou faiblesse du réseau internet à Thiès, la commande bascule automatiquement par SMS classique sécurisé.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profit Simulator -->
+            <div class="simulator-container">
+                <div class="simulator-title">
+                    <span>📱 Simulateur d'Impact pour Restaurateurs</span>
+                </div>
+                
+                <div class="sim-grid">
+                    <div class="sim-sliders-col">
+                        <div class="sim-group">
+                            <div class="sim-label-row">
+                                <span>Commandes moyennes / jour</span>
+                                <span class="sim-val-display"><span id="sim-orders-val">25</span> commandes</span>
+                            </div>
+                            <input type="range" min="5" max="150" value="25" class="sim-slider" id="sim-orders-input" oninput="updateSimulation()">
+                        </div>
+
+                        <div class="sim-group">
+                            <div class="sim-label-row">
+                                <span>Panier Moyen par Client</span>
+                                <span class="sim-val-display"><span id="sim-price-val">4500</span> FCFA</span>
+                            </div>
+                            <input type="range" min="1000" max="25000" step="500" value="4500" class="sim-slider" id="sim-price-input" oninput="updateSimulation()">
+                        </div>
+                    </div>
+
+                    <div class="sim-results-col">
+                        <div class="sim-result-item">
+                            <div class="sim-result-lbl">Chiffre d'affaires mensuel additionnel (Est. +15%)</div>
+                            <div class="sim-result-val" id="sim-result-revenue">+ 506,250 FCFA</div>
+                        </div>
+                        <div class="sim-result-item">
+                            <div class="sim-result-lbl">Temps d'attente moyen économisé</div>
+                            <div class="sim-result-val time" id="sim-result-time">- 50%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
     `;
 
@@ -1436,7 +1621,13 @@ function updateCartQty(dishId, change) {
 }
 
 function recalculateCart() {
-    cart.total = cart.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    let subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    cart.subtotal = subtotal;
+    if (cart.loyaltyApplied) {
+        cart.total = Math.max(0, subtotal - 2500);
+    } else {
+        cart.total = subtotal;
+    }
 }
 
 function updateFloatingCartBar(r) {
@@ -1489,16 +1680,34 @@ function renderCheckoutTab(r) {
         `;
     });
 
+    let totalHtml = '';
+    if (cart.loyaltyApplied) {
+        totalHtml = `
+            <div class="cart-total-box" style="flex-direction: column; align-items: flex-end; gap: 0.25rem;">
+                <div style="font-size: 0.9rem; color: var(--text-secondary);">Sous-total : ${cart.subtotal} FCFA</div>
+                <div style="font-size: 0.9rem; color: var(--success); font-weight: bold; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🎁 Réduction Fidélité : -2,500 FCFA</span>
+                    <button type="button" class="btn btn-link btn-xs" onclick="removeLoyaltyReward()" style="padding: 0; color: #ff6b6b; text-decoration: underline; font-size: 0.75rem;">Retirer</button>
+                </div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">Total à payer : <span class="cart-total-price">${cart.total} FCFA</span></div>
+            </div>
+        `;
+    } else {
+        totalHtml = `
+            <div class="cart-total-box">
+                <span>Total à payer :</span>
+                <span class="cart-total-price">${cart.total} FCFA</span>
+            </div>
+        `;
+    }
+
     container.innerHTML = `
         <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Votre Commande</h2>
         <div class="cart-list">
             ${itemsHtml}
         </div>
         
-        <div class="cart-total-box">
-            <span>Total à payer :</span>
-            <span class="cart-total-price">${cart.total} FCFA</span>
-        </div>
+        ${totalHtml}
         
         <form id="checkout-form" onsubmit="submitSimpleOrder(event, '${r.id}')" style="background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border);">
             <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem;">Informations de Livraison / Récupération</h3>
@@ -1599,6 +1808,11 @@ function submitSimpleOrder(e, restaurantId) {
     const date = new Date().toISOString().split('T')[0];
     const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     
+    let finalNotes = notes;
+    if (cart.loyaltyApplied) {
+        finalNotes = `${notes ? notes + ' | ' : ''}[RÉCOMPENSE FIDÉLITÉ APPLIQUÉE : -2,500 FCFA]`;
+    }
+
     const order = {
         id: orderId,
         restaurantId: r.id,
@@ -1608,7 +1822,7 @@ function submitSimpleOrder(e, restaurantId) {
         address,
         items: cart.items.map(item => ({ name: item.name, price: item.price, qty: item.qty })),
         total: cart.total,
-        note: notes,
+        note: finalNotes,
         status: "Reçue",
         date,
         time
@@ -1617,13 +1831,22 @@ function submitSimpleOrder(e, restaurantId) {
     store.addOrder(order);
     saveOrderToHistory(order, r.name);
     
-    // Format WhatsApp message
+    // Increment used rewards if loyalty was applied
+    if (cart.loyaltyApplied && cart.loyaltyPhone) {
+        if (!store.data.usedRewards) {
+            store.data.usedRewards = {};
+        }
+        store.data.usedRewards[cart.loyaltyPhone] = (store.data.usedRewards[cart.loyaltyPhone] || 0) + 1;
+        store.save();
+    }
+
+    // Format WhatsApp & SMS message
     const formattedItems = cart.items.map(i => `${i.name} x${i.qty}`).join(', ');
     const waText = `Bonjour ${r.name}, je viens de passer la commande n°*${orderId}* sur THIES Resto de la part de *${firstname} ${lastname}* (${phone}).
  
 🛍️ *Détail de la commande* :
 ${formattedItems}
-💰 *Total* : ${cart.total} FCFA
+${cart.loyaltyApplied ? `🎁 *Réduction Fidélité* : -2500 FCFA\n` : ''}💰 *Total* : ${cart.total} FCFA
 🛵 *Mode* : ${mode}
 ${address ? `📍 *Adresse* : ${address}` : ''}
 ${notes ? `📝 *Note* : ${notes}` : ''}
@@ -1631,22 +1854,35 @@ ${notes ? `📝 *Note* : ${notes}` : ''}
 Merci de confirmer la réception !`;
 
     const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+    const smsLink = getSMSLink(r.whatsapp, waText);
     
     // Reset Cart
     cart = {
         restaurantId: null,
         items: [],
-        total: 0
+        total: 0,
+        loyaltyApplied: false,
+        loyaltyPhone: null
     };
     saveCart();
     updateFloatingCartBar(r);
 
     // Show Confirmation screen
+    const isOffline = !navigator.onLine;
+    const waBtnClass = isOffline ? 'btn-secondary' : 'btn-success';
+    const smsBtnClass = isOffline ? 'btn-success' : 'btn-secondary';
+    
+    const connectionAlert = isOffline 
+        ? `<div style="background: rgba(220, 53, 69, 0.15); color: #ff6b6b; padding: 0.75rem; border-radius: 12px; font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(220, 53, 69, 0.3); text-align: center; font-weight: 500;">
+            🔌 Vous êtes HORS-LIGNE. Veuillez envoyer le récapitulatif par SMS classique sécurisé ci-dessous.
+           </div>`
+        : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate par le gérant, veuillez également envoyer le récapitulatif par WhatsApp via le bouton ci-dessous.</p>`;
+
     const container = document.getElementById('checkout-content-container');
     container.innerHTML = `
         <div class="confirmation-screen">
             <div class="confirmation-icon">✅</div>
-            <h2>Commande envoyée !</h2>
+            <h2>Commande enregistrée !</h2>
             <p style="color: var(--text-secondary); margin: 1rem 0;">Votre commande n° <strong>${orderId}</strong> a bien été enregistrée par le restaurant.</p>
             <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
                 <strong>Récapitulatif :</strong><br>
@@ -1654,12 +1890,15 @@ Merci de confirmer la réception !`;
                 Mode : ${mode}<br>
                 Montant : <strong>${order.total} FCFA</strong> (espèces à la livraison/réception)
             </div>
-            <p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate par le gérant, veuillez également envoyer le récapitulatif par WhatsApp via le bouton ci-dessous.</p>
+            ${connectionAlert}
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <a href="${waLink}" target="_blank" class="btn btn-success">
-                    💬 Confirmer aussi par WhatsApp
+                <a href="${waLink}" target="_blank" class="btn ${waBtnClass}">
+                    💬 Confirmer par WhatsApp
                 </a>
-                <button class="btn btn-secondary" onclick="router.navigate('/')">
+                <a href="${smsLink}" class="btn ${smsBtnClass}">
+                    📱 Option Secours : Envoyer par SMS classique
+                </a>
+                <button class="btn btn-dark" onclick="router.navigate('/')">
                     Retourner à l'accueil
                 </button>
             </div>
@@ -2004,11 +2243,22 @@ ${address ? `📍 *Adresse de livraison* : ${address}` : ''}
 Merci de nous confirmer la réception et le départ en préparation !`;
 
     const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+    const smsLink = getSMSLink(r.whatsapp, waText);
     
     // Clear active group order
     activeGroupOrder = null;
     
     // Show confirmation
+    const isOffline = !navigator.onLine;
+    const waBtnClass = isOffline ? 'btn-secondary' : 'btn-success';
+    const smsBtnClass = isOffline ? 'btn-success' : 'btn-secondary';
+    
+    const connectionAlert = isOffline 
+        ? `<div style="background: rgba(220, 53, 69, 0.15); color: #ff6b6b; padding: 0.75rem; border-radius: 12px; font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(220, 53, 69, 0.3); text-align: center; font-weight: 500;">
+            🔌 Vous êtes HORS-LIGNE. Veuillez envoyer le récapitulatif groupé par SMS classique sécurisé ci-dessous.
+           </div>`
+        : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate, veuillez transmettre le récapitulatif groupé par WhatsApp.</p>`;
+
     const container = document.getElementById('group-content-container');
     container.innerHTML = `
         <div class="confirmation-screen">
@@ -2019,12 +2269,15 @@ Merci de nous confirmer la réception et le départ en préparation !`;
                 <strong>Responsable de groupe :</strong> ${payeeName}<br>
                 <strong>Montant total cumulé :</strong> ${grandTotal} FCFA
             </div>
-            <p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate, veuillez transmettre le récapitulatif groupé par WhatsApp.</p>
+            ${connectionAlert}
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <a href="${waLink}" target="_blank" class="btn btn-success">
+                <a href="${waLink}" target="_blank" class="btn ${waBtnClass}">
                     💬 Confirmer par WhatsApp
                 </a>
-                <button class="btn btn-secondary" onclick="router.navigate('/')">
+                <a href="${smsLink}" class="btn ${smsBtnClass}">
+                    📱 Option Secours : Envoyer par SMS classique
+                </a>
+                <button class="btn btn-dark" onclick="router.navigate('/')">
                     Retourner à l'accueil
                 </button>
             </div>
@@ -2171,12 +2424,23 @@ function submitBooking(e, restaurantId) {
     const formattedDate = new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const waText = `Bonjour ${r.name}, je souhaite réserver une table pour *${guests} personnes* le *${formattedDate}* à *${time}* au nom de *${firstname} ${lastname}* (${phone}).
 ${note ? `📝 *Note particulière* : ${note}` : ''}
-
+ 
 Merci de me confirmer la disponibilité !`;
 
     const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+    const smsLink = getSMSLink(r.whatsapp, waText);
 
     // Show confirmation
+    const isOffline = !navigator.onLine;
+    const waBtnClass = isOffline ? 'btn-secondary' : 'btn-success';
+    const smsBtnClass = isOffline ? 'btn-success' : 'btn-secondary';
+    
+    const connectionAlert = isOffline 
+        ? `<div style="background: rgba(220, 53, 69, 0.15); color: #ff6b6b; padding: 0.75rem; border-radius: 12px; font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(220, 53, 69, 0.3); text-align: center; font-weight: 500;">
+            🔌 Vous êtes HORS-LIGNE. Veuillez envoyer la demande par SMS classique sécurisé ci-dessous.
+           </div>`
+        : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Le restaurant doit valider votre réservation. Envoyez le récapitulatif par WhatsApp pour bloquer votre table immédiatement.</p>`;
+
     const container = document.getElementById('booking-content-container');
     container.innerHTML = `
         <div class="confirmation-screen">
@@ -2188,12 +2452,15 @@ Merci de me confirmer la disponibilité !`;
                 Date & Heure : ${formattedDate} à ${time}<br>
                 Couverts : <strong>${guests} personnes</strong>
             </div>
-            <p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Le restaurant doit valider votre réservation. Envoyez le récapitulatif par WhatsApp pour bloquer votre table immédiatement.</p>
+            ${connectionAlert}
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <a href="${waLink}" target="_blank" class="btn btn-success">
-                    💬 Confirmer aussi par WhatsApp
+                <a href="${waLink}" target="_blank" class="btn ${waBtnClass}">
+                    💬 Confirmer par WhatsApp
                 </a>
-                <button class="btn btn-secondary" onclick="router.navigate('/')">
+                <a href="${smsLink}" class="btn ${smsBtnClass}">
+                    📱 Option Secours : Envoyer par SMS classique
+                </a>
+                <button class="btn btn-dark" onclick="router.navigate('/')">
                     Retourner à l'accueil
                 </button>
             </div>
@@ -2615,6 +2882,7 @@ function renderDashboardShell() {
                 <button class="sidebar-btn ${dashboardActiveTab === 'reservations' ? 'active' : ''}" onclick="switchDashboardTab('reservations')">📅 Réservations</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'menu' ? 'active' : ''}" onclick="switchDashboardTab('menu')">🍽️ Plats du Jour</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'reviews' ? 'active' : ''}" onclick="switchDashboardTab('reviews')">💬 Avis Clients</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'accounting' ? 'active' : ''}" onclick="switchDashboardTab('accounting')">📊 Comptabilité</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'settings' ? 'active' : ''}" onclick="switchDashboardTab('settings')">⚙️ Paramètres</button>
             </aside>
             <main class="dashboard-content" id="dashboard-tab-panel">
@@ -2634,7 +2902,7 @@ function switchDashboardTab(tab) {
     btns.forEach(b => b.classList.remove('active'));
     
     // Highlight active
-    const label = tab === 'orders' ? 'commandes' : tab === 'reservations' ? 'réservations' : tab === 'menu' ? 'plats' : tab === 'reviews' ? 'avis' : 'paramètres';
+    const label = tab === 'orders' ? 'commandes' : tab === 'reservations' ? 'réservations' : tab === 'menu' ? 'plats' : tab === 'reviews' ? 'avis' : tab === 'accounting' ? 'comptabilité' : 'paramètres';
     btns.forEach(b => {
         if (b.innerText.toLowerCase().includes(label)) {
             b.classList.add('active');
@@ -3039,7 +3307,131 @@ function renderDashboardTabContent(r) {
                 ${reviewsHtml}
             </div>
         `;
-    } 
+    }
+    else if (dashboardActiveTab === 'accounting') {
+        const orders = store.getOrdersByRestaurant(r.id);
+        const completedOrders = orders.filter(o => o.status === 'Livrée');
+        
+        const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
+        const totalOrdersCount = orders.length;
+        const completedOrdersCount = completedOrders.length;
+        const avgCart = completedOrdersCount > 0 ? Math.round(totalRevenue / completedOrdersCount) : 0;
+        
+        // Breakdown by mode
+        const deliveryOrders = completedOrders.filter(o => o.mode === 'Livraison');
+        const takeawayOrders = completedOrders.filter(o => o.mode === 'A emporter' || o.mode === 'Emporter' || o.mode === 'À emporter');
+        const dineInOrders = completedOrders.filter(o => o.mode === 'Sur place');
+        
+        const deliveryRev = deliveryOrders.reduce((sum, o) => sum + o.total, 0);
+        const takeawayRev = takeawayOrders.reduce((sum, o) => sum + o.total, 0);
+        const dineInRev = dineInOrders.reduce((sum, o) => sum + o.total, 0);
+
+        // Build list of completed or all orders
+        let rowsHtml = '';
+        if (orders.length === 0) {
+            rowsHtml = `
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        Aucune commande enregistrée pour le moment.
+                    </td>
+                </tr>
+            `;
+        } else {
+            orders.forEach(o => {
+                const statusBadge = o.status === 'Livrée' 
+                    ? `<span class="badge badge-success" style="background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3);">Livrée (Payée)</span>`
+                    : o.status === 'Reçue'
+                    ? `<span class="badge badge-warning" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">En attente</span>`
+                    : `<span class="badge badge-info" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">${o.status}</span>`;
+
+                rowsHtml += `
+                    <tr class="accounting-row" data-client="${(o.customerName || '').toLowerCase()}" data-id="${o.id.toLowerCase()}">
+                        <td><strong>${o.date} ${o.time || ''}</strong></td>
+                        <td>${o.customerName || 'Client anonyme'}</td>
+                        <td><a href="tel:${o.customerPhone}" style="color: var(--success); font-weight: bold;">📞 ${o.customerPhone}</a></td>
+                        <td>${o.mode}</td>
+                        <td style="color: var(--primary); font-weight: bold;">${o.total.toLocaleString()} FCFA</td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        panel.innerHTML = `
+            <div class="accounting-dashboard">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: #fff;">📊 Journal de Comptabilité</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem;">Suivi des chiffres d'affaires et historique complet des commandes clients.</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="window.print()">
+                        🖨️ Imprimer le Bilan
+                    </button>
+                </div>
+
+                <div class="accounting-stats-grid">
+                    <div class="accounting-card">
+                        <div class="accounting-card-title">Chiffre d'Affaires Total</div>
+                        <div class="accounting-card-value" style="color: var(--success);">${totalRevenue.toLocaleString()} FCFA</div>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Commandes validées & livrées</small>
+                    </div>
+                    <div class="accounting-card">
+                        <div class="accounting-card-title">Commandes traitées</div>
+                        <div class="accounting-card-value">${completedOrdersCount} / ${totalOrdersCount}</div>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Commandes livrées sur le total</small>
+                    </div>
+                    <div class="accounting-card">
+                        <div class="accounting-card-title">Panier Moyen</div>
+                        <div class="accounting-card-value" style="color: var(--primary);">${avgCart.toLocaleString()} FCFA</div>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Par commande encaissée</small>
+                    </div>
+                </div>
+
+                <div class="accounting-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 2rem;">
+                    <div class="accounting-card" style="padding: 1rem 1.25rem;">
+                        <div class="accounting-card-title" style="font-size: 0.7rem;">🛵 Livraison</div>
+                        <div class="accounting-card-value" style="font-size: 1.2rem;">${deliveryRev.toLocaleString()} F</div>
+                        <small style="color: var(--text-secondary); font-size: 0.7rem;">${deliveryOrders.length} commande(s)</small>
+                    </div>
+                    <div class="accounting-card" style="padding: 1rem 1.25rem;">
+                        <div class="accounting-card-title" style="font-size: 0.7rem;">🛍️ À Emporter</div>
+                        <div class="accounting-card-value" style="font-size: 1.2rem;">${takeawayRev.toLocaleString()} F</div>
+                        <small style="color: var(--text-secondary); font-size: 0.7rem;">${takeawayOrders.length} commande(s)</small>
+                    </div>
+                    <div class="accounting-card" style="padding: 1rem 1.25rem;">
+                        <div class="accounting-card-title" style="font-size: 0.7rem;">🍽️ Sur Place</div>
+                        <div class="accounting-card-value" style="font-size: 1.2rem;">${dineInRev.toLocaleString()} F</div>
+                        <small style="color: var(--text-secondary); font-size: 0.7rem;">${dineInOrders.length} commande(s)</small>
+                    </div>
+                </div>
+
+                <div class="accounting-table-container">
+                    <div class="accounting-header-actions">
+                        <h3 style="font-size: 1.1rem; color: #fff; font-family: var(--font-serif);">Historique Général des Commandes</h3>
+                        <input type="text" placeholder="Rechercher par client ou N°..." class="accounting-search" oninput="filterAccountingTable(this.value)">
+                    </div>
+
+                    <div class="table-responsive-accounting">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Date & Heure</th>
+                                    <th>Client (Prénom & Nom)</th>
+                                    <th>Téléphone</th>
+                                    <th>Mode</th>
+                                    <th>Montant Total</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
     else if (dashboardActiveTab === 'settings') {
         const clientLink = `${window.location.origin}${window.location.pathname}#/r/${r.slug}`;
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(clientLink)}`;
@@ -3120,6 +3512,226 @@ function renderDashboardTabContent(r) {
         `;
     }
 }
+
+// Global helper for accounting search filtering
+window.filterAccountingTable = function(val) {
+    const q = val.toLowerCase().trim();
+    const rows = document.querySelectorAll('.accounting-row');
+    rows.forEach(r => {
+        const client = r.getAttribute('data-client') || '';
+        const id = r.getAttribute('data-id') || '';
+        if (client.includes(q) || id.includes(q)) {
+            r.style.display = '';
+        } else {
+            r.style.display = 'none';
+        }
+    });
+};
+// Global helper for landing page how-it-works tabs switching
+window.switchHowItWorksTab = function(tabId) {
+    document.querySelectorAll('.hw-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('.hw-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    // Highlight the active button
+    const activeBtn = document.querySelector(`.hw-tab-btn[onclick*="${tabId}"]`);
+    const activeContent = document.getElementById(tabId);
+    if (activeBtn) activeBtn.classList.add('active');
+    if (activeContent) activeContent.classList.add('active');
+};
+
+// Global helper for landing page profit simulator
+window.updateSimulation = function() {
+    const ordersInput = document.getElementById('sim-orders-input');
+    const priceInput = document.getElementById('sim-price-input');
+    if (!ordersInput || !priceInput) return;
+
+    const orders = parseInt(ordersInput.value);
+    const price = parseInt(priceInput.value);
+
+    const ordersVal = document.getElementById('sim-orders-val');
+    const priceVal = document.getElementById('sim-price-val');
+    const revResult = document.getElementById('sim-result-revenue');
+
+    if (ordersVal) ordersVal.textContent = orders;
+    if (priceVal) priceVal.textContent = price.toLocaleString();
+
+    // Additionnel revenue (estimated 15% growth)
+    const addRev = Math.round(orders * price * 30 * 0.15);
+    if (revResult) revResult.textContent = "+ " + addRev.toLocaleString() + " FCFA";
+};
+
+// Global helper for checking customer loyalty points
+window.checkLoyaltyPoints = function() {
+    const rawPhone = document.getElementById('loyalty-phone').value.trim();
+    if (!rawPhone) {
+        showToast("Veuillez saisir votre numéro WhatsApp", "warning");
+        return;
+    }
+    const phone = cleanPhoneNumber(rawPhone);
+    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(phone.replace(/\s+/g, ''))) {
+        showToast("Numéro de téléphone sénégalais invalide (ex: +221 77 XXX XX XX)", "danger");
+        return;
+    }
+
+    const orders = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone && o.status === 'Livrée');
+    const reservations = store.data.reservations.filter(r => cleanPhoneNumber(r.customerPhone) === phone && r.status === 'Confirmée');
+
+    const orderPoints = orders.length * 10;
+    const resPoints = reservations.length * 5;
+    const totalPoints = orderPoints + resPoints;
+
+    // Rewards logic: 100 points = 1 reward
+    if (!store.data.usedRewards) {
+        store.data.usedRewards = {};
+    }
+    const usedRewards = store.data.usedRewards[phone] || 0;
+    const totalRewardsUnlocked = Math.floor(totalPoints / 100);
+    const activeRewards = Math.max(0, totalRewardsUnlocked - usedRewards);
+    const nextRewardPoints = 100 - (totalPoints % 100);
+
+    // Gamification badges
+    let tier = 'Gourmand de Bronze 🥉';
+    let tierClass = 'tier-bronze';
+    if (totalPoints >= 200) {
+        tier = 'Empereur du Goût 👑';
+        tierClass = 'tier-emperor';
+    } else if (totalPoints >= 100) {
+        tier = 'Gourmand d\'Or 🥇';
+        tierClass = 'tier-gold';
+    } else if (totalPoints >= 50) {
+        tier = 'Gourmand d\'Argent 🥈';
+        tierClass = 'tier-silver';
+    }
+
+    const resultCard = document.getElementById('loyalty-result-card');
+    if (!resultCard) return;
+    
+    resultCard.style.display = 'block';
+    
+    let rewardActionHtml = '';
+    if (activeRewards > 0) {
+        rewardActionHtml = `
+            <div class="reward-claim-box" style="margin-top: 1.5rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.25rem; border-radius: 16px; display: flex; align-items: center; gap: 1rem;">
+                <span class="gift-icon" style="font-size: 2.2rem;">🎁</span>
+                <div style="flex: 1; text-align: left;">
+                    <h4 style="color: #fff; margin: 0 0 0.25rem 0; font-family: var(--font-serif); font-size: 1.05rem;">Vous avez ${activeRewards} plat(s) offert(s) disponible(s) !</h4>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 0.5rem 0;">Profitez de votre récompense de fidélité lors de votre prochaine commande en ligne.</p>
+                    <button class="btn btn-sm btn-success" onclick="applyLoyaltyRewardToCart('${phone}')">Appliquer au panier actif 🛒</button>
+                </div>
+            </div>
+        `;
+    }
+
+    resultCard.innerHTML = `
+        <div class="loyalty-card-inner" style="background: linear-gradient(135deg, #071a11 0%, #0c2b1d 100%); border: 1px solid var(--border); border-radius: 24px; padding: 1.75rem; text-align: left; position: relative; overflow: hidden; box-shadow: var(--shadow);">
+            <div class="loyalty-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h3 style="font-family: var(--font-serif); color: #fff; margin: 0; font-size: 1.3rem;">Carte de Fidélité</h3>
+                    <span class="loyalty-phone-lbl" style="font-size: 0.8rem; color: var(--text-secondary); font-family: monospace;">WhatsApp: ${phone}</span>
+                </div>
+                <div class="loyalty-tier-badge ${tierClass}" style="font-size: 0.8rem; font-weight: bold; padding: 0.35rem 0.75rem; border-radius: 20px; text-transform: uppercase; background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid rgba(207,168,83,0.3);">${tier}</div>
+            </div>
+            
+            <div class="loyalty-card-body">
+                <div class="loyalty-gauge-container" style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <div class="loyalty-points-circle" style="width: 80px; height: 80px; border-radius: 50%; background: rgba(207, 168, 83, 0.1); border: 2.5px solid var(--primary); display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(207,168,83,0.15);">
+                        <span class="points-num" style="font-size: 1.8rem; font-weight: 800; color: var(--primary); font-family: var(--font-serif); line-height: 1;">${totalPoints}</span>
+                        <span class="points-lbl" style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary); margin-top: 2px;">Points</span>
+                    </div>
+                    <div class="loyalty-progress-text" style="flex: 1; min-width: 200px;">
+                        <p style="font-size: 1.1rem; font-weight: bold; color: #fff; margin: 0;">${totalPoints % 100} / 100 pts</p>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">
+                            Plus que <strong style="color: var(--primary);">${nextRewardPoints} points</strong> pour obtenir votre prochain plat gratuit !
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="loyalty-progress-bar-bg" style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-bottom: 1.5rem; border: 1px solid rgba(255,255,255,0.02);">
+                    <div class="loyalty-progress-bar-fill" style="width: ${totalPoints % 100}%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 10px; transition: width 0.4s ease;"></div>
+                </div>
+
+                <div class="loyalty-stats-summary" style="display: flex; justify-content: space-around; gap: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.25rem; margin-top: 1rem; text-align: center; flex-wrap: wrap;">
+                    <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${orders.length}</span>
+                        <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Commandes livrées</span>
+                    </div>
+                    <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${reservations.length}</span>
+                        <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Tables réservées</span>
+                    </div>
+                    <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${usedRewards}</span>
+                        <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Cadeaux réclamés</span>
+                    </div>
+                </div>
+
+                ${rewardActionHtml}
+            </div>
+        </div>
+    `;
+};
+
+// Global helper for applying loyalty reward to cart
+window.applyLoyaltyRewardToCart = function(phone) {
+    if (!cart.items || cart.items.length === 0) {
+        showToast("Votre panier est vide. Veuillez d'abord ajouter des plats depuis un restaurant !", "warning");
+        return;
+    }
+    
+    // Check points
+    const orders = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone && o.status === 'Livrée');
+    const reservations = store.data.reservations.filter(r => cleanPhoneNumber(r.customerPhone) === phone && r.status === 'Confirmée');
+    const totalPoints = orders.length * 10 + reservations.length * 5;
+    
+    if (!store.data.usedRewards) {
+        store.data.usedRewards = {};
+    }
+    const usedRewards = store.data.usedRewards[phone] || 0;
+    const totalRewardsUnlocked = Math.floor(totalPoints / 100);
+    const activeRewards = Math.max(0, totalRewardsUnlocked - usedRewards);
+    
+    if (activeRewards <= 0) {
+        showToast("Vous n'avez aucune récompense disponible pour le moment.", "danger");
+        return;
+    }
+    
+    cart.loyaltyApplied = true;
+    cart.loyaltyPhone = phone;
+    recalculateCart();
+    saveCart();
+    
+    // Redirect to active restaurant detail checkout tab
+    const activeResto = store.getRestaurantById(cart.restaurantId);
+    if (activeResto) {
+        router.navigate(`/r/${activeResto.slug}`);
+        setTimeout(() => {
+            switchRestoTab('checkout');
+        }, 150);
+    }
+    
+    showToast("🎁 Récompense Fidélité appliquée ! Réduction de 2,500 FCFA.", "success");
+    
+    // Update checker view if on home
+    checkLoyaltyPoints();
+};
+
+// Global helper for removing loyalty reward from active cart
+window.removeLoyaltyReward = function() {
+    cart.loyaltyApplied = false;
+    cart.loyaltyPhone = null;
+    recalculateCart();
+    saveCart();
+    
+    const activeResto = store.getRestaurantById(cart.restaurantId);
+    if (activeResto) {
+        renderCheckoutTab(activeResto);
+    }
+    showToast("Réduction de fidélité retirée.", "info");
+};
 
 // Actions from restaurant dashboard
 function changeOrderStatus(orderId, nextStatus) {
@@ -3946,6 +4558,33 @@ router.add('#/404', () => {
         </div>
     `;
 });
+
+// ----------------------------------------------------
+// PWA Service Worker Registration
+// ----------------------------------------------------
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registered successfully.', reg.scope))
+            .catch(err => console.log('Service Worker registration failed:', err));
+    });
+}
+
+// Global Connection State Listeners
+window.addEventListener('offline', () => {
+    showToast("🔌 Vous êtes hors-ligne. Vous pouvez toujours commander via l'option SMS classique !", "warning");
+});
+window.addEventListener('online', () => {
+    showToast("📶 Connexion Internet rétablie. WhatsApp est de nouveau actif.", "success");
+});
+
+// SMS Link Helper
+window.getSMSLink = function(phone, body) {
+    const cleanPhone = phone.replace(/\+/g, '').trim();
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const separator = isIOS ? '&' : '?';
+    return `sms:${cleanPhone}${separator}body=${encodeURIComponent(body)}`;
+};
 
 // Start application routing
 router.resolve();
