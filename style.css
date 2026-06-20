@@ -2400,15 +2400,26 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         display: none;
     }
     .timeline-card {
-        flex: 0 0 85%;
-        scroll-snap-align: center;
+        flex: 0 0 80% !important;
+        scroll-snap-align: center !important;
     }
 
     .study-split-grid {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
-    .study-carousel-wrapper, .solution-carousel-wrapper {
+    .study-left-col {
+        padding: 1.25rem !important;
+        border-radius: 20px !important;
+    }
+    .study-carousel-wrapper {
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 0.5rem !important;
+        padding: 0 !important;
+        margin-top: 1rem !important;
+    }
+    .solution-carousel-wrapper {
         display: flex;
         flex-direction: column;
         gap: 0.75rem;
@@ -2417,7 +2428,19 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     .study-carousel-wrapper::-webkit-scrollbar, .solution-carousel-wrapper::-webkit-scrollbar {
         display: none;
     }
-    .study-metric-card, .solution-feature-card {
+    .square-stat-card {
+        padding: 0.85rem 0.25rem !important;
+        border-radius: 12px !important;
+        aspect-ratio: 1 / 1 !important;
+    }
+    .square-stat-card .stat-number {
+        font-size: 1.3rem !important;
+        margin-bottom: 0.25rem !important;
+    }
+    .square-stat-card .stat-label {
+        font-size: 0.62rem !important;
+    }
+    .solution-feature-card {
         flex: none;
         width: 100%;
         margin-bottom: 0.5rem !important;
@@ -2425,23 +2448,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         border-radius: 16px;
         background: rgba(255, 255, 255, 0.02) !important;
         border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    }
-    .study-metric-card {
-        border-left: 4px solid var(--primary) !important;
-    }
-    .solution-feature-card {
         border-left: 4px solid #4caf50 !important;
-    }
-    .study-metric-number {
-        font-size: 1.5rem !important;
-        font-weight: 900;
-        color: var(--primary);
-        min-width: 55px !important;
-        background: rgba(207, 168, 83, 0.1) !important;
-        padding: 0.25rem 0.5rem;
-        border-radius: 8px;
-        text-align: center;
-        margin-right: 0.5rem;
     }
     .solution-icon {
         font-size: 1.4rem !important;
@@ -2716,20 +2723,44 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     border-radius: 28px;
     box-shadow: var(--shadow);
 }
-.study-metric-card {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    padding: 1.25rem;
-    border-radius: 20px;
-    background: var(--bg-input);
-    border: 1px solid rgba(255,255,255,0.03);
-    margin-bottom: 1rem;
-    transition: var(--transition-smooth);
+.study-carousel-wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-top: 1.5rem;
 }
-.study-metric-card:hover {
-    transform: translateX(5px);
-    border-color: rgba(207,168,83,0.2);
+.square-stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem 0.75rem !important;
+    aspect-ratio: 1 / 1;
+    background: var(--bg-input) !important;
+    border: 1px solid rgba(255,255,255,0.03) !important;
+    border-radius: 20px;
+    margin-bottom: 0 !important;
+    transition: var(--transition-smooth) !important;
+}
+.square-stat-card:hover {
+    transform: translateY(-5px) !important;
+    border-color: var(--primary) !important;
+    background: rgba(207, 168, 83, 0.05) !important;
+    box-shadow: 0 8px 24px rgba(207, 168, 83, 0.08);
+}
+.square-stat-card .stat-number {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 0.5rem;
+    font-family: var(--font-serif);
+}
+.square-stat-card .stat-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    line-height: 1.35;
 }
 .study-metric-number {
     font-size: 2.2rem;

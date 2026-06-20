@@ -1383,28 +1383,19 @@ router.add('#/', () => {
                     <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: #fff;">Le Constat Local (Étude Juin 2025)</h3>
                     
                     <div class="study-carousel-wrapper">
-                        <div class="study-metric-card">
-                            <span class="study-metric-number">85%</span>
-                            <div class="study-metric-text">
-                                <h4>Désert Numérique Complet</h4>
-                                <p>85% des restaurants de Thiès n'ont aucun site internet ni réseaux sociaux actifs pour leurs clients.</p>
-                            </div>
+                        <div class="study-metric-card square-stat-card">
+                            <span class="stat-number">85%</span>
+                            <span class="stat-label">Désert Numérique Complet</span>
                         </div>
 
-                        <div class="study-metric-card">
-                            <span class="study-metric-number">0%</span>
-                            <div class="study-metric-text">
-                                <h4>Absence de Contenu Moderne</h4>
-                                <p>Aucun établissement ne met en valeur ses plats signatures ou menus du jour en format vidéo (TikTok/Reels).</p>
-                            </div>
+                        <div class="study-metric-card square-stat-card">
+                            <span class="stat-number">0%</span>
+                            <span class="stat-label">Absence de Contenu Moderne</span>
                         </div>
 
-                        <div class="study-metric-card">
-                            <span class="study-metric-number">90%</span>
-                            <div class="study-metric-text">
-                                <h4>Avis Négatifs Ignorés</h4>
-                                <p>La quasi-totalité des fiches Google Business restent sans réponse, nuisant gravement à l'image des restaurants.</p>
-                            </div>
+                        <div class="study-metric-card square-stat-card">
+                            <span class="stat-number">90%</span>
+                            <span class="stat-label">Avis Négatifs Ignorés</span>
                         </div>
                     </div>
                 </div>
