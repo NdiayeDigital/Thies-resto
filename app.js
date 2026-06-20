@@ -1074,27 +1074,29 @@ router.add('#/', () => {
                 <div class="study-left-col">
                     <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: #fff;">Le Constat Local (Étude Juin 2025)</h3>
                     
-                    <div class="study-metric-card">
-                        <span class="study-metric-number">85%</span>
-                        <div class="study-metric-text">
-                            <h4>Désert Numérique Complet</h4>
-                            <p>85% des restaurants de Thiès n'ont aucun site internet ni réseaux sociaux actifs pour leurs clients.</p>
+                    <div class="study-carousel-wrapper">
+                        <div class="study-metric-card">
+                            <span class="study-metric-number">85%</span>
+                            <div class="study-metric-text">
+                                <h4>Désert Numérique Complet</h4>
+                                <p>85% des restaurants de Thiès n'ont aucun site internet ni réseaux sociaux actifs pour leurs clients.</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="study-metric-card">
-                        <span class="study-metric-number">0%</span>
-                        <div class="study-metric-text">
-                            <h4>Absence de Contenu Moderne</h4>
-                            <p>Aucun établissement ne met en valeur ses plats signatures ou menus du jour en format vidéo (TikTok/Reels).</p>
+                        <div class="study-metric-card">
+                            <span class="study-metric-number">0%</span>
+                            <div class="study-metric-text">
+                                <h4>Absence de Contenu Moderne</h4>
+                                <p>Aucun établissement ne met en valeur ses plats signatures ou menus du jour en format vidéo (TikTok/Reels).</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="study-metric-card">
-                        <span class="study-metric-number">90%</span>
-                        <div class="study-metric-text">
-                            <h4>Avis Négatifs Ignorés</h4>
-                            <p>La quasi-totalité des fiches Google Business restent sans réponse, nuisant gravement à l'image des restaurants.</p>
+                        <div class="study-metric-card">
+                            <span class="study-metric-number">90%</span>
+                            <div class="study-metric-text">
+                                <h4>Avis Négatifs Ignorés</h4>
+                                <p>La quasi-totalité des fiches Google Business restent sans réponse, nuisant gravement à l'image des restaurants.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1103,30 +1105,33 @@ router.add('#/', () => {
                 <div class="study-right-col">
                     <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: #fff;">Les Réponses de THIES Resto</h3>
 
-                    <div class="solution-feature-card">
-                        <span class="solution-icon">✨</span>
-                        <div class="solution-text">
-                            <h3>1. Vitrine Digitale Premium</h3>
-                            <p>Chaque partenaire bénéficie d'une page personnalisée, moderne, rapide et optimisée pour le référencement local à Thiès.</p>
+                    <div class="solution-carousel-wrapper">
+                        <div class="solution-feature-card">
+                            <span class="solution-icon">✨</span>
+                            <div class="solution-text">
+                                <h3>1. Vitrine Digitale Premium</h3>
+                                <p>Chaque partenaire bénéficie d'une page personnalisée, moderne, rapide et optimisée pour le référencement local à Thiès.</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="solution-feature-card">
-                        <span class="solution-icon">⚡</span>
-                        <div class="solution-text">
-                            <h3>2. Précommande Réduisant l'Attente</h3>
-                            <p>Les clients commandent et réservent à l'avance, ce qui réduit de moitié les temps d'attente souvent pointés du doigt.</p>
+                        <div class="solution-feature-card">
+                            <span class="solution-icon">⚡</span>
+                            <div class="solution-text">
+                                <h3>2. Précommande Réduisant l'Attente</h3>
+                                <p>Les clients commandent et réservent à l'avance, ce qui réduit de moitié les temps d'attente souvent pointés du doigt.</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="solution-feature-card">
-                        <span class="solution-icon">📶</span>
-                        <div class="solution-text">
-                            <h3>3. Mode Hybride (SMS en Secours)</h3>
-                            <p>En cas de coupure ou faiblesse du réseau internet à Thiès, la commande bascule automatiquement par SMS classique sécurisé.</p>
+                        <div class="solution-feature-card">
+                            <span class="solution-icon">📶</span>
+                            <div class="solution-text">
+                                <h3>3. Mode Hybride (SMS en Secours)</h3>
+                                <p>En cas de coupure ou faiblesse du réseau internet à Thiès, la commande bascule automatiquement par SMS classique sécurisé.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
         </section>
     `;
 

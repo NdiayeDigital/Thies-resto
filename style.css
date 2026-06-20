@@ -2340,64 +2340,24 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         width: 250px;
         height: 250px;
     }
+
+    .hero-right-col {
+        margin-top: 3.5rem;
+    }
     
     .reference-row-cards {
-        grid-template-columns: 1.15fr 0.7fr 1.15fr;
-        gap: 0.35rem;
-        margin: 1.5rem auto;
-        padding: 0 0.25rem;
-    }
-    .ref-card-text {
-        padding: 0.75rem 0.35rem;
-        border-radius: 10px;
-    }
-    .ref-card-text h3 {
-        font-size: 0.7rem;
-        margin-bottom: 0.15rem;
-    }
-    .ref-card-text p {
-        font-size: 0.55rem;
-        line-height: 1.25;
-    }
-    .ref-card-icon-circle {
-        width: 26px;
-        height: 26px;
-        font-size: 0.8rem;
-        margin-bottom: 0.15rem;
-    }
-    .ref-card-image-box {
-        height: 100%;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-    .ref-card-image-box img {
-        height: 100%;
-        object-fit: cover;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
     }
     
     .side-by-side-section {
-        grid-template-columns: 0.8fr 1.2fr;
-        gap: 0.75rem;
-        margin: 2rem auto;
-        padding: 0 0.5rem;
+        grid-template-columns: 1fr;
+        gap: 2rem;
     }
     
     .side-img-box {
-        height: 150px;
-        border-radius: 14px;
-    }
-    
-    .side-content {
-        padding: 0;
-    }
-    .side-content h2 {
-        font-size: 0.9rem;
-        margin-bottom: 0.25rem;
-    }
-    .side-content p {
-        font-size: 0.65rem;
-        line-height: 1.35;
-        margin-bottom: 0.5rem;
+        order: -1;
+        height: 240px;
     }
     
     .signature-section {
@@ -2424,6 +2384,46 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     .sig-item-body p {
         font-size: 0.7rem;
         line-height: 1.35;
+    }
+
+    /* Horizontal Carousels for mobile onboarding & analysis */
+    .timeline-steps {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 1.25rem;
+        padding: 1.5rem 0.5rem;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+    }
+    .timeline-steps::-webkit-scrollbar {
+        display: none;
+    }
+    .timeline-card {
+        flex: 0 0 85%;
+        scroll-snap-align: center;
+    }
+
+    .study-split-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    .study-carousel-wrapper, .solution-carousel-wrapper {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 1.25rem;
+        padding: 1rem 0.5rem;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+    }
+    .study-carousel-wrapper::-webkit-scrollbar, .solution-carousel-wrapper::-webkit-scrollbar {
+        display: none;
+    }
+    .study-metric-card, .solution-feature-card {
+        flex: 0 0 85%;
+        scroll-snap-align: center;
+        margin-bottom: 0 !important;
     }
 }
 
