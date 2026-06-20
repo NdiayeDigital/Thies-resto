@@ -4086,34 +4086,30 @@ function changeOrderStatus(orderId, nextStatus) {
     
     store.updateOrderStatus(orderId, nextStatus);
     
-    // Create pre-filled WhatsApp notification message templates
-    let waText = '';
+    // Simulate push notification to the client
+    let pushText = '';
     
     if (nextStatus === 'Confirmée') {
-        waText = `Bonjour ${o.customerName}, votre commande n°*${o.id}* chez *${currentRestaurantSession.name}* a été validée et part en cuisine ! 🍳`;
+        pushText = `La commande n°${o.id} a été validée et part en cuisine ! 🍳`;
     } else if (nextStatus === 'Prête') {
-        const recoveryMessage = o.mode === 'Livraison' 
-            ? `Notre livreur vient de prendre la route pour vous livrer à l'adresse indiquée.` 
-            : `Vous pouvez dès à présent venir la récupérer au restaurant.`;
-        waText = `Bonjour ${o.customerName}, bonne nouvelle ! Votre commande n°*${o.id}* chez *${currentRestaurantSession.name}* est PRÊTE ! 🛵
-
-${recoveryMessage}`;
+        pushText = `La commande n°${o.id} est PRÊTE ! 🛵`;
     } else if (nextStatus === 'Livrée') {
-        const clientLink = `${window.location.origin}${window.location.pathname}#/r/${store.getRestaurantById(o.restaurantId).slug}`;
-        waText = `Bonjour ${o.customerName}, votre commande n°*${o.id}* chez *${currentRestaurantSession.name}* a été livrée / récupérée avec succès. Bon appétit ! 😋
-
-Laissez-nous une note sur notre page pour nous aider à nous améliorer : ${clientLink}`;
+        pushText = `La commande n°${o.id} a été livrée avec succès. Bon appétit ! 😋`;
     }
-
-    const waLink = `https://wa.me/${o.customerPhone.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
     
     showToast(`Commande mise à jour vers : ${nextStatus}`, "success");
+    if (pushText) {
+        showToast(`📲 Notification push envoyée au client !`, "success");
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Push Envoyé au Client', {
+                body: pushText,
+                icon: 'icon.png'
+            });
+        }
+    }
     
     // Reload dashboard list
     switchDashboardTab('orders');
-    
-    // Automatically trigger WhatsApp notification
-    window.open(waLink, '_blank');
 }
 
 function changeReservationStatus(resId, nextStatus) {
@@ -4122,22 +4118,27 @@ function changeReservationStatus(resId, nextStatus) {
     
     store.updateReservationStatus(resId, nextStatus);
     
-    let waText = '';
+    let pushText = '';
     const formattedDate = new Date(res.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
     
     if (nextStatus === 'Confirmée') {
-        waText = `Bonjour ${res.customerName}, nous sommes ravis de vous confirmer votre réservation de table pour *${res.guests} personnes* chez *${currentRestaurantSession.name}* le *${formattedDate} à ${res.time}*. À très bientôt ! 📅`;
+        pushText = `Réservation confirmée pour ${res.guests} personnes le ${formattedDate} à ${res.time}. 📅`;
     } else if (nextStatus === 'Annulée') {
-        waText = `Bonjour ${res.customerName}, nous sommes au regret de vous informer que nous ne pouvons donner suite à votre demande de réservation n°*${res.id}* le *${formattedDate}* chez *${currentRestaurantSession.name}* pour cause d'indisponibilité ou d'événement privé. Veuillez nous excuser pour le désagrément.`;
+        pushText = `Réservation annulée pour cause d'indisponibilité le ${formattedDate}.`;
     }
     
-    const waLink = `https://wa.me/${res.customerPhone.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
-    
     showToast(`Réservation mise à jour : ${nextStatus}`, "success");
+    if (pushText) {
+        showToast(`📲 Notification push envoyée au client !`, "success");
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('Push Envoyé au Client', {
+                body: pushText,
+                icon: 'icon.png'
+            });
+        }
+    }
+
     switchDashboardTab('reservations');
-    
-    // Automatically open WhatsApp template
-    window.open(waLink, '_blank');
 }
 
 function toggleManualReservationForm() {
