@@ -1019,7 +1019,7 @@ router.add('#/', () => {
             <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <span class="study-title-tag" style="background: rgba(207, 168, 83, 0.1); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(207, 168, 83, 0.2);">🎁 Programme de Fidélisation</span>
                 <h2 style="font-family: var(--font-serif); font-size: 2rem; color: #fff; margin: 0.75rem 0 0.5rem 0;">Consultez votre Statut & Plats Offerts</h2>
-                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">Saisissez votre numéro WhatsApp pour suivre vos points fidélité (10 pts/commande livrée, 5 pts/réservation) et réclamer vos cadeaux.</p>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">Saisissez votre numéro WhatsApp pour suivre vos points fidélité (5 pts/commande livrée, 5 pts/réservation) et réclamer vos cadeaux.</p>
                 
                 <div style="display: flex; gap: 0.75rem; justify-content: center; max-width: 480px; margin: 0 auto 1.5rem auto;">
                     <input type="tel" id="loyalty-phone" class="form-control" placeholder="+221 77 123 45 67" style="margin-bottom: 0;">
@@ -1127,45 +1127,6 @@ router.add('#/', () => {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Profit Simulator -->
-            <div class="simulator-container">
-                <div class="simulator-title">
-                    <span>📱 Simulateur d'Impact pour Restaurateurs</span>
-                </div>
-                
-                <div class="sim-grid">
-                    <div class="sim-sliders-col">
-                        <div class="sim-group">
-                            <div class="sim-label-row">
-                                <span>Commandes moyennes / jour</span>
-                                <span class="sim-val-display"><span id="sim-orders-val">25</span> commandes</span>
-                            </div>
-                            <input type="range" min="5" max="150" value="25" class="sim-slider" id="sim-orders-input" oninput="updateSimulation()">
-                        </div>
-
-                        <div class="sim-group">
-                            <div class="sim-label-row">
-                                <span>Panier Moyen par Client</span>
-                                <span class="sim-val-display"><span id="sim-price-val">4500</span> FCFA</span>
-                            </div>
-                            <input type="range" min="1000" max="25000" step="500" value="4500" class="sim-slider" id="sim-price-input" oninput="updateSimulation()">
-                        </div>
-                    </div>
-
-                    <div class="sim-results-col">
-                        <div class="sim-result-item">
-                            <div class="sim-result-lbl">Chiffre d'affaires mensuel additionnel (Est. +15%)</div>
-                            <div class="sim-result-val" id="sim-result-revenue">+ 506,250 FCFA</div>
-                        </div>
-                        <div class="sim-result-item">
-                            <div class="sim-result-lbl">Temps d'attente moyen économisé</div>
-                            <div class="sim-result-val time" id="sim-result-time">- 50%</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </section>
     `;
 
@@ -3557,26 +3518,6 @@ window.switchHowItWorksTab = function(tabId) {
     if (activeContent) activeContent.classList.add('active');
 };
 
-// Global helper for landing page profit simulator
-window.updateSimulation = function() {
-    const ordersInput = document.getElementById('sim-orders-input');
-    const priceInput = document.getElementById('sim-price-input');
-    if (!ordersInput || !priceInput) return;
-
-    const orders = parseInt(ordersInput.value);
-    const price = parseInt(priceInput.value);
-
-    const ordersVal = document.getElementById('sim-orders-val');
-    const priceVal = document.getElementById('sim-price-val');
-    const revResult = document.getElementById('sim-result-revenue');
-
-    if (ordersVal) ordersVal.textContent = orders;
-    if (priceVal) priceVal.textContent = price.toLocaleString();
-
-    // Additionnel revenue (estimated 15% growth)
-    const addRev = Math.round(orders * price * 30 * 0.15);
-    if (revResult) revResult.textContent = "+ " + addRev.toLocaleString() + " FCFA";
-};
 
 // Global helper for checking customer loyalty points
 window.checkLoyaltyPoints = function() {
@@ -3594,7 +3535,7 @@ window.checkLoyaltyPoints = function() {
     const orders = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone && o.status === 'Livrée');
     const reservations = store.data.reservations.filter(r => cleanPhoneNumber(r.customerPhone) === phone && r.status === 'Confirmée');
 
-    const orderPoints = orders.length * 10;
+    const orderPoints = orders.length * 5;
     const resPoints = reservations.length * 5;
     const totalPoints = orderPoints + resPoints;
 
@@ -3699,7 +3640,7 @@ window.applyLoyaltyRewardToCart = function(phone) {
     // Check points
     const orders = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone && o.status === 'Livrée');
     const reservations = store.data.reservations.filter(r => cleanPhoneNumber(r.customerPhone) === phone && r.status === 'Confirmée');
-    const totalPoints = orders.length * 10 + reservations.length * 5;
+    const totalPoints = orders.length * 5 + reservations.length * 5;
     
     if (!store.data.usedRewards) {
         store.data.usedRewards = {};
