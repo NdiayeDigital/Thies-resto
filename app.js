@@ -352,6 +352,27 @@ class Store {
                 }
             }
 
+            // 4. Sync Customers (Loyalty data)
+            const { data: dbCustomers, error: custError } = await supabaseClient.from('customers').select('*');
+            if (!custError && dbCustomers) {
+                if (!this.data.usedRewards) this.data.usedRewards = {};
+                
+                dbCustomers.forEach(c => {
+                    this.data.usedRewards[c.phone] = Number(c.used_rewards || 0);
+                });
+                
+                // If local usedRewards has any numbers, sync them to Supabase
+                for (const phone in this.data.usedRewards) {
+                    const localUsed = this.data.usedRewards[phone];
+                    const dbCust = dbCustomers.find(c => c.phone === phone);
+                    if (!dbCust || dbCust.used_rewards !== localUsed) {
+                        const order = this.data.orders.find(o => cleanPhoneNumber(o.customerPhone) === phone);
+                        const name = order ? order.customerName : "Client Fidèle";
+                        await this.pushCustomerToSupabase(phone, name, localUsed);
+                    }
+                }
+            }
+
             this.save();
             console.log("Supabase synchronization completed successfully.");
             if (typeof applyFilters === 'function') {
@@ -439,6 +460,28 @@ class Store {
         }
     }
 
+    async pushCustomerToSupabase(phone, name, usedRewards) {
+        if (!supabaseClient) return;
+        try {
+            await supabaseClient.from('customers').upsert({
+                phone: phone,
+                name: name,
+                used_rewards: usedRewards
+            });
+        } catch (e) {
+            console.error("Failed to push customer to Supabase", e);
+        }
+    }
+
+    applyLoyaltyRewardUsed(phone, name) {
+        if (!this.data.usedRewards) {
+            this.data.usedRewards = {};
+        }
+        this.data.usedRewards[phone] = (this.data.usedRewards[phone] || 0) + 1;
+        this.save();
+        this.pushCustomerToSupabase(phone, name, this.data.usedRewards[phone]);
+    }
+
     getRestaurants() {
         return this.data.restaurants;
     }
@@ -482,6 +525,10 @@ class Store {
         this.data.orders.unshift(order);
         this.save();
         this.pushOrderToSupabase(order);
+        
+        // Also save customer profile in Supabase
+        const usedRewards = (this.data.usedRewards && this.data.usedRewards[order.customerPhone]) || 0;
+        this.pushCustomerToSupabase(order.customerPhone, order.customerName, usedRewards);
     }
 
     updateOrderStatus(orderId, status) {
@@ -2020,11 +2067,7 @@ function submitSimpleOrder(e, restaurantId) {
     
     // Increment used rewards if loyalty was applied
     if (cart.loyaltyApplied && cart.loyaltyPhone) {
-        if (!store.data.usedRewards) {
-            store.data.usedRewards = {};
-        }
-        store.data.usedRewards[cart.loyaltyPhone] = (store.data.usedRewards[cart.loyaltyPhone] || 0) + 1;
-        store.save();
+        store.applyLoyaltyRewardUsed(cart.loyaltyPhone, `${firstname} ${lastname}`);
     }
 
     // Format WhatsApp & SMS message

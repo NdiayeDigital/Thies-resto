@@ -55,12 +55,42 @@ CREATE TABLE IF NOT EXISTS reservations (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Enable Read and Write Permissions (RLS Bypass for Anonymous Client usage)
--- Note: For a production app without server auth, we allow public select, insert, update and delete.
+-- 4. Create Customers Table (Loyalty & Profiles)
+CREATE TABLE IF NOT EXISTS customers (
+    phone TEXT PRIMARY KEY,
+    name TEXT,
+    used_rewards INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 5. Enable Row Level Security (RLS)
 ALTER TABLE restaurants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 
+-- Clean existing policies if any
+DROP POLICY IF EXISTS "Allow public read on restaurants" ON restaurants;
+DROP POLICY IF EXISTS "Allow public insert on restaurants" ON restaurants;
+DROP POLICY IF EXISTS "Allow public update on restaurants" ON restaurants;
+DROP POLICY IF EXISTS "Allow public delete on restaurants" ON restaurants;
+
+DROP POLICY IF EXISTS "Allow public read on orders" ON orders;
+DROP POLICY IF EXISTS "Allow public insert on orders" ON orders;
+DROP POLICY IF EXISTS "Allow public update on orders" ON orders;
+DROP POLICY IF EXISTS "Allow public delete on orders" ON orders;
+
+DROP POLICY IF EXISTS "Allow public read on reservations" ON reservations;
+DROP POLICY IF EXISTS "Allow public insert on reservations" ON reservations;
+DROP POLICY IF EXISTS "Allow public update on reservations" ON reservations;
+DROP POLICY IF EXISTS "Allow public delete on reservations" ON reservations;
+
+DROP POLICY IF EXISTS "Allow public read on customers" ON customers;
+DROP POLICY IF EXISTS "Allow public insert on customers" ON customers;
+DROP POLICY IF EXISTS "Allow public update on customers" ON customers;
+DROP POLICY IF EXISTS "Allow public delete on customers" ON customers;
+
+-- Recreate RLS policies
 CREATE POLICY "Allow public read on restaurants" ON restaurants FOR SELECT USING (true);
 CREATE POLICY "Allow public insert on restaurants" ON restaurants FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update on restaurants" ON restaurants FOR UPDATE USING (true);
@@ -75,3 +105,8 @@ CREATE POLICY "Allow public read on reservations" ON reservations FOR SELECT USI
 CREATE POLICY "Allow public insert on reservations" ON reservations FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update on reservations" ON reservations FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete on reservations" ON reservations FOR DELETE USING (true);
+
+CREATE POLICY "Allow public read on customers" ON customers FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on customers" ON customers FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update on customers" ON customers FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete on customers" ON customers FOR DELETE USING (true);
