@@ -143,6 +143,8 @@ class Store {
         // Background sync with Supabase
         if (supabaseClient) {
             this.syncFromSupabase();
+            // Poll for remote database updates every 15 seconds
+            setInterval(() => this.syncFromSupabase(), 15000);
         }
     }
 
@@ -285,7 +287,59 @@ class Store {
                         menu: typeof r.menu === 'string' ? JSON.parse(r.menu) : r.menu,
                         reviews: typeof r.reviews === 'string' ? JSON.parse(r.reviews) : r.reviews
                     }));
+
+                    // Detect changes to menus or critical state to update active views
+                    let dataChanged = false;
+                    mappedRestos.forEach(dbR => {
+                        const localR = this.data.restaurants.find(lr => lr.id === dbR.id);
+                        if (localR) {
+                            if (JSON.stringify(localR.menu) !== JSON.stringify(dbR.menu) || 
+                                localR.coverImage !== dbR.coverImage ||
+                                localR.isOpenManual !== dbR.isOpenManual ||
+                                localR.rating !== dbR.rating ||
+                                localR.reviewsCount !== dbR.reviewsCount ||
+                                localR.name !== dbR.name ||
+                                localR.status !== dbR.status ||
+                                localR.openHours !== dbR.openHours ||
+                                JSON.stringify(localR.closedDays) !== JSON.stringify(dbR.closedDays)) {
+                                dataChanged = true;
+                            }
+                        }
+                    });
+
                     this.data.restaurants = mappedRestos;
+
+                    // If changes were detected, update active UI elements
+                    if (dataChanged) {
+                        console.log("Restaurant data changed on Supabase, refreshing UI elements...");
+                        const hash = window.location.hash || '#/';
+                        const restoMatch = hash.match(/^#\/r\/([^/]+)$/);
+                        if (restoMatch) {
+                            const slug = restoMatch[1];
+                            const currentResto = this.getRestaurantBySlug(slug);
+                            if (currentResto) {
+                                const activeTabBtn = document.querySelector('.tab-btn.active');
+                                const isMenuTab = activeTabBtn ? activeTabBtn.innerText.toLowerCase().includes('menu') : true;
+                                if (isMenuTab) {
+                                    renderDishesTab(currentResto);
+                                } else {
+                                    const statusBadge = isRestaurantOpenNow(currentResto) 
+                                        ? `<span class="badge badge-success">Ouvert</span>` 
+                                        : `<span class="badge badge-danger">Fermé</span>`;
+                                    
+                                    const starsRating = document.querySelector('.stars-rating');
+                                    if (starsRating) starsRating.innerHTML = `★ ${currentResto.rating.toFixed(1)}`;
+                                    
+                                    const statusBadgeEl = document.querySelector('.restaurant-status-row .badge');
+                                    if (statusBadgeEl) statusBadgeEl.outerHTML = statusBadge;
+                                }
+                            }
+                        } else if (hash === '#/' || hash === '') {
+                            if (typeof applyFilters === 'function') {
+                                applyFilters();
+                            }
+                        }
+                    }
                 }
             }
 

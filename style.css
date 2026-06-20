@@ -2412,8 +2412,8 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         display: flex;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
-        gap: 1.25rem;
-        padding: 1rem 0.5rem;
+        gap: 1rem;
+        padding: 0.75rem 0.5rem;
         scroll-behavior: smooth;
         scrollbar-width: none;
     }
@@ -2421,9 +2421,26 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         display: none;
     }
     .study-metric-card, .solution-feature-card {
-        flex: 0 0 85%;
+        flex: 0 0 72%;
         scroll-snap-align: center;
         margin-bottom: 0 !important;
+        padding: 1rem !important;
+    }
+    .study-metric-number {
+        font-size: 1.8rem !important;
+        min-width: 60px !important;
+    }
+    .study-metric-text h4 {
+        font-size: 0.85rem !important;
+    }
+    .study-metric-text p {
+        font-size: 0.75rem !important;
+    }
+    .solution-feature-card h3 {
+        font-size: 0.95rem !important;
+    }
+    .solution-feature-card p {
+        font-size: 0.75rem !important;
     }
 }
 
