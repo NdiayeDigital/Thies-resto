@@ -1,5 +1,5 @@
 {
-  "name": "THIES Resto — Plateforme de Restauration",
+  "name": "THIES Resto – Plateforme de Restauration",
   "short_name": "THIES Resto",
   "description": "Portail unique de commande et réservation pour les restaurants de Thiès, Sénégal",
   "start_url": "/",
@@ -8,15 +8,15 @@
   "theme_color": "#cfa853",
   "icons": [
     {
-      "src": "logo.jpg",
+      "src": "icon.png",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "logo.jpg",
+      "src": "icon.png",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any maskable"
     }
   ]

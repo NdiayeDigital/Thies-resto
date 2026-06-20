@@ -19,8 +19,8 @@
 
     <!-- PWA & Favicon -->
     <link rel="manifest" href="manifest.json">
-    <link rel="icon" href="logo.jpg" type="image/jpeg">
-    <link rel="apple-touch-icon" href="logo.jpg">
+    <link rel="icon" href="icon.png" type="image/jpeg">
+    <link rel="apple-touch-icon" href="icon.png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,14 +30,14 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 
     <link rel="stylesheet" href="style.css">
-</head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>`n</head>
 
 <body>
     <!-- ========== LOADING OVERLAY ========== -->
     <div id="loading-overlay" class="loading-overlay">
         <div class="loading-spinner">
             <div class="spinner-ring"></div>
-            <img src="logo.jpg" class="spinner-logo" alt="THIES Resto Logo" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin: auto;">
+            <img src="icon.png" class="spinner-logo" alt="THIES Resto Logo" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin: auto;">
         </div>
         <p class="loading-text" id="loading-text">Chargement de THIES Resto…</p>
         <div class="loading-progress-container" style="width: 240px; height: 6px; background: rgba(207, 168, 83, 0.15); border-radius: 10px; margin-top: 1.5rem; overflow: hidden; border: 1px solid rgba(207, 168, 83, 0.2);">
@@ -64,7 +64,7 @@
 
             <!-- Center: Logo -->
             <div class="logo-container" onclick="router.navigate('/')">
-                <img src="logo.jpg" class="logo-icon" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+                <img src="icon.png" class="logo-icon" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
                 <span class="logo-text">THIES Resto</span>
             </div>
 
@@ -76,7 +76,7 @@
             <!-- Mobile Drawer Overlay -->
             <div class="mobile-drawer" id="mobile-drawer">
                 <div class="drawer-header">
-                    <img src="logo.jpg" class="logo-icon" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
+                    <img src="icon.png" class="logo-icon" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
                     <span class="logo-text">THIES Resto</span>
                     <button class="close-drawer-btn" onclick="toggleMobileMenu()">✕</button>
                 </div>
@@ -126,7 +126,7 @@
                 <!-- About Column -->
                 <div class="footer-col">
                     <div class="footer-brand" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                        <img src="logo.jpg" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+                        <img src="icon.png" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
                         <span class="logo-text" style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">THIES Resto</span>
                     </div>
                     <p class="footer-about-text">
@@ -139,7 +139,8 @@
                 <!-- Policies Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Légal</h4>
-                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client</a>
+                    <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions Générales (CGV)</a>
+                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client & RGPD</a>
                     <a href="#" onclick="router.navigate('/politique-admin'); return false;">Politique Restaurant</a>
                 </div>
 

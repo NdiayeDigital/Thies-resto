@@ -259,16 +259,16 @@ class Store {
         try {
             console.log("Syncing with Supabase...");
 
-            // 1. Sync Restaurants
-            const { data: dbRestos, error: restosError } = await supabaseClient.from('restaurants').select('*');
+            // 1. Sync Restaurants (Publiques)
+            const { data: dbRestos, error: restosError } = await supabaseClient.from('public_restaurants').select('*');
             if (!restosError && dbRestos) {
-                if (dbRestos.length === 0) {
-                    console.log("Supabase restaurants table is empty. Seeding...");
-                    for (const r of this.data.restaurants) {
-                        await this.pushRestaurantToSupabase(r);
-                    }
-                } else {
-                    const mappedRestos = dbRestos.map(r => ({
+                const mappedRestos = dbRestos.map(r => {
+                    let parsedMenu = r.menu;
+                    try { if (typeof r.menu === 'string') parsedMenu = JSON.parse(r.menu); } catch(e) {}
+                    let parsedReviews = r.reviews;
+                    try { if (typeof r.reviews === 'string') parsedReviews = JSON.parse(r.reviews); } catch(e) {}
+                    
+                    return {
                         id: r.id,
                         name: r.name,
                         slug: r.slug,
@@ -278,81 +278,48 @@ class Store {
                         address: r.address,
                         whatsapp: r.whatsapp,
                         openHours: r.open_hours,
-                        closedDays: Array.isArray(r.closed_days) ? r.closed_days : JSON.parse(r.closed_days || '[]'),
+                        closedDays: Array.isArray(r.closed_days) ? r.closed_days : (r.closed_days ? JSON.parse(r.closed_days) : []),
                         isOpenManual: Boolean(r.is_open_manual),
-                        status: r.status,
-                        username: r.username,
-                        password: r.password,
-                        coverImage: r.cover_image,
-                        menu: typeof r.menu === 'string' ? JSON.parse(r.menu) : r.menu,
-                        reviews: typeof r.reviews === 'string' ? JSON.parse(r.reviews) : r.reviews
-                    }));
-
-                    // Detect changes to menus or critical state to update active views
-                    let dataChanged = false;
-                    mappedRestos.forEach(dbR => {
-                        const localR = this.data.restaurants.find(lr => lr.id === dbR.id);
-                        if (localR) {
-                            if (JSON.stringify(localR.menu) !== JSON.stringify(dbR.menu) || 
-                                localR.coverImage !== dbR.coverImage ||
-                                localR.isOpenManual !== dbR.isOpenManual ||
-                                localR.rating !== dbR.rating ||
-                                localR.reviewsCount !== dbR.reviewsCount ||
-                                localR.name !== dbR.name ||
-                                localR.status !== dbR.status ||
-                                localR.openHours !== dbR.openHours ||
-                                JSON.stringify(localR.closedDays) !== JSON.stringify(dbR.closedDays)) {
-                                dataChanged = true;
-                            }
-                        }
-                    });
-
-                    this.data.restaurants = mappedRestos;
-
-                    // If changes were detected, update active UI elements
-                    if (dataChanged) {
-                        console.log("Restaurant data changed on Supabase, refreshing UI elements...");
-                        const hash = window.location.hash || '#/';
-                        const restoMatch = hash.match(/^#\/r\/([^/]+)$/);
-                        if (restoMatch) {
-                            const slug = restoMatch[1];
-                            const currentResto = this.getRestaurantBySlug(slug);
-                            if (currentResto) {
-                                const activeTabBtn = document.querySelector('.tab-btn.active');
-                                const isMenuTab = activeTabBtn ? activeTabBtn.innerText.toLowerCase().includes('menu') : true;
-                                if (isMenuTab) {
-                                    renderDishesTab(currentResto);
-                                } else {
-                                    const statusBadge = isRestaurantOpenNow(currentResto) 
-                                        ? `<span class="badge badge-success">Ouvert</span>` 
-                                        : `<span class="badge badge-danger">Fermé</span>`;
-                                    
-                                    const starsRating = document.querySelector('.stars-rating');
-                                    if (starsRating) starsRating.innerHTML = `★ ${currentResto.rating.toFixed(1)}`;
-                                    
-                                    const statusBadgeEl = document.querySelector('.restaurant-status-row .badge');
-                                    if (statusBadgeEl) statusBadgeEl.outerHTML = statusBadge;
-                                }
-                            }
-                        } else if (hash === '#/' || hash === '') {
-                            if (typeof applyFilters === 'function') {
-                                applyFilters();
-                            }
-                        }
+                        coverImage: (r.cover_image && r.cover_image !== 'null' && r.cover_image !== 'undefined') ? r.cover_image : null,
+                        menu: Array.isArray(parsedMenu) ? parsedMenu : null,
+                        reviews: Array.isArray(parsedReviews) ? parsedReviews : []
+                    };
+                });
+                
+                // Merge locally saved credentials for normal operation if not fetched (public_restaurants hides them)
+                const mergedRestos = mappedRestos.map(dbR => {
+                    const localR = this.data.restaurants.find(lr => lr.id === dbR.id);
+                    if (localR) {
+                        return {
+                            ...dbR,
+                            menu: (dbR.menu && dbR.menu.length > 0) ? dbR.menu : localR.menu,
+                            coverImage: dbR.coverImage || localR.coverImage,
+                            username: localR.username,
+                            password: localR.password,
+                            status: localR.status
+                        };
                     }
-                }
+                    return {
+                        ...dbR,
+                        menu: dbR.menu || [],
+                        username: dbR.slug,
+                        password: '',
+                        status: 'active'
+                    };
+                });
+
+                this.data.restaurants = mergedRestos;
             }
 
-            // 2. Sync Orders
-            const { data: dbOrders, error: ordersError } = await supabaseClient.from('orders').select('*');
-            if (!ordersError && dbOrders) {
-                if (dbOrders.length === 0 && this.data.orders.length > 0) {
-                    console.log("Supabase orders table is empty. Uploading local orders...");
-                    for (const o of this.data.orders) {
-                        await this.pushOrderToSupabase(o);
-                    }
-                } else if (dbOrders.length > 0) {
-                    const mappedOrders = dbOrders.map(o => ({
+            // 2. Fetch admin data or restaurant specific data
+            if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.password) {
+                // Fetch only for this restaurant via RPC
+                const { data: myOrders, error: ordersError } = await supabaseClient.rpc('get_restaurant_orders', {
+                    p_restaurant_id: currentRestaurantSession.id,
+                    p_password: currentRestaurantSession.password
+                });
+                if (!ordersError && myOrders) {
+                    const mappedOrders = myOrders.map(o => ({
                         id: o.id,
                         restaurantId: o.restaurant_id,
                         customerName: o.customer_name,
@@ -366,26 +333,15 @@ class Store {
                         date: o.date,
                         time: o.time
                     }));
-                    
-                    // Merge local orders not in DB
-                    const localOnlyOrders = this.data.orders.filter(o => !mappedOrders.some(dbo => dbo.id === o.id));
-                    for (const o of localOnlyOrders) {
-                        await this.pushOrderToSupabase(o);
-                    }
-                    this.data.orders = [...localOnlyOrders, ...mappedOrders].sort((a,b) => b.id.localeCompare(a.id));
+                    this.data.orders = mappedOrders.sort((a,b) => b.id.localeCompare(a.id));
                 }
-            }
-
-            // 3. Sync Reservations
-            const { data: dbReservations, error: resError } = await supabaseClient.from('reservations').select('*');
-            if (!resError && dbReservations) {
-                if (dbReservations.length === 0 && this.data.reservations.length > 0) {
-                    console.log("Supabase reservations table is empty. Uploading local reservations...");
-                    for (const r of this.data.reservations) {
-                        await this.pushReservationToSupabase(r);
-                    }
-                } else if (dbReservations.length > 0) {
-                    const mappedReservations = dbReservations.map(r => ({
+                
+                const { data: myRes, error: resError } = await supabaseClient.rpc('get_restaurant_reservations', {
+                    p_restaurant_id: currentRestaurantSession.id,
+                    p_password: currentRestaurantSession.password
+                });
+                if (!resError && myRes) {
+                    const mappedReservations = myRes.map(r => ({
                         id: r.id,
                         restaurantId: r.restaurant_id,
                         customerName: r.customer_name,
@@ -396,34 +352,7 @@ class Store {
                         note: r.note,
                         status: r.status
                     }));
-
-                    // Merge local reservations
-                    const localOnlyRes = this.data.reservations.filter(r => !mappedReservations.some(dbr => dbr.id === r.id));
-                    for (const r of localOnlyRes) {
-                        await this.pushReservationToSupabase(r);
-                    }
-                    this.data.reservations = [...localOnlyRes, ...mappedReservations].sort((a,b) => b.id.localeCompare(a.id));
-                }
-            }
-
-            // 4. Sync Customers (Loyalty data)
-            const { data: dbCustomers, error: custError } = await supabaseClient.from('customers').select('*');
-            if (!custError && dbCustomers) {
-                if (!this.data.usedRewards) this.data.usedRewards = {};
-                
-                dbCustomers.forEach(c => {
-                    this.data.usedRewards[c.phone] = Number(c.used_rewards || 0);
-                });
-                
-                // If local usedRewards has any numbers, sync them to Supabase
-                for (const phone in this.data.usedRewards) {
-                    const localUsed = this.data.usedRewards[phone];
-                    const dbCust = dbCustomers.find(c => c.phone === phone);
-                    if (!dbCust || dbCust.used_rewards !== localUsed) {
-                        const order = this.data.orders.find(o => cleanPhoneNumber(o.customerPhone) === phone);
-                        const name = order ? order.customerName : "Client Fidèle";
-                        await this.pushCustomerToSupabase(phone, name, localUsed);
-                    }
+                    this.data.reservations = mappedReservations.sort((a,b) => b.id.localeCompare(a.id));
                 }
             }
 
@@ -440,7 +369,7 @@ class Store {
     async pushRestaurantToSupabase(resto) {
         if (!supabaseClient) return;
         try {
-            await supabaseClient.from('restaurants').upsert({
+            const { error } = await supabaseClient.from('restaurants').insert({
                 id: resto.id,
                 name: resto.name,
                 slug: resto.slug,
@@ -459,6 +388,24 @@ class Store {
                 menu: resto.menu,
                 reviews: resto.reviews
             });
+
+            if (error && error.code === '23505' && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === resto.id) {
+                await supabaseClient.rpc('update_restaurant_data', {
+                    p_restaurant_id: resto.id,
+                    p_password: currentRestaurantSession.password,
+                    p_updates: {
+                        name: resto.name,
+                        address: resto.address,
+                        whatsapp: resto.whatsapp,
+                        open_hours: resto.openHours,
+                        closed_days: resto.closedDays,
+                        is_open_manual: resto.isOpenManual,
+                        cover_image: resto.coverImage,
+                        menu: resto.menu,
+                        reviews: resto.reviews
+                    }
+                });
+            }
         } catch (e) {
             console.error("Failed to push restaurant to Supabase", e);
         }
@@ -467,7 +414,14 @@ class Store {
     async deleteRestaurantFromSupabase(id) {
         if (!supabaseClient) return;
         try {
-            await supabaseClient.from('restaurants').delete().eq('id', id);
+            if (isSuperAdminSession) {
+                await supabaseClient.rpc('admin_delete_restaurant', {
+                    p_admin_password: 'adminthies',
+                    p_restaurant_id: id
+                });
+            } else {
+                console.warn("Unauthorized delete attempt on Supabase");
+            }
         } catch (e) {
             console.error("Failed to delete restaurant from Supabase", e);
         }
@@ -476,7 +430,7 @@ class Store {
     async pushOrderToSupabase(order) {
         if (!supabaseClient) return;
         try {
-            await supabaseClient.from('orders').upsert({
+            await supabaseClient.from('orders').insert({
                 id: order.id,
                 restaurant_id: order.restaurantId,
                 customer_name: order.customerName,
@@ -498,7 +452,7 @@ class Store {
     async pushReservationToSupabase(res) {
         if (!supabaseClient) return;
         try {
-            await supabaseClient.from('reservations').upsert({
+            await supabaseClient.from('reservations').insert({
                 id: res.id,
                 restaurant_id: res.restaurantId,
                 customer_name: res.customerName,
@@ -585,12 +539,21 @@ class Store {
         this.pushCustomerToSupabase(order.customerPhone, order.customerName, usedRewards);
     }
 
-    updateOrderStatus(orderId, status) {
+    async updateOrderStatus(orderId, status) {
         const order = this.data.orders.find(o => o.id === orderId);
         if (order) {
             order.status = status;
             this.save();
-            this.pushOrderToSupabase(order);
+            if (supabaseClient && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+                await supabaseClient.rpc('update_order_status', {
+                    p_order_id: orderId,
+                    p_restaurant_id: currentRestaurantSession.id,
+                    p_password: currentRestaurantSession.password,
+                    p_status: status
+                });
+            } else {
+                this.pushOrderToSupabase(order);
+            }
         }
     }
 
@@ -604,12 +567,21 @@ class Store {
         this.pushReservationToSupabase(res);
     }
 
-    updateReservationStatus(resId, status) {
+    async updateReservationStatus(resId, status) {
         const res = this.data.reservations.find(r => r.id === resId);
         if (res) {
             res.status = status;
             this.save();
-            this.pushReservationToSupabase(res);
+            if (supabaseClient && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+                await supabaseClient.rpc('update_reservation_status', {
+                    p_res_id: resId,
+                    p_restaurant_id: currentRestaurantSession.id,
+                    p_password: currentRestaurantSession.password,
+                    p_status: status
+                });
+            } else {
+                this.pushReservationToSupabase(res);
+            }
         }
     }
 }
@@ -2195,6 +2167,26 @@ Merci de confirmer la réception !`;
                     Retourner à l'accueil
                 </button>
             </div>
+            
+            <div class="review-section" id="checkout-review-section" style="margin-top: 2rem; background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+                <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">Évaluez votre expérience</h3>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Votre avis aide <strong>${r.name}</strong> à s'améliorer !</p>
+                <div class="form-group" style="text-align: left;">
+                    <label class="form-label">Note sur 5 <span class="required">*</span></label>
+                    <select id="review-rating" class="form-control" required style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                        <option value="5" style="color: black;">⭐⭐⭐⭐⭐ Parfait !</option>
+                        <option value="4" style="color: black;">⭐⭐⭐⭐ Très bien</option>
+                        <option value="3" style="color: black;">⭐⭐⭐ Bien</option>
+                        <option value="2" style="color: black;">⭐⭐ Moyen</option>
+                        <option value="1" style="color: black;">⭐ Décevant</option>
+                    </select>
+                </div>
+                <div class="form-group" style="text-align: left;">
+                    <label class="form-label">Commentaire (optionnel)</label>
+                    <textarea id="review-comment" class="form-control" rows="2" placeholder="Qu'avez-vous pensé du repas ?" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2);"></textarea>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="submitCustomerReview('${r.id}', '${(firstname + ' ' + lastname).replace(/'/g, "\\'")}')">Envoyer mon avis</button>
+            </div>
         </div>
     `;
     
@@ -3032,12 +3024,31 @@ router.add('#/partnership', () => {
 });
 
 
-function handleRestaurantLogin(e) {
+async function handleRestaurantLogin(e) {
     e.preventDefault();
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value;
     
-    const r = store.getRestaurants().find(resto => resto.username === username && resto.password === pass);
+    let r = null;
+    
+    if (supabaseClient) {
+        const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
+            p_username: username,
+            p_password: pass
+        });
+        if (error || !data || data.length === 0) {
+            showToast("Identifiant ou mot de passe incorrect", "danger");
+            return;
+        }
+        r = {
+            id: data[0].id,
+            name: data[0].name,
+            slug: data[0].slug,
+            status: data[0].status
+        };
+    } else {
+        r = store.getRestaurants().find(resto => resto.username === username && resto.password === pass);
+    }
     
     if (!r) {
         showToast("Identifiant ou mot de passe incorrect", "danger");
@@ -3054,7 +3065,7 @@ function handleRestaurantLogin(e) {
         return;
     }
     
-    currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug };
+    currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: pass };
     try {
         sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
     } catch (e) {
@@ -3534,7 +3545,7 @@ function renderDashboardTabContent(r) {
                             <input type="file" id="dish-image-file" class="form-control" accept="image/*" onchange="handleDishImageUpload(event)" style="padding: 0.35rem; height: auto;">
                             <div id="dish-image-preview-container" style="display: none; margin-top: 0.75rem; align-items: center; gap: 0.75rem; background: var(--bg-secondary); padding: 0.5rem; border-radius: 10px; border: 1px solid var(--border);">
                                 <img id="dish-image-preview" src="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
-                                <span style="font-size: 0.75rem; color: var(--success); font-weight: 600;">Photo sélectionnée avec succès ! ✅</span>
+                                <span id="dish-image-upload-status" style="font-size: 0.75rem; color: var(--success); font-weight: 600;">Photo sélectionnée avec succès ! ✅</span>
                             </div>
                         </div>
                         
@@ -3657,9 +3668,14 @@ function renderDashboardTabContent(r) {
                         <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: #fff;">📊 Journal de Comptabilité</h2>
                         <p style="color: var(--text-secondary); font-size: 0.85rem;">Suivi des chiffres d'affaires et historique complet des commandes clients.</p>
                     </div>
-                    <button class="btn btn-secondary btn-sm" onclick="window.print()">
-                        🖨️ Imprimer le Bilan
-                    </button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary btn-sm" onclick="exportOrdersCSV('${r.id}')">💾 Exporter CSV</button>
+                        <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Imprimer</button>
+                    </div>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem; position: relative; height: 250px;">
+                    <canvas id="revenueChart"></canvas>
                 </div>
 
                 <div class="accounting-stats-grid">
@@ -3724,6 +3740,8 @@ function renderDashboardTabContent(r) {
                 </div>
             </div>
         `;
+        
+        setTimeout(() => renderRevenueChart(orders), 100);
     }
     else if (dashboardActiveTab === 'settings') {
         const clientLink = `${window.location.origin}${window.location.pathname}#/r/${r.slug}`;
@@ -3838,7 +3856,7 @@ window.switchHowItWorksTab = function(tabId) {
 
 
 // Global helper for checking customer loyalty points
-window.checkLoyaltyPoints = function() {
+window.checkLoyaltyPoints = async function() {
     const rawPhone = document.getElementById('loyalty-phone').value.trim();
     if (!rawPhone) {
         showToast("Veuillez saisir votre numéro WhatsApp", "warning");
@@ -3850,18 +3868,28 @@ window.checkLoyaltyPoints = function() {
         return;
     }
 
-    const orders = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone && o.status === 'Livrée');
-    const reservations = store.data.reservations.filter(r => cleanPhoneNumber(r.customerPhone) === phone && r.status === 'Confirmée');
+    let ordersCount = 0;
+    let resCount = 0;
+    let usedRewards = 0;
 
-    const orderPoints = orders.length * 5;
-    const resPoints = reservations.length * 5;
+    if (supabaseClient) {
+        const { data, error } = await supabaseClient.rpc('get_customer_loyalty_data', { p_phone: phone });
+        if (!error && data && data.length > 0) {
+            ordersCount = data[0].orders_count;
+            resCount = data[0].reservations_count;
+            usedRewards = data[0].used_rewards;
+        }
+    } else {
+        ordersCount = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone && o.status === 'Livrée').length;
+        resCount = store.data.reservations.filter(r => cleanPhoneNumber(r.customerPhone) === phone && r.status === 'Confirmée').length;
+        if (!store.data.usedRewards) store.data.usedRewards = {};
+        usedRewards = store.data.usedRewards[phone] || 0;
+    }
+
+    const orderPoints = ordersCount * 5;
+    const resPoints = resCount * 5;
     const totalPoints = orderPoints + resPoints;
 
-    // Rewards logic: 100 points = 1 reward
-    if (!store.data.usedRewards) {
-        store.data.usedRewards = {};
-    }
-    const usedRewards = store.data.usedRewards[phone] || 0;
     const totalRewardsUnlocked = Math.floor(totalPoints / 100);
     const activeRewards = Math.max(0, totalRewardsUnlocked - usedRewards);
     const nextRewardPoints = 100 - (totalPoints % 100);
@@ -3929,11 +3957,11 @@ window.checkLoyaltyPoints = function() {
 
                 <div class="loyalty-stats-summary" style="display: flex; justify-content: space-around; gap: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.25rem; margin-top: 1rem; text-align: center; flex-wrap: wrap;">
                     <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
-                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${orders.length}</span>
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${ordersCount}</span>
                         <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Commandes livrées</span>
                     </div>
                     <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
-                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${reservations.length}</span>
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${resCount}</span>
                         <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Tables réservées</span>
                     </div>
                     <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
@@ -3949,21 +3977,31 @@ window.checkLoyaltyPoints = function() {
 };
 
 // Global helper for applying loyalty reward to cart
-window.applyLoyaltyRewardToCart = function(phone) {
+window.applyLoyaltyRewardToCart = async function(phone) {
     if (!cart.items || cart.items.length === 0) {
         showToast("Votre panier est vide. Veuillez d'abord ajouter des plats depuis un restaurant !", "warning");
         return;
     }
     
-    // Check points
-    const orders = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone && o.status === 'Livrée');
-    const reservations = store.data.reservations.filter(r => cleanPhoneNumber(r.customerPhone) === phone && r.status === 'Confirmée');
-    const totalPoints = orders.length * 5 + reservations.length * 5;
-    
-    if (!store.data.usedRewards) {
-        store.data.usedRewards = {};
+    let ordersCount = 0;
+    let resCount = 0;
+    let usedRewards = 0;
+
+    if (supabaseClient) {
+        const { data, error } = await supabaseClient.rpc('get_customer_loyalty_data', { p_phone: phone });
+        if (!error && data && data.length > 0) {
+            ordersCount = data[0].orders_count;
+            resCount = data[0].reservations_count;
+            usedRewards = data[0].used_rewards;
+        }
+    } else {
+        ordersCount = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone && o.status === 'Livrée').length;
+        resCount = store.data.reservations.filter(r => cleanPhoneNumber(r.customerPhone) === phone && r.status === 'Confirmée').length;
+        if (!store.data.usedRewards) store.data.usedRewards = {};
+        usedRewards = store.data.usedRewards[phone] || 0;
     }
-    const usedRewards = store.data.usedRewards[phone] || 0;
+
+    const totalPoints = ordersCount * 5 + resCount * 5;
     const totalRewardsUnlocked = Math.floor(totalPoints / 100);
     const activeRewards = Math.max(0, totalRewardsUnlocked - usedRewards);
     
@@ -4172,26 +4210,61 @@ function resetDishForm() {
     if (previewContainer) previewContainer.style.display = 'none';
 }
 
-function handleDishImageUpload(event) {
+window.handleDishImageUpload = async function(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        const base64Url = e.target.result;
-        // Put the base64 URL in the custom image input so it gets saved on submit
-        document.getElementById('dish-image-custom').value = base64Url;
+    if (!supabaseClient) {
+        showToast("Service Storage non disponible", "danger");
+        return;
+    }
+
+    const previewImg = document.getElementById('dish-image-preview');
+    const container = document.getElementById('dish-image-preview-container');
+    const statusText = document.getElementById('dish-image-upload-status');
+    const customInput = document.getElementById('dish-image-custom');
+    const submitBtn = document.querySelector('#dish-editor-form button[type="submit"]');
+
+    if (container) container.style.display = 'flex';
+    if (previewImg) previewImg.src = URL.createObjectURL(file);
+    if (statusText) {
+        statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        statusText.style.color = "var(--warning)";
+    }
+    if (submitBtn) submitBtn.disabled = true;
+
+    // Build unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `dishes/${currentRestaurantSession.id}/${fileName}`;
+
+    try {
+        const { data, error } = await supabaseClient.storage
+            .from('restaurant_images')
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabaseClient.storage
+            .from('restaurant_images')
+            .getPublicUrl(filePath);
+
+        customInput.value = publicUrlData.publicUrl;
         
-        // Show preview
-        const previewImg = document.getElementById('dish-image-preview');
-        const container = document.getElementById('dish-image-preview-container');
-        if (previewImg && container) {
-            previewImg.src = base64Url;
-            container.style.display = 'flex';
+        if (statusText) {
+            statusText.innerHTML = `✅ Photo uploadée et hébergée sur Supabase !`;
+            statusText.style.color = "var(--success)";
         }
-    };
-    reader.readAsDataURL(file);
-}
+    } catch (e) {
+        console.error("Upload error:", e);
+        if (statusText) {
+            statusText.innerHTML = `❌ Échec de l'envoi (${e.message})`;
+            statusText.style.color = "var(--danger)";
+        }
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+};
 
 function saveDish(e) {
     e.preventDefault();
@@ -4990,6 +5063,223 @@ window.getSMSLink = function(phone, body) {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const separator = isIOS ? '&' : '?';
     return `sms:${cleanPhone}${separator}body=${encodeURIComponent(body)}`;
+};
+
+// CGV Route & Render
+router.on('/cgv', () => renderCGV());
+function renderCGV() {
+    hideLoadingOverlay();
+    const container = document.getElementById('main-content');
+    container.innerHTML = `
+        <div style="max-width: 800px; margin: 4rem auto; padding: 2rem; background: var(--bg-card); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+            <h1 style="color: var(--primary); margin-bottom: 2rem; font-family: var(--font-serif);">Conditions Générales de Vente (CGV) & Mentions Légales</h1>
+            <div style="color: var(--text-secondary); line-height: 1.6;">
+                <h3>1. Présentation de la plateforme</h3>
+                <p>THIES Resto est un portail de mise en relation entre les clients et les restaurants partenaires basés à Thiès, Sénégal.</p>
+                
+                <h3>2. Responsabilités</h3>
+                <p>THIES Resto agit exclusivement en tant qu'intermédiaire technique. Les restaurants partenaires sont seuls responsables de la qualité, l'hygiène et la livraison des repas. <strong>En cas de problème d'intoxication ou d'hygiène, le client doit se retourner directement contre le restaurant concerné.</strong> THIES Resto décline toute responsabilité quant aux conséquences liées à la consommation des produits.</p>
+                
+                <h3>3. Commandes et Paiements</h3>
+                <p>Le paiement s'effectue exclusivement à la livraison ou selon les modalités convenues avec le restaurant via WhatsApp. Les prix affichés incluent les taxes applicables.</p>
+                
+                <h3>4. Données Personnelles (RGPD / CDP Sénégal)</h3>
+                <p>Les données (numéro de téléphone, prénom) sont collectées uniquement pour le traitement de la commande et le programme de fidélité. Elles ne sont pas revendues à des tiers et sont protégées conformément à la loi sur les données personnelles.</p>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 2rem;" onclick="router.navigate('/')">Retour à l'accueil</button>
+        </div>
+    `;
+}
+
+// ----------------------------------------------------
+// CSV Export & Charts
+// ----------------------------------------------------
+window.exportOrdersCSV = function(restaurantId) {
+    const orders = store.getOrdersByRestaurant(restaurantId);
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "ID,Date,Heure,Client,Telephone,Mode,Montant,Statut\n";
+    
+    orders.forEach(function(o) {
+        let row = [
+            o.id,
+            o.date,
+            o.time || '',
+            o.customerName ? o.customerName.replace(/,/g, '') : '',
+            o.customerPhone,
+            o.mode,
+            o.total,
+            o.status
+        ].join(",");
+        csvContent += row + "\n";
+    });
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "commandes_" + new Date().toISOString().split('T')[0] + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+window.revenueChartInstance = null;
+window.renderRevenueChart = function(orders) {
+    const ctx = document.getElementById('revenueChart');
+    if (!ctx) return;
+    
+    const last7Days = Array.from({length: 7}, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return d.toISOString().split('T')[0];
+    });
+    
+    const revenueByDay = {};
+    last7Days.forEach(d => revenueByDay[d] = 0);
+    
+    orders.forEach(o => {
+        if (o.status === 'Livrée' && revenueByDay[o.date] !== undefined) {
+            revenueByDay[o.date] += o.total;
+        }
+    });
+    
+    if (window.revenueChartInstance) {
+        window.revenueChartInstance.destroy();
+    }
+    
+    if(typeof Chart !== 'undefined') {
+        window.revenueChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: last7Days,
+                datasets: [{
+                    label: "Chiffre d'Affaires (FCFA)",
+                    data: Object.values(revenueByDay),
+                    borderColor: '#cfa853',
+                    backgroundColor: 'rgba(207, 168, 83, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { labels: { color: '#fff' } }
+                },
+                scales: {
+                    x: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                    y: { ticks: { color: 'rgba(255,255,255,0.7)' }, grid: { color: 'rgba(255,255,255,0.1)' }, beginAtZero: true }
+                }
+            }
+        });
+    }
+};
+
+// ----------------------------------------------------
+// Realtime & Push Notifications
+// ----------------------------------------------------
+window.requestNotificationPermission = function() {
+    if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
+        Notification.requestPermission();
+    }
+};
+
+window.setupRealtimeSubscriptions = function() {
+    if (!supabaseClient || !currentRestaurantSession || !currentRestaurantSession.id) return;
+    if (window.currentRealtimeSubscription) return; // Already setup
+    
+    window.currentRealtimeSubscription = supabaseClient.channel('custom-insert-channel')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'orders', filter: `restaurant_id=eq.${currentRestaurantSession.id}` },
+        (payload) => {
+          console.log('New order via Realtime!', payload);
+          const newOrder = {
+              id: payload.new.id,
+              restaurantId: payload.new.restaurant_id,
+              customerName: payload.new.customer_name,
+              customerPhone: payload.new.customer_phone,
+              mode: payload.new.mode,
+              address: payload.new.address,
+              items: typeof payload.new.items === 'string' ? JSON.parse(payload.new.items) : payload.new.items,
+              total: Number(payload.new.total),
+              note: payload.new.note,
+              status: payload.new.status,
+              date: payload.new.date,
+              time: payload.new.time
+          };
+          
+          if (!store.data.orders.find(o => o.id === newOrder.id)) {
+              store.data.orders.unshift(newOrder);
+              store.save();
+              
+              if ('Notification' in window && Notification.permission === 'granted') {
+                  navigator.serviceWorker.ready.then(reg => {
+                      reg.showNotification('🔔 Nouvelle Commande!', {
+                          body: `${newOrder.customerName} a commandé pour ${newOrder.total} FCFA.`,
+                          icon: '/icon.png',
+                          vibrate: [200, 100, 200]
+                      });
+                  });
+              } else {
+                  showToast(`🔔 Nouvelle commande de ${newOrder.total} FCFA!`, "success");
+              }
+              
+              if (window.location.hash === '#/dashboard') {
+                  const r = store.getRestaurantById(currentRestaurantSession.id);
+                  if (r) renderDashboardTabContent(r);
+              }
+          }
+        }
+      )
+      .subscribe();
+};
+
+// Hook into login to start realtime
+const originalHandleRestaurantLogin = window.handleRestaurantLogin;
+if (originalHandleRestaurantLogin) {
+    window.handleRestaurantLogin = async function(event) {
+        await originalHandleRestaurantLogin(event);
+        if (currentRestaurantSession) {
+            requestNotificationPermission();
+            setupRealtimeSubscriptions();
+        }
+    };
+}
+
+// Submit Customer Review
+window.submitCustomerReview = async function(restaurantId, customerName) {
+    if (!supabaseClient) {
+        showToast("Service temporairement indisponible.", "danger");
+        return;
+    }
+    
+    const rating = parseInt(document.getElementById('review-rating').value);
+    const comment = document.getElementById('review-comment').value.trim();
+    
+    document.getElementById('checkout-review-section').innerHTML = `<p style="text-align:center; color: var(--success); padding: 1rem;">Envoi de votre avis...</p>`;
+    
+    const { error } = await supabaseClient.rpc('submit_restaurant_review', {
+        p_restaurant_id: restaurantId,
+        p_customer_name: customerName || 'Client Anonyme',
+        p_rating: rating,
+        p_comment: comment
+    });
+    
+    if (error) {
+        console.error("Review Error:", error);
+        showToast("Erreur lors de l'envoi de l'avis.", "danger");
+        document.getElementById('checkout-review-section').innerHTML = `<p style="text-align:center; color: var(--danger); padding: 1rem;">Échec de l'envoi.</p>`;
+    } else {
+        showToast("Merci pour votre avis !", "success");
+        document.getElementById('checkout-review-section').innerHTML = `
+            <div style="text-align:center; padding: 2rem;">
+                <h3 style="color: var(--success); margin-bottom: 0.5rem;">✅ Avis publié avec succès</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Votre retour a bien été pris en compte. Merci !</p>
+            </div>
+        `;
+    }
 };
 
 // Start application routing
