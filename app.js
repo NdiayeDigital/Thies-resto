@@ -123,13 +123,26 @@ const SEED_RESTAURANTS = [
     { id: "r20", name: "Le Jardin des Saveurs", slug: "le-jardin-des-saveurs", rating: 4.6, reviewsCount: 7, category: "Traditionnel", address: "Près de la Manufacture des Arts Décoratifs, Thiès", whatsapp: "+221776789012", openHours: "12:00 - 22:00", closedDays: [1], isOpenManual: true, status: "pending" }
 ];
 
-// App Local Database state manager
+// Supabase Configuration
+const SUPABASE_URL = 'https://eyrayquciqyswshiwtwb.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+let supabaseClient = null;
+
+if (typeof supabase !== 'undefined' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
+    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+}
+
+// App Local Database state manager (with Supabase sync)
 class Store {
     constructor() {
         this.key = 'THIES_RESTO_DB_V2';
         this.data = this.load();
         if (!this.data) {
             this.seed();
+        }
+        // Background sync with Supabase
+        if (supabaseClient) {
+            this.syncFromSupabase();
         }
     }
 
@@ -239,6 +252,193 @@ class Store {
         this.save();
     }
 
+    async syncFromSupabase() {
+        if (!supabaseClient) return;
+        try {
+            console.log("Syncing with Supabase...");
+
+            // 1. Sync Restaurants
+            const { data: dbRestos, error: restosError } = await supabaseClient.from('restaurants').select('*');
+            if (!restosError && dbRestos) {
+                if (dbRestos.length === 0) {
+                    console.log("Supabase restaurants table is empty. Seeding...");
+                    for (const r of this.data.restaurants) {
+                        await this.pushRestaurantToSupabase(r);
+                    }
+                } else {
+                    const mappedRestos = dbRestos.map(r => ({
+                        id: r.id,
+                        name: r.name,
+                        slug: r.slug,
+                        rating: Number(r.rating),
+                        reviewsCount: Number(r.reviews_count),
+                        category: r.category,
+                        address: r.address,
+                        whatsapp: r.whatsapp,
+                        openHours: r.open_hours,
+                        closedDays: Array.isArray(r.closed_days) ? r.closed_days : JSON.parse(r.closed_days || '[]'),
+                        isOpenManual: Boolean(r.is_open_manual),
+                        status: r.status,
+                        username: r.username,
+                        password: r.password,
+                        coverImage: r.cover_image,
+                        menu: typeof r.menu === 'string' ? JSON.parse(r.menu) : r.menu,
+                        reviews: typeof r.reviews === 'string' ? JSON.parse(r.reviews) : r.reviews
+                    }));
+                    this.data.restaurants = mappedRestos;
+                }
+            }
+
+            // 2. Sync Orders
+            const { data: dbOrders, error: ordersError } = await supabaseClient.from('orders').select('*');
+            if (!ordersError && dbOrders) {
+                if (dbOrders.length === 0 && this.data.orders.length > 0) {
+                    console.log("Supabase orders table is empty. Uploading local orders...");
+                    for (const o of this.data.orders) {
+                        await this.pushOrderToSupabase(o);
+                    }
+                } else if (dbOrders.length > 0) {
+                    const mappedOrders = dbOrders.map(o => ({
+                        id: o.id,
+                        restaurantId: o.restaurant_id,
+                        customerName: o.customer_name,
+                        customerPhone: o.customer_phone,
+                        mode: o.mode,
+                        address: o.address,
+                        items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                        total: Number(o.total),
+                        note: o.note,
+                        status: o.status,
+                        date: o.date,
+                        time: o.time
+                    }));
+                    
+                    // Merge local orders not in DB
+                    const localOnlyOrders = this.data.orders.filter(o => !mappedOrders.some(dbo => dbo.id === o.id));
+                    for (const o of localOnlyOrders) {
+                        await this.pushOrderToSupabase(o);
+                    }
+                    this.data.orders = [...localOnlyOrders, ...mappedOrders].sort((a,b) => b.id.localeCompare(a.id));
+                }
+            }
+
+            // 3. Sync Reservations
+            const { data: dbReservations, error: resError } = await supabaseClient.from('reservations').select('*');
+            if (!resError && dbReservations) {
+                if (dbReservations.length === 0 && this.data.reservations.length > 0) {
+                    console.log("Supabase reservations table is empty. Uploading local reservations...");
+                    for (const r of this.data.reservations) {
+                        await this.pushReservationToSupabase(r);
+                    }
+                } else if (dbReservations.length > 0) {
+                    const mappedReservations = dbReservations.map(r => ({
+                        id: r.id,
+                        restaurantId: r.restaurant_id,
+                        customerName: r.customer_name,
+                        customerPhone: r.customer_phone,
+                        date: r.date,
+                        time: r.time,
+                        guests: Number(r.guests),
+                        note: r.note,
+                        status: r.status
+                    }));
+
+                    // Merge local reservations
+                    const localOnlyRes = this.data.reservations.filter(r => !mappedReservations.some(dbr => dbr.id === r.id));
+                    for (const r of localOnlyRes) {
+                        await this.pushReservationToSupabase(r);
+                    }
+                    this.data.reservations = [...localOnlyRes, ...mappedReservations].sort((a,b) => b.id.localeCompare(a.id));
+                }
+            }
+
+            this.save();
+            console.log("Supabase synchronization completed successfully.");
+            if (typeof applyFilters === 'function') {
+                applyFilters();
+            }
+        } catch (e) {
+            console.error("Supabase sync failed", e);
+        }
+    }
+
+    async pushRestaurantToSupabase(resto) {
+        if (!supabaseClient) return;
+        try {
+            await supabaseClient.from('restaurants').upsert({
+                id: resto.id,
+                name: resto.name,
+                slug: resto.slug,
+                rating: resto.rating,
+                reviews_count: resto.reviewsCount,
+                category: resto.category,
+                address: resto.address,
+                whatsapp: resto.whatsapp,
+                open_hours: resto.openHours,
+                closed_days: resto.closedDays,
+                is_open_manual: resto.isOpenManual,
+                status: resto.status,
+                username: resto.username,
+                password: resto.password,
+                cover_image: resto.coverImage,
+                menu: resto.menu,
+                reviews: resto.reviews
+            });
+        } catch (e) {
+            console.error("Failed to push restaurant to Supabase", e);
+        }
+    }
+
+    async deleteRestaurantFromSupabase(id) {
+        if (!supabaseClient) return;
+        try {
+            await supabaseClient.from('restaurants').delete().eq('id', id);
+        } catch (e) {
+            console.error("Failed to delete restaurant from Supabase", e);
+        }
+    }
+
+    async pushOrderToSupabase(order) {
+        if (!supabaseClient) return;
+        try {
+            await supabaseClient.from('orders').upsert({
+                id: order.id,
+                restaurant_id: order.restaurantId,
+                customer_name: order.customerName,
+                customer_phone: order.customerPhone,
+                mode: order.mode,
+                address: order.address,
+                items: order.items,
+                total: order.total,
+                note: order.note,
+                status: order.status,
+                date: order.date,
+                time: order.time
+            });
+        } catch (e) {
+            console.error("Failed to push order to Supabase", e);
+        }
+    }
+
+    async pushReservationToSupabase(res) {
+        if (!supabaseClient) return;
+        try {
+            await supabaseClient.from('reservations').upsert({
+                id: res.id,
+                restaurant_id: res.restaurantId,
+                customer_name: res.customerName,
+                customer_phone: res.customerPhone,
+                date: res.date,
+                time: res.time,
+                guests: res.guests,
+                note: res.note,
+                status: res.status
+            });
+        } catch (e) {
+            console.error("Failed to push reservation to Supabase", e);
+        }
+    }
+
     getRestaurants() {
         return this.data.restaurants;
     }
@@ -256,6 +456,7 @@ class Store {
         if (idx !== -1) {
             this.data.restaurants[idx] = { ...this.data.restaurants[idx], ...fields };
             this.save();
+            this.pushRestaurantToSupabase(this.data.restaurants[idx]);
             return this.data.restaurants[idx];
         }
         return null;
@@ -264,11 +465,13 @@ class Store {
     addRestaurant(resto) {
         this.data.restaurants.push(resto);
         this.save();
+        this.pushRestaurantToSupabase(resto);
     }
 
     deleteRestaurant(id) {
         this.data.restaurants = this.data.restaurants.filter(r => r.id !== id);
         this.save();
+        this.deleteRestaurantFromSupabase(id);
     }
 
     getOrdersByRestaurant(restaurantId) {
@@ -278,6 +481,7 @@ class Store {
     addOrder(order) {
         this.data.orders.unshift(order);
         this.save();
+        this.pushOrderToSupabase(order);
     }
 
     updateOrderStatus(orderId, status) {
@@ -285,6 +489,7 @@ class Store {
         if (order) {
             order.status = status;
             this.save();
+            this.pushOrderToSupabase(order);
         }
     }
 
@@ -295,6 +500,7 @@ class Store {
     addReservation(res) {
         this.data.reservations.unshift(res);
         this.save();
+        this.pushReservationToSupabase(res);
     }
 
     updateReservationStatus(resId, status) {
@@ -302,6 +508,7 @@ class Store {
         if (res) {
             res.status = status;
             this.save();
+            this.pushReservationToSupabase(res);
         }
     }
 }
