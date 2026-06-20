@@ -2405,12 +2405,17 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     }
 
     .study-split-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2rem !important;
     }
     .study-left-col {
         padding: 1.25rem !important;
         border-radius: 20px !important;
+        order: 1 !important;
+    }
+    .study-right-col {
+        order: 2 !important;
     }
     .study-carousel-wrapper {
         display: grid !important;
