@@ -2386,22 +2386,45 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         line-height: 1.35;
     }
 
-    /* Horizontal Carousels for mobile onboarding & analysis */
+    /* Onboarding steps displayed as a 2x2 grid on mobile */
     .timeline-steps {
-        display: flex;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        gap: 1.25rem;
-        padding: 1.5rem 0.5rem;
-        scroll-behavior: smooth;
-        scrollbar-width: none;
-    }
-    .timeline-steps::-webkit-scrollbar {
-        display: none;
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.75rem !important;
+        padding: 0 !important;
+        overflow-x: visible !important;
     }
     .timeline-card {
-        flex: 0 0 80% !important;
-        scroll-snap-align: center !important;
+        flex: none !important;
+        padding: 1.25rem 1rem !important;
+        border-radius: 16px !important;
+        text-align: center !important;
+        min-height: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+    }
+    .timeline-badge {
+        position: static !important;
+        margin: 0 auto 0.5rem auto !important;
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.8rem !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .timeline-icon {
+        font-size: 2rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+    .timeline-card h3 {
+        font-size: 0.9rem !important;
+        margin-bottom: 0.35rem !important;
+    }
+    .timeline-card p {
+        font-size: 0.75rem !important;
+        line-height: 1.4 !important;
     }
 
     .study-split-grid {

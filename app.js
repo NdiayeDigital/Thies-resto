@@ -1267,6 +1267,12 @@ router.add('#/', () => {
                         <h3>Envoi WhatsApp</h3>
                         <p>Votre commande est transmise de manière ultra-rapide par WhatsApp au restaurant. Payez en espèces ou Wave à la livraison.</p>
                     </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">4</div>
+                        <span class="timeline-icon">🎁</span>
+                        <h3>Fidélité cumulée</h3>
+                        <p>Cumulez automatiquement 5 points fidélité à chaque commande livrée pour obtenir des plats offerts.</p>
+                    </div>
                 </div>
             </div>
 
@@ -1291,6 +1297,12 @@ router.add('#/', () => {
                         <h3>Confirmation reçue</h3>
                         <p>Le restaurateur valide votre créneau directement sur son tableau de bord et vous envoie une confirmation par message.</p>
                     </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">4</div>
+                        <span class="timeline-icon">🍽️</span>
+                        <h3>Installez-vous !</h3>
+                        <p>Présentez-vous au restaurant à l'heure convenue : votre table est prête et des points fidélité vous sont offerts.</p>
+                    </div>
                 </div>
             </div>
 
@@ -1301,7 +1313,7 @@ router.add('#/', () => {
                         <div class="timeline-badge">1</div>
                         <span class="timeline-icon">👥</span>
                         <h3>Création du groupe</h3>
-                        <p>Lancez un panier partagé pour vos collègues de bureau ou vos amis en cliquant sur "Commande de Groupe".</p>
+                        <p>Lancez un panier partagé pour vos collègues de bureau ou vos amis en clicking sur "Commande de Groupe".</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">2</div>
@@ -1314,6 +1326,12 @@ router.add('#/', () => {
                         <span class="timeline-icon">🍕</span>
                         <h3>Choix individuels</h3>
                         <p>Chaque membre ajoute ses plats préférés depuis son propre appareil. Le restaurant reçoit le tout regroupé et clair !</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">4</div>
+                        <span class="timeline-icon">👑</span>
+                        <h3>Validation & Envoi</h3>
+                        <p>L'initiateur du groupe valide le panier commun et l'envoie par WhatsApp. Le restaurant livre tout en une fois !</p>
                     </div>
                 </div>
             </div>
