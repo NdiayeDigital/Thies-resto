@@ -770,9 +770,18 @@ router.add('#/', () => {
     stopOrderPolling();
     loadCart();
     
+    // Generate a stable session/visit specific random shuffle for restaurants
+    const allRestos = store.getRestaurants().filter(r => r.status === 'active');
+    const shuffledIds = allRestos.map(r => r.id);
+    for (let i = shuffledIds.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledIds[i], shuffledIds[j]] = [shuffledIds[j], shuffledIds[i]];
+    }
+    window.shuffledRestaurantIds = shuffledIds;
+    
     const container = document.getElementById('main-content');
     
-    const activeRestos = store.getRestaurants().filter(r => r.status === 'active');
+    const activeRestos = allRestos;
     const totalOrders = store.data.orders ? store.data.orders.length : 0;
     const totalReservations = store.data.reservations ? store.data.reservations.length : 0;
 
@@ -1216,6 +1225,11 @@ function applyFilters() {
         restos.sort((a, b) => b.reviewsCount - a.reviewsCount);
     } else if (activeSortBy === 'name') {
         restos.sort((a, b) => a.name.localeCompare(b.name));
+    } else {
+        // Default sort: use stable randomized order generated on home page load
+        if (window.shuffledRestaurantIds) {
+            restos.sort((a, b) => window.shuffledRestaurantIds.indexOf(a.id) - window.shuffledRestaurantIds.indexOf(b.id));
+        }
     }
 
     // Render cards
