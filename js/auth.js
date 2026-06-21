@@ -242,10 +242,8 @@ async function handleRestaurantLogin(e) {
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value.trim();
     
-    // Obfuscated admin check
-    // btoa('thiesresto') = 'dGhpZXNyZXN0bw=='
-    // btoa('Resto221') = 'UmVzdG8yMjE='
-    if (btoa(username) === 'dGhpZXNyZXN0bw==' && btoa(pass) === 'UmVzdG8yMjE=') {
+    // Admin check (plain text to avoid btoa issues)
+    if (username === 'thiesresto' && pass === 'Resto221') {
         sessionStorage.setItem('thies_admin_logged', 'true');
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         setTimeout(() => {
@@ -284,7 +282,12 @@ async function handleRestaurantLogin(e) {
             let baseName = resto.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
             let expectedUsername = 'id_' + baseName;
             let expectedPassword = baseName + '221';
-            return username === expectedUsername && pass.toLowerCase() === expectedPassword;
+            
+            let isDynamicMatch = (username === expectedUsername && pass.toLowerCase() === expectedPassword);
+            let isStoredMatch = (resto.username && username === resto.username.toLowerCase()) && 
+                                (resto.password && pass.toLowerCase() === resto.password.toLowerCase());
+            
+            return isDynamicMatch || isStoredMatch;
         });
         
         if (matchedResto) {
