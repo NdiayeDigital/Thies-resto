@@ -464,19 +464,19 @@ router.add('#/', () => {
         <section class="presentation-section" style="padding: 1rem 0 0 0;">
             <div class="reference-row-cards">
                 <!-- Left Card: Zero Account -->
-                <div class="ref-card-text concept-slide">
+                <div class="ref-card-text">
                     <div class="ref-card-icon-circle">🚫</div>
                     <h3>Zéro Inscription</h3>
                     <p>Commandez et réservez sans jamais avoir besoin de créer un compte. Aucun mot de passe à retenir.</p>
                 </div>
                 
                 <!-- Middle Card: Premium Dish Image -->
-                <div class="ref-card-image-box concept-slide">
+                <div class="ref-card-image-box">
                     <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80" alt="Gourmet Bowl">
                 </div>
                 
                 <!-- Right Card: Direct WhatsApp -->
-                <div class="ref-card-text concept-slide">
+                <div class="ref-card-text">
                     <div class="ref-card-icon-circle">💬</div>
                     <h3>Direct WhatsApp</h3>
                     <p>Votre panier est transformé en un message structuré envoyé en un clic au restaurateur pour confirmation.</p>
@@ -958,7 +958,7 @@ function showMapModal(userLat, userLng, restaurants) {
             
             const marker = L.marker([r.lat, r.lng])
                 .addTo(window.myLeafletMap)
-                .bindTooltip(r.name, {permanent: true, direction: 'top', className: 'map-label'}).bindPopup(`
+                .bindTooltip(r.name, {permanent: true, direction: "top", className: "map-label"}).bindPopup(`
                     <div style="text-align:center;">
                         <b style="font-size:1.1rem;">${r.name}</b><br>
                         <span style="color:var(--text-secondary); font-size:0.85rem;">${r.address}</span><br>
@@ -981,7 +981,7 @@ function showMapModal(userLat, userLng, restaurants) {
         warningDiv.style.textAlign = 'center';
         warningDiv.style.fontWeight = 'bold';
         warningDiv.style.fontSize = '0.9rem';
-        warningDiv.innerHTML = '📍 Votre position a été trouvée, mais les restaurants sont un peu loin de vous. <br><a href="#/catalog" onclick="document.getElementById(\'map-modal\').style.display=\'none\';" style="color: #000; text-decoration: underline; margin-top: 5px; display: inline-block;">Faites-vous livrer en commandant en ligne ! 🛵</a>';
+        warningDiv.innerHTML = `📍 Votre position a été trouvée, mais les restaurants sont un peu loin de vous. <br><a href="#/catalog" onclick="document.getElementById('map-modal').style.display='none';" style="color: #000; text-decoration: underline; margin-top: 5px; display: inline-block;">Faites-vous livrer en commandant en ligne ! 🛵</a>`;
         
         const mapContainer = document.getElementById('leaflet-map');
         if (mapContainer && mapContainer.parentNode) {
