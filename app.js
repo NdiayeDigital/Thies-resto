@@ -2856,3 +2856,49 @@ setInterval(() => {
         }
     }
 }, 20000);
+
+function updateNav() {
+    const navActions = document.getElementById('nav-actions');
+    if (!navActions) return;
+    
+    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+        navActions.innerHTML = `
+            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 1rem; display: none;" class="desktop-only">Connecté : ${currentRestaurantSession.name || 'Admin'}</span>
+            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="handleLogout()">Déconnexion</button>
+        `;
+    } else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
+        navActions.innerHTML = `
+            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="handleLogout()">Déconnexion</button>
+        `;
+    } else {
+        navActions.innerHTML = `
+            <button class="btn btn-primary" onclick="router.navigate('/auth')">Connexion Partenaire</button>
+        `;
+    }
+}
+
+function updateDynamicSEO(resto) {
+    if (!resto) return;
+    document.title = resto.name + " - THIES Resto | Menu & Livraison";
+    
+    const setMeta = (property, content) => {
+        let el = document.querySelector(`meta[property="${property}"]`) || document.querySelector(`meta[name="${property}"]`);
+        if (!el) {
+            el = document.createElement('meta');
+            el.setAttribute(property.startsWith('og:') ? 'property' : 'name', property);
+            document.head.appendChild(el);
+        }
+        el.setAttribute('content', content);
+    };
+
+    const desc = `Découvrez le menu de ${resto.name} sur Thiès Resto. Commandez vos plats et réservez votre table facilement.`;
+    const image = resto.coverImage || 'https://thiesresto.sn/icon.png';
+
+    setMeta('description', desc);
+    setMeta('og:title', resto.name + " - THIES Resto");
+    setMeta('og:description', desc);
+    setMeta('og:image', image);
+    setMeta('twitter:title', resto.name + " - THIES Resto");
+    setMeta('twitter:description', desc);
+    setMeta('twitter:image', image);
+}
