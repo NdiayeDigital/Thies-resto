@@ -254,6 +254,7 @@ async function handleRestaurantLogin(e) {
         try {
             sessionStorage.setItem('thies_admin_logged', 'true');
             sessionStorage.setItem('admin_session', 'true');
+            sessionStorage.setItem('admin_password', pass);
         } catch (e) {}
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         setTimeout(() => {

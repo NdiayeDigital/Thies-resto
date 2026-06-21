@@ -1292,6 +1292,7 @@ function handleAdminLogin(e) {
         try {
             sessionStorage.setItem('admin_session', 'true');
             sessionStorage.setItem('thies_admin_logged', 'true');
+            sessionStorage.setItem('admin_password', pass);
         } catch (e) {
             console.warn("Failed to save admin_session to sessionStorage", e);
         }

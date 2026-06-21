@@ -317,22 +317,36 @@ class Store {
                 reviews: resto.reviews
             });
 
-            if (error && error.code === '23505' && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === resto.id) {
-                await supabaseClient.rpc('update_restaurant_data', {
-                    p_restaurant_id: resto.id,
-                    p_password: currentRestaurantSession.password,
-                    p_updates: {
-                        name: resto.name,
-                        address: resto.address,
-                        whatsapp: resto.whatsapp,
-                        open_hours: resto.openHours,
-                        closed_days: resto.closedDays,
-                        is_open_manual: resto.isOpenManual,
-                        cover_image: resto.coverImage,
-                        menu: resto.menu,
-                        reviews: resto.reviews
-                    }
-                });
+            if (error && error.code === '23505') {
+                if (isSuperAdminSession) {
+                    const adminPass = sessionStorage.getItem('admin_password') || 'adminthies';
+                    await supabaseClient.rpc('admin_update_restaurant', {
+                        p_admin_password: adminPass,
+                        p_restaurant_id: resto.id,
+                        p_updates: {
+                            name: resto.name,
+                            status: resto.status,
+                            username: resto.username,
+                            password: resto.password
+                        }
+                    });
+                } else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === resto.id) {
+                    await supabaseClient.rpc('update_restaurant_data', {
+                        p_restaurant_id: resto.id,
+                        p_password: currentRestaurantSession.password,
+                        p_updates: {
+                            name: resto.name,
+                            address: resto.address,
+                            whatsapp: resto.whatsapp,
+                            open_hours: resto.openHours,
+                            closed_days: resto.closedDays,
+                            is_open_manual: resto.isOpenManual,
+                            cover_image: resto.coverImage,
+                            menu: resto.menu,
+                            reviews: resto.reviews
+                        }
+                    });
+                }
             }
         } catch (e) {
             console.error("Failed to push restaurant to Supabase", e);
@@ -343,8 +357,9 @@ class Store {
         if (!supabaseClient) return;
         try {
             if (isSuperAdminSession) {
+                const adminPass = sessionStorage.getItem('admin_password') || 'adminthies';
                 await supabaseClient.rpc('admin_delete_restaurant', {
-                    p_admin_password: 'adminthies',
+                    p_admin_password: adminPass,
                     p_restaurant_id: id
                 });
             } else {
@@ -399,10 +414,10 @@ class Store {
     async pushCustomerToSupabase(phone, name, usedRewards) {
         if (!supabaseClient) return;
         try {
-            await supabaseClient.from('customers').upsert({
-                phone: phone,
-                name: name,
-                used_rewards: usedRewards
+            await supabaseClient.rpc('upsert_customer_loyalty', {
+                p_phone: phone,
+                p_name: name,
+                p_used_rewards: usedRewards
             });
         } catch (e) {
             console.error("Failed to push customer to Supabase", e);
@@ -420,9 +435,9 @@ class Store {
 
     
     async saveClientInfo(name, phone) {
-        if (!this.supabase) return;
+        if (!supabaseClient) return;
         try {
-            await this.supabase.rpc('upsert_client', {
+            await supabaseClient.rpc('upsert_client', {
                 p_name: name,
                 p_phone: phone
             });

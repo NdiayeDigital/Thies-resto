@@ -105,34 +105,33 @@ DROP POLICY IF EXISTS "Allow public delete on customers" ON customers;
 -- 7. Define Strict Security Policies
 
 -- Restaurants Table Policies:
--- Allow public inserts for registration & initial seed
-CREATE POLICY "Allow public insert on restaurants" ON restaurants FOR INSERT WITH CHECK (true);
+-- Allow public inserts only for new pending registrations
+CREATE POLICY "Allow public insert on restaurants" ON restaurants FOR INSERT WITH CHECK (status = 'pending');
 -- No direct public SELECT, UPDATE or DELETE allowed
 CREATE POLICY "No direct select on restaurants" ON restaurants FOR SELECT USING (false);
 CREATE POLICY "No direct update on restaurants" ON restaurants FOR UPDATE USING (false);
 CREATE POLICY "No direct delete on restaurants" ON restaurants FOR DELETE USING (false);
 
 -- Orders Table Policies:
--- Allow customers to place orders
-CREATE POLICY "Allow public insert on orders" ON orders FOR INSERT WITH CHECK (true);
+-- Allow customers to place orders (must be initial 'Reçue' status)
+CREATE POLICY "Allow public insert on orders" ON orders FOR INSERT WITH CHECK (status = 'Reçue');
 -- No direct public SELECT, UPDATE or DELETE allowed
 CREATE POLICY "No direct select on orders" ON orders FOR SELECT USING (false);
 CREATE POLICY "No direct update on orders" ON orders FOR UPDATE USING (false);
 CREATE POLICY "No direct delete on orders" ON orders FOR DELETE USING (false);
 
 -- Reservations Table Policies:
--- Allow customers to book tables
-CREATE POLICY "Allow public insert on reservations" ON reservations FOR INSERT WITH CHECK (true);
+-- Allow customers to book tables (must be initial 'En attente' status)
+CREATE POLICY "Allow public insert on reservations" ON reservations FOR INSERT WITH CHECK (status = 'En attente');
 -- No direct public SELECT, UPDATE or DELETE allowed
 CREATE POLICY "No direct select on reservations" ON reservations FOR SELECT USING (false);
 CREATE POLICY "No direct update on reservations" ON reservations FOR UPDATE USING (false);
 CREATE POLICY "No direct delete on reservations" ON reservations FOR DELETE USING (false);
 
 -- Customers Table Policies:
--- Allow loyalty profile inserts & upserts
-CREATE POLICY "Allow public insert on customers" ON customers FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public update on customers" ON customers FOR UPDATE USING (true); -- Allow loyalty upserting
--- No direct public SELECT or DELETE allowed
+-- No direct public insert, update, select, or delete allowed (all logic goes through secure upsert_customer_loyalty RPC)
+CREATE POLICY "No direct insert on customers" ON customers FOR INSERT WITH CHECK (false);
+CREATE POLICY "No direct update on customers" ON customers FOR UPDATE USING (false);
 CREATE POLICY "No direct select on customers" ON customers FOR SELECT USING (false);
 CREATE POLICY "No direct delete on customers" ON customers FOR DELETE USING (false);
 
@@ -232,6 +231,25 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Upsert Customer Loyalty Info Securely
+CREATE OR REPLACE FUNCTION upsert_customer_loyalty(
+    p_phone TEXT,
+    p_name TEXT,
+    p_used_rewards INT
+)
+RETURNS VOID
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    INSERT INTO customers (phone, name, used_rewards)
+    VALUES (p_phone, p_name, p_used_rewards)
+    ON CONFLICT (phone) DO UPDATE
+    SET name = EXCLUDED.name,
+        used_rewards = EXCLUDED.used_rewards;
+END;
+$$;
 
 -- Get Customer Loyalty Summary (No Raw Orders Disclosed)
 CREATE OR REPLACE FUNCTION get_customer_loyalty_data(p_phone TEXT)
@@ -458,9 +476,9 @@ CREATE TABLE IF NOT EXISTS public.clients (
 
 -- Policies for clients
 ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Enable insert for everyone" ON public.clients FOR INSERT WITH CHECK (true);
-CREATE POLICY "Enable update for everyone" ON public.clients FOR UPDATE USING (true);
-CREATE POLICY "Enable select for admins" ON public.clients FOR SELECT USING (true);
+CREATE POLICY "No direct insert on clients" ON public.clients FOR INSERT WITH CHECK (false);
+CREATE POLICY "No direct update on clients" ON public.clients FOR UPDATE USING (false);
+CREATE POLICY "No direct select on clients" ON public.clients FOR SELECT USING (false);
 
 -- RPC for upserting clients
 CREATE OR REPLACE FUNCTION upsert_client(p_name TEXT, p_phone TEXT)
