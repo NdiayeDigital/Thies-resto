@@ -438,42 +438,24 @@ BEGIN
 END;
 $$;
 
--- 11. Configuration du Storage (Images des restaurants)
--- Création du bucket 'restaurant_images' s'il n'existe pas
-INSERT INTO storage.buckets (id, name, public) 
-VALUES ('restaurant_images', 'restaurant_images', true)
-ON CONFLICT (id) DO NOTHING;
-
--- Autoriser la lecture publique des images
-DROP POLICY IF EXISTS "Images Publiques" ON storage.objects;
-CREATE POLICY "Images Publiques" ON storage.objects
-FOR SELECT TO public
-USING (bucket_id = 'restaurant_images');
-
--- Autoriser l'insertion (Upload) par n'importe qui (anonyme pour l'instant via le client)
-DROP POLICY IF EXISTS "Upload Images" ON storage.objects;
-CREATE POLICY "Upload Images" ON storage.objects
-FOR INSERT TO public
-WITH CHECK (bucket_id = 'restaurant_images');
-
 -- ==========================================
--- 13. CONFIGURATION SUPABASE STORAGE (UPLOADS IMAGES)
+-- 11. CONFIGURATION SUPABASE STORAGE (UPLOADS IMAGES)
 -- ==========================================
 
--- 1. Cration du dossier de stockage (bucket) public
+-- 1. Création du dossier de stockage (bucket) public
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('restaurant-images', 'restaurant-images', true)
 ON CONFLICT (id) DO NOTHING;
 
--- 2. Dfinir les rgles de scurit pour les images (Lecture publique)
+-- 2. Définir les règles de sécurité pour les images (Lecture publique)
 DROP POLICY IF EXISTS "Images sont publiques" ON storage.objects;
 CREATE POLICY "Images sont publiques" ON storage.objects 
 FOR SELECT USING (bucket_id = 'restaurant-images');
 
--- 3. Autoriser l'upload d'images
+-- 3. Autoriser l'upload d'images (uniquement des images avec mimetype LIKE 'image/%')
 DROP POLICY IF EXISTS "Upload d'images autoris" ON storage.objects;
 CREATE POLICY "Upload d'images autoris" ON storage.objects 
-FOR INSERT WITH CHECK (bucket_id = 'restaurant-images');
+FOR INSERT WITH CHECK (bucket_id = 'restaurant-images' AND mimetype LIKE 'image/%');
 
 -- ==========================================
 -- TABLE: clients
