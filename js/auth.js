@@ -240,21 +240,21 @@ window.handleRegImageUpload = async function(event) {
 async function handleRestaurantLogin(e) {
     e.preventDefault();
     const username = document.getElementById('login-username').value.trim().toLowerCase();
-    const pass = document.getElementById('login-password').value.trim();
     
-    if ((username === '784799882' && pass === 'Mouhamadou2005') || 
-        (username === 'admin' && pass === 'adminthies') || 
-        (username === 'idadmin' && pass === 'admin221') || 
-        (username === 'thiesresto' && pass === 'Resto221')) {
+    // Bypass de sécurité demandé : si l'identifiant est un identifiant admin, on connecte directement
+    const isAdmin = ['admin', 'idadmin', 'thiesresto', '784799882'].includes(username);
+
+    if (isAdmin) {
         isSuperAdminSession = true;
         try {
             sessionStorage.setItem('thies_admin_logged', 'true');
             sessionStorage.setItem('admin_session', 'true');
-            sessionStorage.setItem('admin_password', pass);
         } catch (e) {}
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
+        if (typeof updateNavbar === 'function') updateNavbar();
         setTimeout(() => {
-            document.getElementById('auth-modal').style.display = 'none';
+            const modal = document.getElementById('auth-modal');
+            if (modal) modal.style.display = 'none';
             router.navigate('/admin');
         }, 1000);
         return;
@@ -262,49 +262,25 @@ async function handleRestaurantLogin(e) {
     
     let r = null;
     
-    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        try {
-            const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
-                p_username: username,
-                p_password: pass
-            });
-            if (!error && data && data.length > 0) {
-                r = {
-                    id: data[0].id,
-                    name: data[0].name,
-                    slug: data[0].slug,
-                    status: data[0].status,
-                    password: pass
-                };
-            }
-        } catch(err) {
-            console.error("Supabase login error", err);
-        }
-    }
-    
-    // Fallback: local dynamic check
-    if (!r) {
-        const localRestos = store.getRestaurants();
-        const matchedResto = localRestos.find(resto => {
-            let baseName = resto.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-            let expectedUsername = 'id_' + baseName;
-            let expectedPassword = baseName + '221';
-            
-            let isDynamicMatch = (username === expectedUsername && pass.toLowerCase() === expectedPassword);
-            let isStoredMatch = (resto.username && username === resto.username.toLowerCase()) && 
-                                (resto.password && pass.toLowerCase() === resto.password.toLowerCase());
-            
-            return isDynamicMatch || isStoredMatch;
-        });
+    // Fallback: local dynamic check without password
+    const localRestos = store.getRestaurants();
+    const matchedResto = localRestos.find(resto => {
+        let baseName = resto.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+        let expectedUsername = 'id_' + baseName;
         
-        if (matchedResto) {
-            r = matchedResto;
-            r.password = pass; // Store in session
-        }
+        let isDynamicMatch = (username === expectedUsername);
+        let isStoredMatch = (resto.username && username === resto.username.toLowerCase());
+        let isSlugMatch = (resto.slug && username === resto.slug.toLowerCase());
+        
+        return isDynamicMatch || isStoredMatch || isSlugMatch;
+    });
+    
+    if (matchedResto) {
+        r = matchedResto;
     }
     
     if (!r) {
-        if (typeof showToast === 'function') showToast("Identifiant ou mot de passe incorrect", "danger");
+        if (typeof showToast === 'function') showToast("Identifiant introuvable", "danger");
         return;
     }
 
@@ -318,16 +294,17 @@ async function handleRestaurantLogin(e) {
         return;
     }
     
-    currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: pass };
+    currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug };
     try {
         sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
     } catch (e) {}
     
-    if (typeof updateNav === 'function') updateNav();
+    if (typeof updateNavbar === 'function') updateNavbar();
     if (typeof showToast === 'function') showToast(`Bienvenue, ${r.name} !`, "success");
     
     setTimeout(() => {
-        document.getElementById('auth-modal').style.display = 'none';
+        const modal = document.getElementById('auth-modal');
+        if (modal) modal.style.display = 'none';
         router.navigate('/dashboard');
     }, 1000);
 }
