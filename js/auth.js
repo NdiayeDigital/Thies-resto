@@ -242,14 +242,10 @@ async function handleRestaurantLogin(e) {
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value.trim();
     
-    // Obfuscated admin check to prevent plain-text detection in DevTools/code inspection
-    const uEnc = btoa(username);
-    const pEnc = btoa(pass);
-    
-    if ((uEnc === 'Nzg0Nzk5ODgy' && pEnc === 'TW91aGFtYWRvdTIwMDU=') || 
-        (uEnc === 'YWRtaW4=' && pEnc === 'YWRtaW50aGllcw==') || 
-        (uEnc === 'aWRhZG1pbg==' && pEnc === 'YWRtaW4yMjE=') || 
-        (uEnc === 'dGhpZXNyZXN0bw==' && pEnc === 'UmVzdG8yMjE=')) {
+    if ((username === '784799882' && pass === 'Mouhamadou2005') || 
+        (username === 'admin' && pass === 'adminthies') || 
+        (username === 'idadmin' && pass === 'admin221') || 
+        (username === 'thiesresto' && pass === 'Resto221')) {
         isSuperAdminSession = true;
         try {
             sessionStorage.setItem('thies_admin_logged', 'true');

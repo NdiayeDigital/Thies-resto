@@ -1278,16 +1278,12 @@ router.add('#/admin-login', () => {
 function handleAdminLogin(e) {
     e.preventDefault();
     const user = document.getElementById('admin-user').value.trim().toLowerCase();
-    const pass = document.getElementById('admin-pass').value;
+    const pass = document.getElementById('admin-pass').value.trim();
     
-    // Obfuscated credential verification to prevent plain-text detection in DevTools/code inspection
-    const uEnc = btoa(user);
-    const pEnc = btoa(pass);
-    
-    if ((uEnc === 'Nzg0Nzk5ODgy' && pEnc === 'TW91aGFtYWRvdTIwMDU=') || 
-        (uEnc === 'YWRtaW4=' && pEnc === 'YWRtaW50aGllcw==') || 
-        (uEnc === 'aWRhZG1pbg==' && pEnc === 'YWRtaW4yMjE=') || 
-        (uEnc === 'dGhpZXNyZXN0bw==' && pEnc === 'UmVzdG8yMjE=')) {
+    if ((user === '784799882' && pass === 'Mouhamadou2005') || 
+        (user === 'admin' && pass === 'adminthies') || 
+        (user === 'idadmin' && pass === 'admin221') || 
+        (user === 'thiesresto' && pass === 'Resto221')) {
         isSuperAdminSession = true;
         try {
             sessionStorage.setItem('admin_session', 'true');
