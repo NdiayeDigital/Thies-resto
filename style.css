@@ -1285,6 +1285,9 @@ footer {
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
     
     .sidebar {
         border-right: none;
@@ -1332,11 +1335,24 @@ footer {
     .filter-btn { padding: 0.4rem 0.65rem; font-size: 0.7rem; }
     .footer-grid { grid-template-columns: 1fr; }
     
-    /* 2 Columns for Restaurants on Mobile */
+    /* Horizontal Carousel for Restaurants on Mobile */
     .restaurant-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.75rem;
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
         padding: 0 0.5rem 2rem 0.5rem;
+        gap: 1rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+    }
+    .restaurant-grid::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+    .restaurant-card {
+        min-width: 260px;
+        max-width: 260px;
+        flex-shrink: 0;
+        scroll-snap-align: center;
     }
     .restaurant-card-header {
         height: 90px;

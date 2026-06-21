@@ -453,7 +453,6 @@ router.add('#/', () => {
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button class="btn btn-primary" onclick="scrollToCatalog()">Explorer nos Menus 🍽️</button>
                         <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">📍 Trouver autour de moi</button>
-                        <button class="btn btn-secondary" onclick="router.navigate('/auth')">Espace Restaurateur 🤝</button>
                     </div>
                 </div>
                 
