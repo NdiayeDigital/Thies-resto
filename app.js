@@ -958,7 +958,7 @@ function showMapModal(userLat, userLng, restaurants) {
             
             const marker = L.marker([r.lat, r.lng])
                 .addTo(window.myLeafletMap)
-                .bindPopup(`
+                .bindTooltip(r.name, {permanent: true, direction: 'top', className: 'map-label'}).bindPopup(`
                     <div style="text-align:center;">
                         <b style="font-size:1.1rem;">${r.name}</b><br>
                         <span style="color:var(--text-secondary); font-size:0.85rem;">${r.address}</span><br>

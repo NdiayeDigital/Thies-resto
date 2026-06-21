@@ -1338,7 +1338,7 @@ footer {
     /* Horizontal Carousel for Restaurants on Mobile */
     .restaurant-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; padding: 0 0.5rem 2rem 0.5rem; }
     
-    .restaurant-card { width: 100%; }
+    
     .restaurant-card-header {
         height: 90px;
     }
@@ -2390,7 +2390,11 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     /* Onboarding steps displayed as a 2x2 grid on mobile */
     .timeline-steps {
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-rows: repeat(4, auto) !important;
+        grid-auto-flow: column !important;
+        grid-auto-columns: 85% !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory !important;
         gap: 0.75rem !important;
         padding: 0 !important;
         overflow-x: visible !important;
@@ -2443,7 +2447,11 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     }
     .study-carousel-wrapper, .solution-carousel-wrapper {
         display: grid !important;
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-rows: repeat(4, auto) !important;
+        grid-auto-flow: column !important;
+        grid-auto-columns: 85% !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory !important;
         gap: 0.75rem !important;
         padding: 0 !important;
         margin-top: 1rem !important;
@@ -2907,7 +2915,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 @media (max-width: 768px) {
     .timeline-steps {
         display: flex !important;
-        flex-direction: row !important;
+        
         justify-content: space-around !important;
         gap: 0.5rem !important;
         padding: 0.5rem 0 !important;
@@ -2919,9 +2927,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         box-shadow: none !important;
         min-width: unset !important;
     }
-    .timeline-card h3, .timeline-card p, .timeline-badge {
-        display: none !important;
-    }
+    
     .timeline-icon {
         font-size: 2.2rem !important;
         margin: 0 !important;
@@ -2931,7 +2937,11 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 @media (max-width: 768px) {
     .restaurant-grid {
         display: grid !important;
-        grid-template-columns: repeat(4, 1fr) !important;
+        grid-template-rows: repeat(4, auto) !important;
+        grid-auto-flow: column !important;
+        grid-auto-columns: 85% !important;
+        overflow-x: auto !important;
+        scroll-snap-type: x mandatory !important;
         gap: 0.5rem !important;
         padding: 0.5rem !important;
         overflow-x: hidden !important;
@@ -2953,4 +2963,23 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     .restaurant-card-body p, .restaurant-tags, .restaurant-info {
         display: none !important; /* Hide extra text to fit 4 per row */
     }
+}
+
+.btn-icon-square {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    font-size: 1.2rem;
+}
+.map-label {
+    background: white;
+    border: 1px solid var(--primary);
+    border-radius: 4px;
+    font-weight: bold;
+    padding: 2px 5px;
+    color: var(--text-primary);
 }

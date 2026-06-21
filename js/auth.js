@@ -214,42 +214,47 @@ async function handleRestaurantLogin(e) {
     let r = null;
     
     if (supabaseClient) {
-        const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
-            p_username: username,
-            p_password: pass
-        });
-        if (error || !data || data.length === 0) {
-            // Fallback to local store just in case
-            r = store.getRestaurants().find(resto => resto.slug === username && resto.password === pass);
-            if (!r) {
-                showToast("Identifiant ou mot de passe incorrect", "danger");
-                return;
+        try {
+            const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
+                p_username: username,
+                p_password: pass
+            });
+            if (error || !data || data.length === 0) {
+                // Fallback to local store just in case
+                r = store.getRestaurants().find(resto => (resto.slug === username || resto.username === username) && resto.password === pass);
+                if (!r) {
+                    if (typeof showToast === 'function') showToast("Identifiant ou mot de passe incorrect", "danger");
+                    return;
+                }
+            } else {
+                r = {
+                    id: data[0].id,
+                    name: data[0].name,
+                    slug: data[0].slug,
+                    status: data[0].status,
+                    password: pass
+                };
             }
-        } else {
-            r = {
-                id: data[0].id,
-                name: data[0].name,
-                slug: data[0].slug,
-                status: data[0].status,
-                password: pass
-            };
+        } catch(err) {
+            console.error("Supabase login error, falling back to local", err);
+            r = store.getRestaurants().find(resto => (resto.slug === username || resto.username === username) && resto.password === pass);
         }
     } else {
-        r = store.getRestaurants().find(resto => resto.slug === username && resto.password === pass);
+        r = store.getRestaurants().find(resto => (resto.slug === username || resto.username === username) && resto.password === pass);
     }
     
     if (!r) {
-        showToast("Identifiant ou mot de passe incorrect", "danger");
+        if (typeof showToast === 'function') showToast("Identifiant ou mot de passe incorrect", "danger");
         return;
     }
 
     if (r.status === 'pending') {
-        showToast("Votre compte est en cours de validation par le super-admin.", "warning");
+        if (typeof showToast === 'function') showToast("Votre compte est en cours de validation par le super-admin.", "warning");
         return;
     }
     
     if (r.status === 'suspended') {
-        showToast("Votre compte a été suspendu temporairement. Contactez le réseau.", "danger");
+        if (typeof showToast === 'function') showToast("Votre compte a été suspendu temporairement. Contactez le réseau.", "danger");
         return;
     }
     
@@ -259,7 +264,7 @@ async function handleRestaurantLogin(e) {
     } catch (e) {
         console.warn("Failed to save resto_session to sessionStorage", e);
     }
-    showToast(`Bienvenue, ${r.name} !`, "success");
+    if (typeof showToast === 'function') showToast(`Bienvenue, ${r.name} !`, "success");
     
     setTimeout(() => {
         document.getElementById('auth-modal').style.display = 'none';
