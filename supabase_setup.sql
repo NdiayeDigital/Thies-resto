@@ -419,3 +419,23 @@ USING (bucket_id = 'restaurant_images');
 CREATE POLICY "Upload Images" ON storage.objects
 FOR INSERT TO public
 WITH CHECK (bucket_id = 'restaurant_images');
+
+-- ==========================================
+-- 13. CONFIGURATION SUPABASE STORAGE (UPLOADS IMAGES)
+-- ==========================================
+
+-- 1. Cration du dossier de stockage (bucket) public
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('restaurant-images', 'restaurant-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- 2. Dfinir les rgles de scurit pour les images (Lecture publique)
+DROP POLICY IF EXISTS "Images sont publiques" ON storage.objects;
+CREATE POLICY "Images sont publiques" ON storage.objects 
+FOR SELECT USING (bucket_id = 'restaurant-images');
+
+-- 3. Autoriser l'upload d'images
+DROP POLICY IF EXISTS "Upload d'images autoris" ON storage.objects;
+CREATE POLICY "Upload d'images autoris" ON storage.objects 
+FOR INSERT WITH CHECK (bucket_id = 'restaurant-images');
+
