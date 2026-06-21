@@ -158,19 +158,59 @@ window.handleRegImageUpload = async function(event) {
     if (container) container.style.display = 'flex';
     if (previewImg) previewImg.src = URL.createObjectURL(file);
     if (statusText) {
-        statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        statusText.innerHTML = `⏳ Compression et envoi...`;
         statusText.style.color = "var(--warning)";
     }
     if (submitBtn) submitBtn.disabled = true;
 
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_logo.${fileExt}`;
-    const filePath = `restaurants/${fileName}`;
+    // --- IMAGE COMPRESSION LOGIC ---
+    const compressImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = event => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convert to blob (webp for better compression)
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/webp', 0.8);
+                };
+            };
+        });
+    };
 
     try {
+        const compressedBlob = await compressImage(file);
+        const fileName = `${Date.now()}_logo.webp`;
+        const filePath = `restaurants/${fileName}`;
+
         const { error } = await supabaseClient.storage
             .from('restaurant-images')
-            .upload(filePath, file);
+            .upload(filePath, compressedBlob, { contentType: 'image/webp' });
 
         if (error) throw error;
 
@@ -181,7 +221,7 @@ window.handleRegImageUpload = async function(event) {
         urlInput.value = publicUrlData.publicUrl;
         
         if (statusText) {
-            statusText.innerHTML = `✅ Photo uploadée et hébergée !`;
+            statusText.innerHTML = `✅ Photo compressée et hébergée !`;
             statusText.style.color = "var(--success)";
         }
     } catch (e) {
@@ -196,27 +236,15 @@ window.handleRegImageUpload = async function(event) {
 }
 
 
-async function hashPassword(password) {
-    const msgBuffer = new TextEncoder().encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
 async function handleRestaurantLogin(e) {
     e.preventDefault();
     const username = document.getElementById('login-username').value.trim().toLowerCase();
-    const pass = document.getElementById('login-password').value;
+    const pass = document.getElementById('login-password').value.trim();
     
-    // Hash attendu pour 'admin221'
-    const adminHash = '9632eb1e93cdd5ee1667b57b98fbc1859600a944fc16ce61661cb859ffdf6e98';
-    let hashedPass = '';
-    try {
-        hashedPass = await hashPassword(pass);
-    } catch(e) {}
-    
-    // Check if Super Admin
-    if (username === 'idadmin' && hashedPass === adminHash) {
+    // Obfuscated admin check (btoa('admin221') = 'YWRtaW4yMjE=')
+    // btoa('idadmin') = 'aWRhZG1pbg=='
+    if (btoa(username) === 'aWRhZG1pbg==' && btoa(pass) === 'YWRtaW4yMjE=') {
         sessionStorage.setItem('thies_admin_logged', 'true');
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         setTimeout(() => {
@@ -248,14 +276,14 @@ async function handleRestaurantLogin(e) {
         }
     }
     
-    // Fallback: local dynamic check since passwords are removed from store
+    // Fallback: local dynamic check
     if (!r) {
         const localRestos = store.getRestaurants();
         const matchedResto = localRestos.find(resto => {
             let baseName = resto.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
             let expectedUsername = 'id_' + baseName;
             let expectedPassword = baseName + '221';
-            return username === expectedUsername && pass === expectedPassword;
+            return username === expectedUsername && pass.toLowerCase() === expectedPassword;
         });
         
         if (matchedResto) {
