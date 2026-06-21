@@ -364,13 +364,7 @@ function updateNavbar() {
     navActions.innerHTML = html;
 }
 
-// logoutRestaurant moved to js/auth.js catch (e) {
-        console.warn("Failed to clear resto_session from sessionStorage", e);
-    }
-    currentRestaurantSession = null;
-    showToast("Session restaurant déconnectée", "success");
-    router.navigate('/');
-}
+// logoutRestaurant moved to js/auth.js
 
 function logoutAdmin() {
     try {
