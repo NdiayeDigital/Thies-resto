@@ -5,6 +5,7 @@
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 1. Create Restaurants Table
 CREATE TABLE IF NOT EXISTS restaurants (
@@ -326,7 +327,11 @@ RETURNS JSON AS $$
 DECLARE
     v_result JSON;
 BEGIN
-    IF p_admin_password = 'adminthies' OR p_admin_password = 'admin221' OR p_admin_password = 'Mouhamadou2005' THEN
+    IF encode(digest(p_admin_password, 'sha256'), 'hex') IN (
+        '42eb8c4db0ea9234a9e42c8caa8daaf4c8c8197a6555498f622e62fd0980cd92',
+        '7ea441c9232272092447095c465d58026dcbdc67cf6df9348d4dcea89451bd61',
+        'bb17e5611cb14f1b2abfecebd1b2c51ed510d347495c9751576cae6d1b15b60a'
+    ) THEN
         SELECT json_build_object(
             'restaurants', (SELECT json_agg(r) FROM restaurants r),
             'orders', (SELECT json_agg(o) FROM orders o),
@@ -343,7 +348,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION admin_update_restaurant(p_admin_password TEXT, p_restaurant_id TEXT, p_updates JSONB)
 RETURNS VOID AS $$
 BEGIN
-    IF p_admin_password = 'adminthies' OR p_admin_password = 'admin221' OR p_admin_password = 'Mouhamadou2005' THEN
+    IF encode(digest(p_admin_password, 'sha256'), 'hex') IN (
+        '42eb8c4db0ea9234a9e42c8caa8daaf4c8c8197a6555498f622e62fd0980cd92',
+        '7ea441c9232272092447095c465d58026dcbdc67cf6df9348d4dcea89451bd61',
+        'bb17e5611cb14f1b2abfecebd1b2c51ed510d347495c9751576cae6d1b15b60a'
+    ) THEN
         UPDATE restaurants
         SET 
             name = COALESCE(p_updates->>'name', name),
@@ -361,7 +370,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION admin_delete_restaurant(p_admin_password TEXT, p_restaurant_id TEXT)
 RETURNS VOID AS $$
 BEGIN
-    IF p_admin_password = 'adminthies' OR p_admin_password = 'admin221' OR p_admin_password = 'Mouhamadou2005' THEN
+    IF encode(digest(p_admin_password, 'sha256'), 'hex') IN (
+        '42eb8c4db0ea9234a9e42c8caa8daaf4c8c8197a6555498f622e62fd0980cd92',
+        '7ea441c9232272092447095c465d58026dcbdc67cf6df9348d4dcea89451bd61',
+        'bb17e5611cb14f1b2abfecebd1b2c51ed510d347495c9751576cae6d1b15b60a'
+    ) THEN
         DELETE FROM restaurants WHERE id = p_restaurant_id;
     ELSE
         RAISE EXCEPTION 'Non autorisé';

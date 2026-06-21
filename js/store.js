@@ -319,7 +319,7 @@ class Store {
 
             if (error && error.code === '23505') {
                 if (isSuperAdminSession) {
-                    const adminPass = sessionStorage.getItem('admin_password') || 'adminthies';
+                    const adminPass = sessionStorage.getItem('admin_password') || '';
                     await supabaseClient.rpc('admin_update_restaurant', {
                         p_admin_password: adminPass,
                         p_restaurant_id: resto.id,
@@ -357,7 +357,7 @@ class Store {
         if (!supabaseClient) return;
         try {
             if (isSuperAdminSession) {
-                const adminPass = sessionStorage.getItem('admin_password') || 'adminthies';
+                const adminPass = sessionStorage.getItem('admin_password') || '';
                 await supabaseClient.rpc('admin_delete_restaurant', {
                     p_admin_password: adminPass,
                     p_restaurant_id: id
