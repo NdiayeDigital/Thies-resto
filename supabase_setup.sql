@@ -3,6 +3,9 @@
 -- Secure Production Version with Strict RLS & RPC
 -- ==========================================
 
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
 -- 1. Create Restaurants Table
 CREATE TABLE IF NOT EXISTS restaurants (
     id TEXT PRIMARY KEY,
@@ -439,7 +442,6 @@ DROP POLICY IF EXISTS "Upload d'images autoris" ON storage.objects;
 CREATE POLICY "Upload d'images autoris" ON storage.objects 
 FOR INSERT WITH CHECK (bucket_id = 'restaurant-images');
 
-\n
 -- ==========================================
 -- TABLE: clients
 -- ==========================================
