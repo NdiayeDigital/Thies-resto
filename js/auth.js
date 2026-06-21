@@ -195,13 +195,28 @@ window.handleRegImageUpload = async function(event) {
     }
 }
 
+
+async function hashPassword(password) {
+    const msgBuffer = new TextEncoder().encode(password);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function handleRestaurantLogin(e) {
     e.preventDefault();
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value;
     
+    // Hash attendu pour 'admin221'
+    const adminHash = '9632eb1e93cdd5ee1667b57b98fbc1859600a944fc16ce61661cb859ffdf6e98';
+    let hashedPass = '';
+    try {
+        hashedPass = await hashPassword(pass);
+    } catch(e) {}
+    
     // Check if Super Admin
-    if (username === 'idadmin' && pass === 'admin221') {
+    if (username === 'idadmin' && hashedPass === adminHash) {
         sessionStorage.setItem('thies_admin_logged', 'true');
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         setTimeout(() => {
@@ -213,20 +228,13 @@ async function handleRestaurantLogin(e) {
     
     let r = null;
     
-    if (supabaseClient) {
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
             const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
                 p_username: username,
                 p_password: pass
             });
-            if (error || !data || data.length === 0) {
-                // Fallback to local store just in case
-                r = store.getRestaurants().find(resto => (resto.slug === username || resto.username === username) && resto.password === pass);
-                if (!r) {
-                    if (typeof showToast === 'function') showToast("Identifiant ou mot de passe incorrect", "danger");
-                    return;
-                }
-            } else {
+            if (!error && data && data.length > 0) {
                 r = {
                     id: data[0].id,
                     name: data[0].name,
@@ -236,11 +244,24 @@ async function handleRestaurantLogin(e) {
                 };
             }
         } catch(err) {
-            console.error("Supabase login error, falling back to local", err);
-            r = store.getRestaurants().find(resto => (resto.slug === username || resto.username === username) && resto.password === pass);
+            console.error("Supabase login error", err);
         }
-    } else {
-        r = store.getRestaurants().find(resto => (resto.slug === username || resto.username === username) && resto.password === pass);
+    }
+    
+    // Fallback: local dynamic check since passwords are removed from store
+    if (!r) {
+        const localRestos = store.getRestaurants();
+        const matchedResto = localRestos.find(resto => {
+            let baseName = resto.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            let expectedUsername = 'id_' + baseName;
+            let expectedPassword = baseName + '221';
+            return username === expectedUsername && pass === expectedPassword;
+        });
+        
+        if (matchedResto) {
+            r = matchedResto;
+            r.password = pass; // Store in session
+        }
     }
     
     if (!r) {
@@ -249,21 +270,21 @@ async function handleRestaurantLogin(e) {
     }
 
     if (r.status === 'pending') {
-        if (typeof showToast === 'function') showToast("Votre compte est en cours de validation par le super-admin.", "warning");
+        if (typeof showToast === 'function') showToast("Votre compte est en cours de validation.", "warning");
         return;
     }
     
     if (r.status === 'suspended') {
-        if (typeof showToast === 'function') showToast("Votre compte a été suspendu temporairement. Contactez le réseau.", "danger");
+        if (typeof showToast === 'function') showToast("Votre compte a été suspendu temporairement.", "danger");
         return;
     }
     
     currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: pass };
     try {
         sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
-    } catch (e) {
-        console.warn("Failed to save resto_session to sessionStorage", e);
-    }
+    } catch (e) {}
+    
+    if (typeof updateNav === 'function') updateNav();
     if (typeof showToast === 'function') showToast(`Bienvenue, ${r.name} !`, "success");
     
     setTimeout(() => {

@@ -1335,23 +1335,14 @@ footer {
     .filter-btn { padding: 0.4rem 0.65rem; font-size: 0.7rem; }
     .footer-grid { grid-template-columns: 1fr; }
     
-    /* Horizontal Carousel for Restaurants on Mobile */
+    /* Horizontal Carousel removed for Restaurants on Mobile */
     .restaurant-grid {
-        display: flex;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
         padding: 0 0.5rem 2rem 0.5rem;
-        gap: 1rem;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none; /* Firefox */
-    }
-    .restaurant-grid::-webkit-scrollbar {
-        display: none; /* Chrome/Safari */
+        gap: 0.75rem;
     }
     .restaurant-card {
-        min-width: 260px;
-        max-width: 260px;
-        flex-shrink: 0;
         scroll-snap-align: center;
     }
     .restaurant-card-header {
