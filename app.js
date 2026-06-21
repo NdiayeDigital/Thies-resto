@@ -2806,3 +2806,53 @@ window.submitCustomerReview = async function(restaurantId, customerName) {
 
 // Start application routing
 router.resolve();
+\n
+// ==================== SORTING LOGIC ====================
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const sortSelect = document.getElementById('sort-select');
+        if (sortSelect) {
+            sortSelect.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if(val === 'rating') {
+                    // Trier par note (Meilleure en premier)
+                    Store.restaurants.sort((a, b) => b.rating - a.rating);
+                } else if(val === 'alpha') {
+                    // Trier de A à Z
+                    Store.restaurants.sort((a, b) => a.name.localeCompare(b.name));
+                } else {
+                    // Revenir à l'ordre par défaut (pas de tri spécifique ou ordre ID)
+                    // On pourrait recharger depuis SEED_RESTAURANTS pour l'ordre original
+                    Store.restaurants = [...SEED_RESTAURANTS];
+                }
+                
+                // Re-render
+                if (window.renderCatalogCards) {
+                    renderCatalogCards(Store.restaurants);
+                } else {
+                    renderHome();
+                }
+            });
+        }
+    }, 1000);
+});
+\n
+// Auto-refresh data every 20 seconds
+setInterval(() => {
+    if (typeof store !== 'undefined' && store.loadDataFromSupabase) {
+        // We only want to refresh silently if we're not currently editing something.
+        // For clients, it's fine. For admin, maybe skip if typing.
+        const activeElem = document.activeElement;
+        const isEditing = activeElem && (activeElem.tagName === 'INPUT' || activeElem.tagName === 'TEXTAREA');
+        if (!isEditing) {
+            store.loadDataFromSupabase().then(() => {
+                if (typeof applyFilters === 'function') {
+                    // re-render silently
+                    // applyFilters();
+                    // We don't want to re-render aggressively because it interrupts scrolling
+                    // Just update the status badges if needed
+                }
+            });
+        }
+    }
+}, 20000);

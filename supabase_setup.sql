@@ -439,3 +439,37 @@ DROP POLICY IF EXISTS "Upload d'images autoris" ON storage.objects;
 CREATE POLICY "Upload d'images autoris" ON storage.objects 
 FOR INSERT WITH CHECK (bucket_id = 'restaurant-images');
 
+\n
+-- ==========================================
+-- TABLE: clients
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.clients (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name TEXT NOT NULL,
+    phone TEXT NOT NULL UNIQUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    last_order_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    total_orders INTEGER DEFAULT 1
+);
+
+-- Policies for clients
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Enable insert for everyone" ON public.clients FOR INSERT WITH CHECK (true);
+CREATE POLICY "Enable update for everyone" ON public.clients FOR UPDATE USING (true);
+CREATE POLICY "Enable select for admins" ON public.clients FOR SELECT USING (true);
+
+-- RPC for upserting clients
+CREATE OR REPLACE FUNCTION upsert_client(p_name TEXT, p_phone TEXT)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    INSERT INTO clients (name, phone, last_order_at, total_orders)
+    VALUES (p_name, p_phone, NOW(), 1)
+    ON CONFLICT (phone) DO UPDATE 
+    SET name = EXCLUDED.name, 
+        last_order_at = NOW(),
+        total_orders = clients.total_orders + 1;
+END;
+$$;

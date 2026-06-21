@@ -365,7 +365,19 @@ class Store {
         this.pushCustomerToSupabase(phone, name, this.data.usedRewards[phone]);
     }
 
-    getRestaurants() {
+    
+    async saveClientInfo(name, phone) {
+        if (!this.supabase) return;
+        try {
+            await this.supabase.rpc('upsert_client', {
+                p_name: name,
+                p_phone: phone
+            });
+        } catch (error) {
+            console.error('Error saving client info:', error);
+        }
+    }
+\n    getRestaurants() {
         return this.data.restaurants;
     }
 
