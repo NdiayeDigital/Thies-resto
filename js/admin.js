@@ -1280,7 +1280,10 @@ function handleAdminLogin(e) {
     const user = document.getElementById('admin-user').value.trim().toLowerCase();
     const pass = document.getElementById('admin-pass').value;
     
-    if ((user === 'admin' && pass === 'adminthies') || (user === 'idadmin' && pass === 'admin221') || (user === 'thiesresto' && pass === 'Resto221')) {
+    if ((user === 'admin' && pass === 'adminthies') || 
+        (user === 'idadmin' && pass === 'admin221') || 
+        (user === 'thiesresto' && pass === 'Resto221') ||
+        (user === '784799882' && pass === 'Mouhamadou2005')) {
         isSuperAdminSession = true;
         try {
             sessionStorage.setItem('admin_session', 'true');

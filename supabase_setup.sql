@@ -308,7 +308,7 @@ RETURNS JSON AS $$
 DECLARE
     v_result JSON;
 BEGIN
-    IF p_admin_password = 'adminthies' OR p_admin_password = 'admin221' THEN
+    IF p_admin_password = 'adminthies' OR p_admin_password = 'admin221' OR p_admin_password = 'Mouhamadou2005' THEN
         SELECT json_build_object(
             'restaurants', (SELECT json_agg(r) FROM restaurants r),
             'orders', (SELECT json_agg(o) FROM orders o),
@@ -325,7 +325,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION admin_update_restaurant(p_admin_password TEXT, p_restaurant_id TEXT, p_updates JSONB)
 RETURNS VOID AS $$
 BEGIN
-    IF p_admin_password = 'adminthies' OR p_admin_password = 'admin221' THEN
+    IF p_admin_password = 'adminthies' OR p_admin_password = 'admin221' OR p_admin_password = 'Mouhamadou2005' THEN
         UPDATE restaurants
         SET 
             name = COALESCE(p_updates->>'name', name),
@@ -343,7 +343,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION admin_delete_restaurant(p_admin_password TEXT, p_restaurant_id TEXT)
 RETURNS VOID AS $$
 BEGIN
-    IF p_admin_password = 'adminthies' OR p_admin_password = 'admin221' THEN
+    IF p_admin_password = 'adminthies' OR p_admin_password = 'admin221' OR p_admin_password = 'Mouhamadou2005' THEN
         DELETE FROM restaurants WHERE id = p_restaurant_id;
     ELSE
         RAISE EXCEPTION 'Non autorisé';
