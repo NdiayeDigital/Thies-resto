@@ -1280,10 +1280,14 @@ function handleAdminLogin(e) {
     const user = document.getElementById('admin-user').value.trim().toLowerCase();
     const pass = document.getElementById('admin-pass').value;
     
-    if ((user === 'admin' && pass === 'adminthies') || 
-        (user === 'idadmin' && pass === 'admin221') || 
-        (user === 'thiesresto' && pass === 'Resto221') ||
-        (user === '784799882' && pass === 'Mouhamadou2005')) {
+    // Obfuscated credential verification to prevent plain-text detection in DevTools/code inspection
+    const uEnc = btoa(user);
+    const pEnc = btoa(pass);
+    
+    if ((uEnc === 'Nzg0Nzk5ODgy' && pEnc === 'TW91aGFtYWRvdTIwMDU=') || 
+        (uEnc === 'YWRtaW4=' && pEnc === 'YWRtaW50aGllcw==') || 
+        (uEnc === 'aWRhZG1pbg==' && pEnc === 'YWRtaW4yMjE=') || 
+        (uEnc === 'dGhpZXNyZXN0bw==' && pEnc === 'UmVzdG8yMjE=')) {
         isSuperAdminSession = true;
         try {
             sessionStorage.setItem('admin_session', 'true');
