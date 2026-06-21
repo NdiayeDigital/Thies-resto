@@ -878,6 +878,128 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     return R * c;
 }
 
+
+// ----------------------------------------------------
+// Map Modal Logic
+// ----------------------------------------------------
+function showMapModal(userLat, userLng, restaurants) {
+    let mapModal = document.getElementById('map-modal');
+    if (!mapModal) {
+        mapModal = document.createElement('div');
+        mapModal.id = 'map-modal';
+        mapModal.style.position = 'fixed';
+        mapModal.style.top = '0';
+        mapModal.style.left = '0';
+        mapModal.style.width = '100vw';
+        mapModal.style.height = '100vh';
+        mapModal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+        mapModal.style.zIndex = '99999';
+        mapModal.style.display = 'flex';
+        mapModal.style.flexDirection = 'column';
+        
+        mapModal.innerHTML = `
+            <div style="background: var(--bg-card); width: 100%; height: 100%; max-width: 800px; max-height: 90vh; margin: auto; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; position: relative; border: 1px solid var(--border);">
+                <div style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0;">📍 Restaurants autour de moi</h3>
+                    <button id="close-map-btn" style="background: transparent; border: none; font-size: 2rem; cursor: pointer; color: var(--text-primary); line-height: 1;">&times;</button>
+                </div>
+                <div id="leaflet-map" style="flex: 1; width: 100%;"></div>
+            </div>
+        `;
+        document.body.appendChild(mapModal);
+        
+        document.getElementById('close-map-btn').addEventListener('click', () => {
+            mapModal.style.display = 'none';
+        });
+    }
+    
+    mapModal.style.display = 'flex';
+    
+    // Check if Leaflet is loaded
+    if (typeof L === 'undefined') {
+        if (typeof showToast === 'function') showToast("Erreur: Carte non chargée.", "danger");
+        return;
+    }
+
+    if (!window.myLeafletMap) {
+        window.myLeafletMap = L.map('leaflet-map').setView([userLat, userLng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(window.myLeafletMap);
+    } else {
+        window.myLeafletMap.setView([userLat, userLng], 14);
+    }
+    
+    // Clear existing markers
+    if (window.myMapMarkers) {
+        window.myMapMarkers.forEach(m => window.myLeafletMap.removeLayer(m));
+    }
+    window.myMapMarkers = [];
+    
+    // Add user marker
+    const userIcon = L.divIcon({
+        className: 'user-marker',
+        html: '<div style="background-color: var(--primary); width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>',
+        iconSize: [20, 20]
+    });
+    
+    const userMarker = L.marker([userLat, userLng], {icon: userIcon})
+        .addTo(window.myLeafletMap)
+        .bindPopup("<b>Vous êtes ici 🎯</b>").openPopup();
+    window.myMapMarkers.push(userMarker);
+    
+    let anyClose = false;
+
+    // Add restaurant markers
+    restaurants.forEach(r => {
+        if (r.lat && r.lng) {
+            const isClose = r._tempDistance && r._tempDistance < 20; // threshold: 20km
+            if (isClose) anyClose = true;
+            
+            const marker = L.marker([r.lat, r.lng])
+                .addTo(window.myLeafletMap)
+                .bindPopup(`
+                    <div style="text-align:center;">
+                        <b style="font-size:1.1rem;">${r.name}</b><br>
+                        <span style="color:var(--text-secondary); font-size:0.85rem;">${r.address}</span><br>
+                        <span style="font-size:0.8rem; color:var(--primary); font-weight:bold;">${r._tempDistance ? r._tempDistance + ' km' : ''}</span><br>
+                        <a href="#/r/${r.slug}" style="display:inline-block; margin-top:8px; padding:6px 12px; background:var(--primary); color:white; border-radius:4px; text-decoration:none;" onclick="document.getElementById('map-modal').style.display='none';">Voir le menu</a>
+                    </div>
+                `);
+            window.myMapMarkers.push(marker);
+        }
+    });
+
+    if (!anyClose) {
+        if (typeof showToast === 'function') {
+            showToast("Les restaurants sont un peu loin de vous. Commandez en ligne pour vous faire livrer ! 🛵", "info");
+        }
+        const warningDiv = document.createElement('div');
+        warningDiv.style.background = 'var(--warning)';
+        warningDiv.style.color = '#000';
+        warningDiv.style.padding = '10px 15px';
+        warningDiv.style.textAlign = 'center';
+        warningDiv.style.fontWeight = 'bold';
+        warningDiv.style.fontSize = '0.9rem';
+        warningDiv.innerHTML = '📍 Votre position a été trouvée, mais les restaurants sont un peu loin de vous. <br><a href="#/catalog" onclick="document.getElementById(\\'map-modal\\').style.display=\\'none\\';" style="color: #000; text-decoration: underline; margin-top: 5px; display: inline-block;">Faites-vous livrer en commandant en ligne ! 🛵</a>';
+        
+        const mapContainer = document.getElementById('leaflet-map');
+        if (mapContainer && mapContainer.parentNode) {
+            // Remove previous warning if exists to prevent duplicates
+            const oldWarning = document.getElementById('map-distance-warning');
+            if (oldWarning) oldWarning.remove();
+            
+            warningDiv.id = 'map-distance-warning';
+            mapContainer.parentNode.insertBefore(warningDiv, mapContainer);
+        }
+    }
+    
+    // Force Leaflet to recalculate size since it was hidden
+    setTimeout(() => {
+        window.myLeafletMap.invalidateSize();
+    }, 200);
+}
+
 window.geolocateRestaurants = function() {
     if ("geolocation" in navigator) {
         if (typeof showToast === 'function') showToast("Recherche de votre position...", "info");
@@ -901,6 +1023,10 @@ window.geolocateRestaurants = function() {
             
             // Re-render
             applyFilters();
+            
+            // Show Map Modal
+            showMapModal(userLat, userLng, store.data.restaurants);
+            
         }, (error) => {
             if (typeof showToast === 'function') showToast("Impossible d'obtenir votre position. Veuillez autoriser l'accès.", "error");
         });
@@ -908,6 +1034,7 @@ window.geolocateRestaurants = function() {
         if (typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée par votre navigateur.", "error");
     }
 };
+
 
 function filterRestaurantsList() {
     applyFilters();

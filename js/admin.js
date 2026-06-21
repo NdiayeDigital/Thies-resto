@@ -632,9 +632,22 @@ function renderDashboardTabContent(r) {
                 </div>
 
                 <!-- Info Modification Form -->
+                
                 <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 20px;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem;">Coordonnées & Horaires</h3>
+                    <h3 style="font-size: 1.1rem; margin-bottom: 1.25rem;">Coordonnées, Horaires & Logo</h3>
                     <form onsubmit="saveProfileSettings(event, '${r.id}')">
+                        <div class="form-group" style="margin-bottom: 1.5rem;">
+                            <label class="form-label">Logo du Restaurant</label>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <img id="settings-logo-preview" src="${r.image}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary);" onerror="this.src='https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=200'">
+                                <div style="flex: 1;">
+                                    <input type="file" id="settings-logo-file" class="form-control" accept="image/*" onchange="handleRestaurantLogoUpload(event)" style="padding: 0.35rem; height: auto;">
+                                    <input type="hidden" id="settings-logo-url" value="${r.image}">
+                                    <span id="settings-logo-status" style="font-size: 0.75rem; color: var(--success); display: none; margin-top: 0.25rem;">Upload en cours...</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label class="form-label">Numéro WhatsApp de réception <span class="required">*</span></label>
                             <input type="tel" id="settings-whatsapp" class="form-control" value="${r.whatsapp}" required>
@@ -657,9 +670,10 @@ function renderDashboardTabContent(r) {
                             <input type="password" id="settings-password" class="form-control" placeholder="Laisser vide si aucun changement">
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                        <button type="submit" id="settings-submit-btn" class="btn btn-primary">Enregistrer les modifications</button>
                     </form>
                 </div>
+
 
                 <!-- QR Code Generation -->
                 <div class="qr-container" style="margin: 0 auto;">
