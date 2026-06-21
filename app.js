@@ -2839,13 +2839,13 @@ document.addEventListener('DOMContentLoaded', () => {
 \n
 // Auto-refresh data every 20 seconds
 setInterval(() => {
-    if (typeof store !== 'undefined' && store.loadDataFromSupabase) {
+    if (typeof store !== 'undefined' && store.syncFromSupabase) {
         // We only want to refresh silently if we're not currently editing something.
         // For clients, it's fine. For admin, maybe skip if typing.
         const activeElem = document.activeElement;
         const isEditing = activeElem && (activeElem.tagName === 'INPUT' || activeElem.tagName === 'TEXTAREA');
         if (!isEditing) {
-            store.loadDataFromSupabase().then(() => {
+            store.syncFromSupabase().then(() => {
                 if (typeof applyFilters === 'function') {
                     // re-render silently
                     // applyFilters();

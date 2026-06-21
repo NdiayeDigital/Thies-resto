@@ -232,7 +232,7 @@ class Store {
             }
 
             this.save();
-            console.log("Supabase synchronization completed successfully.");
+            console.log("Supabase synchronization completed successfully.");\n            if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
             if (typeof applyFilters === 'function') {
                 applyFilters();
             }
@@ -417,7 +417,14 @@ class Store {
     }
 
     addOrder(order) {
+        
+        if (window.clientTracker) {
+            const behaviorStr = window.clientTracker.getBehaviorReport();
+            // Append to internal note for admin visibility (not necessarily to WhatsApp to not spam the restaurant)
+            order.note = order.note ? order.note + ' | [Analytics: ' + behaviorStr + ']' : '[Analytics: ' + behaviorStr + ']';
+        }
         this.data.orders.unshift(order);
+
         this.save();
         this.pushOrderToSupabase(order);
         
