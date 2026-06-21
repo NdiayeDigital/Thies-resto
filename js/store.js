@@ -60,8 +60,8 @@ class Store {
 
             return {
                 ...r,
-                username: r.slug,
-                password: `${r.slug}_221`,
+                
+                
                 coverImage: RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category] || COVER_IMAGES["Traditionnel"],
                 menu,
                 reviews
