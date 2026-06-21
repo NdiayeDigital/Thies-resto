@@ -200,6 +200,17 @@ async function handleRestaurantLogin(e) {
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value;
     
+    // Check if Super Admin
+    if (username === 'admin' && pass === 'superadmin2024') {
+        sessionStorage.setItem('thies_admin_logged', 'true');
+        if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
+        setTimeout(() => {
+            document.getElementById('auth-modal').style.display = 'none';
+            router.navigate('/admin');
+        }, 1000);
+        return;
+    }
+    
     let r = null;
     
     if (supabaseClient) {
@@ -208,17 +219,23 @@ async function handleRestaurantLogin(e) {
             p_password: pass
         });
         if (error || !data || data.length === 0) {
-            showToast("Identifiant ou mot de passe incorrect", "danger");
-            return;
+            // Fallback to local store just in case
+            r = store.getRestaurants().find(resto => resto.slug === username && resto.password === pass);
+            if (!r) {
+                showToast("Identifiant ou mot de passe incorrect", "danger");
+                return;
+            }
+        } else {
+            r = {
+                id: data[0].id,
+                name: data[0].name,
+                slug: data[0].slug,
+                status: data[0].status,
+                password: pass
+            };
         }
-        r = {
-            id: data[0].id,
-            name: data[0].name,
-            slug: data[0].slug,
-            status: data[0].status
-        };
     } else {
-        r = store.getRestaurants().find(resto => resto.username === username && resto.password === pass);
+        r = store.getRestaurants().find(resto => resto.slug === username && resto.password === pass);
     }
     
     if (!r) {
@@ -243,7 +260,11 @@ async function handleRestaurantLogin(e) {
         console.warn("Failed to save resto_session to sessionStorage", e);
     }
     showToast(`Bienvenue, ${r.name} !`, "success");
-    router.navigate('/dashboard');
+    
+    setTimeout(() => {
+        document.getElementById('auth-modal').style.display = 'none';
+        router.navigate('/dashboard');
+    }, 1000);
 }
 
 function handleRestaurantRegister(e) {

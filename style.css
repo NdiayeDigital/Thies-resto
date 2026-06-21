@@ -1336,24 +1336,9 @@ footer {
     .footer-grid { grid-template-columns: 1fr; }
     
     /* Horizontal Carousel for Restaurants on Mobile */
-    .restaurant-grid {
-        display: flex;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        padding: 0 0.5rem 2rem 0.5rem;
-        gap: 1rem;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none; /* Firefox */
-    }
-    .restaurant-grid::-webkit-scrollbar {
-        display: none; /* Chrome/Safari */
-    }
-    .restaurant-card {
-        min-width: 260px;
-        max-width: 260px;
-        flex-shrink: 0;
-        scroll-snap-align: center;
-    }
+    .restaurant-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; padding: 0 0.5rem 2rem 0.5rem; }
+    
+    .restaurant-card { width: 100%; }
     .restaurant-card-header {
         height: 90px;
     }
@@ -2918,3 +2903,54 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 
 
 
+
+@media (max-width: 768px) {
+    .timeline-steps {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-around !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem 0 !important;
+    }
+    .timeline-card {
+        padding: 0.5rem !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        min-width: unset !important;
+    }
+    .timeline-card h3, .timeline-card p, .timeline-badge {
+        display: none !important;
+    }
+    .timeline-icon {
+        font-size: 2.2rem !important;
+        margin: 0 !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .restaurant-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 0.5rem !important;
+        padding: 0.5rem !important;
+        overflow-x: hidden !important;
+    }
+    .restaurant-card {
+        min-width: 0 !important; /* Allow shrinking */
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+    .restaurant-card-header {
+        height: 60px !important;
+    }
+    .restaurant-card-body h3 {
+        font-size: 0.8rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    .restaurant-card-body p, .restaurant-tags, .restaurant-info {
+        display: none !important; /* Hide extra text to fit 4 per row */
+    }
+}
