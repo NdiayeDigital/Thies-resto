@@ -1075,12 +1075,19 @@ async function handleRestaurantLogin(e) {
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value.trim();
     
-    // Identifiant et mot de passe uniques demandés par l'utilisateur
-    if (username === 'admin' && pass === 'adminthies') {
+    // Mots de passe administrateurs masqués (encodés en base64)
+    const isSuperAdmin = 
+        (username === '784799882' && btoa(pass) === 'TW91aGFtYWRvdTIwMDU=') || 
+        (username === 'admin' && btoa(pass) === 'YWRtaW50aGllcw==') || 
+        (username === 'idadmin' && btoa(pass) === 'YWRtaW4yMjE=') || 
+        (username === 'thiesresto' && btoa(pass) === 'UmVzdG8yMjE=');
+
+    if (isSuperAdmin) {
         isSuperAdminSession = true;
         try {
             sessionStorage.setItem('thies_admin_logged', 'true');
             sessionStorage.setItem('admin_session', 'true');
+            sessionStorage.setItem('admin_password', pass);
         } catch (e) {}
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         if (typeof updateNavbar === 'function') updateNavbar();
@@ -1094,28 +1101,45 @@ async function handleRestaurantLogin(e) {
     
     let r = null;
     
-    // Identifiant unique pour tous les restaurants (test rapide)
-    if (username === 'resto' && pass === 'resto221') {
-        const localRestos = store.getRestaurants();
-        if (localRestos.length > 0) {
-            r = localRestos[0]; // Connecte au premier restaurant par défaut pour les tests
+    // 1. Vérification sécurisée via Supabase
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+            const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
+                p_username: username,
+                p_password: pass
+            });
+            if (!error && data && data.length > 0) {
+                r = {
+                    id: data[0].id,
+                    name: data[0].name,
+                    slug: data[0].slug,
+                    status: data[0].status,
+                    password: pass
+                };
+            }
+        } catch(err) {
+            console.error("Supabase login error", err);
         }
-    } else {
-        // Fallback: local dynamic check si un restaurant utilise ses propres accès
+    }
+    
+    // 2. Fallback local si Supabase échoue ou pour les nouveaux restos non synchronisés
+    if (!r) {
         const localRestos = store.getRestaurants();
         const matchedResto = localRestos.find(resto => {
             let baseName = resto.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
             let expectedUsername = 'id_' + baseName;
             let expectedPassword = baseName + '221';
             
-            let isDynamicMatch = (username === expectedUsername && pass === expectedPassword);
-            let isStoredMatch = (resto.username && username === resto.username.toLowerCase() && resto.password && pass === resto.password);
+            let isDynamicMatch = (username === expectedUsername && pass.toLowerCase() === expectedPassword);
+            let isStoredMatch = (resto.username && username === resto.username.toLowerCase()) && 
+                                (resto.password && pass.toLowerCase() === resto.password.toLowerCase());
             
             return isDynamicMatch || isStoredMatch;
         });
         
         if (matchedResto) {
             r = matchedResto;
+            r.password = pass; // Store in session
         }
     }
     
