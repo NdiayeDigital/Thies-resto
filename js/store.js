@@ -232,7 +232,8 @@ class Store {
             }
 
             this.save();
-            console.log("Supabase synchronization completed successfully.");\n            if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+            console.log("Supabase synchronization completed successfully.");
+            if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
             if (typeof applyFilters === 'function') {
                 applyFilters();
             }
@@ -377,7 +378,7 @@ class Store {
             console.error('Error saving client info:', error);
         }
     }
-\n    getRestaurants() {
+    getRestaurants() {
         return this.data.restaurants;
     }
 

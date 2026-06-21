@@ -2806,7 +2806,7 @@ window.submitCustomerReview = async function(restaurantId, customerName) {
 
 // Start application routing
 router.resolve();
-\n
+
 // ==================== SORTING LOGIC ====================
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
@@ -2836,7 +2836,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 1000);
 });
-\n
+
 // Auto-refresh data every 20 seconds
 setInterval(() => {
     if (typeof store !== 'undefined' && store.syncFromSupabase) {
