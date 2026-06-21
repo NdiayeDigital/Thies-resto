@@ -3059,7 +3059,7 @@ function hideLoadingOverlay() {
                     setTimeout(() => overlay.remove(), 600);
                 }
                 isFirstLoad = false;
-            }, 5000);
+            }, 500);
         }
     } else {
         const overlay = document.getElementById('loading-overlay');
@@ -3431,10 +3431,13 @@ function logoutAdmin() {
 // Page: LANDING PAGE (catalog)
 // ----------------------------------------------------
 router.add('#/', () => {
-    // Hide cart bar
-    document.getElementById('floating-cart-bar').style.display = 'none';
-    stopOrderPolling();
-    loadCart();
+    try {
+        // Hide cart bar
+        const cartBar = document.getElementById('floating-cart-bar');
+        if (cartBar) cartBar.style.display = 'none';
+        
+        if (typeof stopOrderPolling === 'function') stopOrderPolling();
+        if (typeof loadCart === 'function') loadCart();
     
     // Generate a stable session/visit specific random shuffle for restaurants
     const allRestos = store.getRestaurants().filter(r => r.status === 'active');
@@ -3810,8 +3813,16 @@ router.add('#/', () => {
         </section>
     `;
 
-    applyFilters();
+    if (typeof applyFilters === 'function') applyFilters();
     hideLoadingOverlay();
+    } catch (err) {
+        console.error("Error in home route:", err);
+        hideLoadingOverlay();
+        const container = document.getElementById('main-content');
+        if (container) {
+            container.innerHTML = `<div style="padding: 100px; text-align: center; color: red;">Une erreur est survenue lors du chargement : ${err.message}</div>`;
+        }
+    }
 });
 
 function scrollToCatalog() {
@@ -5855,7 +5866,18 @@ window.submitCustomerReview = async function(restaurantId, customerName) {
 };
 
 // Start application routing
-router.resolve();
+try {
+    router.resolve();
+} catch (err) {
+    console.error("Global Initialization Error:", err);
+    hideLoadingOverlay();
+    document.body.innerHTML += `<div style="position:fixed;top:0;left:0;right:0;background:red;color:white;padding:20px;z-index:999999;">Erreur Critique d'Initialisation: ${err.message}</div>`;
+}
+
+window.addEventListener('error', function(e) {
+    hideLoadingOverlay();
+    console.error("Uncaught Error:", e.message);
+});
 
 // ==================== SORTING LOGIC ====================
 document.addEventListener('DOMContentLoaded', () => {
