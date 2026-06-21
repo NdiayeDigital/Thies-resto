@@ -414,11 +414,13 @@ VALUES ('restaurant_images', 'restaurant_images', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Autoriser la lecture publique des images
+DROP POLICY IF EXISTS "Images Publiques" ON storage.objects;
 CREATE POLICY "Images Publiques" ON storage.objects
 FOR SELECT TO public
 USING (bucket_id = 'restaurant_images');
 
 -- Autoriser l'insertion (Upload) par n'importe qui (anonyme pour l'instant via le client)
+DROP POLICY IF EXISTS "Upload Images" ON storage.objects;
 CREATE POLICY "Upload Images" ON storage.objects
 FOR INSERT TO public
 WITH CHECK (bucket_id = 'restaurant_images');
