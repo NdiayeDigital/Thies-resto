@@ -1074,9 +1074,14 @@ async function handleRestaurantLogin(e) {
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value.trim();
     
-    // Mot de passe administrateur masqué (encodé en base64)
-    // Identifiant unique : admin / Mot de passe : adminthies
-    const isSuperAdmin = (username === 'admin' && btoa(pass) === 'YWRtaW50aGllcw==');
+    // Hachage sécurisé du mot de passe admin (SHA-256)
+    const msgUint8 = new TextEncoder().encode(pass);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    // Identifiant unique : admin / Mot de passe fort sécurisé
+    const isSuperAdmin = (username === 'admin' && hashHex === '4c5b8f75c052bcf17d687eefcfe9fc03c5a8b145c0ebea94806c0bd218b9d6d1');
 
     if (isSuperAdmin) {
         isSuperAdminSession = true;
@@ -1097,7 +1102,7 @@ async function handleRestaurantLogin(e) {
     
     let r = null;
     
-    // 1. Vérification sécurisée via Supabase
+    // 1. Vérification sécurisée EXCLUSIVE via Supabase
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
             const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
@@ -1118,26 +1123,7 @@ async function handleRestaurantLogin(e) {
         }
     }
     
-    // 2. Fallback local si Supabase échoue ou pour les nouveaux restos non synchronisés
-    if (!r) {
-        const localRestos = store.getRestaurants();
-        const matchedResto = localRestos.find(resto => {
-            let baseName = resto.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-            let expectedUsername = 'id_' + baseName;
-            let expectedPassword = baseName + '221';
-            
-            let isDynamicMatch = (username === expectedUsername && pass.toLowerCase() === expectedPassword);
-            let isStoredMatch = (resto.username && username === resto.username.toLowerCase()) && 
-                                (resto.password && pass.toLowerCase() === resto.password.toLowerCase());
-            
-            return isDynamicMatch || isStoredMatch;
-        });
-        
-        if (matchedResto) {
-            r = matchedResto;
-            r.password = pass; // Store in session
-        }
-    }
+    // Fallback local désactivé en production pour des raisons de sécurité.
     
     if (!r) {
         if (typeof showToast === 'function') showToast("Identifiant ou mot de passe introuvable", "danger");
@@ -4386,7 +4372,7 @@ function renderDishesTab(r) {
         html += `
             <div class="dish-card">
                 <div class="dish-img-container">
-                    <img src="${d.image}" class="dish-image" alt="${d.name}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'">
+                    <img src="${d.image}" class="dish-image" alt="${d.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'">
                     <span class="dish-price-tag">${d.price} FCFA</span>
                 </div>
                 <div class="dish-body">
@@ -5863,6 +5849,27 @@ window.submitCustomerReview = async function(restaurantId, customerName) {
         `;
     }
 };
+
+// ==================== NETWORK DETECTOR ====================
+window.addEventListener('offline', () => {
+    let banner = document.getElementById('offline-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'offline-banner';
+        banner.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:var(--danger);color:white;text-align:center;padding:12px;z-index:999999;font-weight:bold;font-size:0.9rem;box-shadow:0 4px 6px rgba(0,0,0,0.2);animation:slideDown 0.3s ease-out;';
+        banner.innerHTML = '⚠️ Vous êtes hors connexion. Veuillez vérifier votre réseau.';
+        document.body.appendChild(banner);
+    }
+    banner.style.display = 'block';
+});
+
+window.addEventListener('online', () => {
+    const banner = document.getElementById('offline-banner');
+    if (banner) {
+        banner.style.display = 'none';
+        if (typeof showToast === 'function') showToast("Connexion rétablie !", "success");
+    }
+});
 
 // Start application routing
 try {
