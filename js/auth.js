@@ -1,7 +1,11 @@
 function logoutRestaurant() {
     try {
         sessionStorage.removeItem('resto_session');
-    }
+    } catch(e) {}
+    if (typeof currentRestaurantSession !== 'undefined') currentRestaurantSession = null;
+    if (typeof showToast === 'function') showToast('Déconnexion réussie', 'success');
+    if (typeof router !== 'undefined') router.navigate('/auth');
+}
 
 router.add('#/auth', () => {
     // Hide cart
