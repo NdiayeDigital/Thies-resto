@@ -58,8 +58,7 @@ class ClientTracker {
     }
 }
 
-// Initialize tracker
-window.clientTracker = new ClientTracker();
+// Initialize tracker later when router is defined
 const COVER_IMAGES = {
     "Traditionnel": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60",
     "Grillades / Dibi": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=60",
@@ -5867,6 +5866,10 @@ window.submitCustomerReview = async function(restaurantId, customerName) {
 
 // Start application routing
 try {
+    // Initialize tracker now that router is defined
+    if (typeof ClientTracker !== 'undefined') {
+        window.clientTracker = new ClientTracker();
+    }
     router.resolve();
 } catch (err) {
     console.error("Global Initialization Error:", err);
