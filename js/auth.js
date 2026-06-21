@@ -201,7 +201,7 @@ async function handleRestaurantLogin(e) {
     const pass = document.getElementById('login-password').value;
     
     // Check if Super Admin
-    if (username === 'admin' && pass === 'superadmin2024') {
+    if (username === 'idadmin' && pass === 'admin221') {
         sessionStorage.setItem('thies_admin_logged', 'true');
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         setTimeout(() => {
