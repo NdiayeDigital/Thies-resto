@@ -1075,12 +1075,9 @@ async function handleRestaurantLogin(e) {
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value.trim();
     
-    // Mots de passe administrateurs masqués (encodés en base64)
-    const isSuperAdmin = 
-        (username === '784799882' && btoa(pass) === 'TW91aGFtYWRvdTIwMDU=') || 
-        (username === 'admin' && btoa(pass) === 'YWRtaW50aGllcw==') || 
-        (username === 'idadmin' && btoa(pass) === 'YWRtaW4yMjE=') || 
-        (username === 'thiesresto' && btoa(pass) === 'UmVzdG8yMjE=');
+    // Mot de passe administrateur masqué (encodé en base64)
+    // Identifiant unique : admin / Mot de passe : adminthies
+    const isSuperAdmin = (username === 'admin' && btoa(pass) === 'YWRtaW50aGllcw==');
 
     if (isSuperAdmin) {
         isSuperAdminSession = true;
