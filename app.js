@@ -203,25 +203,61 @@ function playNotificationSound() {
     }
 }
 
-// ---------- ORDER POLLING (for restaurant dashboard) ----------
-let lastKnownOrderCount = 0;
-let pollingInterval = null;
+// ---------- ORDER POLLING (Supabase Realtime WebSockets) ----------
+let orderChannel = null;
 function startOrderPolling(restaurantId) {
     stopOrderPolling();
-    lastKnownOrderCount = store.getOrdersByRestaurant(restaurantId).length;
-    pollingInterval = setInterval(() => {
-        const current = store.getOrdersByRestaurant(restaurantId).length;
-        if (current > lastKnownOrderCount) {
-            playNotificationSound();
-            showToast(`🔔 Nouvelle commande reçue !`, 'success');
-            lastKnownOrderCount = current;
-        }
-    }, 30000);
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        orderChannel = supabaseClient
+            .channel('realtime-orders')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'orders' },
+                (payload) => {
+                    const newOrder = payload.new;
+                    if (newOrder.restaurant_id === restaurantId) {
+                        // Avoid duplicates if sync already caught it
+                        const exists = store.data.orders.find(o => o.id === newOrder.id);
+                        if (!exists) {
+                            playNotificationSound();
+                            if (typeof showToast === 'function') showToast(`🔔 Nouvelle commande reçue !`, 'success');
+                            
+                            const formatted = {
+                                id: newOrder.id,
+                                restaurantId: newOrder.restaurant_id,
+                                customerName: newOrder.customer_name,
+                                customerPhone: newOrder.customer_phone,
+                                mode: newOrder.mode,
+                                address: newOrder.address,
+                                items: typeof newOrder.items === 'string' ? JSON.parse(newOrder.items) : newOrder.items,
+                                total: newOrder.total,
+                                note: newOrder.note,
+                                status: newOrder.status,
+                                date: newOrder.date
+                            };
+                            store.data.orders.unshift(formatted);
+                            store.save();
+                            
+                            // Re-render dashboard if open
+                            if (typeof renderDashboardTabContent === 'function') {
+                                const r = store.getRestaurantById(restaurantId);
+                                if (r && document.getElementById('dashboard-view-orders') && document.getElementById('dashboard-view-orders').classList.contains('active')) {
+                                    renderDashboardTabContent(r);
+                                }
+                            }
+                        }
+                    }
+                }
+            )
+            .subscribe();
+    }
 }
 function stopOrderPolling() {
-    if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+    if (orderChannel && typeof supabaseClient !== 'undefined' && supabaseClient) {
+        supabaseClient.removeChannel(orderChannel);
+        orderChannel = null;
+    }
 }
-
 
 // ---------- SCROLL HELPERS ----------
 function scrollToHowItWorks() {

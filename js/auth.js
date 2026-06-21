@@ -242,9 +242,10 @@ async function handleRestaurantLogin(e) {
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value.trim();
     
-    // Obfuscated admin check (btoa('admin221') = 'YWRtaW4yMjE=')
-    // btoa('idadmin') = 'aWRhZG1pbg=='
-    if (btoa(username) === 'aWRhZG1pbg==' && btoa(pass) === 'YWRtaW4yMjE=') {
+    // Obfuscated admin check
+    // btoa('thiesresto') = 'dGhpZXNyZXN0bw=='
+    // btoa('Resto221') = 'UmVzdG8yMjE='
+    if (btoa(username) === 'dGhpZXNyZXN0bw==' && btoa(pass) === 'UmVzdG8yMjE=') {
         sessionStorage.setItem('thies_admin_logged', 'true');
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         setTimeout(() => {
