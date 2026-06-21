@@ -2672,8 +2672,11 @@ function renderAdminTabTable() {
 
         let rowsHtml = '';
         activeOrSuspended.forEach(r => {
-            const rOrders = store.getOrdersByRestaurant(r.id).length;
+            const rOrdersList = store.getOrdersByRestaurant(r.id);
             const rReservations = store.getReservationsByRestaurant(r.id).length;
+            const rCompletedOrders = rOrdersList.filter(o => o.status === 'completed' || o.status === 'delivered');
+            const rRevenue = rCompletedOrders.reduce((sum, o) => sum + o.total, 0);
+            
             const statusLabel = r.status === 'active' 
                 ? `<span class="badge badge-success">Actif</span>` 
                 : `<span class="badge badge-danger">Suspendu</span>`;
@@ -2686,9 +2689,9 @@ function renderAdminTabTable() {
                 <tr>
                     <td><strong>${r.name}</strong></td>
                     <td>${statusLabel}</td>
-                    <td>★ ${r.rating.toFixed(1)} (${r.reviewsCount} avis)</td>
-                    <td>${rOrders} commande(s)</td>
-                    <td>${rReservations} résa(s)</td>
+                    <td>★ ${r.rating.toFixed(1)}</td>
+                    <td>${rOrdersList.length} Cmd(s)</td>
+                    <td style="color: var(--success); font-weight: bold;">${rRevenue.toLocaleString()} FCFA</td>
                     <td>
                         <button class="btn btn-primary btn-sm" onclick="impersonateRestaurant('${r.id}')">Gérer ⚙️</button>
                         ${actionBtn}
@@ -2705,9 +2708,9 @@ function renderAdminTabTable() {
                         <tr>
                             <th>Restaurant</th>
                             <th>Statut</th>
-                            <th>Note Moyenne</th>
+                            <th>Note</th>
                             <th>Commandes</th>
-                            <th>Réservations</th>
+                            <th>C.A. Généré</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
