@@ -2624,7 +2624,7 @@ window.getSMSLink = function(phone, body) {
 };
 
 // CGV Route & Render
-router.on('/cgv', () => renderCGV());
+router.add('#/cgv', () => renderCGV());
 function renderCGV() {
     hideLoadingOverlay();
     const container = document.getElementById('main-content');

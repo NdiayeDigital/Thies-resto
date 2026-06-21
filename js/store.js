@@ -137,6 +137,11 @@ class Store {
             // 1. Sync Restaurants (Publiques)
             const { data: dbRestos, error: restosError } = await supabaseClient.from('public_restaurants').select('*');
             if (!restosError && dbRestos) {
+                if (dbRestos.length === 0) {
+                    console.log("Database is empty. Seeding remote database with local restaurant data...");
+                    await this.seedRemoteDatabase();
+                    return;
+                }
                 const mappedRestos = dbRestos.map(r => {
                     let parsedMenu = r.menu;
                     try { if (typeof r.menu === 'string') parsedMenu = JSON.parse(r.menu); } catch(e) {}
@@ -239,6 +244,53 @@ class Store {
             }
         } catch (e) {
             console.error("Supabase sync failed", e);
+        }
+    }
+
+    async seedRemoteDatabase() {
+        if (!supabaseClient) return;
+        try {
+            let localRestos = this.data.restaurants;
+            if (!localRestos || localRestos.length === 0) {
+                this.seed();
+                localRestos = this.data.restaurants;
+            }
+
+            const list = localRestos.map(r => {
+                let baseName = r.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                let username = 'id_' + baseName;
+                let password = baseName + '221';
+                
+                return {
+                    id: r.id,
+                    name: r.name,
+                    slug: r.slug,
+                    rating: r.rating || 4.0,
+                    reviews_count: r.reviewsCount || 0,
+                    category: r.category,
+                    address: r.address || '',
+                    whatsapp: r.whatsapp || '',
+                    open_hours: r.openHours || '08:00 - 22:00',
+                    closed_days: r.closedDays || [],
+                    is_open_manual: r.isOpenManual !== undefined ? r.isOpenManual : true,
+                    status: 'active',
+                    username: username,
+                    password: password,
+                    cover_image: r.coverImage || '',
+                    menu: r.menu || [],
+                    reviews: r.reviews || []
+                };
+            });
+
+            const { error } = await supabaseClient.from('restaurants').insert(list);
+            if (error) {
+                console.error("Error seeding remote database:", error);
+            } else {
+                console.log("Successfully seeded remote database!");
+                await this.syncFromSupabase();
+            }
+        } catch (e) {
+            console.error("Failed to seed remote database:", e);
         }
     }
 

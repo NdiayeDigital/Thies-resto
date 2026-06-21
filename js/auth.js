@@ -243,8 +243,12 @@ async function handleRestaurantLogin(e) {
     const pass = document.getElementById('login-password').value.trim();
     
     // Admin check (plain text to avoid btoa issues)
-    if (username === 'thiesresto' && pass === 'Resto221') {
-        sessionStorage.setItem('thies_admin_logged', 'true');
+    if ((username === 'thiesresto' && pass === 'Resto221') || (username === 'idadmin' && pass === 'admin221') || (username === 'admin' && pass === 'adminthies')) {
+        isSuperAdminSession = true;
+        try {
+            sessionStorage.setItem('thies_admin_logged', 'true');
+            sessionStorage.setItem('admin_session', 'true');
+        } catch (e) {}
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         setTimeout(() => {
             document.getElementById('auth-modal').style.display = 'none';

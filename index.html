@@ -4,19 +4,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-    <meta name="description" content="THIES Resto — La plateforme commune de restauration à Thiès, Sénégal. Commandez vos plats du jour, réservez des tables et passez des commandes de groupe dans les 20 meilleurs restaurants partenaires. Confirmation WhatsApp, paiement espèces, zéro inscription.">
-    <meta name="keywords" content="restaurant thies, bon plan thies, commander repas thies, livraison repas thies, manger a thies, restauration thies, thiès resto, fast food thies, dibiterie thies, gastronomie thies">
+    <meta name="description"
+        content="THIES Resto — La plateforme commune de restauration à Thiès, Sénégal. Commandez vos plats du jour, réservez des tables et passez des commandes de groupe dans les 20 meilleurs restaurants partenaires. Confirmation WhatsApp, paiement espèces, zéro inscription.">
+    <meta name="keywords"
+        content="restaurant thies, bon plan thies, commander repas thies, livraison repas thies, manger a thies, restauration thies, thiès resto, fast food thies, dibiterie thies, gastronomie thies">
     <meta name="robots" content="index, follow">
     <meta name="author" content="NdiayeDigital">
     <link rel="canonical" href="https://thiesresto.sn/">
-    
+
     <meta name="theme-color" content="#ff6b35">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
+
     <!-- Open Graph (Facebook, LinkedIn, etc.) -->
     <meta property="og:title" content="THIES Resto — Tous les restaurants de Thiès en un clic">
-    <meta property="og:description" content="Découvrez les meilleurs restaurants et bons plans de Thiès. Commandez vos repas en ligne facilement avec confirmation via WhatsApp.">
+    <meta property="og:description"
+        content="Découvrez les meilleurs restaurants et bons plans de Thiès. Commandez vos repas en ligne facilement avec confirmation via WhatsApp.">
     <meta property="og:image" content="https://thiesresto.sn/icon.png">
     <meta property="og:url" content="https://thiesresto.sn/">
     <meta property="og:type" content="website">
@@ -26,7 +29,8 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="THIES Resto — La plateforme de restauration à Thiès">
-    <meta name="twitter:description" content="Trouvez votre restaurant à Thiès, passez commande et réservez votre table en quelques secondes.">
+    <meta name="twitter:description"
+        content="Trouvez votre restaurant à Thiès, passez commande et réservez votre table en quelques secondes.">
     <meta name="twitter:image" content="https://thiesresto.sn/icon.png">
 
     <title>THIES Resto — Plateforme de Restauration Commune à Thiès, Sénégal</title>
@@ -45,7 +49,8 @@
 
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
 
 <body>
@@ -53,11 +58,15 @@
     <div id="loading-overlay" class="loading-overlay">
         <div class="loading-spinner">
             <div class="spinner-ring"></div>
-            <img src="icon.png" class="spinner-logo" alt="THIES Resto Logo" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin: auto;">
+            <img src="icon.png" class="spinner-logo" alt="THIES Resto Logo"
+                style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin: auto;">
         </div>
         <p class="loading-text" id="loading-text">Chargement de THIES Resto…</p>
-        <div class="loading-progress-container" style="width: 240px; height: 6px; background: rgba(207, 168, 83, 0.15); border-radius: 10px; margin-top: 1.5rem; overflow: hidden; border: 1px solid rgba(207, 168, 83, 0.2);">
-            <div id="loading-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.1s linear; border-radius: 10px;"></div>
+        <div class="loading-progress-container"
+            style="width: 240px; height: 6px; background: rgba(207, 168, 83, 0.15); border-radius: 10px; margin-top: 1.5rem; overflow: hidden; border: 1px solid rgba(207, 168, 83, 0.2);">
+            <div id="loading-progress-bar"
+                style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.1s linear; border-radius: 10px;">
+            </div>
         </div>
     </div>
 
@@ -80,7 +89,8 @@
 
             <!-- Center: Logo -->
             <div class="logo-container" onclick="router.navigate('/')">
-                <img src="icon.png" class="logo-icon" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+                <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
+                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
                 <span class="logo-text">THIES Resto</span>
             </div>
 
@@ -92,7 +102,8 @@
             <!-- Mobile Drawer Overlay -->
             <div class="mobile-drawer" id="mobile-drawer">
                 <div class="drawer-header">
-                    <img src="icon.png" class="logo-icon" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
+                    <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
+                        style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
                     <span class="logo-text">THIES Resto</span>
                     <button class="close-drawer-btn" onclick="toggleMobileMenu()">✕</button>
                 </div>
@@ -100,9 +111,12 @@
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
                     <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
                     <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/auth'); return false;">Espace Restaurateur</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir Partenaire 🤝</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin-login'); return false;">Super-Admin Console</a>
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/auth'); return false;">Espace
+                        Restaurateur</a>
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
+                        Partenaire 🤝</a>
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin-login'); return false;">Super-Admin
+                        Console</a>
                 </div>
             </div>
             <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>
@@ -141,9 +155,13 @@
             <div class="footer-grid">
                 <!-- About Column -->
                 <div class="footer-col">
-                    <div class="footer-brand" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
-                        <img src="icon.png" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
-                        <span class="logo-text" style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">THIES Resto</span>
+                    <div class="footer-brand"
+                        style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <img src="icon.png" alt="THIES Resto Logo"
+                            style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+                        <span class="logo-text"
+                            style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">THIES
+                            Resto</span>
                     </div>
                     <p class="footer-about-text">
                         La première plateforme de restauration commune à Thiès, Sénégal. Née d'une étude de terrain sur
@@ -156,7 +174,8 @@
                 <div class="footer-col">
                     <h4 class="footer-col-title">Légal</h4>
                     <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions Générales (CGV)</a>
-                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client & RGPD</a>
+                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client &
+                        RGPD</a>
                     <a href="#" onclick="router.navigate('/politique-admin'); return false;">Politique Restaurant</a>
                 </div>
 
@@ -174,7 +193,8 @@
                 <div class="footer-col">
                     <h4 class="footer-col-title">Contact & Réseaux</h4>
                     <a href="https://wa.me/221784799882" target="_blank">💬 WhatsApp (+221 78 479 98 82)</a>
-                    <a href="https://www.instagram.com/thies_resto?igsh=YzcybGdmYmthNHhl" target="_blank">📸 Instagram</a>
+                    <a href="https://www.instagram.com/thies_resto?igsh=YzcybGdmYmthNHhl" target="_blank">📸
+                        Instagram</a>
                     <a href="mailto:contact@thiesresto.sn">✉️ contact@thiesresto.sn</a>
                 </div>
 
@@ -238,28 +258,30 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
     <!-- Leaflet JS for Maps -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- App Logic -->
-    <script src="js/analytics.js"></script>\n    <script src="js/data.js"></script>
+    <script src="js/analytics.js"></script>
+    <script src="js/data.js"></script>
     <script src="js/store.js"></script>
     <script src="js/router.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
     <script src="app.js"></script>
 
-<script>
-function togglePasswordVisibility(inputId, iconElement) {
-    const input = document.getElementById(inputId);
-    if (input.type === 'password') {
-        input.type = 'text';
-        iconElement.textContent = '🙈';
-    } else {
-        input.type = 'password';
-        iconElement.textContent = '👁️';
-    }
-}
-</script>
+    <script>
+        function togglePasswordVisibility(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconElement.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                iconElement.textContent = '👁️';
+            }
+        }
+    </script>
 </body>
 
 </html>

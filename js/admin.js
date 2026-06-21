@@ -1277,13 +1277,14 @@ router.add('#/admin-login', () => {
 
 function handleAdminLogin(e) {
     e.preventDefault();
-    const user = document.getElementById('admin-user').value.trim();
+    const user = document.getElementById('admin-user').value.trim().toLowerCase();
     const pass = document.getElementById('admin-pass').value;
     
-    if (user === 'admin' && pass === 'adminthies') {
+    if ((user === 'admin' && pass === 'adminthies') || (user === 'idadmin' && pass === 'admin221') || (user === 'thiesresto' && pass === 'Resto221')) {
         isSuperAdminSession = true;
         try {
             sessionStorage.setItem('admin_session', 'true');
+            sessionStorage.setItem('thies_admin_logged', 'true');
         } catch (e) {
             console.warn("Failed to save admin_session to sessionStorage", e);
         }
