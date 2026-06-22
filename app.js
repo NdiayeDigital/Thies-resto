@@ -5981,11 +5981,13 @@ function updateNav() {
     if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
         if (navActions) navActions.innerHTML = `
             <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;" class="desktop-only">👤 ${currentRestaurantSession.name || 'Connecté'}</span>
+            <button class="btn btn-outline desktop-only" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="handleLogout()">Déconnexion</button>
         `;
         if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'block';
     } else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
         if (navActions) navActions.innerHTML = `
             <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;" class="desktop-only">👑 Admin</span>
+            <button class="btn btn-outline desktop-only" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="handleLogout()">Déconnexion</button>
         `;
         if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'block';
     } else {
