@@ -3469,12 +3469,19 @@ router.add('#/', () => {
         `;
     }
 
+    const hour = new Date().getHours();
+    let greeting = "Bonjour";
+    if (hour < 11) greeting = "Bonjour ! Prêt pour le déjeuner ?";
+    else if (hour < 17) greeting = "Une petite faim ?";
+    else greeting = "Bonsoir ! Ne cuisinez pas ce soir.";
+
     container.innerHTML = `
         <!-- ========== HERO SECTION ========== -->
         <section class="hero-section">
             <div class="hero-split-container">
                 <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col">
+                    <span class="greeting-text" style="display: block; font-size: 1rem; color: var(--primary); font-weight: 500; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">${greeting}</span>
                     <h1 class="hero-title">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
                     <p class="hero-subtitle">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
@@ -4223,6 +4230,28 @@ router.add('#/r/:slug', (slug, startTab = 'menu', groupId = null) => {
     renderRestaurantView(r, startTab, groupId);
 });
 
+window.shareRestaurant = function(name, slug) {
+    const url = 'https://thiesresto.sn/#/r/' + slug;
+    const text = "Regarde ce restaurant sur THIES Resto, on commande ce soir ? " + name;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: name,
+            text: text,
+            url: url
+        }).catch(console.error);
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        navigator.clipboard.writeText(text + " : " + url)
+            .then(() => {
+                if (typeof showToast === 'function') showToast("Lien copié dans le presse-papiers !", "success");
+            })
+            .catch(() => {
+                window.open('https://api.whatsapp.com/send?text=' + encodeURIComponent(text + " " + url), '_blank');
+            });
+    }
+};
+
 function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
     const container = document.getElementById('main-content');
     
@@ -4269,6 +4298,9 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
                 <a href="https://wa.me/${r.whatsapp.replace(/\+/g, '')}" target="_blank" class="btn btn-outline btn-sm">
                     💬 Contacter WhatsApp
                 </a>
+                <button class="btn btn-primary btn-sm" onclick="shareRestaurant('${r.name}', '${r.slug}')">
+                    📤 Partager à un ami
+                </button>
             </div>
         </div>
 
