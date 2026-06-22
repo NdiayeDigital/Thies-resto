@@ -2569,8 +2569,9 @@ function renderAdminView() {
                     <h1 style="font-size: 1.75rem;">Super-Admin Console</h1>
                     <p style="color: var(--text-secondary); font-size: 0.85rem;">Supervisez l'intégralité du réseau de restauration de Thiès.</p>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
                     <span class="badge badge-danger">Live Monitor</span>
+                    <button class="btn btn-outline" style="color: var(--danger); border-color: var(--danger); font-size: 0.8rem; padding: 0.3rem 0.6rem;" onclick="handleLogout()">🚪 Déconnexion</button>
                 </div>
             </div>
 
