@@ -2557,8 +2557,10 @@ function renderAdminView() {
     const orders = store.data.orders;
     const reservations = store.data.reservations;
     
-    // Estimated Gross Merchandise Volume
-    const totalGmv = orders.reduce((sum, o) => sum + o.total, 0);
+    // Estimated Gross Merchandise Volume (Chiffre d'Affaires global)
+    // On calcule la somme exacte des chiffres d'affaires de toutes les commandes validées (livrées ou terminées)
+    const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'delivered');
+    const totalGmv = completedOrders.reduce((sum, o) => sum + o.total, 0);
 
     container.innerHTML = `
         <div style="padding: 2rem 1.5rem; max-width: 1000px; margin: 0 auto;">
@@ -2583,7 +2585,7 @@ function renderAdminView() {
                 </div>
                 <div class="stat-card">
                     <span class="stat-card-title">Volume d'affaires généré</span>
-                    <span class="stat-card-value">${totalGmv} FCFA</span>
+                    <span class="stat-card-value">${totalGmv.toLocaleString()} FCFA</span>
                 </div>
                 <div class="stat-card">
                     <span class="stat-card-title">Commandes / Réservations</span>
