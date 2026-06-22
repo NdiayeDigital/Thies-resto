@@ -13,7 +13,7 @@
     <link rel="canonical" href="https://thiesresto.sn/">
 
     <meta name="theme-color" content="#ff6b35">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- Open Graph (Facebook, LinkedIn, etc.) -->
@@ -115,8 +115,8 @@
                         Restaurateur</a>
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
                         Partenaire 🤝</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin-login'); return false;">Super-Admin
-                        Console</a>
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin-login'); return false;" style="font-size: 1.5rem; text-align: center; margin-top: 1rem;" title="Sécurité">🔐</a>
+                    <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;" style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem;">🚪 Déconnexion</a>
                 </div>
             </div>
             <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>

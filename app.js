@@ -3385,14 +3385,12 @@ function updateNavbar() {
             html = `
                 <span class="badge badge-danger">Super-Admin</span>
                 <button class="btn btn-primary btn-sm" onclick="router.navigate('/admin')">Console Admin 📊</button>
-                <button class="btn btn-secondary btn-sm" onclick="logoutAdmin()">Déconnexion</button>
             `;
         }
     } else if (currentRestaurantSession) {
         html = `
             <span class="badge badge-success">${currentRestaurantSession.name}</span>
             <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
-            <button class="btn btn-secondary btn-sm" onclick="logoutRestaurant()">Déconnexion</button>
         `;
     } else {
         html = `
@@ -5944,23 +5942,37 @@ setInterval(() => {
 
 function updateNav() {
     const navActions = document.getElementById('nav-actions');
-    if (!navActions) return;
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
     
     if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
-        navActions.innerHTML = `
-            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 1rem; display: none;" class="desktop-only">Connecté : ${currentRestaurantSession.name || 'Admin'}</span>
-            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="handleLogout()">Déconnexion</button>
+        if (navActions) navActions.innerHTML = `
+            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;" class="desktop-only">👤 ${currentRestaurantSession.name || 'Connecté'}</span>
         `;
+        if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'block';
     } else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
-        navActions.innerHTML = `
-            <button class="btn btn-outline" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="handleLogout()">Déconnexion</button>
+        if (navActions) navActions.innerHTML = `
+            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;" class="desktop-only">👑 Admin</span>
         `;
+        if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'block';
     } else {
-        navActions.innerHTML = `
+        if (navActions) navActions.innerHTML = `
             <button class="btn btn-primary" onclick="router.navigate('/auth')">Connexion Partenaire</button>
         `;
+        if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
     }
 }
+
+window.handleLogout = function() {
+    if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
+        if (typeof logoutAdmin === 'function') logoutAdmin();
+    } else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+        if (typeof logoutRestaurant === 'function') logoutRestaurant();
+    }
+    const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
+    if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
+    updateNav();
+    router.navigate('/');
+};
 
 function updateDynamicSEO(resto) {
     if (!resto) return;

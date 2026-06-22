@@ -58,10 +58,11 @@ class Store {
                 reply: rev.reply
             }));
 
+            const baseName = r.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
             return {
                 ...r,
-                
-                
+                username: 'id_' + baseName,
+                password: baseName + '221',
                 coverImage: RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category] || COVER_IMAGES["Traditionnel"],
                 menu,
                 reviews
@@ -170,21 +171,23 @@ class Store {
                 const mergedRestos = mappedRestos.map(dbR => {
                     const localR = this.data.restaurants.find(lr => lr.id === dbR.id);
                     if (localR) {
+                        const baseName = dbR.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
                         return {
                             ...dbR,
                             menu: (dbR.menu && dbR.menu.length > 0) ? dbR.menu : localR.menu,
                             coverImage: dbR.coverImage || localR.coverImage,
-                            username: localR.username,
-                            password: localR.password,
-                            status: localR.status
+                            username: localR.username || ('id_' + baseName),
+                            password: localR.password || (baseName + '221'),
+                            status: localR.status || dbR.status || 'active'
                         };
                     }
+                    const baseName = dbR.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
                     return {
                         ...dbR,
                         menu: dbR.menu || [],
-                        username: dbR.slug,
-                        password: '',
-                        status: 'active'
+                        username: 'id_' + baseName,
+                        password: baseName + '221',
+                        status: dbR.status || 'active'
                     };
                 });
 
