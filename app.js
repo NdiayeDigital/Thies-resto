@@ -202,7 +202,715 @@ const SEED_RESTAURANTS = [
     { id: "r16", name: "La Casablancaise", slug: "la-casablancaise", rating: 4.7, reviewsCount: 19, category: "Gastronomique", address: "Quartier Som, Thiès", whatsapp: "+221781056721", lat: 14.7900, lng: -16.9300, openHours: "12:00 - 23:00", closedDays: [1], isOpenManual: true, status: "active" },
     { id: "r17", name: "La Table des Gourmets", slug: "la-table-des-gourmets", rating: 5.0, reviewsCount: 14, category: "Gastronomique", address: "Quartier Grand-Thiès", whatsapp: "+221787846296", lat: 14.7950, lng: -16.9250, openHours: "19:00 - 23:30", closedDays: [1, 2], isOpenManual: true, status: "active" },
     { id: "r18", name: "La Licorne", slug: "la-licorne", rating: 4.8, reviewsCount: 11, category: "Gastronomique", address: "Zone Résidentielle Escale, Thiès", whatsapp: "+221772012229", lat: 14.8000, lng: -16.9200, openHours: "12:00 - 23:00", closedDays: [1], isOpenManual: true, status: "active" },
-    { id: "r19", name: "Biba Food", slug: "biba-food", rating: 5.0, reviewsCount: 9, category: "Fast Food", address: "Quartier Cité Lamy, Thiès", whatsapp: "+221770000000", lat: 14.8050, lng: -16.9100, openHours: "17:00 - 23:00", closedDays: [], isOpenManual: true, status: "active" }
+    { id: "r19", name: "Biba Food", slug: "biba-food", rating: 5.0, reviewsCount: 9, category: "Fast Food", address: "Quartier Cité Lamy, Thiès", whatsapp: "+221770000000", lat: 14.8050, lng: -16.9100, openHours: "17:00 - 23:00", closedDays: [], isOpenManual: true, status: "active" }, { id: "r20", name: "Complexe ABOUL ABBAS", slug: "complexe-aboul-abbas", rating: 5.0, reviewsCount: 0, category: "Traditionnel", address: "À préciser", whatsapp: "À préciser", lat: 14.7950, lng: -16.9250, openHours: "08:00 - 23:00", closedDays: [], isOpenManual: true, status: "active", menu: [
+    {
+        "id": "dish_abba_1",
+        "name": "Thiébou Dieune bou wekh",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_2",
+        "name": "Thiébou Dieune bou Khonk",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_3",
+        "name": "Yassa Poulet",
+        "description": "",
+        "price": 2500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_4",
+        "name": "Mafe Yapp",
+        "description": "",
+        "price": 2500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_5",
+        "name": "Soupou Kandia",
+        "description": "",
+        "price": 2500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_6",
+        "name": "C’est bon",
+        "description": "",
+        "price": 2500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_7",
+        "name": "Thiébou Yapp",
+        "description": "",
+        "price": 2500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_8",
+        "name": "Salade composée",
+        "description": "",
+        "price": 1500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_9",
+        "name": "Salade exotique",
+        "description": "",
+        "price": 4500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_10",
+        "name": "Frites",
+        "description": "",
+        "price": 1000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_11",
+        "name": "Poulet entier",
+        "description": "",
+        "price": 7000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_12",
+        "name": "Demi Poulet",
+        "description": "",
+        "price": 3500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_13",
+        "name": "Gambas",
+        "description": "",
+        "price": 6000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_14",
+        "name": "Crevettes",
+        "description": "",
+        "price": 4000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_15",
+        "name": "Poisson Grillé",
+        "description": "",
+        "price": 4000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_16",
+        "name": "Brochette de Lotte",
+        "description": "",
+        "price": 2500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_17",
+        "name": "Brochette de Boeuf",
+        "description": "",
+        "price": 4000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_18",
+        "name": "Filet de Boeuf",
+        "description": "",
+        "price": 7000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_19",
+        "name": "Côte de Boeuf",
+        "description": "",
+        "price": 5000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_20",
+        "name": "Dibi",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_21",
+        "name": "Dibi 500g",
+        "description": "",
+        "price": 3500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_22",
+        "name": "Dibi 1kg",
+        "description": "",
+        "price": 7000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_23",
+        "name": "Lakhass",
+        "description": "",
+        "price": 250,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_24",
+        "name": "Dibi Poulet entier",
+        "description": "",
+        "price": 8000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_25",
+        "name": "Dibi Moitié Poulet",
+        "description": "",
+        "price": 4000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_26",
+        "name": "Sandwich",
+        "description": "",
+        "price": 1000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_27",
+        "name": "Tacos Viande",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_28",
+        "name": "Burger",
+        "description": "",
+        "price": 1500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_29",
+        "name": "Chawarma Royal",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_30",
+        "name": "Panini Jambon",
+        "description": "",
+        "price": 1300,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_31",
+        "name": "Panini Poulet",
+        "description": "",
+        "price": 1800,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_32",
+        "name": "Sandwich Poulet",
+        "description": "",
+        "price": 1500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_33",
+        "name": "Chawarma Poulet",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_34",
+        "name": "Chawarma Viande",
+        "description": "",
+        "price": 1500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_35",
+        "name": "Soupream Parisien",
+        "description": "",
+        "price": 1500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_36",
+        "name": "Double Burger",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_37",
+        "name": "Norvégienne",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_38",
+        "name": "Fataya simple",
+        "description": "",
+        "price": 1500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_39",
+        "name": "Fataya complet",
+        "description": "",
+        "price": 700,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_40",
+        "name": "Tacos Poulet",
+        "description": "",
+        "price": 2500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_41",
+        "name": "Burger Royale",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_42",
+        "name": "Petit Pois",
+        "description": "",
+        "price": 1500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_43",
+        "name": "Tacos Mixte",
+        "description": "",
+        "price": 3000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_44",
+        "name": "Pizza Poulet",
+        "description": "",
+        "price": 5000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_45",
+        "name": "Pizza Margarite",
+        "description": "",
+        "price": 4000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_46",
+        "name": "Pizza Fermière",
+        "description": "",
+        "price": 5000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_47",
+        "name": "Pizza Chawarma",
+        "description": "",
+        "price": 5000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_48",
+        "name": "Pizza Reine",
+        "description": "",
+        "price": 4000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_49",
+        "name": "Pizza Jambon",
+        "description": "",
+        "price": 4000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_50",
+        "name": "Pizza Orientale",
+        "description": "",
+        "price": 4000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_51",
+        "name": "Pizza Mexicaine",
+        "description": "",
+        "price": 6000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_52",
+        "name": "Crudité",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_53",
+        "name": "Athiéké",
+        "description": "",
+        "price": 2500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_54",
+        "name": "Coucoulet",
+        "description": "",
+        "price": 4000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_55",
+        "name": "Touffé",
+        "description": "",
+        "price": 3000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_56",
+        "name": "Thiéré",
+        "description": "",
+        "price": 2500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_57",
+        "name": "Légumes sautés",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_58",
+        "name": "Calamars + Crevettes",
+        "description": "",
+        "price": 4500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_59",
+        "name": "Omelette Jambon",
+        "description": "",
+        "price": 3000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_60",
+        "name": "Omelette Fromage",
+        "description": "",
+        "price": 3000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_61",
+        "name": "Omelette Saucisson",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_62",
+        "name": "Plateau entrée",
+        "description": "",
+        "price": 10000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_63",
+        "name": "Fruits de mer",
+        "description": "",
+        "price": 7000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_64",
+        "name": "Plateau",
+        "description": "",
+        "price": 3500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_65",
+        "name": "Salée",
+        "description": "",
+        "price": 3000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_66",
+        "name": "Sucré",
+        "description": "",
+        "price": 2000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_67",
+        "name": "Bouye Nestlé",
+        "description": "",
+        "price": 1500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_68",
+        "name": "Bouye Fraise",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_69",
+        "name": "Bissap Rouge",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_70",
+        "name": "Bissap Blanc",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_71",
+        "name": "Torsade",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_72",
+        "name": "Pot Salade",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_73",
+        "name": "Cocktail de Fruits",
+        "description": "",
+        "price": 1000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_74",
+        "name": "Pot de Jus",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_75",
+        "name": "Boisson Ira",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_76",
+        "name": "Boisson Fanta",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_77",
+        "name": "Bouteille Jus Petit Model",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_78",
+        "name": "Coca-Cola",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_79",
+        "name": "Wéli",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_80",
+        "name": "Vimto",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_81",
+        "name": "3 X Petit modèle",
+        "description": "",
+        "price": 1000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_82",
+        "name": "3 X Grand Modèle",
+        "description": "",
+        "price": 1000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_83",
+        "name": "Jus d Orange",
+        "description": "",
+        "price": 300,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_84",
+        "name": "Café Simple",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_85",
+        "name": "Café Lavazze",
+        "description": "",
+        "price": 300,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_86",
+        "name": "Café au Lait",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_87",
+        "name": "Thé",
+        "description": "",
+        "price": 300,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_88",
+        "name": "Dessert Mousse au Chocolat",
+        "description": "",
+        "price": 1500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_89",
+        "name": "Drops",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_90",
+        "name": "Chaussons Ananas",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_91",
+        "name": "Feuillettes Viande",
+        "description": "",
+        "price": 700,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_92",
+        "name": "Feuillettes Jambon",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_93",
+        "name": "Feuillettes Hot Dog",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_94",
+        "name": "Gateaux 8 parts",
+        "description": "",
+        "price": 10000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_95",
+        "name": "Gateaux 10 parts",
+        "description": "",
+        "price": 10000,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_96",
+        "name": "Cake",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_97",
+        "name": "Pli Pli",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_98",
+        "name": "Madeleine",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_99",
+        "name": "Pain Raisin",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_100",
+        "name": "Tarte Ananas",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    },
+    {
+        "id": "dish_abba_101",
+        "name": "Tarye Citron",
+        "description": "",
+        "price": 500,
+        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
+    }
+] }
 ];
 
 // Supabase Configuration
@@ -271,7 +979,7 @@ class Store {
                 username: 'id_' + baseName,
                 password: baseName + '221',
                 coverImage: RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category] || COVER_IMAGES["Traditionnel"],
-                menu,
+                menu: r.menu || menu,
                 reviews
             };
         });
