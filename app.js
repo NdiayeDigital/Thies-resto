@@ -1978,6 +1978,7 @@ function renderDashboardShell() {
                 <button class="sidebar-btn ${dashboardActiveTab === 'reviews' ? 'active' : ''}" onclick="switchDashboardTab('reviews')">💬 Avis Clients</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'accounting' ? 'active' : ''}" onclick="switchDashboardTab('accounting')">📊 Comptabilité</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'settings' ? 'active' : ''}" onclick="switchDashboardTab('settings')">⚙️ Paramètres</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'subscription' ? 'active' : ''}" onclick="switchDashboardTab('subscription')">💳 Abonnement</button>
             </aside>
             <main class="dashboard-content" id="dashboard-tab-panel">
                 <!-- Sub tab contents injected here -->
@@ -1996,7 +1997,7 @@ function switchDashboardTab(tab) {
     btns.forEach(b => b.classList.remove('active'));
     
     // Highlight active
-    const label = tab === 'orders' ? 'commandes' : tab === 'reservations' ? 'réservations' : tab === 'menu' ? 'plats' : tab === 'reviews' ? 'avis' : tab === 'accounting' ? 'comptabilité' : 'paramètres';
+    const label = tab === 'orders' ? 'commandes' : tab === 'reservations' ? 'réservations' : tab === 'menu' ? 'plats' : tab === 'reviews' ? 'avis' : tab === 'accounting' ? 'comptabilité' : tab === 'subscription' ? 'abonnement' : 'paramètres';
     btns.forEach(b => {
         if (b.innerText.toLowerCase().includes(label)) {
             b.classList.add('active');
@@ -3302,6 +3303,55 @@ function renderAdminView() {
                 </div>
             </div>
 
+
+            <!-- Section Abonnements -->
+            <section style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 2rem; border: 1px solid var(--border);">
+                <h3 style="margin-top: 0; color: var(--text-primary); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span>💳 Abonnements & Revenus Plateforme</span>
+                    <span style="color: var(--success); font-weight: 800; font-size: 1.2rem; background: rgba(var(--success-rgb), 0.1); padding: 0.4rem 0.8rem; border-radius: 8px;">Revenus Plateforme: 23 000 FCFA / mois</span>
+                </h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Suivi des packs d'hébergement souscrits par les restaurants après leurs 3 mois gratuits.</p>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+                        <thead>
+                            <tr style="background: var(--bg-secondary); text-align: left; border-bottom: 2px solid var(--border);">
+                                <th style="padding: 1rem;">Restaurant</th>
+                                <th style="padding: 1rem;">Statut Gratuité</th>
+                                <th style="padding: 1rem;">Pack Souscrit</th>
+                                <th style="padding: 1rem;">Revenu (Mensuel)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 1rem;"><strong>La Licorne</strong></td>
+                                <td style="padding: 1rem;"><span class="badge badge-warning">Terminée</span></td>
+                                <td style="padding: 1rem;"><span class="badge badge-primary">Pack Startup</span></td>
+                                <td style="padding: 1rem; font-weight: 700; color: var(--success);">5 000 FCFA</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 1rem;"><strong>L'Épicurien</strong></td>
+                                <td style="padding: 1rem;"><span class="badge badge-warning">Terminée</span></td>
+                                <td style="padding: 1rem;"><span class="badge" style="background: var(--text-secondary); color: white;">Pack Simple</span></td>
+                                <td style="padding: 1rem; font-weight: 700; color: var(--success);">3 000 FCFA</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 1rem;"><strong>Complexe ABOUL ABBAS</strong></td>
+                                <td style="padding: 1rem;"><span class="badge badge-success">En cours (2 mois restants)</span></td>
+                                <td style="padding: 1rem;"><span class="badge" style="background: #e2e8f0; color: #64748b;">Aucun (Gratuit)</span></td>
+                                <td style="padding: 1rem; font-weight: 700; color: var(--text-secondary);">0 FCFA</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <td style="padding: 1rem;"><strong>Massa Massa</strong></td>
+                                <td style="padding: 1rem;"><span class="badge badge-warning">Terminée</span></td>
+                                <td style="padding: 1rem;"><span class="badge" style="background: var(--accent); color: white;">Pack Entreprise</span></td>
+                                <td style="padding: 1rem; font-weight: 700; color: var(--success);">15 000 FCFA</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+
             <!-- Tab selections -->
             <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
                 <button class="btn btn-sm ${adminActiveTab === 'pending' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('pending')">Demandes en attente (${pendingCount})</button>
@@ -3601,12 +3651,14 @@ function impersonateRestaurant(id) {
     if (!r) return;
     
     currentRestaurantSession = r;
+    sessionStorage.setItem('restaurantSession', JSON.stringify(r));
     showToast(`Session administrateur activée pour "${r.name}"`, "success");
     router.navigate('/dashboard');
 }
 
 function exitImpersonation() {
     currentRestaurantSession = null;
+    sessionStorage.removeItem('restaurantSession');
     showToast("Retour à la console Super-Admin", "info");
     router.navigate('/admin');
 }
