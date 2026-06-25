@@ -2654,6 +2654,13 @@ function renderDashboardTabContent(r) {
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const daysLeft = Math.max(0, 90 - diffDays);
         
+        // WhatsApp admin number for subscription requests
+        const adminWhatsApp = '221781056721';
+        const buildWhatsAppLink = (pack, price) => {
+            const msg = encodeURIComponent(`Bonjour Thiès à Table 👋\n\nJe souhaite souscrire au *${pack}* (${price} FCFA/mois) pour réactiver mon restaurant.\n\n🏪 Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n📦 Pack choisi : ${pack}\n\nMerci de procéder à l'activation !`);
+            return 'https://wa.me/' + adminWhatsApp + '?text=' + msg;
+        };
+        
         let freePeriodHtml = '';
         if (daysLeft > 0) {
             freePeriodHtml = `
@@ -2666,13 +2673,19 @@ function renderDashboardTabContent(r) {
                 </div>
             `;
         } else {
+            const reactivateMsg = encodeURIComponent('Bonjour Thiès à Table 👋\\n\\nMa période d\\'essai gratuit est terminée et je souhaite réactiver mon restaurant.\\n\\n🏪 Restaurant : ' + r.name + '\\n🆔 Identifiant : ' + r.slug + '\\n\\nMerci de m\\'indiquer la marche à suivre !');
             freePeriodHtml = `
-                <div style="background: linear-gradient(135deg, var(--danger) 0%, #ff4b4b 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
-                    <div>
-                        <h3 style="margin: 0 0 0.5rem 0; font-size: 1.4rem;">⚠️ Période d'essai terminée</h3>
-                        <p style="margin: 0; font-size: 1rem; opacity: 0.9;">Vos 3 mois gratuits sont écoulés. <strong>Votre restaurant a été automatiquement désactivé de l'application client.</strong> Veuillez souscrire à l'un de nos forfaits pour réactiver votre boutique.</p>
+                <div style="background: linear-gradient(135deg, var(--danger) 0%, #ff4b4b 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.4rem;">⚠️ Période d'essai terminée</h3>
+                            <p style="margin: 0; font-size: 1rem; opacity: 0.9;">Vos 3 mois gratuits sont écoulés. <strong>Votre restaurant a été automatiquement désactivé.</strong> Choisissez un pack ci-dessous et envoyez-nous un message WhatsApp pour réactiver votre boutique.</p>
+                        </div>
+                        <div style="font-size: 2.5rem;">🔒</div>
                     </div>
-                    <div style="font-size: 2.5rem;">🔒</div>
+                    <a href="https://wa.me/${adminWhatsApp}?text=${reactivateMsg}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; background: white; color: #25D366; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 0.95rem;">
+                        💬 Contacter Thiès à Table sur WhatsApp
+                    </a>
                 </div>
             `;
         }
@@ -2684,7 +2697,7 @@ function renderDashboardTabContent(r) {
                 ${freePeriodHtml}
 
                 <h3 style="margin-bottom: 0.5rem; color: var(--text-primary); font-size: 1.3rem;">Des forfaits Gagnant-Gagnant</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Nos tarifs sont pensés pour s'adapter à la taille de votre activité. Vous ne payez que pour les outils qui vous font grandir.</p>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Nos tarifs sont pensés pour s'adapter à la taille de votre activité. Pour souscrire, cliquez sur le bouton du pack qui vous convient et envoyez-nous un message WhatsApp avec vos identifiants.</p>
                 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
                     <!-- Pack Simple -->
@@ -2699,7 +2712,7 @@ function renderDashboardTabContent(r) {
                             <li style="margin-bottom: 0.5rem;">✅ Rapport d'activité trimestriel</li>
                             <li style="margin-bottom: 0.5rem;">✅ Support technique par e-mail</li>
                         </ul>
-                        <button class="btn btn-outline" style="width: 100%;" onclick="alert('Fonctionnalité de souscription bientôt disponible.')">Choisir ce Pack</button>
+                        <a href="${buildWhatsAppLink('Pack Simple', '3 000')}" target="_blank" class="btn btn-outline" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
                     </div>
 
                     <!-- Pack Startup -->
@@ -2715,7 +2728,7 @@ function renderDashboardTabContent(r) {
                             <li style="margin-bottom: 0.5rem;">📊 Rapport détaillé des ventes (Mensuel)</li>
                             <li style="margin-bottom: 0.5rem;">💬 Support direct et rapide via WhatsApp</li>
                         </ul>
-                        <button class="btn btn-primary" style="width: 100%;" onclick="alert('Fonctionnalité de souscription bientôt disponible.')">Choisir ce Pack</button>
+                        <a href="${buildWhatsAppLink('Pack Startup', '5 000')}" target="_blank" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
                     </div>
 
                     <!-- Pack Entreprise -->
@@ -2730,7 +2743,7 @@ function renderDashboardTabContent(r) {
                             <li style="margin-bottom: 0.5rem;">🎁 Outils de fidélisation (Coupons promo)</li>
                             <li style="margin-bottom: 0.5rem;">📈 Statistiques avancées (Hebdomadaire)</li>
                         </ul>
-                        <button class="btn btn-outline" style="width: 100%; border-color: var(--accent); color: var(--accent);" onclick="alert('Fonctionnalité de souscription bientôt disponible.')">Choisir ce Pack</button>
+                        <a href="${buildWhatsAppLink('Pack Entreprise', '15 000')}" target="_blank" class="btn btn-outline" style="width: 100%; border-color: var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
                     </div>
                 </div>
             </div>
