@@ -2921,3 +2921,6 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     padding: 2px 5px;
     color: var(--text-primary);
 }
+
+#catalog-section { padding-top: 4rem; }
+@media (max-width: 768px) { .hero-right-col > div { width: 180px !important; height: 180px !important; } .hero-right-col { margin-bottom: 2rem; } }
