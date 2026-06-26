@@ -4340,7 +4340,7 @@ router.add('#/r/:slug', (slug, startTab = 'menu', groupId = null) => {
 });
 
 window.shareRestaurant = function(name, slug) {
-    const url = 'https://thiesresto.sn/#/r/' + slug;
+    const url = 'https://thies-resto.com/#/r/' + slug;
     const text = "Regarde ce restaurant sur THIES Resto, on commande ce soir ? " + name;
     
     if (navigator.share) {
@@ -6112,7 +6112,7 @@ function updateDynamicSEO(resto) {
     };
 
     const desc = `Découvrez le menu de ${resto.name} sur Thiès Resto. Commandez vos plats et réservez votre table facilement.`;
-    const image = resto.coverImage || 'https://thiesresto.sn/icon.png';
+    const image = resto.coverImage || 'https://thies-resto.com/icon.png';
 
     setMeta('description', desc);
     setMeta('og:title', resto.name + " - THIES Resto");
