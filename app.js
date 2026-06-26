@@ -844,13 +844,13 @@ window.handleRegImageUpload = async function(event) {
         const filePath = `restaurants/${fileName}`;
 
         const { error } = await supabaseClient.storage
-            .from('restaurant-images')
+            .from('restaurant_images')
             .upload(filePath, compressedBlob, { contentType: 'image/webp' });
 
         if (error) throw error;
 
         const { data: publicUrlData } = supabaseClient.storage
-            .from('restaurant-images')
+            .from('restaurant_images')
             .getPublicUrl(filePath);
 
         urlInput.value = publicUrlData.publicUrl;
