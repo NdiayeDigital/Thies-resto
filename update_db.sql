@@ -40,19 +40,24 @@ VALUES ('restaurant_images', 'restaurant_images', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. Autoriser tout le monde à lire les images (Public Read)
+DROP POLICY IF EXISTS "Images Publiques" ON storage.objects;
 CREATE POLICY "Images Publiques" 
 ON storage.objects FOR SELECT 
 USING ( bucket_id = 'restaurant_images' );
 
 -- 6. Autoriser les utilisateurs anonymes à uploader des images
+DROP POLICY IF EXISTS "Upload d'images par les restaurants" ON storage.objects;
 CREATE POLICY "Upload d'images par les restaurants" 
 ON storage.objects FOR INSERT 
 WITH CHECK ( bucket_id = 'restaurant_images' );
 
 -- 7. Autoriser la mise à jour/suppression
+DROP POLICY IF EXISTS "Gestion d'images" ON storage.objects;
 CREATE POLICY "Gestion d'images" 
 ON storage.objects FOR UPDATE 
 USING ( bucket_id = 'restaurant_images' );
+
+DROP POLICY IF EXISTS "Suppression d'images" ON storage.objects;
 CREATE POLICY "Suppression d'images" 
 ON storage.objects FOR DELETE 
 USING ( bucket_id = 'restaurant_images' );
