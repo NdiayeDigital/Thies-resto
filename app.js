@@ -2645,7 +2645,7 @@ function renderDashboardTabContent(r) {
                 </div>
             `;
         } else {
-            const reactivateMsg = encodeURIComponent('Bonjour Thiès à Table 👋\\n\\nMa période d\\'essai gratuit est terminée et je souhaite réactiver mon restaurant.\\n\\n🏪 Restaurant : ' + r.name + '\\n🆔 Identifiant : ' + r.slug + '\\n\\nMerci de m\\'indiquer la marche à suivre !');
+            const reactivateMsg = encodeURIComponent(`Bonjour Thiès à Table 👋\n\nMa période d'essai gratuit est terminée et je souhaite réactiver mon restaurant.\n\n🏪 Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
             freePeriodHtml = `
                 <div style="background: linear-gradient(135deg, var(--danger) 0%, #ff4b4b 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
@@ -5825,26 +5825,6 @@ function renderGroupTab(r, groupId = null) {
                 </div>
                 <button class="btn btn-secondary btn-sm" onclick="copyGroupLink()">Copier 📋</button>
                 <a href="${waShareLink}" target="_blank" class="btn btn-success btn-sm">Partager 💬</a>
-            </div>
-
-            <!-- SIMULATION FORM FOR MULTIPLE USERS ON SAME MACHINE -->
-            <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.25rem; border-radius: 16px;">
-                <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem;">Ajouter un participant ou votre choix</h4>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Nom du participant <span class="required">*</span></label>
-                        <input type="text" id="part-name" class="form-control" placeholder="Aline, Omar..." required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Plat choisi <span class="required">*</span></label>
-                        <select id="part-dish-select" class="form-control" required>
-                            ${dishesOptions}
-                        </select>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-secondary btn-block btn-sm" onclick="addParticipantAction('${r.slug}', '${groupId}')">
-                    Ajouter ce choix au panier commun ➕
-                </button>
             </div>
 
             <div class="group-participants">
