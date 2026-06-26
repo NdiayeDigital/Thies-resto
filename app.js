@@ -3486,24 +3486,21 @@ function updateNavbar() {
     if (isSuperAdminSession) {
         if (currentRestaurantSession) {
             html = `
-                <span class="badge badge-danger">👑 Admin (${currentRestaurantSession.name})</span>
-                <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
-                <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()">Console Admin 🔐</button>
+                <button class="btn btn-primary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; margin-right: 0.5rem;" onclick="router.navigate('/dashboard')" title="Tableau de Bord 📊">📊</button>
+                <button class="btn btn-secondary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;" onclick="exitImpersonation()" title="Quitter Impersonation 🔐">🔐</button>
             `;
         } else {
             html = `
-                <span class="badge badge-danger">Super-Admin</span>
-                <button class="btn btn-primary btn-sm" onclick="router.navigate('/admin')">Console Admin 📊</button>
+                <button class="btn btn-primary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;" onclick="router.navigate('/admin')" title="Console Admin 👑">👑</button>
             `;
         }
     } else if (currentRestaurantSession) {
         html = `
-            <span class="badge badge-success">${currentRestaurantSession.name}</span>
-            <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
+            <button class="btn btn-primary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;" onclick="router.navigate('/dashboard')" title="Tableau de Bord 📊">📊</button>
         `;
     } else {
         html = `
-            <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')">Espace Resto</button>
+            <button class="btn btn-secondary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;" onclick="router.navigate('/auth')" title="Espace Restaurateur 👨‍🍳">👨‍🍳</button>
         `;
     }
     navActions.innerHTML = html;
