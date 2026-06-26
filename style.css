@@ -2918,16 +2918,3 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     padding: 2px 5px;
     color: var(--text-primary);
 }
-
-
-/* MOBILE BOTTOM NAV */
-.mobile-bottom-nav { display: none; }
-@media (max-width: 768px) {
-  .mobile-bottom-nav { display: flex; justify-content: space-around; align-items: center; position: fixed; bottom: 0; left: 0; width: 100%; height: 65px; background: var(--bg-card); border-top: 1px solid var(--border); z-index: 9998; box-shadow: 0 -5px 15px rgba(0,0,0,0.3); }
-  .bottom-nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); text-decoration: none; font-size: 0.7rem; font-weight: 600; padding: 0.5rem; transition: color 0.2s; }
-  .bottom-nav-item:hover, .bottom-nav-item:active { color: var(--primary); }
-  .hamburger-btn { display: none !important; }
-  .floating-cart-bar { bottom: 75px !important; }
-  .floating-support-btn { bottom: 145px !important; }
-  body { padding-bottom: 70px; }
-}
