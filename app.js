@@ -3613,6 +3613,37 @@ router.add('#/', () => {
                 </div>
             </div>
         </section>
+        <!-- VOS DERNIERES COMMANDES PERSISTANT -->
+        ${historyHtml}
+
+        <section id="catalog-section">
+            <div class="section-header">
+                <h2 class="section-title">Les Restaurants Partenaires</h2>
+            </div>
+
+            <!-- FILTERS BAR -->
+            <div class="filter-bar" id="filter-bar">
+                <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')">Tous</button>
+                <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')">🍲 Traditionnel</button>
+                <button class="filter-btn ${activeFilter === 'Fast Food' ? 'active' : ''}" onclick="setFilter('Fast Food')">🍔 Fast Food</button>
+                <button class="filter-btn ${activeFilter === 'Grillades / Dibi' ? 'active' : ''}" onclick="setFilter('Grillades / Dibi')">🔥 Grillades</button>
+                <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')">✨ Gastronomique</button>
+                <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')">🥐 Pâtisserie</button>
+            </div>
+
+            <!-- SORTING BAR -->
+            <div class="sort-bar">
+                <label for="sort-select">Trier par :</label>
+                <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
+                    <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
+                    <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
+                    <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
+                    <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
+                </select>
+            </div>
+            
+            <div class="restaurant-grid" id="restaurants-list-grid"></div>
+        </section>
 
         <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
         <section class="presentation-section" style="padding: 1rem 0 0 0;">
@@ -3799,37 +3830,6 @@ router.add('#/', () => {
             </div>
         </section>
 
-        <!-- VOS DERNIERES COMMANDES PERSISTANT -->
-        ${historyHtml}
-
-        <section id="catalog-section">
-            <div class="section-header">
-                <h2 class="section-title">Les Restaurants Partenaires</h2>
-            </div>
-
-            <!-- FILTERS BAR -->
-            <div class="filter-bar" id="filter-bar">
-                <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')">Tous</button>
-                <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')">🍲 Traditionnel</button>
-                <button class="filter-btn ${activeFilter === 'Fast Food' ? 'active' : ''}" onclick="setFilter('Fast Food')">🍔 Fast Food</button>
-                <button class="filter-btn ${activeFilter === 'Grillades / Dibi' ? 'active' : ''}" onclick="setFilter('Grillades / Dibi')">🔥 Grillades</button>
-                <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')">✨ Gastronomique</button>
-                <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')">🥐 Pâtisserie</button>
-            </div>
-
-            <!-- SORTING BAR -->
-            <div class="sort-bar">
-                <label for="sort-select">Trier par :</label>
-                <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
-                    <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
-                    <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
-                    <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
-                    <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
-                </select>
-            </div>
-            
-            <div class="restaurant-grid" id="restaurants-list-grid"></div>
-        </section>
 
         <!-- ========== LOYALTY CARD SECTION ========== -->
         <section class="loyalty-checker-section" style="padding: 2.5rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); margin: 2rem auto; max-width: 1200px;">
