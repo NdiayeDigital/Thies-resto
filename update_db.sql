@@ -2,6 +2,7 @@
 ALTER TABLE restaurants ADD COLUMN IF NOT EXISTS subscription_pack TEXT DEFAULT 'Aucun (Gratuit)';
 
 -- 2. Mettre à jour la vue publique
+DROP VIEW IF EXISTS public_restaurants;
 CREATE OR REPLACE VIEW public_restaurants AS
 SELECT 
     id, name, slug, rating, reviews_count, category, address, 
