@@ -5761,22 +5761,52 @@ function renderCGV() {
     hideLoadingOverlay();
     const container = document.getElementById('main-content');
     container.innerHTML = `
-        <div style="max-width: 800px; margin: 4rem auto; padding: 2rem; background: var(--bg-card); border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
-            <h1 style="color: var(--primary); margin-bottom: 2rem; font-family: var(--font-serif);">Conditions Générales de Vente (CGV) & Mentions Légales</h1>
-            <div style="color: var(--text-secondary); line-height: 1.6;">
-                <h3>1. Présentation de la plateforme</h3>
-                <p>THIES Resto est un portail de mise en relation entre les clients et les restaurants partenaires basés à Thiès, Sénégal.</p>
+        <div style="max-width: 800px; margin: 4rem auto; padding: 2.5rem; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow);">
+            <h1 style="color: var(--primary); margin-bottom: 2rem; font-family: var(--font-serif); font-size: 2.2rem;">Mentions Légales & CGV</h1>
+            
+            <div style="color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem;">
                 
-                <h3>2. Responsabilités</h3>
-                <p>THIES Resto agit exclusivement en tant qu'intermédiaire technique. Les restaurants partenaires sont seuls responsables de la qualité, l'hygiène et la livraison des repas. <strong>En cas de problème d'intoxication ou d'hygiène, le client doit se retourner directement contre le restaurant concerné.</strong> THIES Resto décline toute responsabilité quant aux conséquences liées à la consommation des produits.</p>
+                <h2 style="color: var(--text-primary); margin-top: 2rem; margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.5rem;">1. Mentions Légales</h2>
+                <p><strong>Éditeur de la plateforme :</strong> NdiayeDigital</p>
+                <p><strong>Plateforme :</strong> THIES Resto (thies-resto.com)</p>
+                <p><strong>Contact :</strong> contact@thies-resto.com / +221 78 479 98 82</p>
+                <p><strong>Hébergement :</strong> Vercel Inc. (USA) / Base de données : Supabase</p>
+                <p>La plateforme THIES Resto est un annuaire et un outil de mise en relation dématérialisé dédié à la restauration dans la région de Thiès (Sénégal).</p>
+
+                <h2 style="color: var(--text-primary); margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.5rem;">2. Conditions Générales d'Utilisation (CGU)</h2>
+                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">2.1 Rôle de THIES Resto</h3>
+                <p>THIES Resto agit exclusivement en tant qu'intermédiaire technique de mise en relation. La plateforme permet aux clients de consulter les menus et d'envoyer des commandes ou des réservations aux restaurants partenaires via WhatsApp et le tableau de bord de la plateforme.</p>
                 
-                <h3>3. Commandes et Paiements</h3>
-                <p>Le paiement s'effectue exclusivement à la livraison ou selon les modalités convenues avec le restaurant via WhatsApp. Les prix affichés incluent les taxes applicables.</p>
+                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">2.2 Responsabilités</h3>
+                <p><strong>THIES Resto ne prépare pas, ne vend pas et ne livre pas de repas.</strong> Par conséquent, les restaurants partenaires sont seuls responsables de :</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
+                    <li>L'exactitude de leurs menus, prix et disponibilités.</li>
+                    <li>La qualité, la conformité et l'hygiène des plats préparés.</li>
+                    <li>Les délais de préparation et les conditions de livraison.</li>
+                </ul>
+                <p>En cas de litige, de retard, de non-conformité de la commande ou de problème d'intoxication alimentaire, <strong>le client s'engage à se retourner exclusivement et directement contre le restaurant concerné</strong>. La responsabilité de THIES Resto ne saurait être engagée à quelque titre que ce soit concernant la prestation de restauration.</p>
+
+                <h2 style="color: var(--text-primary); margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.5rem;">3. Conditions Générales de Vente (CGV)</h2>
+                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">3.1 Commandes et Tarifs</h3>
+                <p>Les prix affichés sur la plateforme sont définis par les restaurants et incluent les taxes applicables au Sénégal. Les frais de livraison, s'ils existent, sont communiqués directement par le restaurant au client (notamment via WhatsApp) avant la confirmation finale.</p>
                 
-                <h3>4. Données Personnelles (RGPD / CDP Sénégal)</h3>
-                <p>Les données (numéro de téléphone, prénom) sont collectées uniquement pour le traitement de la commande et le programme de fidélité. Elles ne sont pas revendues à des tiers et sont protégées conformément à la loi sur les données personnelles.</p>
+                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">3.2 Paiement</h3>
+                <p>Aucun paiement n'est traité directement sur la plateforme THIES Resto. Le règlement s'effectue exclusivement en espèces (ou via un service de mobile money selon l'accord du restaurant) au moment de la livraison ou du retrait sur place.</p>
+
+                <h2 style="color: var(--text-primary); margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.5rem;">4. Protection des Données (CDP Sénégal)</h2>
+                <p>Dans le cadre de l'utilisation du service, les données suivantes sont collectées : Prénom et Numéro de téléphone. Ces données sont strictement utilisées pour :</p>
+                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
+                    <li>La transmission de la commande au restaurant.</li>
+                    <li>Le suivi du programme de fidélité.</li>
+                </ul>
+                <p>Conformément à la législation sénégalaise sur la protection des données à caractère personnel (CDP), THIES Resto s'engage à ne jamais revendre ces données à des tiers. Vous disposez d'un droit d'accès et de suppression de vos données en contactant : contact@thies-resto.com.</p>
+                
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
+                <p style="font-size: 0.85rem; font-style: italic; text-align: center;">Ces conditions sont acceptées implicitement par toute personne utilisant la plateforme.</p>
             </div>
-            <button class="btn btn-primary" style="margin-top: 2rem;" onclick="router.navigate('/')">Retour à l'accueil</button>
+            <div style="text-align: center; margin-top: 2.5rem;">
+                <button class="btn btn-primary" onclick="router.navigate('/')">J'ai compris, retour à l'accueil</button>
+            </div>
         </div>
     `;
 }
