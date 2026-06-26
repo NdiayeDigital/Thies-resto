@@ -55,3 +55,15 @@ USING ( bucket_id = 'restaurant_images' );
 CREATE POLICY "Suppression d'images" 
 ON storage.objects FOR DELETE 
 USING ( bucket_id = 'restaurant_images' );
+
+-- 8. Verify Admin Login RPC
+CREATE OR REPLACE FUNCTION verify_admin_login(p_password TEXT)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN encode(digest(p_password, 'sha256'), 'hex') IN (
+        '42eb8c4db0ea9234a9e42c8caa8daaf4c8c8197a6555498f622e62fd0980cd92',
+        '7ea441c9232272092447095c465d58026dcbdc67cf6df9348d4dcea89451bd61',
+        'bb17e5611cb14f1b2abfecebd1b2c51ed510d347495c9751576cae6d1b15b60a'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

@@ -240,17 +240,35 @@ window.handleRegImageUpload = async function(event) {
 async function handleRestaurantLogin(e) {
     e.preventDefault();
     const username = document.getElementById('login-username').value.trim().toLowerCase();
+    const password = document.getElementById('login-password').value;
     
-    // Bypass de sécurité demandé : si l'identifiant est un identifiant admin, on connecte directement
+    if (!supabaseClient) {
+        showToast("Erreur de connexion serveur (Supabase non configuré)", "danger");
+        return;
+    }
+
+    showToast("Vérification des identifiants...", "info");
+
     const isAdmin = ['admin', 'idadmin', 'thiesresto', '784799882'].includes(username);
 
     if (isAdmin) {
+        const { data: isValid, error } = await supabaseClient.rpc('verify_admin_login', {
+            p_password: password
+        });
+
+        if (error || !isValid) {
+            showToast("Mot de passe Super-Admin incorrect", "danger");
+            return;
+        }
+
         isSuperAdminSession = true;
         try {
             sessionStorage.setItem('thies_admin_logged', 'true');
             sessionStorage.setItem('admin_session', 'true');
-        } catch (e) {}
-        if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
+            sessionStorage.setItem('admin_password', password);
+        } catch (err) {}
+        
+        showToast("Connexion réussie ! Bienvenue Admin.", "success");
         if (typeof updateNavbar === 'function') updateNavbar();
         setTimeout(() => {
             const modal = document.getElementById('auth-modal');
@@ -260,47 +278,36 @@ async function handleRestaurantLogin(e) {
         return;
     }
     
-    let r = null;
-    
-    // Fallback: local dynamic check without password
-    const localRestos = store.getRestaurants();
-    const matchedResto = localRestos.find(resto => {
-        let baseName = resto.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-        let expectedUsername = 'id_' + baseName;
-        
-        let isDynamicMatch = (username === expectedUsername);
-        let isStoredMatch = (resto.username && username === resto.username.toLowerCase());
-        let isSlugMatch = (resto.slug && username === resto.slug.toLowerCase());
-        
-        return isDynamicMatch || isStoredMatch || isSlugMatch;
+    // Restaurant Login verification
+    const { data: result, error } = await supabaseClient.rpc('verify_restaurant_login', {
+        p_username: username,
+        p_password: password
     });
-    
-    if (matchedResto) {
-        r = matchedResto;
-    }
-    
-    if (!r) {
-        if (typeof showToast === 'function') showToast("Identifiant introuvable", "danger");
+
+    if (error || !result || !result.success) {
+        showToast(result?.message || "Identifiant ou mot de passe incorrect", "danger");
         return;
     }
 
+    const r = result.data;
+
     if (r.status === 'pending') {
-        if (typeof showToast === 'function') showToast("Votre compte est en cours de validation.", "warning");
+        showToast("Votre compte est en cours de validation.", "warning");
         return;
     }
     
     if (r.status === 'suspended') {
-        if (typeof showToast === 'function') showToast("Votre compte a été suspendu temporairement.", "danger");
+        showToast("Votre compte a été suspendu temporairement.", "danger");
         return;
     }
     
     currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug };
     try {
         sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
-    } catch (e) {}
+    } catch (err) {}
     
     if (typeof updateNavbar === 'function') updateNavbar();
-    if (typeof showToast === 'function') showToast(`Bienvenue, ${r.name} !`, "success");
+    showToast(`Bienvenue, ${r.name} !`, "success");
     
     setTimeout(() => {
         const modal = document.getElementById('auth-modal');
