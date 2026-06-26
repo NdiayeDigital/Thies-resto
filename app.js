@@ -925,7 +925,7 @@ if (typeof supabase !== 'undefined' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON
 // App Local Database state manager (with Supabase sync)
 class Store {
     constructor() {
-        this.key = 'THIES_RESTO_DB_V2';
+        this.key = 'THIES_RESTO_DB_V3'; // Bumped version to clear all old local cached orders
         this.data = this.load();
         if (!this.data) {
             this.seed();
@@ -1323,7 +1323,7 @@ class Store {
         
         this.data.restaurants.forEach(r => {
             // Mock created date if not present. In a real DB, this is the registration date.
-            const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+            const createdAt = new Date(r.createdAt || '2026-06-26T00:00:00Z');
             const diffTime = Math.abs(currentDate - createdAt);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
@@ -2621,7 +2621,7 @@ function renderDashboardTabContent(r) {
 
     else if (dashboardActiveTab === 'subscription') {
         const currentDate = new Date();
-        const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+        const createdAt = new Date(r.createdAt || '2026-06-26T00:00:00Z');
         const diffTime = Math.abs(currentDate - createdAt);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const daysLeft = Math.max(0, 90 - diffDays);
