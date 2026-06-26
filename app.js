@@ -654,7 +654,7 @@ router.add('#/auth', () => {
         <div class="auth-container" style="max-width: 450px; margin: 3rem auto; padding: 2rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
             <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
                 <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🏪</span>
-                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: #fff;">Espace Partenaire</h2>
+                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: var(--text-primary);">Espace Partenaire</h2>
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Connectez-vous à votre tableau de bord restaurant.</p>
             </div>
 
@@ -695,7 +695,7 @@ router.add('#/partnership', () => {
         <div class="auth-container" style="max-width: 600px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
             <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
                 <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🤝</span>
-                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: #fff;">Demande de Partenariat</h2>
+                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: var(--text-primary);">Demande de Partenariat</h2>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
                     Rejoignez la première plateforme commune de restauration à Thiès. Remplissez les informations de votre établissement ci-dessous.
                 </p>
@@ -1569,7 +1569,7 @@ function renderDashboardTabContent(r) {
             <div class="accounting-dashboard">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: #fff;">📊 Journal de Comptabilité</h2>
+                        <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: var(--text-primary);">📊 Journal de Comptabilité</h2>
                         <p style="color: var(--text-secondary); font-size: 0.85rem;">Suivi des chiffres d'affaires et historique complet des commandes clients.</p>
                     </div>
                     <div style="display: flex; gap: 0.5rem;">
@@ -1620,7 +1620,7 @@ function renderDashboardTabContent(r) {
 
                 <div class="accounting-table-container">
                     <div class="accounting-header-actions">
-                        <h3 style="font-size: 1.1rem; color: #fff; font-family: var(--font-serif);">Historique Général des Commandes</h3>
+                        <h3 style="font-size: 1.1rem; color: var(--text-primary); font-family: var(--font-serif);">Historique Général des Commandes</h3>
                         <input type="text" placeholder="Rechercher par client ou N°..." class="accounting-search" oninput="filterAccountingTable(this.value)">
                     </div>
 
@@ -1941,7 +1941,7 @@ window.checkLoyaltyPoints = async function() {
             <div class="reward-claim-box" style="margin-top: 1.5rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.25rem; border-radius: 16px; display: flex; align-items: center; gap: 1rem;">
                 <span class="gift-icon" style="font-size: 2.2rem;">🎁</span>
                 <div style="flex: 1; text-align: left;">
-                    <h4 style="color: #fff; margin: 0 0 0.25rem 0; font-family: var(--font-serif); font-size: 1.05rem;">Vous avez ${activeRewards} plat(s) offert(s) disponible(s) !</h4>
+                    <h4 style="color: var(--text-primary); margin: 0 0 0.25rem 0; font-family: var(--font-serif); font-size: 1.05rem;">Vous avez ${activeRewards} plat(s) offert(s) disponible(s) !</h4>
                     <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 0.5rem 0;">Profitez de votre récompense de fidélité lors de votre prochaine commande en ligne.</p>
                     <button class="btn btn-sm btn-success" onclick="applyLoyaltyRewardToCart('${phone}')">Appliquer au panier actif 🛒</button>
                 </div>
@@ -1953,7 +1953,7 @@ window.checkLoyaltyPoints = async function() {
         <div class="loyalty-card-inner" style="background: linear-gradient(135deg, #071a11 0%, #0c2b1d 100%); border: 1px solid var(--border); border-radius: 24px; padding: 1.75rem; text-align: left; position: relative; overflow: hidden; box-shadow: var(--shadow);">
             <div class="loyalty-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
                 <div>
-                    <h3 style="font-family: var(--font-serif); color: #fff; margin: 0; font-size: 1.3rem;">Carte de Fidélité</h3>
+                    <h3 style="font-family: var(--font-serif); color: var(--text-primary); margin: 0; font-size: 1.3rem;">Carte de Fidélité</h3>
                     <span class="loyalty-phone-lbl" style="font-size: 0.8rem; color: var(--text-secondary); font-family: monospace;">WhatsApp: ${phone}</span>
                 </div>
                 <div class="loyalty-tier-badge ${tierClass}" style="font-size: 0.8rem; font-weight: bold; padding: 0.35rem 0.75rem; border-radius: 20px; text-transform: uppercase; background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid rgba(207,168,83,0.3);">${tier}</div>
@@ -1966,7 +1966,7 @@ window.checkLoyaltyPoints = async function() {
                         <span class="points-lbl" style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary); margin-top: 2px;">Points</span>
                     </div>
                     <div class="loyalty-progress-text" style="flex: 1; min-width: 200px;">
-                        <p style="font-size: 1.1rem; font-weight: bold; color: #fff; margin: 0;">${totalPoints % 100} / 100 pts</p>
+                        <p style="font-size: 1.1rem; font-weight: bold; color: var(--text-primary); margin: 0;">${totalPoints % 100} / 100 pts</p>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">
                             Plus que <strong style="color: var(--primary);">${nextRewardPoints} points</strong> pour obtenir votre prochain plat gratuit !
                         </p>
@@ -1979,15 +1979,15 @@ window.checkLoyaltyPoints = async function() {
 
                 <div class="loyalty-stats-summary" style="display: flex; justify-content: space-around; gap: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.25rem; margin-top: 1rem; text-align: center; flex-wrap: wrap;">
                     <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
-                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${ordersCount}</span>
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">${ordersCount}</span>
                         <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Commandes livrées</span>
                     </div>
                     <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
-                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${resCount}</span>
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">${resCount}</span>
                         <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Tables réservées</span>
                     </div>
                     <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
-                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${usedRewards}</span>
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">${usedRewards}</span>
                         <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Cadeaux réclamés</span>
                     </div>
                 </div>
@@ -2723,7 +2723,7 @@ function renderAdminTabTable() {
     else if (adminActiveTab === 'create') {
         tableContainer.innerHTML = `
             <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 2rem; border-radius: 24px; max-width: 600px; margin: 0 auto; box-shadow: var(--shadow);">
-                <h3 style="font-family: var(--font-serif); font-size: 1.35rem; margin-bottom: 1.5rem; text-align: center; color: #fff;">Créer un Nouveau Partenaire Restaurant</h3>
+                <h3 style="font-family: var(--font-serif); font-size: 1.35rem; margin-bottom: 1.5rem; text-align: center; color: var(--text-primary);">Créer un Nouveau Partenaire Restaurant</h3>
                 
                 <form id="admin-create-resto-form" onsubmit="handleAdminCreateRestaurant(event)">
                     <div class="form-group" style="margin-bottom: 1rem;">
@@ -3607,9 +3607,8 @@ router.add('#/', () => {
                 
                 <!-- Right: Logo instead of food plate -->
                 <div class="hero-right-col" style="display: flex; justify-content: center; align-items: center;">
-                    <div style="position: relative; width: 250px; height: 250px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 2rem; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        <img src="icon.png" alt="THIES Resto Logo" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-bottom: 1rem;">
-                        <span style="color: var(--primary); font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; letter-spacing: 1px;">THIES <span style="color: var(--primary);">Resto</span></span>
+                    <div style="position: relative; width: 250px; height: 250px; border-radius: 50%; box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--primary);">
+                        <img src="icon.png" alt="THIES Resto Logo" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
                 </div>
             </div>
@@ -3700,7 +3699,7 @@ router.add('#/', () => {
         <!-- ONBOARDING COMMENT CA MARCHE -->
         <section class="how-it-works" id="how-it-works-section">
             <span class="study-title-tag">💡 Mode d'emploi</span>
-            <h2 class="section-title" style="text-align:center; margin-bottom: 0.5rem; color: #fff;">Comment fonctionne la plateforme ?</h2>
+            <h2 class="section-title" style="text-align:center; margin-bottom: 0.5rem; color: var(--text-primary);">Comment fonctionne la plateforme ?</h2>
             <p class="study-subtitle">Découvrez la simplicité et la flexibilité de THIES Resto à travers nos trois services phares.</p>
             
             <div class="how-it-works-tabs">
@@ -3836,7 +3835,7 @@ router.add('#/', () => {
         <section class="loyalty-checker-section" style="padding: 2.5rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); margin: 2rem auto; max-width: 1200px;">
             <div style="max-width: 800px; margin: 0 auto; text-align: center;">
                 <span class="study-title-tag" style="background: rgba(207, 168, 83, 0.1); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(207, 168, 83, 0.2);">🎁 Programme de Fidélisation</span>
-                <h2 style="font-family: var(--font-serif); font-size: 2rem; color: #fff; margin: 0.75rem 0 0.5rem 0;">Consultez votre Statut & Plats Offerts</h2>
+                <h2 style="font-family: var(--font-serif); font-size: 2rem; color: var(--text-primary); margin: 0.75rem 0 0.5rem 0;">Consultez votre Statut & Plats Offerts</h2>
                 <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">Saisissez votre numéro WhatsApp pour suivre vos points fidélité (5 pts/commande livrée, 5 pts/réservation) et réclamer vos cadeaux.</p>
                 
                 <div style="display: flex; gap: 0.75rem; justify-content: center; max-width: 480px; margin: 0 auto 1.5rem auto;">
@@ -3854,14 +3853,14 @@ router.add('#/', () => {
         <section class="field-study-section" id="field-study-section">
             <div style="text-align: center;">
                 <span class="study-title-tag">📊 Analyse & Impact</span>
-                <h2 class="section-title" style="margin-bottom: 0.5rem; color: #fff;">L'Étude de Terrain & Notre Solution</h2>
+                <h2 class="section-title" style="margin-bottom: 0.5rem; color: var(--text-primary);">L'Étude de Terrain & Notre Solution</h2>
                 <p class="study-subtitle">Comment THIES Resto répond à la réalité chiffrée de la restauration à Thiès.</p>
             </div>
 
             <div class="study-split-grid">
                 <!-- Left: Problems / Metrics -->
                 <div class="study-left-col">
-                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: #fff;">Le Constat Local (Étude Juin 2025)</h3>
+                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Le Constat Local (Étude Juin 2025)</h3>
                     
                     <div class="study-carousel-wrapper">
                         <div class="study-metric-card square-stat-card">
@@ -3883,7 +3882,7 @@ router.add('#/', () => {
 
                 <!-- Right: Our Solutions -->
                 <div class="study-right-col">
-                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: #fff;">Les Réponses de THIES Resto</h3>
+                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Les Réponses de THIES Resto</h3>
 
                     <div class="solution-carousel-wrapper">
                         <div class="solution-feature-card">
@@ -4772,7 +4771,7 @@ function renderCheckoutTab(r) {
                     <span>🎁 Réduction Fidélité : -2,500 FCFA</span>
                     <button type="button" class="btn btn-link btn-xs" onclick="removeLoyaltyReward()" style="padding: 0; color: #ff6b6b; text-decoration: underline; font-size: 0.75rem;">Retirer</button>
                 </div>
-                <div style="font-size: 1.25rem; font-weight: 800; color: #fff; margin-top: 0.25rem;">Total à payer : <span class="cart-total-price">${cart.total} FCFA</span></div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin-top: 0.25rem;">Total à payer : <span class="cart-total-price">${cart.total} FCFA</span></div>
             </div>
         `;
     } else {
@@ -5708,15 +5707,15 @@ router.add('#/politique-client', () => {
         <section class="policy-page-container" style="max-width: 800px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 28px; box-shadow: var(--shadow);">
             <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
                 <span class="study-title-tag">⚖️ Mentions Légales</span>
-                <h1 style="font-family: var(--font-serif); font-size: 2rem; color: #fff; margin-top: 0.5rem; margin-bottom: 0.25rem;">Politique d'utilisation — Espace Client</h1>
+                <h1 style="font-family: var(--font-serif); font-size: 2rem; color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.25rem;">Politique d'utilisation — Espace Client</h1>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; font-style: italic;">Cette politique s'applique à toute personne utilisant la plateforme Thiès Resto pour consulter un menu, passer une commande, participer à une commande de groupe, réserver une table ou laisser un avis.</p>
             </div>
             
             <div class="policy-content" style="color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem;">
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">1. Aucun compte requis</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">1. Aucun compte requis</h3>
                 <p>Thiès Resto ne demande jamais la création d'un compte ni d'identifiants pour commander, réserver ou participer à une commande de groupe. Vous fournissez uniquement les informations nécessaires au traitement de votre demande : nom, prénom, et numéro de téléphone.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">2. Informations que vous transmettez</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">2. Informations que vous transmettez</h3>
                 <p>Lorsque vous passez une commande, réservez une table, ou laissez un avis, vous transmettez au restaurant concerné :</p>
                 <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
                     <li>Votre nom et prénom</li>
@@ -5726,31 +5725,31 @@ router.add('#/politique-client', () => {
                 </ul>
                 <p>Ces informations sont transmises uniquement au restaurant concerné. Thiès Resto ne les revend à aucun tiers et ne les utilise pas à des fins publicitaires.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">3. Commande de groupe</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">3. Commande de groupe</h3>
                 <p>Si vous participez à une commande de groupe créée par une autre personne, votre prénom et le plat que vous choisissez sont visibles par les autres participants au sein de cette commande de groupe, ainsi que par le restaurant au moment de l'envoi de la commande complète.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">4. Exactitude de vos informations</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">4. Exactitude de vos informations</h3>
                 <p>Vous êtes responsable de l'exactitude des informations que vous transmettez, notamment votre numéro de téléphone. Un numéro incorrect peut empêcher le restaurant de vous contacter pour confirmer votre commande ou votre réservation.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">5. Paiement</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">5. Paiement</h3>
                 <p>Thiès Resto ne collecte aucun paiement en ligne. Le règlement de votre commande se fait directement auprès du restaurant, en espèces, à la livraison ou sur place, selon le mode que vous avez choisi. Thiès Resto n'intervient à aucune étape de cette transaction financière.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">6. Avis clients</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">6. Avis clients</h3>
                 <p>Si vous laissez un avis (note et commentaire) après une commande ou une réservation, celui-ci est rendu public sur la page du restaurant concerné. Le restaurant peut y répondre publiquement. Vous vous engagez à rédiger un avis sincère et respectueux. Thiès Resto se réserve le droit de masquer un avis manifestement abusif, injurieux ou sans rapport avec une expérience réelle.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">7. Statut et disponibilité du restaurant</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">7. Statut et disponibilité du restaurant</h3>
                 <p>Les informations affichées (statut Ouvert/Fermé, menu du jour, créneaux de réservation disponibles) sont saisies et mises à jour par le restaurant lui-même. Thiès Resto ne garantit pas en temps réel l'exactitude absolue de ces informations en cas de retard de mise à jour par le restaurant. En cas de doute, le bouton de confirmation WhatsApp vous permet de vérifier directement auprès du restaurant.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">8. Confirmation par WhatsApp</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">8. Confirmation par WhatsApp</h3>
                 <p>Après l'envoi d'une commande ou d'une réservation, un bouton vous permet d'envoyer également un message de confirmation directement au restaurant via WhatsApp. Cette étape est facultative mais recommandée, notamment en cas de connexion internet instable, pour vous assurer que votre demande a bien été reçue.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">9. Programme de fidélité</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">9. Programme de fidélité</h3>
                 <p>Si le restaurant propose un programme de fidélité, vos points sont associés à votre numéro de téléphone et cumulés automatiquement à chaque commande validée. Aucune carte physique ni application n'est nécessaire. Les conditions exactes du programme (seuil de récompense, type de récompense) sont définies librement par chaque restaurant.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">10. Responsabilité</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">10. Responsabilité</h3>
                 <p>Thiès Resto met en relation le client et le restaurant mais n'est pas partie à la transaction commerciale elle-même (préparation du repas, qualité du service, respect des horaires annoncés). Toute réclamation relative au déroulement d'une commande ou d'une réservation doit être adressée directement au restaurant concerné.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">11. Évolutions de cette politique</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">11. Évolutions de cette politique</h3>
                 <p>Cette politique peut évoluer à mesure que de nouvelles fonctionnalités sont ajoutées à la plateforme. La version la plus récente est toujours disponible sur cette page.</p>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
@@ -5774,16 +5773,16 @@ router.add('#/politique-admin', () => {
         <section class="policy-page-container" style="max-width: 800px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 28px; box-shadow: var(--shadow);">
             <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
                 <span class="study-title-tag">⚖️ Charte Resto</span>
-                <h1 style="font-family: var(--font-serif); font-size: 2rem; color: #fff; margin-top: 0.5rem; margin-bottom: 0.25rem;">Politique d'utilisation — Espace Administrateur</h1>
+                <h1 style="font-family: var(--font-serif); font-size: 2rem; color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.25rem;">Politique d'utilisation — Espace Administrateur</h1>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; font-style: italic;">Cette politique s'applique au restaurant utilisant son tableau de bord Thiès Resto pour gérer son menu, ses commandes, ses réservations et ses avis clients.</p>
             </div>
             
             <div class="policy-content" style="color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem;">
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">1. Accès et compte</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">1. Accès et compte</h3>
                 <p>L'accès au tableau de bord administrateur est protégé par un identifiant et un mot de passe propres à votre restaurant. Vous êtes responsable de la confidentialité de ces identifiants. Ne les partagez qu'avec les membres de votre équipe autorisés à gérer les commandes et le menu.</p>
                 <p>En cas de doute sur une utilisation non autorisée de votre compte, changez votre mot de passe immédiatement depuis l'onglet Paramètres.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">2. Exactitude des informations publiées</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">2. Exactitude des informations publiées</h3>
                 <p>Vous vous engagez à maintenir à jour les informations suivantes, visibles publiquement par vos clients :</p>
                 <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
                     <li>Le statut Ouvert / Fermé de votre restaurant, reflété en temps réel</li>
@@ -5793,7 +5792,7 @@ router.add('#/politique-admin', () => {
                 </ul>
                 <p>Une information erronée (plat indisponible affiché comme disponible, statut « Ouvert » alors que le restaurant est fermé) peut entraîner une mauvaise expérience client et nuire à votre réputation. Il est de votre responsabilité de garder ces données exactes.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">3. Traitement des commandes et réservations</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">3. Traitement des commandes et réservations</h3>
                 <p>Chaque commande ou réservation reçue déclenche une notification immédiate sur votre tableau de bord et une option d'envoi WhatsApp. Vous vous engagez à :</p>
                 <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
                     <li>Traiter les commandes en attente dans un délai raisonnable</li>
@@ -5802,22 +5801,22 @@ router.add('#/politique-admin', () => {
                     <li>Ne pas annuler une commande ou une réservation déjà confirmée sans en informer le client par WhatsApp</li>
                 </ul>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">4. Gestion des avis clients</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">4. Gestion des avis clients</h3>
                 <p>Les avis laissés par les clients sur votre page sont publics et ne peuvent pas être supprimés by the restaurant. Vous disposez d'un droit de réponse publique à chaque avis depuis votre tableau de bord. Les réponses doivent rester professionnelles et respectueuses, y compris face à un avis négatif ou injuste.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">5. Paiement</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">5. Paiement</h3>
                 <p>Thiès Resto ne traite aucun paiement en ligne. Toutes les transactions financières (espèces ou tout autre moyen que vous acceptez) se déroulent directement entre vous et le client, à la livraison ou sur place. Thiès Resto n'intervient à aucun moment dans cette transaction et n'en est pas responsable.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">6. Données collectées sur vos clients</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">6. Données collectées sur vos clients</h3>
                 <p>Dans le cadre de l'utilisation de la plateforme, vous avez accès aux informations suivantes transmises par vos clients : nom, prénom, numéro de téléphone, contenu de leur commande ou réservation. Ces informations doivent être utilisées uniquement dans le cadre du service que vous proposez (traitement de la commande, organisation de la réservation, programme de fidélité) et ne doivent pas être réutilisées à d'autres fins, notamment commerciales, sans le consentement du client.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">7. Disponibilité du service</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">7. Disponibilité du service</h3>
                 <p>Thiès Resto met tout en œuvre pour assurer la disponibilité continue du tableau de bord et de la page client. En cas de panne, de maintenance ou d'interruption de service, le restaurant en sera informé dans la mesure du possible. Thiès Resto ne peut être tenu responsable des pertes de commandes liées à une interruption de connexion internet ou de réseau mobile, locale au restaurant ou au client.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">8. Modification ou suspension du compte</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">8. Modification ou suspension du compte</h3>
                 <p>Le restaurant peut demander la suspension ou la fermeture de son espace à tout moment. Thiès Resto se réserve le droit de suspendre un compte en cas de non-respect manifeste de cette politique, notamment en cas d'informations délibérément trompeuses publiées sur la page client.</p>
 
-                <h3 style="color: #fff; font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">9. Évolutions de cette politique</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">9. Évolutions de cette politique</h3>
                 <p>Cette politique peut être amenée à évoluer à mesure que de nouvelles fonctionnalités sont ajoutées à la plateforme. Le restaurant sera informé de toute modification significative.</p>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
