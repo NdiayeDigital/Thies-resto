@@ -1054,9 +1054,9 @@ function renderDashboardShell() {
     let impersonateBanner = '';
     if (isSuperAdminSession) {
         impersonateBanner = `
-            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); color: white; padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; border-radius: 12px; margin: 1rem 1.5rem 0 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.1);">
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); color: var(--primary); padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; border-radius: 12px; margin: 1rem 1.5rem 0 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.1);">
                 <span>👑 Mode Super-Admin : Vous gérez actuellement le profil de "<strong>${r.name}</strong>"</span>
-                <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()" style="background: rgba(255,255,255,0.25); border-color: transparent; color: white; font-weight: 700;">
+                <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()" style="background: rgba(255,255,255,0.25); border-color: transparent; color: var(--primary); font-weight: 700;">
                     Retourner à la Console 🔐
                 </button>
             </div>
@@ -1758,7 +1758,7 @@ function renderDashboardTabContent(r) {
         let freePeriodHtml = '';
         if (daysLeft > 0) {
             freePeriodHtml = `
-                <div style="background: linear-gradient(135deg, var(--success) 0%, #20c997 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+                <div style="background: linear-gradient(135deg, var(--success) 0%, #20c997 100%); color: var(--primary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
                     <div>
                         <h3 style="margin: 0 0 0.5rem 0; font-size: 1.4rem;">🎉 Période de Gratuité en cours</h3>
                         <p style="margin: 0; font-size: 1rem; opacity: 0.9;">Il vous reste <strong>${daysLeft} jours</strong> d'accès gratuit. Profitez-en pour développer votre chiffre d'affaires !</p>
@@ -1769,7 +1769,7 @@ function renderDashboardTabContent(r) {
         } else {
             const reactivateMsg = encodeURIComponent(`Bonjour Thiès à Table 👋\n\nMa période d'essai gratuit est terminée et je souhaite réactiver mon restaurant.\n\n🏪 Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
             freePeriodHtml = `
-                <div style="background: linear-gradient(135deg, var(--danger) 0%, #ff4b4b 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                <div style="background: linear-gradient(135deg, var(--danger) 0%, #ff4b4b 100%); color: var(--primary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
                         <div>
                             <h3 style="margin: 0 0 0.5rem 0; font-size: 1.4rem;">⚠️ Période d'essai terminée</h3>
@@ -1811,7 +1811,7 @@ function renderDashboardTabContent(r) {
 
                     <!-- Pack Startup -->
                     <div style="border: 2px solid var(--primary); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; position: relative; background: rgba(var(--primary-rgb), 0.03); box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.1);">
-                        <div style="position: absolute; top: -12px; right: 20px; background: var(--primary); color: white; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">Recommandé</div>
+                        <div style="position: absolute; top: -12px; right: 20px; background: var(--primary); color: var(--primary); padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">Recommandé</div>
                         <h4 style="margin: 0 0 0.5rem 0; font-size: 1.3rem; color: var(--text-primary);">Pack Startup</h4>
                         <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">5 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Pour booster vos ventes avec une meilleure visibilité.</p>
@@ -3588,17 +3588,17 @@ router.add('#/', () => {
                 <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col">
                     <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
-                    <h1 class="hero-title" style="color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
-                    <p class="hero-subtitle" style="color: rgba(255,255,255,0.8); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+                    <h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
+                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
                     <div class="search-container" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px;">
-                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
-                        <button class="search-btn" style="color: white;">🔍</button>
+                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
+                        <button class="search-btn" style="color: var(--primary);">🔍</button>
                     </div>
 
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
                         <button class="btn btn-primary" onclick="scrollToCatalog()" style="box-shadow: 0 4px 15px rgba(242,107,33,0.4);">Explorer nos Menus 🍽️</button>
-                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">📍 Trouver autour de moi</button>
+                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">📍 Trouver autour de moi</button>
                     </div>
                 </div>
                 
@@ -3606,7 +3606,7 @@ router.add('#/', () => {
                 <div class="hero-right-col" style="display: flex; justify-content: center; align-items: center;">
                     <div style="position: relative; width: 250px; height: 250px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 2rem; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center;">
                         <img src="icon.png" alt="THIES Resto Logo" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-bottom: 1rem;">
-                        <span style="color: white; font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; letter-spacing: 1px;">THIES <span style="color: var(--primary);">Resto</span></span>
+                        <span style="color: var(--primary); font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; letter-spacing: 1px;">THIES <span style="color: var(--primary);">Resto</span></span>
                     </div>
                 </div>
             </div>
@@ -4544,11 +4544,11 @@ window.openProductModal = function(restaurantId, dishId) {
         <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0c0e12; z-index: 9999; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; overflow-y: auto;">
             <!-- Header -->
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; position: absolute; top: 0; left: 0; width: 100%; z-index: 10;">
-                <button onclick="document.getElementById('product-detail-modal').remove()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; backdrop-filter: blur(5px);">
+                <button onclick="document.getElementById('product-detail-modal').remove()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 50%; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; backdrop-filter: blur(5px);">
                     ←
                 </button>
                 <div style="position: relative;" onclick="document.getElementById('product-detail-modal').remove(); openCartTab();">
-                    <button style="background: var(--primary); border: none; width: 45px; height: 45px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 15px rgba(207,168,83,0.4);">
+                    <button style="background: var(--primary); border: none; width: 45px; height: 45px; border-radius: 50%; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 15px rgba(207,168,83,0.4);">
                         🛒
                     </button>
                     <span style="position: absolute; top: -5px; right: -5px; background: white; color: var(--primary); font-size: 0.75rem; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
@@ -4571,7 +4571,7 @@ window.openProductModal = function(restaurantId, dishId) {
             <div style="background: #0c0e12; padding: 2rem 1.5rem; flex: 1; border-top-left-radius: 30px; border-top-right-radius: 30px; display: flex; flex-direction: column;">
                 
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                    <h2 style="color: white; font-size: 1.8rem; font-family: var(--font-serif); font-weight: 700; margin: 0; max-width: 65%;">${dish.name}</h2>
+                    <h2 style="color: var(--primary); font-size: 1.8rem; font-family: var(--font-serif); font-weight: 700; margin: 0; max-width: 65%;">${dish.name}</h2>
                     <span style="color: var(--primary); font-size: 1.6rem; font-weight: 800;">${dish.price} <span style="font-size: 1rem;">FCFA</span></span>
                 </div>
                 
@@ -4582,15 +4582,15 @@ window.openProductModal = function(restaurantId, dishId) {
                     <div style="display: flex; flex-direction: column;">
                         <span style="color: rgba(255,255,255,0.5); font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 0.5rem; text-transform: uppercase;">Quantité</span>
                         <div style="display: flex; align-items: center; gap: 1rem; background: #16181d; border-radius: 30px; padding: 0.25rem; border: 1px solid rgba(255,255,255,0.05);">
-                            <button onclick="if(window.currentProductQty > 1) { window.currentProductQty--; document.getElementById('modal-qty-val').innerText = window.currentProductQty; }" style="background: var(--primary); border: none; width: 35px; height: 35px; border-radius: 50%; color: white; font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">-</button>
-                            <span id="modal-qty-val" style="color: white; font-weight: 700; font-size: 1.2rem; min-width: 20px; text-align: center;">1</span>
-                            <button onclick="window.currentProductQty++; document.getElementById('modal-qty-val').innerText = window.currentProductQty;" style="background: var(--primary); border: none; width: 35px; height: 35px; border-radius: 50%; color: white; font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                            <button onclick="if(window.currentProductQty > 1) { window.currentProductQty--; document.getElementById('modal-qty-val').innerText = window.currentProductQty; }" style="background: var(--primary); border: none; width: 35px; height: 35px; border-radius: 50%; color: var(--primary); font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">-</button>
+                            <span id="modal-qty-val" style="color: var(--primary); font-weight: 700; font-size: 1.2rem; min-width: 20px; text-align: center;">1</span>
+                            <button onclick="window.currentProductQty++; document.getElementById('modal-qty-val').innerText = window.currentProductQty;" style="background: var(--primary); border: none; width: 35px; height: 35px; border-radius: 50%; color: var(--primary); font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Action Button -->
-                <button onclick="addModalItemToCart('${restaurantId}', '${dishId}'); document.getElementById('product-detail-modal').remove();" style="background: var(--primary); color: white; border: none; width: 100%; padding: 1.25rem; border-radius: 20px; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; box-shadow: 0 10px 25px rgba(207,168,83,0.3); transition: transform 0.2s;">
+                <button onclick="addModalItemToCart('${restaurantId}', '${dishId}'); document.getElementById('product-detail-modal').remove();" style="background: var(--primary); color: var(--primary); border: none; width: 100%; padding: 1.25rem; border-radius: 20px; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; box-shadow: 0 10px 25px rgba(207,168,83,0.3); transition: transform 0.2s;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                     AJOUTER AU PANIER
                 </button>
@@ -4986,7 +4986,7 @@ Merci de confirmer la réception !`;
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Votre avis aide <strong>${r.name}</strong> à s'améliorer !</p>
                 <div class="form-group" style="text-align: left;">
                     <label class="form-label">Note sur 5 <span class="required">*</span></label>
-                    <select id="review-rating" class="form-control" required style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2);">
+                    <select id="review-rating" class="form-control" required style="background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid rgba(255,255,255,0.2);">
                         <option value="5" style="color: black;">⭐⭐⭐⭐⭐ Parfait !</option>
                         <option value="4" style="color: black;">⭐⭐⭐⭐ Très bien</option>
                         <option value="3" style="color: black;">⭐⭐⭐ Bien</option>
@@ -4996,7 +4996,7 @@ Merci de confirmer la réception !`;
                 </div>
                 <div class="form-group" style="text-align: left;">
                     <label class="form-label">Commentaire (optionnel)</label>
-                    <textarea id="review-comment" class="form-control" rows="2" placeholder="Qu'avez-vous pensé du repas ?" style="background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.2);"></textarea>
+                    <textarea id="review-comment" class="form-control" rows="2" placeholder="Qu'avez-vous pensé du repas ?" style="background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid rgba(255,255,255,0.2);"></textarea>
                 </div>
                 <button class="btn btn-primary btn-block" onclick="submitCustomerReview('${r.id}', '${(firstname + ' ' + lastname).replace(/'/g, "\\'")}')">Envoyer mon avis</button>
             </div>
