@@ -3583,30 +3583,30 @@ router.add('#/', () => {
 
     container.innerHTML = `
         <!-- ========== HERO SECTION ========== -->
-        <section class="hero-section">
+        <section class="hero-section" style="background: linear-gradient(rgba(10, 10, 12, 0.8), rgba(10, 10, 12, 0.95)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed; padding: 6rem 1.5rem 5rem 1.5rem;">
             <div class="hero-split-container">
                 <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col">
-                    <span class="greeting-text" style="display: block; font-size: 1rem; color: var(--primary); font-weight: 500; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">${greeting}</span>
-                    <h1 class="hero-title">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
-                    <p class="hero-subtitle">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+                    <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
+                    <h1 class="hero-title" style="color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
+                    <p class="hero-subtitle" style="color: rgba(255,255,255,0.8); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
                     <div class="search-container" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px;">
-                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant (dibi, yassa, pastel...)" oninput="applyFilters()">
-                        <button class="search-btn">🔍</button>
+                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
+                        <button class="search-btn" style="color: white;">🔍</button>
                     </div>
 
                     <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button class="btn btn-primary" onclick="scrollToCatalog()">Explorer nos Menus 🍽️</button>
-                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">📍 Trouver autour de moi</button>
+                        <button class="btn btn-primary" onclick="scrollToCatalog()" style="box-shadow: 0 4px 15px rgba(242,107,33,0.4);">Explorer nos Menus 🍽️</button>
+                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">📍 Trouver autour de moi</button>
                     </div>
                 </div>
                 
-                <!-- Right: Large Gourmet Plate Image -->
-                <div class="hero-right-col">
-                    <div class="hero-food-plate-container">
-                        <img class="hero-food-plate" src="https://images.unsplash.com/photo-1544025162-d76694265947?w=700&auto=format&fit=crop&q=80" alt="Dibi d'Agneau Thiès">
-                        <div class="glow-effect"></div>
+                <!-- Right: Logo instead of food plate -->
+                <div class="hero-right-col" style="display: flex; justify-content: center; align-items: center;">
+                    <div style="position: relative; width: 250px; height: 250px; border-radius: 50%; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 2rem; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <img src="icon.png" alt="THIES Resto Logo" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); margin-bottom: 1rem;">
+                        <span style="color: white; font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; letter-spacing: 1px;">THIES <span style="color: var(--primary);">Resto</span></span>
                     </div>
                 </div>
             </div>

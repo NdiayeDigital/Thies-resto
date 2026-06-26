@@ -1,23 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Marcellus&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    --bg-primary: #04100a;
-    --bg-secondary: #071a11;
-    --bg-card: #0a2418;
-    --bg-input: #0d3020;
-    --primary: #cfa853;
-    --primary-rgb: 207, 168, 83;
-    --primary-hover: #bfa054;
-    --accent: #dfc384;
+    --bg-primary: #0a0a0c;
+    --bg-secondary: #121214;
+    --bg-card: #18191c;
+    --bg-input: #222327;
+    --primary: #f26b21;
+    --primary-rgb: 242, 107, 33;
+    --primary-hover: #d95a1a;
+    --accent: #ff8c42;
     --success: #10b981;
     --danger: #ef4444;
     --text-primary: #f5f6f5;
     --text-secondary: #a6b4ad;
-    --border: rgba(207, 168, 83, 0.15);
-    --border-focus: rgba(207, 168, 83, 0.5);
+    --border: rgba(242, 107, 33, 0.15);
+    --border-focus: rgba(242, 107, 33, 0.5);
     --shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.8);
     --glass-bg: rgba(7, 26, 17, 0.85);
-    --glass-border: rgba(207, 168, 83, 0.1);
+    --glass-border: rgba(242, 107, 33, 0.1);
     --font-serif: 'Marcellus', 'Playfair Display', Georgia, serif;
     --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -29,21 +29,21 @@
     --bg-secondary: #f6f3ea;
     --bg-card: #ffffff;
     --bg-input: #fbf9f4;
-    --text-primary: #0d2116;
+    --text-primary: #121212;
     --text-secondary: #5a6b61;
-    --border: rgba(207, 168, 83, 0.2);
-    --border-focus: rgba(207, 168, 83, 0.6);
+    --border: rgba(242, 107, 33, 0.2);
+    --border-focus: rgba(242, 107, 33, 0.6);
     --shadow: 0 10px 30px -10px rgba(13, 33, 22, 0.1);
     --glass-bg: rgba(253, 251, 247, 0.85);
-    --glass-border: rgba(207, 168, 83, 0.15);
+    --glass-border: rgba(242, 107, 33, 0.15);
 }
 [data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3,
 [data-theme="light"] h4, [data-theme="light"] h5, [data-theme="light"] h6 {
-    color: #0d2116;
+    color: #121212;
 }
-[data-theme="light"] .form-control { color: #0d2116; }
-[data-theme="light"] .stat-card-value { color: #0d2116; }
-[data-theme="light"] .search-input { color: #0d2116; }
+[data-theme="light"] .form-control { color: #121212; }
+[data-theme="light"] .stat-card-value { color: #121212; }
+[data-theme="light"] .search-input { color: #121212; }
 
 /* Reset & Base */
 * {
@@ -165,13 +165,13 @@ main {
 
 .btn-primary {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-    color: #04100a;
+    color: #0a0a0c;
     font-weight: 700;
-    box-shadow: 0 4px 15px rgba(207, 168, 83, 0.25);
+    box-shadow: 0 4px 15px rgba(242, 107, 33, 0.25);
 }
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(207, 168, 83, 0.35);
+    box-shadow: 0 6px 20px rgba(242, 107, 33, 0.35);
 }
 .btn-primary:active {
     transform: translateY(0);
@@ -269,7 +269,7 @@ main {
 .hero-section {
     padding: 5rem 1.5rem 4rem 1.5rem;
     text-align: center;
-    background: radial-gradient(circle at 30% 20%, rgba(207, 168, 83, 0.08), transparent 40%), 
+    background: radial-gradient(circle at 30% 20%, rgba(242, 107, 33, 0.08), transparent 40%), 
                 radial-gradient(circle at 70% 60%, rgba(16, 185, 129, 0.05), transparent 50%),
                 linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
     border-bottom: 1px solid var(--border);
@@ -630,7 +630,7 @@ main {
     font-weight: 700;
     color: var(--primary);
     font-size: 0.9rem;
-    border: 1px solid rgba(207, 168, 83, 0.3);
+    border: 1px solid rgba(242, 107, 33, 0.3);
 }
 
 .dish-body {
@@ -1929,7 +1929,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     transition: var(--transition-smooth);
 }
 .admin-table tbody tr:hover {
-    background: rgba(207, 168, 83, 0.06);
+    background: rgba(242, 107, 33, 0.06);
 }
 .admin-table td {
     vertical-align: middle;
@@ -2107,7 +2107,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     border-radius: 50%;
     position: relative;
     padding: 8px;
-    background: radial-gradient(circle, rgba(207, 168, 83, 0.25) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(242, 107, 33, 0.25) 0%, transparent 70%);
 }
 
 .hero-food-plate {
@@ -2129,7 +2129,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
     border-radius: 50%;
-    box-shadow: inset 0 0 40px rgba(207, 168, 83, 0.3);
+    box-shadow: inset 0 0 40px rgba(242, 107, 33, 0.3);
     pointer-events: none;
 }
 
@@ -2173,7 +2173,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     font-size: 1.35rem;
     margin-bottom: 1.25rem;
     color: var(--primary);
-    background: rgba(207, 168, 83, 0.05);
+    background: rgba(242, 107, 33, 0.05);
 }
 
 .ref-card-text h3 {
@@ -2500,7 +2500,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     position: absolute;
     top: -4px;
     right: 4px;
-    background: linear-gradient(135deg, #ff6b35, #cfa853);
+    background: linear-gradient(135deg, #ff6b35, #f26b21);
     color: white;
     font-size: 0.6rem;
     font-weight: 800;
@@ -2607,9 +2607,9 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 }
 .hw-tab-btn.active {
     background: linear-gradient(135deg, var(--primary), var(--primary-hover));
-    color: #04100a;
+    color: #0a0a0c;
     border-color: transparent;
-    box-shadow: 0 4px 15px rgba(207, 168, 83, 0.3);
+    box-shadow: 0 4px 15px rgba(242, 107, 33, 0.3);
 }
 .hw-tab-content {
     display: none;
@@ -2646,7 +2646,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 .timeline-card:hover {
     transform: translateY(-6px);
     border-color: var(--primary);
-    box-shadow: 0 10px 30px rgba(207, 168, 83, 0.08);
+    box-shadow: 0 10px 30px rgba(242, 107, 33, 0.08);
 }
 .timeline-card:hover::before {
     opacity: 1;
@@ -2707,7 +2707,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     pointer-events: none;
 }
 .study-title-tag {
-    background: rgba(207, 168, 83, 0.1);
+    background: rgba(242, 107, 33, 0.1);
     color: var(--primary);
     border: 1px solid var(--border);
     padding: 0.4rem 1rem;
@@ -2763,8 +2763,8 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 .square-stat-card:hover {
     transform: translateY(-5px) !important;
     border-color: var(--primary) !important;
-    background: rgba(207, 168, 83, 0.05) !important;
-    box-shadow: 0 8px 24px rgba(207, 168, 83, 0.08);
+    background: rgba(242, 107, 33, 0.05) !important;
+    box-shadow: 0 8px 24px rgba(242, 107, 33, 0.08);
 }
 .square-stat-card .stat-number {
     font-size: 2.2rem;
