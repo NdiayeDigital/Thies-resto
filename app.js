@@ -4508,11 +4508,11 @@ function renderDishesTab(r) {
     r.menu.forEach(d => {
         const isCurrentlyOpen = isRestaurantOpenNow(r);
         const actionBtn = isCurrentlyOpen
-            ? `<button class="btn btn-primary btn-block" onclick="addToCart('${r.id}', '${d.id}')">Ajouter au Panier 🛒</button>`
+            ? `<button class="btn btn-primary btn-block" onclick="openProductModal('${r.id}', '${d.id}')">Choisir & Ajouter 🛒</button>`
             : `<button class="btn btn-secondary btn-block" disabled>Fermé temporairement</button>`;
 
         html += `
-            <div class="dish-card">
+            <div class="dish-card" onclick="if(isRestaurantOpenNow(store.getRestaurantById('${r.id}'))) openProductModal('${r.id}', '${d.id}')" style="cursor: pointer;">
                 <div class="dish-img-container">
                     <img src="${d.image}" class="dish-image" alt="${d.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'">
                     <span class="dish-price-tag">${d.price} FCFA</span>
@@ -4526,6 +4526,121 @@ function renderDishesTab(r) {
         `;
     });
     grid.innerHTML = html;
+}
+
+window.openProductModal = function(restaurantId, dishId) {
+    const r = store.getRestaurantById(restaurantId);
+    const dish = r.menu.find(d => d.id === dishId);
+    if (!dish) return;
+
+    let modal = document.getElementById('product-detail-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'product-detail-modal';
+        document.body.appendChild(modal);
+    }
+    
+    // Default quantity
+    window.currentProductQty = 1;
+
+    modal.innerHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0c0e12; z-index: 9999; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; overflow-y: auto;">
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; position: absolute; top: 0; left: 0; width: 100%; z-index: 10;">
+                <button onclick="document.getElementById('product-detail-modal').remove()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; backdrop-filter: blur(5px);">
+                    ←
+                </button>
+                <div style="position: relative;" onclick="document.getElementById('product-detail-modal').remove(); openCartTab();">
+                    <button style="background: var(--primary); border: none; width: 45px; height: 45px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 15px rgba(207,168,83,0.4);">
+                        🛒
+                    </button>
+                    <span style="position: absolute; top: -5px; right: -5px; background: white; color: var(--primary); font-size: 0.75rem; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                        ${cart.items.length}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Image Hero -->
+            <div style="flex: 1; min-height: 40vh; position: relative; display: flex; align-items: center; justify-content: center; padding: 5rem 2rem 2rem 2rem; background: radial-gradient(circle at center, rgba(207,168,83,0.15) 0%, transparent 60%);">
+                <img src="${dish.image}" style="width: 280px; height: 280px; object-fit: cover; border-radius: 50%; box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.05);" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'">
+            </div>
+
+            <!-- Curved Separator -->
+            <div style="width: 100%; height: 30px; background: transparent; position: relative; overflow: hidden; margin-top: -15px;">
+                <div style="position: absolute; top: 15px; left: -10%; width: 120%; height: 100px; border-top: 1px solid rgba(207,168,83,0.3); border-radius: 50%; box-shadow: 0 -10px 30px rgba(207,168,83,0.1);"></div>
+            </div>
+
+            <!-- Details Section -->
+            <div style="background: #0c0e12; padding: 2rem 1.5rem; flex: 1; border-top-left-radius: 30px; border-top-right-radius: 30px; display: flex; flex-direction: column;">
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                    <h2 style="color: white; font-size: 1.8rem; font-family: var(--font-serif); font-weight: 700; margin: 0; max-width: 65%;">${dish.name}</h2>
+                    <span style="color: var(--primary); font-size: 1.6rem; font-weight: 800;">${dish.price} <span style="font-size: 1rem;">FCFA</span></span>
+                </div>
+                
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.95rem; line-height: 1.5; margin-bottom: 2rem;">${dish.description}</p>
+
+                <!-- Controls -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                    <div style="display: flex; flex-direction: column;">
+                        <span style="color: rgba(255,255,255,0.5); font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 0.5rem; text-transform: uppercase;">Quantité</span>
+                        <div style="display: flex; align-items: center; gap: 1rem; background: #16181d; border-radius: 30px; padding: 0.25rem; border: 1px solid rgba(255,255,255,0.05);">
+                            <button onclick="if(window.currentProductQty > 1) { window.currentProductQty--; document.getElementById('modal-qty-val').innerText = window.currentProductQty; }" style="background: var(--primary); border: none; width: 35px; height: 35px; border-radius: 50%; color: white; font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">-</button>
+                            <span id="modal-qty-val" style="color: white; font-weight: 700; font-size: 1.2rem; min-width: 20px; text-align: center;">1</span>
+                            <button onclick="window.currentProductQty++; document.getElementById('modal-qty-val').innerText = window.currentProductQty;" style="background: var(--primary); border: none; width: 35px; height: 35px; border-radius: 50%; color: white; font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button onclick="addModalItemToCart('${restaurantId}', '${dishId}'); document.getElementById('product-detail-modal').remove();" style="background: var(--primary); color: white; border: none; width: 100%; padding: 1.25rem; border-radius: 20px; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; box-shadow: 0 10px 25px rgba(207,168,83,0.3); transition: transform 0.2s;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                    AJOUTER AU PANIER
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+window.addModalItemToCart = function(restaurantId, dishId) {
+    const qty = window.currentProductQty || 1;
+    
+    // Re-use logic from addToCart but with quantity
+    const r = store.getRestaurantById(restaurantId);
+    const dish = r.menu.find(d => d.id === dishId);
+    if (!dish) return;
+    
+    if (cart.restaurantId && cart.restaurantId !== restaurantId && cart.items.length > 0) {
+        const oldResto = store.getRestaurantById(cart.restaurantId);
+        const oldName = oldResto ? oldResto.name : "un autre restaurant";
+        const confirmClear = confirm(`Votre panier contient déjà des plats de "${oldName}". Voulez-vous vider votre panier actuel pour commander chez "${r.name}" ?`);
+        if (!confirmClear) return;
+        cart = { restaurantId: restaurantId, items: [], total: 0 };
+    }
+
+    if (!cart.restaurantId) cart.restaurantId = restaurantId;
+
+    const existingItem = cart.items.find(i => i.id === dishId);
+    if (existingItem) {
+        existingItem.qty += qty;
+    } else {
+        cart.items.push({
+            id: dish.id,
+            name: dish.name,
+            price: dish.price,
+            qty: qty
+        });
+    }
+
+    cart.total += dish.price * qty;
+    saveCart();
+    
+    if (document.getElementById('panel-checkout')) {
+        renderCheckoutTab(store.getRestaurantById(restaurantId));
+    }
+    updateFloatingCartBar(store.getRestaurantById(restaurantId));
+    
+    showToast(`(${qty}) ${dish.name} ajouté(s) au panier ! 🛒`, "success");
 }
 
 // Cart updates
