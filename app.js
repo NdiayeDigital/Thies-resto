@@ -59,859 +59,6 @@ class ClientTracker {
 }
 
 // Initialize tracker later when router is defined
-const COVER_IMAGES = {
-    "Traditionnel": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60",
-    "Grillades / Dibi": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=60",
-    "Fast Food": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600&auto=format&fit=crop&q=60",
-    "Pâtisserie": "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?w=600&auto=format&fit=crop&q=60",
-    "Gastronomique": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&auto=format&fit=crop&q=60"
-};
-
-// Unique cover per restaurant (alternating within categories)
-const RESTAURANT_COVERS = {
-    "r1": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=60",
-    "r2": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=60",
-    "r3": "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&auto=format&fit=crop&q=60",
-    "r4": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&auto=format&fit=crop&q=60",
-    "r5": "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600&auto=format&fit=crop&q=60",
-    "r6": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop&q=60",
-    "r7": "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&auto=format&fit=crop&q=60",
-    "r8": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600&auto=format&fit=crop&q=60",
-    "r9": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&auto=format&fit=crop&q=60",
-    "r10": "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&auto=format&fit=crop&q=60",
-    "r11": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=600&auto=format&fit=crop&q=60",
-    "r12": "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=600&auto=format&fit=crop&q=60",
-    "r13": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=60",
-    "r14": "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60",
-    "r15": "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?w=600&auto=format&fit=crop&q=60",
-    "r16": "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=600&auto=format&fit=crop&q=60",
-    "r17": "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=60",
-    "r18": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600&auto=format&fit=crop&q=60",
-    "r19": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600&auto=format&fit=crop&q=60",
-    "r20": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&auto=format&fit=crop&q=60"
-};
-
-// Dish image options for admin image selector
-const DISH_IMAGE_OPTIONS = [
-    { label: "Thiéboudiène / Poisson", url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60" },
-    { label: "Yassa / Poulet", url: "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&auto=format&fit=crop&q=60" },
-    { label: "Mafé / Ragoût", url: "https://images.unsplash.com/photo-1547592180-85f173990554?w=500&auto=format&fit=crop&q=60" },
-    { label: "Grillades / Dibi", url: "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60" },
-    { label: "Poulet Grillé", url: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&auto=format&fit=crop&q=60" },
-    { label: "Brochettes", url: "https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=500&auto=format&fit=crop&q=60" },
-    { label: "Burger", url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60" },
-    { label: "Chawarma / Wrap", url: "https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60" },
-    { label: "Frites", url: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60" },
-    { label: "Pizza", url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&auto=format&fit=crop&q=60" },
-    { label: "Salade", url: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500&auto=format&fit=crop&q=60" },
-    { label: "Poisson Grillé", url: "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop&q=60" },
-    { label: "Croissant / Pâtisserie", url: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&auto=format&fit=crop&q=60" },
-    { label: "Pain au Chocolat", url: "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=500&auto=format&fit=crop&q=60" },
-    { label: "Petit-Déjeuner", url: "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&auto=format&fit=crop&q=60" },
-    { label: "Dessert / Chocolat", url: "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop&q=60" },
-    { label: "Boisson / Jus", url: "https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&auto=format&fit=crop&q=60" },
-    { label: "Jus de Bouye", url: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60" },
-    { label: "Riz Sénégalais", url: "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=500&auto=format&fit=crop&q=60" },
-    { label: "URL personnalisée", url: "" }
-];
-
-// Default Menu templates by Category
-const MENU_TEMPLATES = {
-    "Traditionnel": [
-        { id: 'dish_1', name: 'Thiéboudiène Penda Mbaye', description: 'Riz au poisson rouge traditionnel sénégalais, légumes frais (chou, manioc, carotte) et sauce tamarin douce.', price: 2500, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_2', name: 'Yassa Poulet au Feu de Bois', description: 'Poulet mariné au citron vert, moutarde et oignons caramélisés fondants, servi avec riz blanc brisé.', price: 2200, image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_3', name: 'Mafé Viande de Bœuf', description: 'Mijoté de bœuf tendre dans une sauce onctueuse à base de pâte d\'arachide locale, riz blanc.', price: 2000, image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_4', name: 'Jus de Bissap Glacé', description: 'Boisson rafraîchissante maison à base d\'infusion de fleurs d\'hibiscus séchées, menthe et sucre.', price: 500, image: 'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_5', name: 'Jus de Bouye (Pain de Singe)', description: 'Jus local onctueux à base de pulpe de fruits de baobab et de lait concentré sucré.', price: 500, image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60' }
-    ],
-    "Grillades / Dibi": [
-        { id: 'dish_6', name: 'Dibi d\'Agneau Traditionnel (Portion)', description: 'Viande d\'agneau coupée en morceaux, marinée et grillée façon dibiterie, servie avec oignons et piment.', price: 4500, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_7', name: 'Dibi de Poulet (Demi Poulet)', description: 'Demi-poulet mariné aux épices locales et grillé lentement, accompagné d\'oignons émincés.', price: 3500, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_8', name: 'Merguez Braisées de Thiès', description: 'Brochettes de merguez maison grillées, servies avec frites croustillantes.', price: 2500, image: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_4', name: 'Jus de Bissap Glacé', description: 'Infusion de fleurs d\'hibiscus séchées parfumée à la menthe.', price: 500, image: 'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&auto=format&fit=crop&q=60' }
-    ],
-    "Fast Food": [
-        { id: 'dish_9', name: 'Burger Teranga Double Cheese', description: 'Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison.', price: 2000, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_10', name: 'Chawarma Poulet Fromage', description: 'Pain libanais roulé garni de poulet émincé grillé, frites maison, crème d\'ail et fromage.', price: 1500, image: 'https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_11', name: 'Frites Maison (Portion XXL)', description: 'Pommes de terre fraîches coupées à la main et frites dorées aux herbes aromatiques.', price: 800, image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_5', name: 'Jus de Bouye', description: 'Jus onctueux à base de fruit de baobab.', price: 500, image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60' }
-    ],
-    "Pâtisserie": [
-        { id: 'dish_12', name: 'Croissant Beurre Français', description: 'Feuilletage croustillant pur beurre, doré à souhait.', price: 500, image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_13', name: 'Pain au Chocolat (Chocolatine)', description: 'Viennoiserie feuilletée avec deux barres de chocolat noir.', price: 600, image: 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_14', name: 'Formule Petit-Déjeuner Express', description: 'Un café Touba ou expresso, un croissant, et un verre de jus frais d\'orange.', price: 1500, image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&auto=format&fit=crop&q=60' }
-    ],
-    "Gastronomique": [
-        { id: 'dish_15', name: 'Lotte rôtie sauce vanille de Casamance', description: 'Médaillon de lotte poêlé, purée fine de patate douce et émulsion à la vanille.', price: 7500, image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_16', name: 'Filet de Bœuf braisé au Café Touba', description: 'Filet tendre de bœuf du pays, sauce corsée infusée au café Touba et poivre de Selim, petits légumes.', price: 8000, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_17', name: 'Moelleux au Chocolat & Coulis Bissap', description: 'Dessert gourmand au cœur coulant, parfumé d\'un coulis acidulé au bissap rouge.', price: 2500, image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop&q=60' }
-    ]
-};
-
-// Seeding standard reviews
-const SAMPLE_REVIEWS = [
-    { author: "Abdoulaye Diallo", rating: 5, comment: "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement.", date: "2026-06-10", reply: "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes." },
-    { author: "Khadija Fall", rating: 4, comment: "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison.", date: "2026-06-12", reply: null },
-    { author: "Michel Dupont", rating: 5, comment: "Un trésor caché à Thiès. Le service Teranga est excellent.", date: "2026-06-14", reply: "Merci Michel ! Heureux de vous avoir accueilli." }
-];
-
-// Celebration Animation Helper
-window.triggerCelebration = function() {
-    if (typeof confetti === 'function') {
-        const duration = 3000;
-        const end = Date.now() + duration;
-
-        (function frame() {
-            confetti({
-                particleCount: 5,
-                angle: 60,
-                spread: 55,
-                origin: { x: 0 },
-                colors: ['#ff6b35', '#cfa853', '#4caf50']
-            });
-            confetti({
-                particleCount: 5,
-                angle: 120,
-                spread: 55,
-                origin: { x: 1 },
-                colors: ['#ff6b35', '#cfa853', '#4caf50']
-            });
-
-            if (Date.now() < end) {
-                requestAnimationFrame(frame);
-            }
-        }());
-    }
-};
-
-// Complete Seed Data from rapport_restaurants_thies
-const SEED_RESTAURANTS = [
-    { id: "r1", name: "Croissant Magique", slug: "croissant-magique", rating: 3.9, reviewsCount: 999, category: "Pâtisserie", address: "Avenue Léopold Sédar Senghor, Thiès", whatsapp: "+221339512551", lat: 14.7933, lng: -16.9298, openHours: "07:00 - 22:00", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r2", name: "Le Café du Rail", slug: "cafe-du-rail", rating: 4.7, reviewsCount: 679, category: "Traditionnel", address: "Près de la Gare ferroviaire de Thiès", whatsapp: "+221773505050", lat: 14.7880, lng: -16.9350, openHours: "08:00 - 23:00", closedDays: [1], isOpenManual: true, status: "active" },
-    { id: "r3", name: "Restaurant Madiba", slug: "restaurant-madiba", rating: 4.3, reviewsCount: 312, category: "Traditionnel", address: "Quartier Escale, Thiès", whatsapp: "+221339542523", lat: 14.7980, lng: -16.9200, openHours: "11:30 - 23:00", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r4", name: "Les Délices", slug: "les-delices", rating: 3.6, reviewsCount: 328, category: "Traditionnel", address: "373 Av. Lamine Gueye, Thiès", whatsapp: "+221339517516", lat: 14.7930, lng: -16.9295, openHours: "24h/24", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r5", name: "OBS Resto Chicha", slug: "obs-resto-chicha", rating: 5.0, reviewsCount: 1, category: "Traditionnel", address: "Rue Dr. Birane Beye, Thiès", whatsapp: "+221784269172", lat: 14.7940, lng: -16.9280, openHours: "24h/24", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r6", name: "Sam's Prestige", slug: "sams-prestige", rating: 3.5, reviewsCount: 229, category: "Traditionnel", address: "Avenida Léopold Senghor, Thiès", whatsapp: "+221772004699", lat: 14.7950, lng: -16.9300, openHours: "08:00 - 02:00", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r7", name: "Ile de Gorée", slug: "ile-de-goree", rating: 3.9, reviewsCount: 159, category: "Traditionnel", address: "Av. Lamine Gueye, Thiès", whatsapp: "+221339510267", lat: 14.7910, lng: -16.9310, openHours: "08:00 - 04:00", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r8", name: "Nadia", slug: "nadia", rating: 4.0, reviewsCount: 0, category: "Traditionnel", address: "Thiès 21000, Sénégal", whatsapp: "+221774640624", lat: 14.7960, lng: -16.9320, openHours: "24h/24", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r9", name: "Tacos de Thiès", slug: "tacos-de-thies", rating: 3.6, reviewsCount: 74, category: "Fast Food", address: "335 Av. Lamine Gueye, Thiès", whatsapp: "+221761385542", lat: 14.7925, lng: -16.9290, openHours: "11:00 - 02:00", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r10", name: "Pamanda", slug: "pamanda", rating: 4.0, reviewsCount: 366, category: "Traditionnel", address: "Guinth Rue Amadou Sow, Thiès", whatsapp: "+221339521550", lat: 14.8050, lng: -16.9250, openHours: "09:00 - 01:30", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r11", name: "Case à Teranga", slug: "case-a-teranga", rating: 3.9, reviewsCount: 7, category: "Traditionnel", address: "Thiès, Sénégal", whatsapp: "+221773239779", lat: 14.7900, lng: -16.9350, openHours: "09:00 - 00:00", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r12", name: "Restaurant Khayma Teslem", slug: "khayma-teslem", rating: 5.0, reviewsCount: 1, category: "Traditionnel", address: "358 Rocade de Contournement de Thiès", whatsapp: "+221788712020", lat: 14.7800, lng: -16.9500, openHours: "24h/24", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r13", name: "Nice Time Complexe", slug: "nice-time-complexe", rating: 4.1, reviewsCount: 614, category: "Traditionnel", address: "137 Allée Mawa, M Doucouré, Thiès", whatsapp: "+221339540442", lat: 14.7880, lng: -16.9400, openHours: "12:00 - 23:00", closedDays: [], isOpenManual: true, status: "active" },
-    { id: "r16", name: "La Casablancaise", slug: "la-casablancaise", rating: 4.7, reviewsCount: 19, category: "Gastronomique", address: "Quartier Som, Thiès", whatsapp: "+221781056721", lat: 14.7900, lng: -16.9300, openHours: "12:00 - 23:00", closedDays: [1], isOpenManual: true, status: "active" },
-    { id: "r17", name: "La Table des Gourmets", slug: "la-table-des-gourmets", rating: 5.0, reviewsCount: 14, category: "Gastronomique", address: "Quartier Grand-Thiès", whatsapp: "+221787846296", lat: 14.7950, lng: -16.9250, openHours: "19:00 - 23:30", closedDays: [1, 2], isOpenManual: true, status: "active" },
-    { id: "r18", name: "La Licorne", slug: "la-licorne", rating: 4.8, reviewsCount: 11, category: "Gastronomique", address: "Zone Résidentielle Escale, Thiès", whatsapp: "+221772012229", lat: 14.8000, lng: -16.9200, openHours: "12:00 - 23:00", closedDays: [1], isOpenManual: true, status: "active" },
-    { id: "r19", name: "Biba Food", slug: "biba-food", rating: 5.0, reviewsCount: 9, category: "Fast Food", address: "Quartier Cité Lamy, Thiès", whatsapp: "+221770000000", lat: 14.8050, lng: -16.9100, openHours: "17:00 - 23:00", closedDays: [], isOpenManual: true, status: "active" }, { id: "r20", name: "Complexe ABOUL ABBAS", slug: "complexe-aboul-abbas", rating: 5.0, reviewsCount: 0, category: "Traditionnel", address: "À préciser", whatsapp: "À préciser", lat: 14.7950, lng: -16.9250, openHours: "08:00 - 23:00", closedDays: [], isOpenManual: true, status: "active", menu: [
-    {
-        "id": "dish_abba_1",
-        "name": "Thiébou Dieune bou wekh",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_2",
-        "name": "Thiébou Dieune bou Khonk",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_3",
-        "name": "Yassa Poulet",
-        "description": "",
-        "price": 2500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_4",
-        "name": "Mafe Yapp",
-        "description": "",
-        "price": 2500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_5",
-        "name": "Soupou Kandia",
-        "description": "",
-        "price": 2500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_6",
-        "name": "C’est bon",
-        "description": "",
-        "price": 2500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_7",
-        "name": "Thiébou Yapp",
-        "description": "",
-        "price": 2500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_8",
-        "name": "Salade composée",
-        "description": "",
-        "price": 1500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_9",
-        "name": "Salade exotique",
-        "description": "",
-        "price": 4500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_10",
-        "name": "Frites",
-        "description": "",
-        "price": 1000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_11",
-        "name": "Poulet entier",
-        "description": "",
-        "price": 7000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_12",
-        "name": "Demi Poulet",
-        "description": "",
-        "price": 3500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_13",
-        "name": "Gambas",
-        "description": "",
-        "price": 6000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_14",
-        "name": "Crevettes",
-        "description": "",
-        "price": 4000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_15",
-        "name": "Poisson Grillé",
-        "description": "",
-        "price": 4000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_16",
-        "name": "Brochette de Lotte",
-        "description": "",
-        "price": 2500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_17",
-        "name": "Brochette de Boeuf",
-        "description": "",
-        "price": 4000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_18",
-        "name": "Filet de Boeuf",
-        "description": "",
-        "price": 7000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_19",
-        "name": "Côte de Boeuf",
-        "description": "",
-        "price": 5000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_20",
-        "name": "Dibi",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_21",
-        "name": "Dibi 500g",
-        "description": "",
-        "price": 3500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_22",
-        "name": "Dibi 1kg",
-        "description": "",
-        "price": 7000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_23",
-        "name": "Lakhass",
-        "description": "",
-        "price": 250,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_24",
-        "name": "Dibi Poulet entier",
-        "description": "",
-        "price": 8000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_25",
-        "name": "Dibi Moitié Poulet",
-        "description": "",
-        "price": 4000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_26",
-        "name": "Sandwich",
-        "description": "",
-        "price": 1000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_27",
-        "name": "Tacos Viande",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_28",
-        "name": "Burger",
-        "description": "",
-        "price": 1500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_29",
-        "name": "Chawarma Royal",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_30",
-        "name": "Panini Jambon",
-        "description": "",
-        "price": 1300,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_31",
-        "name": "Panini Poulet",
-        "description": "",
-        "price": 1800,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_32",
-        "name": "Sandwich Poulet",
-        "description": "",
-        "price": 1500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_33",
-        "name": "Chawarma Poulet",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_34",
-        "name": "Chawarma Viande",
-        "description": "",
-        "price": 1500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_35",
-        "name": "Soupream Parisien",
-        "description": "",
-        "price": 1500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_36",
-        "name": "Double Burger",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_37",
-        "name": "Norvégienne",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_38",
-        "name": "Fataya simple",
-        "description": "",
-        "price": 1500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_39",
-        "name": "Fataya complet",
-        "description": "",
-        "price": 700,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_40",
-        "name": "Tacos Poulet",
-        "description": "",
-        "price": 2500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_41",
-        "name": "Burger Royale",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_42",
-        "name": "Petit Pois",
-        "description": "",
-        "price": 1500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_43",
-        "name": "Tacos Mixte",
-        "description": "",
-        "price": 3000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_44",
-        "name": "Pizza Poulet",
-        "description": "",
-        "price": 5000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_45",
-        "name": "Pizza Margarite",
-        "description": "",
-        "price": 4000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_46",
-        "name": "Pizza Fermière",
-        "description": "",
-        "price": 5000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_47",
-        "name": "Pizza Chawarma",
-        "description": "",
-        "price": 5000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_48",
-        "name": "Pizza Reine",
-        "description": "",
-        "price": 4000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_49",
-        "name": "Pizza Jambon",
-        "description": "",
-        "price": 4000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_50",
-        "name": "Pizza Orientale",
-        "description": "",
-        "price": 4000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_51",
-        "name": "Pizza Mexicaine",
-        "description": "",
-        "price": 6000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_52",
-        "name": "Crudité",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_53",
-        "name": "Athiéké",
-        "description": "",
-        "price": 2500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_54",
-        "name": "Coucoulet",
-        "description": "",
-        "price": 4000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_55",
-        "name": "Touffé",
-        "description": "",
-        "price": 3000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_56",
-        "name": "Thiéré",
-        "description": "",
-        "price": 2500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_57",
-        "name": "Légumes sautés",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_58",
-        "name": "Calamars + Crevettes",
-        "description": "",
-        "price": 4500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_59",
-        "name": "Omelette Jambon",
-        "description": "",
-        "price": 3000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_60",
-        "name": "Omelette Fromage",
-        "description": "",
-        "price": 3000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_61",
-        "name": "Omelette Saucisson",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_62",
-        "name": "Plateau entrée",
-        "description": "",
-        "price": 10000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_63",
-        "name": "Fruits de mer",
-        "description": "",
-        "price": 7000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_64",
-        "name": "Plateau",
-        "description": "",
-        "price": 3500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_65",
-        "name": "Salée",
-        "description": "",
-        "price": 3000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_66",
-        "name": "Sucré",
-        "description": "",
-        "price": 2000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_67",
-        "name": "Bouye Nestlé",
-        "description": "",
-        "price": 1500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_68",
-        "name": "Bouye Fraise",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_69",
-        "name": "Bissap Rouge",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_70",
-        "name": "Bissap Blanc",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_71",
-        "name": "Torsade",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_72",
-        "name": "Pot Salade",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_73",
-        "name": "Cocktail de Fruits",
-        "description": "",
-        "price": 1000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_74",
-        "name": "Pot de Jus",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_75",
-        "name": "Boisson Ira",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_76",
-        "name": "Boisson Fanta",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_77",
-        "name": "Bouteille Jus Petit Model",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_78",
-        "name": "Coca-Cola",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_79",
-        "name": "Wéli",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_80",
-        "name": "Vimto",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_81",
-        "name": "3 X Petit modèle",
-        "description": "",
-        "price": 1000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_82",
-        "name": "3 X Grand Modèle",
-        "description": "",
-        "price": 1000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_83",
-        "name": "Jus d Orange",
-        "description": "",
-        "price": 300,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_84",
-        "name": "Café Simple",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_85",
-        "name": "Café Lavazze",
-        "description": "",
-        "price": 300,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_86",
-        "name": "Café au Lait",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_87",
-        "name": "Thé",
-        "description": "",
-        "price": 300,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_88",
-        "name": "Dessert Mousse au Chocolat",
-        "description": "",
-        "price": 1500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_89",
-        "name": "Drops",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_90",
-        "name": "Chaussons Ananas",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_91",
-        "name": "Feuillettes Viande",
-        "description": "",
-        "price": 700,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_92",
-        "name": "Feuillettes Jambon",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_93",
-        "name": "Feuillettes Hot Dog",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_94",
-        "name": "Gateaux 8 parts",
-        "description": "",
-        "price": 10000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_95",
-        "name": "Gateaux 10 parts",
-        "description": "",
-        "price": 10000,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_96",
-        "name": "Cake",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_97",
-        "name": "Pli Pli",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_98",
-        "name": "Madeleine",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_99",
-        "name": "Pain Raisin",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_100",
-        "name": "Tarte Ananas",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    },
-    {
-        "id": "dish_abba_101",
-        "name": "Tarye Citron",
-        "description": "",
-        "price": 500,
-        "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60"
-    }
-] }
-];
 
 // Supabase Configuration
 const SUPABASE_URL = 'https://eyrayquciqyswshiwtwb.supabase.co';
@@ -957,43 +104,10 @@ class Store {
     }
 
     seed() {
-        // Initialize base structure
-        const restaurants = SEED_RESTAURANTS.map(r => {
-            // Pick a matching menu template based on category
-            const menuType = MENU_TEMPLATES[r.category] ? r.category : "Traditionnel";
-            const menu = JSON.parse(JSON.stringify(MENU_TEMPLATES[menuType]));
-            
-            // Generate reviews list
-            const reviews = SAMPLE_REVIEWS.map((rev, index) => ({
-                id: `rev_${r.id}_${index}`,
-                author: rev.author,
-                rating: rev.rating,
-                comment: rev.comment,
-                date: rev.date,
-                reply: rev.reply
-            }));
-
-            const baseName = r.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-            return {
-                ...r,
-                username: 'id_' + baseName,
-                password: baseName + '221',
-                coverImage: RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category] || COVER_IMAGES["Traditionnel"],
-                menu: r.menu || menu,
-                reviews
-            };
-        });
-
-        // Initialize orders - empty, real data comes from Supabase only
-        const orders = [];
-
-        // Initialize reservations - empty, real data comes from Supabase only
-        const reservations = [];
-
         this.data = {
-            restaurants,
-            orders,
-            reservations,
+            restaurants: [],
+            orders: [],
+            reservations: [],
             groupOrders: []
         };
         this.save();
@@ -1047,7 +161,9 @@ class Store {
                             coverImage: dbR.coverImage || localR.coverImage,
                             username: localR.username || ('id_' + baseName),
                             password: localR.password || (baseName + '221'),
-                            status: localR.status || dbR.status || 'active'
+                            status: localR.status || dbR.status || 'active',
+                            subscriptionPack: localR.subscriptionPack || 'Aucun (Gratuit)',
+                            createdAt: localR.createdAt || '2026-06-25T00:00:00Z'
                         };
                     }
                     const baseName = dbR.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -1056,7 +172,9 @@ class Store {
                         menu: dbR.menu || [],
                         username: 'id_' + baseName,
                         password: baseName + '221',
-                        status: dbR.status || 'active'
+                        status: dbR.status || 'active',
+                        subscriptionPack: 'Aucun (Gratuit)',
+                        createdAt: dbR.created_at || '2026-06-25T00:00:00Z'
                     };
                 });
 
@@ -1186,7 +304,8 @@ class Store {
                 password: resto.password,
                 cover_image: resto.coverImage,
                 menu: resto.menu,
-                reviews: resto.reviews
+                reviews: resto.reviews,
+                subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
             });
 
             if (error && error.code === '23505') {
@@ -1199,7 +318,8 @@ class Store {
                             name: resto.name,
                             status: resto.status,
                             username: resto.username,
-                            password: resto.password
+                            password: resto.password,
+                            subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
                         }
                     });
                 } else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === resto.id) {
@@ -1328,9 +448,11 @@ class Store {
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
             // Suspend restaurant if 3 months (90 days) free trial has expired and no paid package is active
-            if (diffDays > 90 && r.status === 'active') {
+            let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
+            if (diffDays > 90 && r.status === 'active' && packSubscribed === 'Aucun (Gratuit)') {
                 r.status = 'suspended';
                 changed = true;
+                this.pushRestaurantToSupabase(r);
             }
         });
         
@@ -3399,56 +2521,65 @@ function renderAdminView() {
                 </div>
             </div>
 
-
             <!-- Section Abonnements -->
-            <section style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 2rem; border: 1px solid var(--border);">
-                <h3 style="margin-top: 0; color: var(--text-primary); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
-                    <span>💳 Abonnements & Revenus Plateforme</span>
-                    <span style="color: var(--success); font-weight: 800; font-size: 1.2rem; background: rgba(var(--success-rgb), 0.1); padding: 0.4rem 0.8rem; border-radius: 8px;">Revenus Plateforme: 0 FCFA / mois</span>
-                </h3>
-                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Suivi des packs d'hébergement souscrits par les restaurants après leurs 3 mois gratuits.</p>
-                <div style="overflow-x: auto;">
+            ${(function() {
+                let totalPlatformRevenue = 0;
+                let rowsHtml = restos.filter(r => r.status !== 'pending').map(r => {
+                    const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+                    const diffTime = Math.abs(new Date() - createdAt);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    let daysLeft = 90 - diffDays;
+                    let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
+                    let revenue = 0;
                     
-                    <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
-                        <thead>
-                            <tr style="background: var(--bg-secondary); text-align: left; border-bottom: 2px solid var(--border);">
-                                <th style="padding: 1rem;">Restaurant</th>
-                                <th style="padding: 1rem;">Statut Gratuité</th>
-                                <th style="padding: 1rem;">Pack Souscrit</th>
-                                <th style="padding: 1rem;">Revenu (Mensuel)</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr style="border-bottom: 1px solid var(--border);">
-                                <td style="padding: 1rem;"><strong>La Licorne</strong></td>
-                                <td style="padding: 1rem;"><span class="badge badge-success">En cours (90 jrs restants)</span></td>
-                                <td style="padding: 1rem;"><span class="badge" style="background: #e2e8f0; color: #64748b;">Aucun (Gratuit)</span></td>
-                                <td style="padding: 1rem; font-weight: 700; color: var(--text-secondary);">0 FCFA</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid var(--border);">
-                                <td style="padding: 1rem;"><strong>L'Épicurien</strong></td>
-                                <td style="padding: 1rem;"><span class="badge badge-success">En cours (89 jrs restants)</span></td>
-                                <td style="padding: 1rem;"><span class="badge" style="background: #e2e8f0; color: #64748b;">Aucun (Gratuit)</span></td>
-                                <td style="padding: 1rem; font-weight: 700; color: var(--text-secondary);">0 FCFA</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid var(--border);">
-                                <td style="padding: 1rem;"><strong>Complexe ABOUL ABBAS</strong></td>
-                                <td style="padding: 1rem;"><span class="badge badge-success">En cours (90 jrs restants)</span></td>
-                                <td style="padding: 1rem;"><span class="badge" style="background: #e2e8f0; color: #64748b;">Aucun (Gratuit)</span></td>
-                                <td style="padding: 1rem; font-weight: 700; color: var(--text-secondary);">0 FCFA</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid var(--border);">
-                                <td style="padding: 1rem;"><strong>Massa Massa</strong></td>
-                                <td style="padding: 1rem;"><span class="badge badge-success">En cours (85 jrs restants)</span></td>
-                                <td style="padding: 1rem;"><span class="badge" style="background: #e2e8f0; color: #64748b;">Aucun (Gratuit)</span></td>
-                                <td style="padding: 1rem; font-weight: 700; color: var(--text-secondary);">0 FCFA</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                </div>
-            </section>
-
+                    if (packSubscribed === 'Pack Simple') revenue = 3000;
+                    else if (packSubscribed === 'Pack Startup') revenue = 5000;
+                    else if (packSubscribed === 'Pack Entreprise') revenue = 15000;
+                    
+                    if (r.status === 'active' || r.status === 'suspended') {
+                        totalPlatformRevenue += revenue;
+                    }
+                    
+                    let statusHtml = '';
+                    if (daysLeft > 0) {
+                        statusHtml = `<span class="badge badge-success">En cours (${daysLeft} jrs restants)</span>`;
+                    } else {
+                        statusHtml = `<span class="badge badge-danger">Expiré</span>`;
+                    }
+                    
+                    return `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem;"><strong>${r.name}</strong></td>
+                        <td style="padding: 1rem;">${statusHtml}</td>
+                        <td style="padding: 1rem;"><span class="badge" style="background: ${packSubscribed === 'Aucun (Gratuit)' ? '#e2e8f0' : 'rgba(var(--accent-rgb), 0.1)'}; color: ${packSubscribed === 'Aucun (Gratuit)' ? '#64748b' : 'var(--accent)'};">${packSubscribed}</span></td>
+                        <td style="padding: 1rem; font-weight: 700; color: var(--text-secondary);">${revenue > 0 ? revenue.toLocaleString() + ' FCFA' : '0 FCFA'}</td>
+                    </tr>`;
+                }).join('');
+                
+                return `
+                <section style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 2rem; border: 1px solid var(--border);">
+                    <h3 style="margin-top: 0; color: var(--text-primary); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <span>💳 Abonnements & Revenus Plateforme</span>
+                        <span style="color: var(--success); font-weight: 800; font-size: 1.2rem; background: rgba(var(--success-rgb), 0.1); padding: 0.4rem 0.8rem; border-radius: 8px;">Revenus Plateforme: ${totalPlatformRevenue.toLocaleString()} FCFA / mois</span>
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Suivi des packs d'hébergement souscrits par les restaurants après leurs 3 mois gratuits.</p>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+                            <thead>
+                                <tr style="background: var(--bg-secondary); text-align: left; border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem;">Restaurant</th>
+                                    <th style="padding: 1rem;">Statut Gratuité</th>
+                                    <th style="padding: 1rem;">Pack Souscrit</th>
+                                    <th style="padding: 1rem;">Revenu (Mensuel)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml || '<tr><td colspan="4" style="padding: 1rem; text-align: center; color: var(--text-secondary);">Aucun restaurant actif</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>`;
+            })()}
 
             <!-- Tab selections -->
             <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap;">
@@ -3545,17 +2676,27 @@ function renderAdminTabTable() {
                 ? `<button class="btn btn-danger btn-sm" onclick="suspendRestaurant('${r.id}')">Suspendre 🔒</button>`
                 : `<button class="btn btn-success btn-sm" onclick="reactivateRestaurant('${r.id}')">Réactiver 🔓</button>`;
 
+            let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
+            let selectPackHtml = `
+                <select class="form-control" style="padding: 0.2rem; font-size: 0.8rem; height: auto;" onchange="updateRestaurantPack('${r.id}', this.value)">
+                    <option value="Aucun (Gratuit)" ${packSubscribed === 'Aucun (Gratuit)' ? 'selected' : ''}>Gratuit (0 FCFA)</option>
+                    <option value="Pack Simple" ${packSubscribed === 'Pack Simple' ? 'selected' : ''}>Simple (3k FCFA)</option>
+                    <option value="Pack Startup" ${packSubscribed === 'Pack Startup' ? 'selected' : ''}>Startup (5k FCFA)</option>
+                    <option value="Pack Entreprise" ${packSubscribed === 'Pack Entreprise' ? 'selected' : ''}>Entreprise (15k FCFA)</option>
+                </select>
+            `;
+
             rowsHtml += `
                 <tr>
                     <td><strong>${r.name}</strong></td>
                     <td>${statusLabel}</td>
-                    <td>★ ${r.rating.toFixed(1)}</td>
+                    <td>${selectPackHtml}</td>
                     <td>${rOrdersList.length} Cmd(s)</td>
                     <td style="color: var(--success); font-weight: bold;">${rRevenue.toLocaleString()} FCFA</td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="impersonateRestaurant('${r.id}')">Gérer ⚙️</button>
+                        <button class="btn btn-primary btn-sm" onclick="impersonateRestaurant('${r.id}')" title="Gérer ce restaurant">⚙️</button>
                         ${actionBtn}
-                        <button class="btn btn-secondary btn-sm" onclick="router.navigate('/r/${r.slug}')">Visiter la Page</button>
+                        <button class="btn btn-secondary btn-sm" onclick="router.navigate('/r/${r.slug}')" title="Visiter la page">🌐</button>
                     </td>
                 </tr>
             `;
@@ -3568,7 +2709,7 @@ function renderAdminTabTable() {
                         <tr>
                             <th>Restaurant</th>
                             <th>Statut</th>
-                            <th>Note</th>
+                            <th>Pack Abonnement</th>
                             <th>Commandes</th>
                             <th>C.A. Généré</th>
                             <th>Actions</th>
@@ -3838,6 +2979,18 @@ function reactivateRestaurant(id) {
     showToast(`Restaurant ${r.name} réactivé`, "success");
     renderAdminView();
 }
+
+window.updateRestaurantPack = function(id, packName) {
+    const r = store.getRestaurantById(id);
+    if (!r) return;
+    
+    // Si on attribue un pack payant, le restaurant doit être réactivé
+    const newStatus = r.status === 'suspended' && packName !== 'Aucun (Gratuit)' ? 'active' : r.status;
+    
+    store.updateRestaurant(id, { subscriptionPack: packName, status: newStatus });
+    showToast(`Pack ${packName} attribué à ${r.name}`, "success");
+    renderAdminView();
+};
 
 function impersonateRestaurant(id) {
     const r = store.getRestaurantById(id);
@@ -4848,7 +4001,7 @@ function applyFilters() {
             ? `<span class="badge badge-success restaurant-card-badge">Ouvert</span>` 
             : `<span class="badge badge-danger restaurant-card-badge">Fermé</span>`;
         
-        const coverUrl = r.coverImage || RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category] || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
+        const coverUrl = r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
         const distanceBadge = r._tempDistance ? `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 ${r._tempDistance} km</div>` : '';
             
         cardsHtml += `
@@ -5162,7 +4315,7 @@ router.add('#/r/:slug', (slug, startTab = 'menu', groupId = null) => {
         "@context": "https://schema.org",
         "@type": "Restaurant",
         "name": r.name,
-        "image": r.coverImage || RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category],
+        "image": r.coverImage || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60",
         "address": {
             "@type": "PostalAddress",
             "streetAddress": r.address,
