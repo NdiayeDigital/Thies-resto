@@ -984,57 +984,11 @@ class Store {
             };
         });
 
-        // Initialize orders
-        const orders = [
-            {
-                id: "ORD-9821",
-                restaurantId: "r18",
-                customerName: "Moussa Ndiaye",
-                customerPhone: "+221776541234",
-                mode: "Livraison",
-                address: "Cité Lamy, Villa 104, Thiès",
-                items: [
-                    { name: 'Lotte rôtie sauce vanille de Casamance', price: 7500, qty: 1 },
-                    { name: 'Moelleux au Chocolat & Coulis Bissap', price: 2500, qty: 2 }
-                ],
-                total: 12500,
-                note: "Sans piment s'il vous plaît",
-                status: "Confirmée",
-                date: "2026-06-18",
-                time: "14:15"
-            },
-            {
-                id: "ORD-1204",
-                restaurantId: "r18",
-                customerName: "Awa Diop",
-                customerPhone: "+221768884422",
-                mode: "A emporter",
-                address: "",
-                items: [
-                    { name: 'Filet de Bœuf braisé au Café Touba', price: 8000, qty: 1 }
-                ],
-                total: 8000,
-                note: "",
-                status: "Reçue",
-                date: "2026-06-18",
-                time: "17:05"
-            }
-        ];
+        // Initialize orders - empty, real data comes from Supabase only
+        const orders = [];
 
-        // Initialize reservations
-        const reservations = [
-            {
-                id: "RES-4482",
-                restaurantId: "r18",
-                customerName: "Babacar Sy",
-                customerPhone: "+221774443322",
-                date: "2026-06-20",
-                time: "20:30",
-                guests: 4,
-                note: "Table en terrasse si possible",
-                status: "Confirmée"
-            }
-        ];
+        // Initialize reservations - empty, real data comes from Supabase only
+        const reservations = [];
 
         this.data = {
             restaurants,
@@ -2066,24 +2020,42 @@ function renderDashboardTabContent(r) {
                 if (o.status === 'Reçue') {
                     statusBadge = `<span class="badge badge-warning" style="animation: pulseMainCircle 2s infinite;">Reçue</span>`;
                     actionBtns = `
-                        <button class="btn btn-primary btn-block" onclick="changeOrderStatus('${o.id}', 'Confirmée')" style="font-weight: 700;">
-                            ✅ Accepter la commande & notifier 💬
-                        </button>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="changeOrderStatus('${o.id}', 'Confirmée')" style="font-weight: 700; flex: 1;">
+                                ✅ Accepter & notifier 💬
+                            </button>
+                            <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700; flex: 1;">
+                                ❌ Refuser la commande
+                            </button>
+                        </div>
                     `;
                 } else if (o.status === 'Confirmée') {
                     statusBadge = `<span class="badge badge-info">En Préparation</span>`;
                     actionBtns = `
-                        <button class="btn btn-success btn-block" onclick="changeOrderStatus('${o.id}', 'Prête')" style="font-weight: 700; background: #007bff; border-color: #007bff;">
-                            🛵 Commande Prête & notifier client 💬
-                        </button>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="changeOrderStatus('${o.id}', 'Prête')" style="font-weight: 700; flex: 1; background: #007bff; border-color: #007bff;">
+                                🛵 Prête & notifier client 💬
+                            </button>
+                            <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700;">
+                                ❌ Annuler
+                            </button>
+                        </div>
                     `;
                 } else if (o.status === 'Prête') {
                     statusBadge = `<span class="badge badge-success">Prête</span>`;
                     actionBtns = `
-                        <button class="btn btn-success btn-block" onclick="changeOrderStatus('${o.id}', 'Livrée')" style="font-weight: 700; background: var(--success); border-color: var(--success);">
-                            📦 Marquer comme Livrée / Récupérée 💬
-                        </button>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="changeOrderStatus('${o.id}', 'Livrée')" style="font-weight: 700; flex: 1; background: var(--success); border-color: var(--success);">
+                                📦 Livrée / Récupérée 💬
+                            </button>
+                            <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700;">
+                                ❌ Annuler
+                            </button>
+                        </div>
                     `;
+                } else if (o.status === 'Annulée') {
+                    statusBadge = `<span class="badge badge-danger">Annulée</span>`;
+                    actionBtns = `<span style="font-size: 0.85rem; color: var(--danger); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: rgba(var(--danger-rgb,220,53,69), 0.1); border-radius: 8px;">❌ Commande refusée / annulée</span>`;
                 } else {
                     statusBadge = `<span class="badge badge-success" style="opacity: 0.6">Livrée / Récupérée</span>`;
                     actionBtns = `<span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: var(--bg-secondary); border-radius: 8px;">✅ Commande traitée et archivée</span>`;
@@ -2979,26 +2951,27 @@ function changeOrderStatus(orderId, nextStatus) {
     
     store.updateOrderStatus(orderId, nextStatus);
     
-    // Simulate push notification to the client
+    // Build notification message for the client
     let pushText = '';
+    const restoName = currentRestaurantSession ? currentRestaurantSession.name || '' : '';
     
     if (nextStatus === 'Confirmée') {
-        pushText = `La commande n°${o.id} a été validée et part en cuisine ! 🍳`;
+        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* a été *acceptée* et part en cuisine ! 🍳\n\nMontant : ${o.total} FCFA\nMode : ${o.mode}\n\nMerci pour votre confiance !`;
     } else if (nextStatus === 'Prête') {
-        pushText = `La commande n°${o.id} est PRÊTE ! 🛵`;
+        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* est *PRÊTE* ! 🛵\n\n${o.mode === 'Livraison' ? 'Elle est en cours de livraison.' : 'Vous pouvez venir la récupérer.'}\n\nBon appétit !`;
     } else if (nextStatus === 'Livrée') {
-        pushText = `La commande n°${o.id} a été livrée avec succès. Bon appétit ! 😋`;
+        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* a été *livrée avec succès*. 😋\n\nMerci et à bientôt sur Thiès à Table !`;
+    } else if (nextStatus === 'Annulée') {
+        pushText = `Bonjour ${o.customerName} 👋\n\nNous sommes désolés, votre commande n°${o.id} chez *${restoName}* a été *annulée* par le restaurant. ❌\n\nVeuillez nous excuser pour ce désagrément. N'hésitez pas à passer une nouvelle commande.`;
     }
     
-    showToast(`Commande mise à jour vers : ${nextStatus}`, "success");
-    if (pushText) {
-        showToast(`📲 Notification push envoyée au client !`, "success");
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('Push Envoyé au Client', {
-                body: pushText,
-                icon: 'icon.png'
-            });
-        }
+    showToast(`Commande mise à jour vers : ${nextStatus}`, nextStatus === 'Annulée' ? 'warning' : 'success');
+    
+    // Open WhatsApp to notify the client directly
+    if (pushText && o.customerPhone) {
+        const waLink = 'https://wa.me/' + o.customerPhone.replace(/\+/g, '') + '?text=' + encodeURIComponent(pushText);
+        window.open(waLink, '_blank');
+        showToast(`📲 WhatsApp ouvert pour notifier le client !`, 'success');
     }
     
     // Reload dashboard list
@@ -3478,10 +3451,11 @@ function renderAdminView() {
 
 
             <!-- Tab selections -->
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-                <button class="btn btn-sm ${adminActiveTab === 'pending' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('pending')">Demandes en attente (${pendingCount})</button>
-                <button class="btn btn-sm ${adminActiveTab === 'active' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('active')">Réseau Actif (${activeRestos.length})</button>
-                <button class="btn btn-sm ${adminActiveTab === 'create' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('create')">Ajouter un Restaurant ➕</button>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-sm ${adminActiveTab === 'pending' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('pending')">⏳ Demandes (${pendingCount})</button>
+                <button class="btn btn-sm ${adminActiveTab === 'active' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('active')">🏪 Réseau Actif (${activeRestos.length})</button>
+                <button class="btn btn-sm ${adminActiveTab === 'create' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('create')">➕ Ajouter</button>
+                <button class="btn btn-sm ${adminActiveTab === 'accounting' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('accounting')">📊 Comptabilité</button>
             </div>
 
 
@@ -3663,6 +3637,100 @@ function renderAdminTabTable() {
                     
                     <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700;">Ajouter le Restaurant au Réseau 🚀</button>
                 </form>
+            </div>
+        `;
+    }
+    else if (adminActiveTab === 'accounting') {
+        const allOrders = store.data.orders;
+        const completedOrders = allOrders.filter(o => o.status === 'Livrée');
+        const cancelledOrders = allOrders.filter(o => o.status === 'Annulée');
+        const pendingOrders = allOrders.filter(o => o.status === 'Reçue' || o.status === 'Confirmée' || o.status === 'Prête');
+        const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
+        
+        // Revenue per restaurant
+        let revenueByResto = {};
+        completedOrders.forEach(o => {
+            const resto = restos.find(r => r.id === o.restaurantId);
+            const name = resto ? resto.name : o.restaurantId;
+            revenueByResto[name] = (revenueByResto[name] || 0) + o.total;
+        });
+        
+        let revenueRowsHtml = '';
+        Object.entries(revenueByResto).sort((a,b) => b[1] - a[1]).forEach(([name, rev]) => {
+            const orderCount = completedOrders.filter(o => {
+                const r = restos.find(r => r.name === name);
+                return r && o.restaurantId === r.id;
+            }).length;
+            revenueRowsHtml += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.75rem;"><strong>${name}</strong></td>
+                    <td style="padding: 0.75rem;">${orderCount}</td>
+                    <td style="padding: 0.75rem; font-weight: 700; color: var(--success);">${rev.toLocaleString()} FCFA</td>
+                </tr>
+            `;
+        });
+        
+        if (!revenueRowsHtml) {
+            revenueRowsHtml = '<tr><td colspan="3" style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">Aucune commande livrée pour le moment.</td></tr>';
+        }
+
+        // All orders list
+        let allOrdersHtml = '';
+        const sortedOrders = [...allOrders].sort((a,b) => (b.date + b.time).localeCompare(a.date + a.time));
+        sortedOrders.forEach(o => {
+            const resto = restos.find(r => r.id === o.restaurantId);
+            const restoName = resto ? resto.name : o.restaurantId;
+            const statusClass = o.status === 'Livrée' ? 'badge-success' : o.status === 'Annulée' ? 'badge-danger' : o.status === 'Reçue' ? 'badge-warning' : 'badge-info';
+            allOrdersHtml += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.6rem; font-weight: 600;">${o.id}</td>
+                    <td style="padding: 0.6rem;">${restoName}</td>
+                    <td style="padding: 0.6rem;">${o.customerName}</td>
+                    <td style="padding: 0.6rem;">${o.date} ${o.time}</td>
+                    <td style="padding: 0.6rem;"><span class="badge ${statusClass}">${o.status}</span></td>
+                    <td style="padding: 0.6rem; font-weight: 700; color: var(--primary);">${o.total.toLocaleString()} FCFA</td>
+                </tr>
+            `;
+        });
+        
+        if (!allOrdersHtml) {
+            allOrdersHtml = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">Aucune commande enregistrée sur la plateforme.</td></tr>';
+        }
+
+        tableContainer.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="stat-card" style="border-top: 4px solid var(--success); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">💰 Chiffre d'Affaires Global</span>
+                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--success);">${totalRevenue.toLocaleString()} FCFA</span>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--primary); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">📦 Total Commandes</span>
+                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">${allOrders.length}</span>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--accent); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">⏳ En Attente</span>
+                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--accent);">${pendingOrders.length}</span>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--danger); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">❌ Annulées</span>
+                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--danger);">${cancelledOrders.length}</span>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">📊 Revenus par Restaurant</h3>
+            <div class="table-responsive" style="margin-bottom: 2rem;">
+                <table class="admin-table" style="width: 100%;">
+                    <thead><tr><th style="padding: 0.75rem;">Restaurant</th><th style="padding: 0.75rem;">Commandes Livrées</th><th style="padding: 0.75rem;">C.A. Généré</th></tr></thead>
+                    <tbody>${revenueRowsHtml}</tbody>
+                </table>
+            </div>
+
+            <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">📋 Historique de toutes les Commandes</h3>
+            <div class="table-responsive">
+                <table class="admin-table" style="width: 100%;">
+                    <thead><tr><th style="padding: 0.6rem;">N°</th><th style="padding: 0.6rem;">Restaurant</th><th style="padding: 0.6rem;">Client</th><th style="padding: 0.6rem;">Date</th><th style="padding: 0.6rem;">Statut</th><th style="padding: 0.6rem;">Montant</th></tr></thead>
+                    <tbody>${allOrdersHtml}</tbody>
+                </table>
             </div>
         `;
     }
