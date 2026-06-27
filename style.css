@@ -2351,11 +2351,12 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     .hero-food-plate-container {
         width: 200px;
         height: 200px;
+        transform: translateY(40px);
     }
 
     .hero-right-col {
         order: 2;
-        margin-top: 6rem !important;
+        margin-top: 0;
         margin-bottom: 1rem;
     }
 
