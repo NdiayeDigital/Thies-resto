@@ -1566,17 +1566,19 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 /* ========== HERO SPLIT LAYOUT & ANIMATIONS ========== */
 .hero-split-container {
     display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 3rem;
+    grid-template-columns: 1fr;
+    gap: 1rem;
     align-items: center;
-    max-width: 1200px;
+    max-width: 800px;
     margin: 0 auto;
-    text-align: left;
+    text-align: center;
     padding: 2rem 0;
 }
 
 .hero-left-col {
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
     align-items: center;
     position: relative;
@@ -2080,18 +2082,18 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 /* ========== HERO SPLIT LAYOUT ========== */
 .hero-split-container {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap: 2.5rem;
-    max-width: 1200px;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    max-width: 800px;
     margin: 0 auto;
     align-items: center;
-    text-align: left;
+    text-align: center;
 }
 
 .hero-left-col {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .hero-right-col {

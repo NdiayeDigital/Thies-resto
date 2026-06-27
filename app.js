@@ -3600,18 +3600,12 @@ router.add('#/', () => {
                         <button class="search-btn" style="color: var(--primary);">🔍</button>
                     </div>
 
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
                         <button class="btn btn-primary" onclick="scrollToCatalog()" style="box-shadow: 0 4px 15px rgba(242,107,33,0.4);">Explorer nos Menus 🍽️</button>
                         <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">📍 Trouver autour de moi</button>
                     </div>
                 </div>
                 
-                <div class="hero-right-col">
-                    <div class="hero-food-plate-container">
-                        <img class="hero-food-plate" src="https://images.unsplash.com/photo-1544025162-d76694265947?w=700&auto=format&fit=crop&q=80" alt="Dibi d'Agneau Thiès">
-                        <div class="glow-effect"></div>
-                    </div>
-                </div>
             </div>
         </section>
         <!-- VOS DERNIERES COMMANDES PERSISTANT -->
