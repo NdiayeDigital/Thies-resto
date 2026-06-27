@@ -3591,7 +3591,6 @@ router.add('#/', () => {
             <div class="hero-split-container">
                 <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col">
-                    <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
                     <h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
                     <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
