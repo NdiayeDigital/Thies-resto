@@ -2335,23 +2335,30 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     
     .hero-split-container {
         grid-template-columns: 1fr;
-        gap: 2rem;
+        gap: 0;
         text-align: center;
     }
     
     .hero-left-col {
         align-items: center;
-        
+        order: 1;
     }
     
     .hero-food-plate-container {
-        width: 250px;
-        height: 250px;
+        width: 200px;
+        height: 200px;
     }
 
     .hero-right-col {
-        margin-top: 1rem;
-        margin-bottom: 2rem;
+        order: 2;
+        margin-top: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .greeting-text {
+        font-size: 0.95rem !important;
+        margin-bottom: 0.8rem !important;
+        display: block !important;
     }
     
     .reference-row-cards {
@@ -2921,45 +2928,5 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     color: var(--text-primary);
 }
 
-#catalog-section { padding-top: 2rem; margin-top: 2rem; position: relative; z-index: 10; }
-@media (max-width: 768px) { .hero-right-col > div { width: 180px !important; height: 180px !important; } .hero-right-col { margin-bottom: 2rem; } }
-
-@media (max-width: 768px) {
-    .mobile-bottom-nav {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border);
-        padding: 0.8rem 0;
-        z-index: 1000;
-        box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
-    }
-    
-    .bottom-nav-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        color: var(--text-secondary);
-        text-decoration: none;
-        font-size: 0.75rem;
-        font-weight: 500;
-    }
-    
-    .bottom-nav-item.active {
-        color: var(--primary);
-    }
-    
-    body {
-        padding-bottom: 70px;
-    }
-    
-    .floating-cart-bar {
-        bottom: 80px; /* Above the bottom nav */
-    }
-}
+#catalog-section { padding-top: 2rem; margin-top: 1rem; position: relative; z-index: 10; }
 
