@@ -2101,7 +2101,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     position: relative;
 }
 
-.hero-food-plate-container {
+.hero-right-col > div {
     width: 320px;
     height: 320px;
     border-radius: 50%;
@@ -2334,25 +2334,26 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     }
     
     .hero-split-container {
-        grid-template-columns: 1fr;
-        gap: 2rem;
-        text-align: center;
+        grid-template-columns: 1fr 100px;
+        gap: 1rem;
+        text-align: left;
+        align-items: flex-start;
     }
     
     .hero-left-col {
-        align-items: center;
-        order: 2;
+        align-items: flex-start;
+        order: 1;
     }
     
-    .hero-food-plate-container {
-        width: 250px;
-        height: 250px;
+    .hero-right-col > div {
+        width: 100px !important;
+        height: 100px !important;
     }
 
     .hero-right-col {
-        margin-top: 1rem;
+        margin-top: 0.5rem;
         margin-bottom: 0rem;
-        order: 1;
+        order: 2;
     }
     
     .reference-row-cards {
@@ -2923,4 +2924,4 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 }
 
 #catalog-section { padding-top: 4rem; }
-@media (max-width: 768px) { .hero-right-col > div { width: 180px !important; height: 180px !important; } .hero-right-col { margin-bottom: 2rem; } }
+
