@@ -3591,8 +3591,8 @@ router.add('#/', () => {
             <div class="hero-split-container">
                 <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col">
-                    
-                    <div style="margin: 0 0 1.5rem 0; width: 100px; height: 100px; border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--primary);"><img src="icon.png" alt="THIES Resto Logo" style="width: 100%; height: 100%; object-fit: cover;"></div><h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
+                    <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
+                    <h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
                     <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
                     <div class="search-container" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px;">
@@ -3606,7 +3606,14 @@ router.add('#/', () => {
                     </div>
                 </div>
                 
-                </div></div></section>
+                <!-- Right: Logo instead of food plate -->
+                <div class="hero-right-col" style="display: flex; justify-content: center; align-items: center;">
+                    <div style="position: relative; width: 250px; height: 250px; border-radius: 50%; box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--primary);">
+                        <img src="icon.png" alt="THIES Resto Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                </div>
+            </div>
+        </section>
         <!-- VOS DERNIERES COMMANDES PERSISTANT -->
         ${historyHtml}
 
@@ -6301,5 +6308,4 @@ function setDynamicMeta(title, image) {
     let twImage = document.querySelector("meta[name='twitter:image']");
     if(twImage) twImage.setAttribute('content', image);
 }
-
 
