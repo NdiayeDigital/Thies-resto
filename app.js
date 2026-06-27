@@ -1884,6 +1884,27 @@ window.switchHowItWorksTab = function(tabId) {
 };
 
 
+// Navigate to loyalty tab and check points
+window.openLoyaltyAndCheck = function(phone) {
+    if (window.location.hash !== '#/' && window.location.hash !== '') {
+        router.navigate('/');
+    }
+    setTimeout(() => {
+        if (typeof switchHowItWorksTab === 'function') {
+            switchHowItWorksTab('hw-loyalty');
+        }
+        const hwSection = document.getElementById('how-it-works-section');
+        if (hwSection) {
+            hwSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        const phoneInput = document.getElementById('loyalty-phone');
+        if (phoneInput) {
+            phoneInput.value = phone;
+            window.checkLoyaltyPoints();
+        }
+    }, 200);
+};
+
 // Global helper for checking customer loyalty points
 window.checkLoyaltyPoints = async function() {
     const rawPhone = document.getElementById('loyalty-phone').value.trim();
@@ -4986,6 +5007,14 @@ Merci de confirmer la réception !`;
         <div class="confirmation-screen">
             <div class="confirmation-icon">✅</div>
             <h2>Commande enregistrée !</h2>
+            <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 12px; margin: 1.5rem 0; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎉</div>
+                <h3 style="color: var(--success); margin-bottom: 0.5rem; font-size: 1.1rem;">Félicitations !</h3>
+                <p style="color: var(--text-primary); font-size: 0.9rem; margin-bottom: 1rem;">Vous venez de gagner <strong>+5 points de fidélité</strong> avec cette commande !</p>
+                <button class="btn btn-secondary btn-sm" onclick="window.openLoyaltyAndCheck('${phone}')" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">
+                    🎁 Voir mon solde de points
+                </button>
+            </div>
             <p style="color: var(--text-secondary); margin: 1rem 0;">Votre commande n° <strong>${orderId}</strong> a bien été enregistrée par le restaurant.</p>
             <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
                 <strong>Récapitulatif :</strong><br>
