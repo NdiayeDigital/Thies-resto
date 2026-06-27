@@ -1063,15 +1063,42 @@ function renderDashboardShell() {
         `;
     }
     
+    // Check trial expiry for paywall
+    const _createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+    const _diffTime = Math.abs(new Date() - _createdAt);
+    const _diffDays = Math.ceil(_diffTime / (1000 * 60 * 60 * 24));
+    const _packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
+    const isTrialExpired = _diffDays > 90 && _packSubscribed === 'Aucun (Gratuit)' && !isSuperAdminSession;
+    const _daysLeft = Math.max(0, 90 - _diffDays);
+
+    // Locked tab icon for expired trials
+    const lockIcon = isTrialExpired ? ' 🔒' : '';
+
+    // Alert banner for expired trials
+    let trialAlertBanner = '';
+    if (isTrialExpired) {
+        trialAlertBanner = `
+            <div style="background: linear-gradient(135deg, #dc3545 0%, #ff4b4b 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin: 1rem 1.5rem 0 1.5rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 15px rgba(220,53,69,0.3); animation: pulseMainCircle 2s infinite;">
+                <span style="font-size: 2rem;">⚠️</span>
+                <div>
+                    <strong style="font-size: 1.1rem;">Votre page est indisponible sur la plateforme</strong>
+                    <p style="margin: 0.25rem 0 0; opacity: 0.9; font-size: 0.9rem;">Votre période d'essai gratuit de 3 mois est terminée. Souscrivez à un abonnement pour réactiver votre restaurant.</p>
+                </div>
+                <button class="btn btn-sm" onclick="switchDashboardTab('subscription')" style="background: white; color: #dc3545; font-weight: 700; white-space: nowrap;">💳 Voir les offres</button>
+            </div>
+        `;
+    }
+
     container.innerHTML = `
         ${impersonateBanner}
+        ${trialAlertBanner}
         <div class="dashboard-grid">
             <aside class="sidebar">
-                <button class="sidebar-btn ${dashboardActiveTab === 'orders' ? 'active' : ''}" onclick="switchDashboardTab('orders')">📦 Commandes</button>
-                <button class="sidebar-btn ${dashboardActiveTab === 'reservations' ? 'active' : ''}" onclick="switchDashboardTab('reservations')">📅 Réservations</button>
-                <button class="sidebar-btn ${dashboardActiveTab === 'menu' ? 'active' : ''}" onclick="switchDashboardTab('menu')">🍽️ Plats du Jour</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'orders' ? 'active' : ''}" onclick="switchDashboardTab('orders')">📦 Commandes${lockIcon}</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'reservations' ? 'active' : ''}" onclick="switchDashboardTab('reservations')">📅 Réservations${lockIcon}</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'menu' ? 'active' : ''}" onclick="switchDashboardTab('menu')">🍽️ Plats du Jour${lockIcon}</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'reviews' ? 'active' : ''}" onclick="switchDashboardTab('reviews')">💬 Avis Clients</button>
-                <button class="sidebar-btn ${dashboardActiveTab === 'accounting' ? 'active' : ''}" onclick="switchDashboardTab('accounting')">📊 Comptabilité</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'accounting' ? 'active' : ''}" onclick="switchDashboardTab('accounting')">📊 Comptabilité${lockIcon}</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'settings' ? 'active' : ''}" onclick="switchDashboardTab('settings')">⚙️ Paramètres</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'subscription' ? 'active' : ''}" onclick="switchDashboardTab('subscription')">💳 Abonnement</button>
             </aside>
@@ -1104,6 +1131,35 @@ function switchDashboardTab(tab) {
 
 function renderDashboardTabContent(r) {
     const panel = document.getElementById('dashboard-tab-panel');
+    
+    // Check trial expiry for paywall
+    const _cr = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+    const _dt = Math.abs(new Date() - _cr);
+    const _dd = Math.ceil(_dt / (1000 * 60 * 60 * 24));
+    const _pk = r.subscriptionPack || 'Aucun (Gratuit)';
+    const trialExpired = _dd > 90 && _pk === 'Aucun (Gratuit)' && !isSuperAdminSession;
+    
+    // Block restricted tabs if trial expired
+    const lockedTabs = ['orders', 'reservations', 'menu', 'accounting'];
+    if (trialExpired && lockedTabs.includes(dashboardActiveTab)) {
+        const adminWhatsApp = '221781056721';
+        const reactivateMsg = encodeURIComponent(`Bonjour Thiès à Table 👋\n\nMa période d'essai gratuit est terminée et je souhaite réactiver mon restaurant.\n\n🏪 Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
+        panel.innerHTML = `
+            <div style="text-align: center; padding: 4rem 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;">
+                <div style="font-size: 4rem; margin-bottom: 1.5rem;">🔒</div>
+                <h2 style="color: var(--text-primary); font-size: 1.8rem; margin-bottom: 1rem;">Disponible en mode Pro</h2>
+                <p style="color: var(--text-secondary); font-size: 1rem; max-width: 500px; margin: 0 auto 1.5rem auto; line-height: 1.6;">Votre période d'essai gratuit de 3 mois est terminée. Cette fonctionnalité est réservée aux restaurants ayant un abonnement actif.</p>
+                <div style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); padding: 1rem; border-radius: 12px; margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    <p style="color: #ff6b6b; font-weight: 600; margin: 0;">⚠️ Votre page restaurant est actuellement indisponible sur la plateforme pour les clients.</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; max-width: 350px; margin: 0 auto;">
+                    <button class="btn btn-primary" onclick="switchDashboardTab('subscription')" style="font-weight: 700;">💳 Voir les offres d'abonnement</button>
+                    <a href="https://wa.me/${adminWhatsApp}?text=${reactivateMsg}" target="_blank" class="btn btn-success" style="font-weight: 700; background: #25D366; border-color: #25D366; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Contacter le support WhatsApp</a>
+                </div>
+            </div>
+        `;
+        return;
+    }
     
     if (dashboardActiveTab === 'orders') {
         const orders = store.getOrdersByRestaurant(r.id);
@@ -1804,7 +1860,7 @@ function renderDashboardTabContent(r) {
                     <!-- Pack Simple -->
                     <div style="border: 2px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; transition: transform 0.3s ease; background: var(--bg-secondary);">
                         <h4 style="margin: 0 0 0.5rem 0; font-size: 1.3rem; color: var(--text-primary);">Pack Simple</h4>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">3 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">5 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">L'essentiel pour exister en ligne et recevoir des commandes.</p>
                         <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
                             <li style="margin-bottom: 0.5rem;">✅ Menu digital accessible 24/7</li>
@@ -1813,14 +1869,14 @@ function renderDashboardTabContent(r) {
                             <li style="margin-bottom: 0.5rem;">✅ Rapport d'activité trimestriel</li>
                             <li style="margin-bottom: 0.5rem;">✅ Support technique par e-mail</li>
                         </ul>
-                        <a href="${buildWhatsAppLink('Pack Simple', '3 000')}" target="_blank" class="btn btn-outline" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
+                        <a href="${buildWhatsAppLink('Pack Simple', '5 000')}" target="_blank" class="btn btn-outline" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
                     </div>
 
                     <!-- Pack Startup -->
                     <div style="border: 2px solid var(--primary); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; position: relative; background: rgba(var(--primary-rgb), 0.03); box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.1);">
                         <div style="position: absolute; top: -12px; right: 20px; background: var(--primary); color: var(--primary); padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">Recommandé</div>
                         <h4 style="margin: 0 0 0.5rem 0; font-size: 1.3rem; color: var(--text-primary);">Pack Startup</h4>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">5 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">15 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Pour booster vos ventes avec une meilleure visibilité.</p>
                         <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-primary); font-size: 0.95rem; line-height: 1.6; font-weight: 500;">
                             <li style="margin-bottom: 0.5rem;">✅ <strong>Tout du Pack Simple</strong></li>
@@ -1829,13 +1885,13 @@ function renderDashboardTabContent(r) {
                             <li style="margin-bottom: 0.5rem;">📊 Rapport détaillé des ventes (Mensuel)</li>
                             <li style="margin-bottom: 0.5rem;">💬 Support direct et rapide via WhatsApp</li>
                         </ul>
-                        <a href="${buildWhatsAppLink('Pack Startup', '5 000')}" target="_blank" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
+                        <a href="${buildWhatsAppLink('Pack Startup', '15 000')}" target="_blank" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
                     </div>
 
                     <!-- Pack Entreprise -->
                     <div style="border: 2px solid var(--accent); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; background: rgba(var(--accent-rgb), 0.03);">
                         <h4 style="margin: 0 0 0.5rem 0; font-size: 1.3rem; color: var(--text-primary);">Pack Entreprise</h4>
-                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent); margin-bottom: 0.5rem;">15 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent); margin-bottom: 0.5rem;">25 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">La solution complète pour dominer le marché local.</p>
                         <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
                             <li style="margin-bottom: 0.5rem;">✅ <strong>Tout du Pack Startup</strong></li>
@@ -1844,7 +1900,7 @@ function renderDashboardTabContent(r) {
                             <li style="margin-bottom: 0.5rem;">🎁 Outils de fidélisation (Coupons promo)</li>
                             <li style="margin-bottom: 0.5rem;">📈 Statistiques avancées (Hebdomadaire)</li>
                         </ul>
-                        <a href="${buildWhatsAppLink('Pack Entreprise', '15 000')}" target="_blank" class="btn btn-outline" style="width: 100%; border-color: var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
+                        <a href="${buildWhatsAppLink('Pack Entreprise', '25 000')}" target="_blank" class="btn btn-outline" style="width: 100%; border-color: var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
                     </div>
                 </div>
             </div>
@@ -2560,9 +2616,9 @@ function renderAdminView() {
                     let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
                     let revenue = 0;
                     
-                    if (packSubscribed === 'Pack Simple') revenue = 3000;
-                    else if (packSubscribed === 'Pack Startup') revenue = 5000;
-                    else if (packSubscribed === 'Pack Entreprise') revenue = 15000;
+                    if (packSubscribed === 'Pack Simple') revenue = 5000;
+                    else if (packSubscribed === 'Pack Startup') revenue = 15000;
+                    else if (packSubscribed === 'Pack Entreprise') revenue = 25000;
                     
                     if (r.status === 'active' || r.status === 'suspended') {
                         totalPlatformRevenue += revenue;
@@ -2708,9 +2764,9 @@ function renderAdminTabTable() {
             let selectPackHtml = `
                 <select class="form-control" style="padding: 0.2rem; font-size: 0.8rem; height: auto;" onchange="updateRestaurantPack('${r.id}', this.value)">
                     <option value="Aucun (Gratuit)" ${packSubscribed === 'Aucun (Gratuit)' ? 'selected' : ''}>Gratuit (0 FCFA)</option>
-                    <option value="Pack Simple" ${packSubscribed === 'Pack Simple' ? 'selected' : ''}>Simple (3k FCFA)</option>
-                    <option value="Pack Startup" ${packSubscribed === 'Pack Startup' ? 'selected' : ''}>Startup (5k FCFA)</option>
-                    <option value="Pack Entreprise" ${packSubscribed === 'Pack Entreprise' ? 'selected' : ''}>Entreprise (15k FCFA)</option>
+                    <option value="Pack Simple" ${packSubscribed === 'Pack Simple' ? 'selected' : ''}>Simple (5k FCFA)</option>
+                    <option value="Pack Startup" ${packSubscribed === 'Pack Startup' ? 'selected' : ''}>Startup (15k FCFA)</option>
+                    <option value="Pack Entreprise" ${packSubscribed === 'Pack Entreprise' ? 'selected' : ''}>Entreprise (25k FCFA)</option>
                 </select>
             `;
 
