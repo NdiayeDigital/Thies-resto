@@ -3592,7 +3592,7 @@ router.add('#/', () => {
                 <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col">
                     
-                    <div style="margin: 0 auto 1.5rem auto; width: 150px; height: 150px; border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--primary); animation: spinDish 20s linear infinite;"><img src="icon.png" alt="THIES Resto Logo" style="width: 100%; height: 100%; object-fit: cover;"></div><h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
+                    <div style="margin: 0 0 1.5rem 0; width: 100px; height: 100px; border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 2px solid var(--primary);"><img src="icon.png" alt="THIES Resto Logo" style="width: 100%; height: 100%; object-fit: cover;"></div><h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
                     <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
                     <div class="search-container" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px;">
