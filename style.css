@@ -2341,7 +2341,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     
     .hero-left-col {
         align-items: center;
-        order: 2;
+        
     }
     
     .hero-food-plate-container {
@@ -2352,7 +2352,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     .hero-right-col {
         margin-top: 1rem;
         margin-bottom: 0rem;
-        order: 1;
+        
     }
     
     .reference-row-cards {

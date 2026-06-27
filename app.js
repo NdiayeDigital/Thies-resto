@@ -3606,10 +3606,10 @@ router.add('#/', () => {
                     </div>
                 </div>
                 
-                <!-- Right: Logo instead of food plate -->
-                <div class="hero-right-col" style="display: flex; justify-content: center; align-items: center;">
-                    <div style="position: relative; width: 250px; height: 250px; border-radius: 50%; box-shadow: 0 20px 40px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; border: 3px solid var(--primary);">
-                        <img src="icon.png" alt="THIES Resto Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                <div class="hero-right-col">
+                    <div class="hero-food-plate-container">
+                        <img class="hero-food-plate" src="https://images.unsplash.com/photo-1544025162-d76694265947?w=700&auto=format&fit=crop&q=80" alt="Dibi d'Agneau Thiès">
+                        <div class="glow-effect"></div>
                     </div>
                 </div>
             </div>
