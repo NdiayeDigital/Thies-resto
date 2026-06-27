@@ -30,3 +30,7 @@ temp/
 git_diff.txt
 *.docx
 IDENTIFIANTS_RESTAURANTS.md
+
+# Database & Sensitive Scripts (DO NOT PUSH)
+*.sql
+*.py
