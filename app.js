@@ -3617,6 +3617,30 @@ router.add('#/', () => {
         <!-- VOS DERNIERES COMMANDES PERSISTANT -->
         ${historyHtml}
 
+        <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
+        <section class="presentation-section" style="padding: 1rem 0 0 0;">
+            <div class="reference-row-cards">
+                <!-- Left Card: Zero Account -->
+                <div class="ref-card-text">
+                    <div class="ref-card-icon-circle">🚫</div>
+                    <h3>Zéro Inscription</h3>
+                    <p>Commandez et réservez sans jamais avoir besoin de créer un compte. Aucun mot de passe à retenir.</p>
+                </div>
+                
+                <!-- Middle Card: Premium Dish Image -->
+                <div class="ref-card-image-box">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80" alt="Gourmet Bowl">
+                </div>
+                
+                <!-- Right Card: Direct WhatsApp -->
+                <div class="ref-card-text">
+                    <div class="ref-card-icon-circle">💬</div>
+                    <h3>Direct WhatsApp</h3>
+                    <p>Votre panier est transformé en un message structuré envoyé en un clic au restaurateur pour confirmation.</p>
+                </div>
+            </div>
+        </section>
+
         <section id="catalog-section">
             <div class="section-header">
                 <h2 class="section-title">Les Restaurants Partenaires</h2>
@@ -3644,30 +3668,6 @@ router.add('#/', () => {
             </div>
             
             <div class="restaurant-grid" id="restaurants-list-grid"></div>
-        </section>
-
-        <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
-        <section class="presentation-section" style="padding: 1rem 0 0 0;">
-            <div class="reference-row-cards">
-                <!-- Left Card: Zero Account -->
-                <div class="ref-card-text">
-                    <div class="ref-card-icon-circle">🚫</div>
-                    <h3>Zéro Inscription</h3>
-                    <p>Commandez et réservez sans jamais avoir besoin de créer un compte. Aucun mot de passe à retenir.</p>
-                </div>
-                
-                <!-- Middle Card: Premium Dish Image -->
-                <div class="ref-card-image-box">
-                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80" alt="Gourmet Bowl">
-                </div>
-                
-                <!-- Right Card: Direct WhatsApp -->
-                <div class="ref-card-text">
-                    <div class="ref-card-icon-circle">💬</div>
-                    <h3>Direct WhatsApp</h3>
-                    <p>Votre panier est transformé en un message structuré envoyé en un clic au restaurateur pour confirmation.</p>
-                </div>
-            </div>
         </section>
 
         <!-- ========== PRESENTATION SECTION (Side by Side: Image Left, Text Right) ========== -->
