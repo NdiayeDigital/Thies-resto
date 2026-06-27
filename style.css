@@ -965,7 +965,7 @@ textarea.form-control {
 .review-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     margin-bottom: 0.5rem;
 }
 
@@ -1803,7 +1803,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     padding: 1rem;
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     text-align: left;
 }
 
@@ -2080,7 +2080,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 /* ========== HERO SPLIT LAYOUT ========== */
 .hero-split-container {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: 1fr; text-align: center;
     gap: 2.5rem;
     max-width: 1200px;
     margin: 0 auto;
@@ -2091,7 +2091,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 .hero-left-col {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
 }
 
 .hero-right-col {
@@ -2254,7 +2254,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 /* Section Signature: List Left, Big Dish Picture Right */
 .signature-section {
     display: grid;
-    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-columns: 1fr; text-align: center;
     gap: 3.5rem;
     max-width: 1000px;
     margin: 5rem auto;
@@ -2276,7 +2276,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     padding: 1.25rem 1.5rem;
     display: flex;
     gap: 1.25rem;
-    align-items: flex-start;
+    align-items: center;
     transition: var(--transition-smooth);
 }
 
@@ -2899,7 +2899,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     .dashboard-header-actions,
     .admin-header {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: center;
         gap: 1rem;
     }
     
