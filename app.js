@@ -1180,7 +1180,14 @@ function renderDashboardTabContent(r) {
                     actionBtns = `<span style="font-size: 0.85rem; color: var(--danger); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: rgba(var(--danger-rgb,220,53,69), 0.1); border-radius: 8px;">❌ Commande refusée / annulée</span>`;
                 } else {
                     statusBadge = `<span class="badge badge-success" style="opacity: 0.6">Livrée / Récupérée</span>`;
-                    actionBtns = `<span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: var(--bg-secondary); border-radius: 8px;">✅ Commande traitée et archivée</span>`;
+                    const reviewText = `Bonjour ${o.customerName}, avez-vous aimé votre commande chez ${r.name} ? Laissez-nous un avis sur Thiès Resto ! https://thies-resto.com/#/r/${r.slug}`;
+                    const waLink = `https://wa.me/${o.customerPhone.replace(/\+/g, '')}?text=${encodeURIComponent(reviewText)}`;
+                    actionBtns = `
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: var(--bg-secondary); border-radius: 8px;">✅ Commande traitée et archivée</span>
+                            <a href="${waLink}" target="_blank" class="btn btn-primary" style="font-weight: 700; background: #25D366; border-color: #25D366; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">⭐ Relance Avis (WhatsApp)</a>
+                        </div>
+                    `;
                 }
 
                 listHtml += `
