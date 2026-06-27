@@ -4867,9 +4867,30 @@ function toggleAddressField(show) {
     }
 }
 
+// Rate Limiter to prevent spam
+function checkOrderRateLimit() {
+    const now = Date.now();
+    const oneHour = 60 * 60 * 1000;
+    let timestamps = JSON.parse(localStorage.getItem('thies_order_timestamps') || '[]');
+    
+    // Filter timestamps within the last hour
+    timestamps = timestamps.filter(ts => now - ts < oneHour);
+    
+    if (timestamps.length >= 3) {
+        if(typeof showToast === 'function') showToast("Limite anti-spam atteinte : maximum 3 envois par heure. Veuillez patienter.", "danger");
+        return false;
+    }
+    
+    timestamps.push(now);
+    localStorage.setItem('thies_order_timestamps', JSON.stringify(timestamps));
+    return true;
+}
+
 // Submission of client order
 function submitSimpleOrder(e, restaurantId) {
     e.preventDefault();
+    
+    if (!checkOrderRateLimit()) return;
     
     const r = store.getRestaurantById(restaurantId);
     
@@ -5251,6 +5272,8 @@ function copyGroupLink() {
 function submitGroupOrder(e, restaurantId, grandTotal) {
     e.preventDefault();
     
+    if (!checkOrderRateLimit()) return;
+    
     const r = store.getRestaurantById(restaurantId);
     const payeeName = document.getElementById('group-payee-name').value.trim();
     const phone = cleanPhoneNumber(document.getElementById('group-phone').value.trim());
@@ -5470,6 +5493,8 @@ function validateBookingDate(restaurantId) {
 
 function submitBooking(e, restaurantId) {
     e.preventDefault();
+    
+    if (!checkOrderRateLimit()) return;
     
     const r = store.getRestaurantById(restaurantId);
     
