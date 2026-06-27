@@ -3526,6 +3526,7 @@ function logoutAdmin() {
 // Page: LANDING PAGE (catalog)
 // ----------------------------------------------------
 router.add('#/', () => {
+    setDynamicMeta('THIES Resto — Plateforme de Restauration Commune à Thiès, Sénégal', 'icon.png');
     try {
         // Hide cart bar
         const cartBar = document.getElementById('floating-cart-bar');
@@ -6291,3 +6292,20 @@ function updateDynamicSEO(resto) {
     setMeta('twitter:description', desc);
     setMeta('twitter:image', image);
 }
+
+function setDynamicMeta(title, image) {
+    document.title = title;
+    let iconLink = document.querySelector("link[rel='icon']") || document.createElement('link');
+    iconLink.rel = 'icon';
+    iconLink.href = image;
+    document.head.appendChild(iconLink);
+    let appleLink = document.querySelector("link[rel='apple-touch-icon']") || document.createElement('link');
+    appleLink.rel = 'apple-touch-icon';
+    appleLink.href = image;
+    document.head.appendChild(appleLink);
+    let ogImage = document.querySelector("meta[property='og:image']");
+    if(ogImage) ogImage.setAttribute('content', image);
+    let twImage = document.querySelector("meta[name='twitter:image']");
+    if(twImage) twImage.setAttribute('content', image);
+}
+
