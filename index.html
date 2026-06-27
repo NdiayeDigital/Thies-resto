@@ -151,11 +151,6 @@
                     <span class="bar"></span>
                     <span class="bar"></span>
                 </button>
-                <div class="nav-desktop-links">
-                    <a href="#" onclick="router.navigate('/'); return false;">Accueil</a>
-                    <a href="#" onclick="scrollToHowItWorks(); return false;">Concept</a>
-                    <a href="#" onclick="scrollToCatalog(); return false;">Restaurants</a>
-                </div>
             </div>
 
             <!-- Center: Logo -->
@@ -182,15 +177,12 @@
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
                     <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
                     <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/auth'); return false;">Espace
-                        Restaurateur</a>
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
                         Partenaire 🤝</a>
                     <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
                         Espace Livreurs 🛵 
                         <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt disponible)</span>
                     </a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin-login'); return false;" style="font-size: 2.5rem; text-align: center; margin-top: 1.5rem;" title="Sécurité">🔐</a>
                     <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;" style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪 Déconnexion</a>
                 </div>
             </div>

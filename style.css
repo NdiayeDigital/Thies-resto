@@ -1987,7 +1987,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 }
 
 .hamburger-btn {
-    display: none;
+    display: flex;
     flex-direction: column;
     justify-content: space-between;
     width: 22px;
