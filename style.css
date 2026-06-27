@@ -2350,7 +2350,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     }
 
     .hero-right-col {
-        margin-top: 4rem;
+        margin-top: 6rem !important;
         margin-bottom: 2rem;
     }
     
@@ -2921,5 +2921,5 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     color: var(--text-primary);
 }
 
-#catalog-section { padding-top: 5rem; margin-top: 2rem; position: relative; z-index: 10; }
+#catalog-section { padding-top: 2rem; margin-top: 2rem; position: relative; z-index: 10; }
 @media (max-width: 768px) { .hero-right-col > div { width: 180px !important; height: 180px !important; } .hero-right-col { margin-bottom: 2rem; } }
