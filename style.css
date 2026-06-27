@@ -2333,6 +2333,10 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         transform: none;
     }
     
+    .hero-section {
+        padding-top: 10rem !important;
+    }
+
     .hero-split-container {
         grid-template-columns: 1fr;
         gap: 0;
@@ -2351,7 +2355,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 
     .hero-right-col {
         order: 2;
-        margin-top: 3rem;
+        margin-top: 6rem !important;
         margin-bottom: 1rem;
     }
 

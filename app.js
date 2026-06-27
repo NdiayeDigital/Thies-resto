@@ -3587,7 +3587,7 @@ router.add('#/', () => {
 
     container.innerHTML = `
         <!-- ========== HERO SECTION ========== -->
-        <section class="hero-section" style="background: linear-gradient(rgba(10, 10, 12, 0.8), rgba(10, 10, 12, 0.95)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed; padding: 6rem 1.5rem 5rem 1.5rem;">
+        <section class="hero-section" style="background: linear-gradient(rgba(10, 10, 12, 0.8), rgba(10, 10, 12, 0.95)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
             <div class="hero-split-container">
                 <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col">
