@@ -5942,6 +5942,136 @@ router.add('#/politique-admin', () => {
 });
 
 // ----------------------------------------------------
+// Order Tracking View
+// ----------------------------------------------------
+router.add('#/tracking', () => {
+    document.getElementById('floating-cart-bar').style.display = 'none';
+    
+    // Set up realtime listener object if not exists
+    if (!window.trackingSubscriptions) window.trackingSubscriptions = {};
+    
+    document.getElementById('main-content').innerHTML = `
+        <div style="max-width: 600px; margin: 0 auto; padding: 2rem 1.5rem; text-align: center; animation: fadeIn 0.4s ease;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">📍</div>
+            <h2 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1.8rem;">Suivi de Commande</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">Entrez votre numéro de téléphone (WhatsApp) pour suivre l'état de votre commande en direct.</p>
+            
+            <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow);">
+                <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
+                    <input type="tel" id="tracking-phone" class="form-control" placeholder="+221 77 123 45 67" style="margin-bottom: 0;">
+                    <button class="btn btn-primary" onclick="window.fetchOrderTracking()" style="white-space: nowrap;">Suivre 🔍</button>
+                </div>
+                <div id="tracking-result-container" style="text-align: left; margin-top: 1.5rem;">
+                    <!-- Tracking results will appear here -->
+                </div>
+            </div>
+        </div>
+    `;
+});
+
+window.fetchOrderTracking = async function() {
+    const rawPhone = document.getElementById('tracking-phone').value.trim();
+    if (!rawPhone) {
+        showToast("Veuillez saisir votre numéro", "warning");
+        return;
+    }
+    const phone = cleanPhoneNumber(rawPhone);
+    const container = document.getElementById('tracking-result-container');
+    
+    container.innerHTML = '<div style="text-align:center;"><div class="spinner-ring" style="width:30px;height:30px;border-width:3px;"></div></div>';
+    
+    if (!supabaseClient) {
+        container.innerHTML = '<p style="color: var(--danger); text-align: center;">Erreur de connexion. Veuillez réessayer.</p>';
+        return;
+    }
+    
+    try {
+        const { data, error } = await supabaseClient
+            .from('orders')
+            .select('id, restaurant_id, items, total, status, created_at')
+            .eq('customer_phone', phone)
+            .order('created_at', { ascending: false })
+            .limit(3);
+            
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding: 2rem 0; color: var(--text-secondary);">Aucune commande récente trouvée pour ce numéro.</div>';
+            return;
+        }
+        
+        let html = '';
+        data.forEach(order => {
+            const r = store.getRestaurantById(order.restaurant_id);
+            const rName = r ? r.name : 'Restaurant inconnu';
+            
+            let statusColor = 'var(--text-secondary)';
+            let statusIcon = '⏳';
+            let stepPercent = 25;
+            
+            if (order.status === 'Reçue') { statusColor = 'var(--accent)'; statusIcon = '⏳'; stepPercent = 25; }
+            else if (order.status === 'Confirmée' || order.status === 'Prête') { statusColor = 'var(--primary)'; statusIcon = '👨‍🍳'; stepPercent = 50; }
+            else if (order.status === 'Livrée') { statusColor = '#20c997'; statusIcon = '✅'; stepPercent = 100; }
+            
+            html += `
+                <div id="track-card-${order.id}" style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1rem; position: relative; overflow: hidden;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Commande n° ${order.id}</div>
+                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1.1rem;">${rName}</h4>
+                        </div>
+                        <div class="track-status-badge" style="background: rgba(255,255,255,0.1); padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: ${statusColor}; border: 1px solid ${statusColor}; display: flex; align-items: center; gap: 0.3rem;">
+                            <span>${statusIcon}</span> <span class="track-status-text">${order.status}</span>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        ${order.items ? order.items.map(i => i.qty + 'x ' + i.name).join(', ') : ''}
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 0.5rem;">
+                        <div class="track-progress-bar" style="height: 100%; width: ${stepPercent}%; background: ${statusColor}; transition: width 0.5s ease-out, background 0.5s ease-out;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
+                        <span style="${stepPercent >= 25 ? 'color: var(--text-primary); font-weight:bold;' : ''}">Reçue</span>
+                        <span style="${stepPercent >= 50 ? 'color: var(--text-primary); font-weight:bold;' : ''}">Confirmée</span>
+                        <span style="${stepPercent >= 100 ? 'color: var(--text-primary); font-weight:bold;' : ''}">Livrée</span>
+                    </div>
+                </div>
+            `;
+            
+            // Setup Realtime Listener for this specific order
+            if (!window.trackingSubscriptions[order.id]) {
+                window.trackingSubscriptions[order.id] = supabaseClient.channel('track-' + order.id)
+                    .on(
+                        'postgres_changes',
+                        { event: 'UPDATE', schema: 'public', table: 'orders', filter: 'id=eq.' + order.id },
+                        (payload) => {
+                            console.log('Order update tracked:', payload);
+                            if (payload.new.status !== payload.old.status) {
+                                // Play sound
+                                const audio = document.getElementById('notification-sound');
+                                if (audio) audio.play().catch(e => console.log('Audio play blocked', e));
+                                
+                                // Refresh view
+                                window.fetchOrderTracking();
+                                
+                                showToast(\`🔔 Mise à jour : Votre commande est maintenant "\${payload.new.status}" !\`, "success");
+                            }
+                        }
+                    )
+                    .subscribe();
+            }
+        });
+        
+        container.innerHTML = html;
+        
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = '<p style="color: var(--danger); text-align: center;">Une erreur est survenue.</p>';
+    }
+};
+// ----------------------------------------------------
 // 404 View
 // ----------------------------------------------------
 router.add('#/404', () => {
