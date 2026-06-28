@@ -3797,6 +3797,16 @@ router.add('#/', () => {
             </div>
             
             <div class="restaurant-grid" id="restaurants-list-grid"></div>
+
+            <!-- RESTAURANT SUGGESTION CTA -->
+            <div style="background: rgba(207, 168, 83, 0.1); border: 1px dashed var(--primary); border-radius: 16px; padding: 2rem; text-align: center; max-width: 600px; margin: 3rem auto 1rem auto;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤔</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.2rem;">Votre restaurant préféré n'est pas là ?</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Nous ajoutons continuellement de nouvelles tables à Thiès. Aidez-nous à découvrir les meilleures !</p>
+                <a href="https://wa.me/221784799882?text=Bonjour,%20j'aimerais%20suggérer%20ce%20restaurant%20sur%20Thiès%20à%20Table%20:%20[Insérez le nom]" target="_blank" class="btn btn-primary" style="background: var(--bg-card); color: var(--primary); border: 1px solid var(--primary); text-decoration: none;">
+                    Suggérer un restaurant 💡
+                </a>
+            </div>
         </section>
 
         <!-- ========== PRESENTATION SECTION (Side by Side: Image Left, Text Right) ========== -->
