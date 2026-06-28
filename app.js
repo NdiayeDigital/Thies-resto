@@ -3695,6 +3695,55 @@ router.add('#/', () => {
         <!-- VOS DERNIERES COMMANDES PERSISTANT -->
         ${historyHtml}
 
+    // Trending Today Logic
+    let trendingItemsHtml = '';
+    const allDishes = [];
+    allRestos.forEach(r => {
+        if (r.menu) {
+            r.menu.forEach(category => {
+                if (category.items) {
+                    category.items.forEach(item => {
+                        allDishes.push({ ...item, restaurantId: r.id, restaurantName: r.name });
+                    });
+                }
+            });
+        }
+    });
+    // Shuffle and pick 3 dishes
+    for (let i = allDishes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allDishes[i], allDishes[j]] = [allDishes[j], allDishes[i]];
+    }
+    const trendingDishes = allDishes.slice(0, 3);
+    trendingDishes.forEach((dish, idx) => {
+        const medals = ['🥇', '🥈', '🥉'];
+        trendingItemsHtml += `
+            <div style="background: var(--bg-secondary); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s; cursor: pointer;" onclick="router.navigate('/r/${dish.restaurantId}')" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                <div style="position: relative;">
+                    <img src="${dish.image}" style="width: 100%; height: 160px; object-fit: cover;" alt="${dish.name}" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80'">
+                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 20px; font-size: 1.1rem; font-weight: bold; backdrop-filter: blur(5px); display: flex; align-items: center; gap: 5px;">${medals[idx]} <span style="font-size: 0.8rem; text-transform: uppercase;">Top ${idx+1}</span></div>
+                    <div style="position: absolute; bottom: 10px; right: 10px; background: var(--primary); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">${dish.price} FCFA</div>
+                </div>
+                <div style="padding: 1rem;">
+                    <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${dish.name}</h3>
+                    <p style="margin: 0; font-size: 0.85rem; color: var(--accent); opacity: 0.9;">📍 ${dish.restaurantName}</p>
+                </div>
+            </div>
+        `;
+    });
+
+    const trendingSectionHtml = `
+        <section style="padding: 2rem 1.5rem 1rem 1.5rem; max-width: 1200px; margin: 0 auto;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0; font-size: 1.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">🔥 Tendances du Jour</h2>
+                <span style="font-size: 0.75rem; color: var(--accent); background: rgba(207,168,83,0.1); border: 1px solid rgba(207,168,83,0.3); padding: 0.3rem 0.8rem; border-radius: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; animation: pulseMainCircle 2s infinite;">En direct</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                ${trendingItemsHtml}
+            </div>
+        </section>
+    `;
+
         <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
         <section class="presentation-section" style="padding: 1rem 0 0 0;">
             <div class="reference-row-cards">
@@ -3718,6 +3767,8 @@ router.add('#/', () => {
                 </div>
             </div>
         </section>
+
+        ${trendingSectionHtml}
 
         <section id="catalog-section">
             <div class="section-header">
@@ -3994,6 +4045,7 @@ router.add('#/', () => {
     `;
 
     if (typeof applyFilters === 'function') applyFilters();
+    if (typeof startSocialProof === 'function') startSocialProof();
     hideLoadingOverlay();
     } catch (err) {
         console.error("Error in home route:", err);
@@ -6083,6 +6135,68 @@ router.add('#/404', () => {
         </div>
     `;
 });
+
+// ----------------------------------------------------
+// Social Proof Logic
+// ----------------------------------------------------
+let socialProofInterval = null;
+window.startSocialProof = function() {
+    if (socialProofInterval) clearInterval(socialProofInterval);
+    const toast = document.getElementById('social-proof-toast');
+    if (!toast) return;
+
+    const names = ['Fatou', 'Ousmane', 'Awa', 'Mamadou', 'Aminata', 'Cheikh', 'Ndeye', 'Ibrahima', 'Khadija', 'Fallou'];
+    const actions = [
+        (name, resto, dish) => `<strong>${name}</strong> a commandé <em>${dish}</em> chez <strong>${resto}</strong>`,
+        (name, resto, dish) => `<strong>${name}</strong> a gagné +5 points fidélité chez <strong>${resto}</strong>`,
+        (name, resto, dish) => `<strong>${name}</strong> a réservé une table chez <strong>${resto}</strong>`
+    ];
+    
+    const allDishes = [];
+    store.getRestaurants().filter(r => r.status === 'active').forEach(r => {
+        if(r.menu) {
+            r.menu.forEach(c => {
+                if(c.items) c.items.forEach(i => allDishes.push({ dish: i.name, resto: r.name }));
+            });
+        }
+    });
+
+    if(allDishes.length === 0) return;
+
+    socialProofInterval = setInterval(() => {
+        // Stop if not on home page
+        if (window.location.hash !== '' && window.location.hash !== '#/') {
+            return;
+        }
+
+        const randomName = names[Math.floor(Math.random() * names.length)];
+        const randomDishItem = allDishes[Math.floor(Math.random() * allDishes.length)];
+        const randomAction = actions[Math.floor(Math.random() * actions.length)];
+        const minutes = Math.floor(Math.random() * 5) + 1;
+        
+        toast.innerHTML = `
+            <div style="background: rgba(207,168,83,0.15); padding: 10px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; height: 40px; width: 40px; flex-shrink: 0;">🔥</div>
+            <div>
+                <p style="margin: 0; font-size: 0.85rem; font-weight: 400; line-height: 1.3;">${randomAction(randomName, randomDishItem.resto, randomDishItem.dish)}</p>
+                <p style="margin: 0; font-size: 0.75rem; color: var(--accent); margin-top: 3px; font-weight: bold;">Il y a ${minutes} min</p>
+            </div>
+        `;
+        
+        toast.style.display = 'flex';
+        // Force reflow
+        void toast.offsetWidth;
+        toast.style.opacity = '1';
+        
+        // Hide after 5 seconds
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if(toast.style.opacity === '0') toast.style.display = 'none';
+            }, 500);
+        }, 5000);
+        
+    }, 12000 + Math.random() * 8000); // Randomly between 12s and 20s
+}
 
 // ----------------------------------------------------
 // PWA Service Worker Registration
