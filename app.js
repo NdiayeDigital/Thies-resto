@@ -3669,32 +3669,6 @@ router.add('#/', () => {
     else if (hour < 17) greeting = "Une petite faim ?";
     else greeting = "Bonsoir ! Ne cuisinez pas ce soir.";
 
-    container.innerHTML = `
-        <!-- ========== HERO SECTION ========== -->
-        <section class="hero-section" style="background: linear-gradient(rgba(10, 10, 12, 0.8), rgba(10, 10, 12, 0.95)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
-            <div class="hero-split-container">
-                <!-- Left: Title, Description and Search -->
-                <div class="hero-left-col">
-                    <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
-                    <h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
-                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
-                    
-                    <div class="search-container" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px;">
-                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
-                        <button class="search-btn" style="color: var(--primary);">🔍</button>
-                    </div>
-
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-                        <button class="btn btn-primary" onclick="scrollToCatalog()" style="box-shadow: 0 4px 15px rgba(242,107,33,0.4);">Explorer nos Menus 🍽️</button>
-                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">📍 Trouver autour de moi</button>
-                    </div>
-                </div>
-                
-            </div>
-        </section>
-        <!-- VOS DERNIERES COMMANDES PERSISTANT -->
-        ${historyHtml}
-
     // Trending Today Logic
     let trendingItemsHtml = '';
     const allDishes = [];
@@ -3743,6 +3717,32 @@ router.add('#/', () => {
             </div>
         </section>
     `;
+
+    container.innerHTML = `
+        <!-- ========== HERO SECTION ========== -->
+        <section class="hero-section" style="background: linear-gradient(rgba(10, 10, 12, 0.8), rgba(10, 10, 12, 0.95)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
+            <div class="hero-split-container">
+                <!-- Left: Title, Description and Search -->
+                <div class="hero-left-col">
+                    <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
+                    <h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
+                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+                    
+                    <div class="search-container" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px;">
+                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
+                        <button class="search-btn" style="color: var(--primary);">🔍</button>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                        <button class="btn btn-primary" onclick="scrollToCatalog()" style="box-shadow: 0 4px 15px rgba(242,107,33,0.4);">Explorer nos Menus 🍽️</button>
+                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">📍 Trouver autour de moi</button>
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+        <!-- VOS DERNIERES COMMANDES PERSISTANT -->
+        ${historyHtml}
 
         <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
         <section class="presentation-section" style="padding: 1rem 0 0 0;">
@@ -6108,7 +6108,7 @@ window.fetchOrderTracking = async function() {
                                 // Refresh view
                                 window.fetchOrderTracking();
                                 
-                                showToast(\`🔔 Mise à jour : Votre commande est maintenant "\${payload.new.status}" !\`, "success");
+                                showToast(`🔔 Mise à jour : Votre commande est maintenant "${payload.new.status}" !`, "success");
                             }
                         }
                     )
