@@ -1,0 +1,43 @@
+{
+    "p_updates":  {
+                      "menu":  [
+                                   {
+                                       "id":  "dish_1",
+                                       "name":  "Thiéboudiène Penda Mbaye",
+                                       "image":  "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500\u0026auto=format\u0026fit=crop\u0026q=60",
+                                       "price":  2500,
+                                       "description":  "Riz au poisson rouge traditionnel sénégalais, légumes frais (chou, manioc, carotte) et sauce tamarin douce."
+                                   },
+                                   {
+                                       "id":  "dish_2",
+                                       "name":  "Yassa Poulet au Feu de Bois",
+                                       "image":  "https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500\u0026auto=format\u0026fit=crop\u0026q=60",
+                                       "price":  2200,
+                                       "description":  "Poulet mariné au citron vert, moutarde et oignons caramélisés fondants, servi avec riz blanc brisé."
+                                   },
+                                   {
+                                       "id":  "dish_3",
+                                       "name":  "Mafé Viande de Bœuf",
+                                       "image":  "https://images.unsplash.com/photo-1547592180-85f173990554?w=500\u0026auto=format\u0026fit=crop\u0026q=60",
+                                       "price":  2000,
+                                       "description":  "Mijoté de bœuf tendre dans une sauce onctueuse à base de pâte d\u0027arachide locale, riz blanc."
+                                   },
+                                   {
+                                       "id":  "dish_4",
+                                       "name":  "Jus de Bissap Glacé",
+                                       "image":  "https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500\u0026auto=format\u0026fit=crop\u0026q=60",
+                                       "price":  500,
+                                       "description":  "Boisson rafraîchissante maison à base d\u0027infusion de fleurs d\u0027hibiscus séchées, menthe et sucre."
+                                   },
+                                   {
+                                       "id":  "dish_5",
+                                       "name":  "Jus de Bouye (Pain de Singe)",
+                                       "image":  "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500\u0026auto=format\u0026fit=crop\u0026q=60",
+                                       "price":  500,
+                                       "description":  "Jus local onctueux à base de pulpe de fruits de baobab et de lait concentré sucré."
+                                   }
+                               ]
+                  },
+    "p_password":  "alamindelice221",
+    "p_restaurant_id":  "r21"
+}
