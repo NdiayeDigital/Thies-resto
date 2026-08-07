@@ -358,16 +358,19 @@ async function handleRestaurantLogin(e) {
             });
             
             if (!authError && authData && authData.user) {
-                // Fetch restaurant metadata
-                const { data: rData } = await supabaseClient.from('public_restaurants').select('*').eq('id', authData.user.id).single();
-                if (rData) {
-                    r = {
-                        id: rData.id,
-                        name: rData.name,
-                        slug: rData.slug,
-                        status: rData.status || 'active',
-                        password: pass
-                    };
+                // Fetch restaurant metadata using the restaurant_id stored in user_metadata
+                const restoId = authData.user.user_metadata?.restaurant_id;
+                if (restoId) {
+                    const { data: rData } = await supabaseClient.from('public_restaurants').select('*').eq('id', restoId).single();
+                    if (rData) {
+                        r = {
+                            id: rData.id,
+                            name: rData.name,
+                            slug: rData.slug,
+                            status: rData.status || 'active',
+                            password: pass
+                        };
+                    }
                 }
             } else {
                 // FALLBACK : Ancien système RPC (si la migration SQL n'a pas encore été exécutée)
