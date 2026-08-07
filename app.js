@@ -4500,7 +4500,7 @@ function recalculateCart() {
         cart.total += cart.deliveryFee;
     }
 }
-}
+
 
 function updateFloatingCartBar(r) {
     const bar = document.getElementById('floating-cart-bar');
@@ -4716,7 +4716,7 @@ function toggleAddressField(show) {
         totalEls.forEach(el => el.innerText = cart.total + " FCFA");
     }
 }
-}
+
 
 // Rate Limiter to prevent spam
 function checkOrderRateLimit() {
