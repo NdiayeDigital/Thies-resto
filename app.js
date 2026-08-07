@@ -348,21 +348,42 @@ async function handleRestaurantLogin(e) {
     
     let r = null;
     
-    // 1. Vérification sécurisée EXCLUSIVE via Supabase
+    // 1. Vérification sécurisée via Supabase Auth
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
-            const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
-                p_username: username,
-                p_password: pass
+            // Tentative de connexion via le nouveau système (Supabase Auth)
+            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+                email: username + '@thiesresto.com',
+                password: pass
             });
-            if (!error && data && data.length > 0) {
-                r = {
-                    id: data[0].id,
-                    name: data[0].name,
-                    slug: data[0].slug,
-                    status: data[0].status,
-                    password: pass
-                };
+            
+            if (!authError && authData && authData.user) {
+                // Fetch restaurant metadata
+                const { data: rData } = await supabaseClient.from('public_restaurants').select('*').eq('id', authData.user.id).single();
+                if (rData) {
+                    r = {
+                        id: rData.id,
+                        name: rData.name,
+                        slug: rData.slug,
+                        status: rData.status || 'active',
+                        password: pass
+                    };
+                }
+            } else {
+                // FALLBACK : Ancien système RPC (si la migration SQL n'a pas encore été exécutée)
+                const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
+                    p_username: username,
+                    p_password: pass
+                });
+                if (!error && data && data.length > 0) {
+                    r = {
+                        id: data[0].id,
+                        name: data[0].name,
+                        slug: data[0].slug,
+                        status: data[0].status,
+                        password: pass
+                    };
+                }
             }
         } catch(err) {
             console.error("Supabase login error", err);
