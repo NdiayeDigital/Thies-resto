@@ -1,3 +1,15 @@
+let currentRestaurantSession = null;
+let isSuperAdminSession = false;
+try {
+    const sessionStr = sessionStorage.getItem('resto_session');
+    if (sessionStr) {
+        currentRestaurantSession = JSON.parse(atob(sessionStr));
+    }
+    isSuperAdminSession = sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true';
+} catch (e) {
+    console.warn("sessionStorage is not accessible or invalid. Session data will be held in memory only.", e);
+}
+
 // Supabase Configuration
 const SUPABASE_URL = 'https://eyrayquciqyswshiwtwb.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cmF5cXVjaXF5c3dzaGl3dHdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDQyNjQsImV4cCI6MjA5NzQ4MDI2NH0.8_VJvm9xiwmqX3oLD9L1b9W7r7T-b9OfJ2WIyST3FoM';
