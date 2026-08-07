@@ -1,4 +1,4 @@
-
+﻿
 // Client Behavior Analytics Tracker
 class ClientTracker {
     constructor() {
@@ -1301,18 +1301,18 @@ function renderDashboardTabContent(r) {
                             </div>
                         </div>
 
-                                                <div class="form-group" style="background: rgba(242,107,33,0.05); padding: 1rem; border-radius: 12px; border: 1px dashed var(--primary); margin-bottom: 1.5rem;">
+                        <div class="form-group" style="background: rgba(242,107,33,0.05); padding: 1rem; border-radius: 12px; border: 1px dashed var(--primary); margin-bottom: 1.5rem;">
                             <label class="form-label" style="color: var(--primary);">📍 Coordonnées GPS (Requis pour la livraison) <span class="required">*</span></label>
                             <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                                <input type="number" id="settings-lat" class="form-control" step="any" value="$({r.lat || ''})" placeholder="Latitude (ex: 14.79)" required style="margin-bottom: 0;">
-                                <input type="number" id="settings-lng" class="form-control" step="any" value="$({r.lng || ''})" placeholder="Longitude (ex: -16.92)" required style="margin-bottom: 0;">
+                                <input type="number" id="settings-lat" class="form-control" step="any" value="${r.lat || ''}" placeholder="Latitude (ex: 14.79)" required style="margin-bottom: 0;">
+                                <input type="number" id="settings-lng" class="form-control" step="any" value="${r.lng || ''}" placeholder="Longitude (ex: -16.92)" required style="margin-bottom: 0;">
                             </div>
                             <button type="button" class="btn btn-secondary btn-sm" onclick="captureGPSCoordinates()" style="width: 100%;">📌 Capturer ma position actuelle</button>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label">Numéro WhatsApp de réception <span class="required">*</span></label>
-                            <input type="tel" id="settings-whatsapp" class="form-control" value="$({r.whatsapp})" required>
+                            <input type="tel" id="settings-whatsapp" class="form-control" value="${r.whatsapp}" required>
                         </div>
                         
                         <div class="form-group">
@@ -2725,7 +2725,7 @@ function exportReservationsToCSV() {
     const encodedUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUrl);
-    link.setAttribute("download", `reservations_$($r.slug)_$(new Date().toISOString().split('T')[0]).csv`);
+    link.setAttribute("download", `reservations_${r.slug}_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -3776,24 +3776,23 @@ function applyFilters() {
             : `<span class="badge badge-danger restaurant-card-badge">Fermé</span>`;
         
         const coverUrl = r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
-                let distanceBadge = '';
+        let distanceBadge = '';
         let distanceOverlay = '';
         if (r._tempDistance) {
-            distanceBadge = <div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 $({r._tempDistance}) km</div>;
+            distanceBadge = `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 ${r._tempDistance} km</div>`;
             if (r._tempDistance > 10) {
-                distanceBadge = <div style="position: absolute; top: 1rem; right: 1rem; background: var(--danger); color: white; padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">⚠️ Très loin ($({r._tempDistance}) km)</div>;
-                distanceOverlay = <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; color: white; text-align: center; padding: 1rem;">
+                distanceBadge = `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--danger); color: white; padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">⚠️ Très loin (${r._tempDistance} km)</div>`;
+                distanceOverlay = `<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; color: white; text-align: center; padding: 1rem;">
                     <span style="font-size: 2rem; margin-bottom: 0.5rem;">🚧</span>
                     <h4 style="margin: 0 0 0.5rem 0;">Restaurant très loin</h4>
-                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); router.navigate('/r/$({r.slug})')">Commander quand même</button>
-                </div>;
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); router.navigate('/r/${r.slug}')">Commander quand même</button>
+                </div>`;
             }
         }
             
-        cardsHtml += 
-            <div class="restaurant-card" style="position: relative;" onclick="if(!$({r._tempDistance > 10}) || event.target.tagName === 'BUTTON') router.navigate('/r/$({r.slug})')">
-                $({distanceOverlay})
-                $({distanceBadge})
+        cardsHtml += `
+            <div class="restaurant-card" style="position: relative;" onclick="if(!(${r._tempDistance > 10}) || event.target.tagName === 'BUTTON') router.navigate('/r/${r.slug}')">
+                ${distanceOverlay}
                 ${distanceBadge}
                 <div class="restaurant-card-header">
                     <img src="${coverUrl}" class="restaurant-card-cover" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
@@ -4780,51 +4779,107 @@ function submitSimpleOrder(e, restaurantId) {
         note: finalNotes,
         status: "Reçue",
         date,
-        time
+        time,
+        deliveryFee: cart.deliveryFee || 0,
+        deliveryLat: cart.deliveryLat || null,
+        deliveryLng: cart.deliveryLng || null
     };
 
+    window.pendingOrderContext = { order, r, firstname, lastname, mode, phone };
+    
+    const container = document.getElementById('checkout-content-container');
+    container.innerHTML = `
+        <div class="confirmation-screen">
+            <div class="spinner-ring" style="width:40px;height:40px;border-width:4px;margin: 0 auto 1rem;"></div>
+            <h2>Vérification du numéro...</h2>
+            <p style="color: var(--text-secondary);">Un code SMS est en cours d'envoi au <strong>${phone}</strong></p>
+        </div>
+    `;
+    
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        supabaseClient.auth.signInWithOtp({ phone: phone }).then(({ data, error }) => {
+            if (error) {
+                console.error("OTP Error", error);
+                if(typeof showToast === 'function') showToast("Erreur d'envoi du SMS.", "danger");
+            } else {
+                if(typeof showToast === 'function') showToast("SMS Envoyé ! Vérifiez votre téléphone.", "info");
+            }
+            
+            container.innerHTML += `
+                <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
+                    <h2>Vérification de Sécurité</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Veuillez entrer le code à 6 chiffres envoyé au <strong>${phone}</strong>.</p>
+                    
+                    <div class="form-group">
+                        <input type="text" id="otp-input-code" class="form-control" placeholder="Ex: 123456" style="font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-weight: bold; margin-bottom: 1rem;" maxlength="6">
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 1rem;" id="btn-verify-otp">
+                        ✅ Vérifier et Commander
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="renderCheckoutTab(store.getRestaurantById(cart.restaurantId))" style="width: 100%; background: transparent; color: var(--text-primary); border: 1px solid var(--border);">
+                        Annuler
+                    </button>
+                </div>
+            `;
+        });
+    } else {
+        executePendingOrder();
+    }
+}
+
+window.verifyOtpAndSubmitOrder = async function() {
+    const code = document.getElementById('otp-input-code').value.trim();
+    if (!code || code.length < 6) {
+        if(typeof showToast === 'function') showToast("Veuillez entrer le code à 6 chiffres", "warning");
+        return;
+    }
+    
+    const btn = document.getElementById('btn-verify-otp');
+    btn.disabled = true;
+    btn.innerHTML = `<div class="spinner-ring" style="width:20px;height:20px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Vérification...`;
+    
+    const { phone } = window.pendingOrderContext;
+    
+    const { data, error } = await supabaseClient.auth.verifyOtp({ phone, token: code, type: 'sms' });
+    
+    if (error) {
+        if(typeof showToast === 'function') showToast("Code invalide ou expiré.", "danger");
+        btn.disabled = false;
+        btn.innerHTML = "✅ Vérifier et Commander";
+    } else {
+        if(typeof showToast === 'function') showToast("Numéro vérifié avec succès !", "success");
+        executePendingOrder();
+    }
+};
+
+window.executePendingOrder = function() {
+    if (!window.pendingOrderContext) return;
+    
+    const { order, r, firstname, lastname, mode, phone } = window.pendingOrderContext;
+    
     store.addOrder(order);
     saveOrderToHistory(order, r.name);
     
-    // Increment used rewards if loyalty was applied
     if (cart.loyaltyApplied && cart.loyaltyPhone) {
         store.applyLoyaltyRewardUsed(cart.loyaltyPhone, `${firstname} ${lastname}`);
     }
 
-    // Format WhatsApp & SMS message
-    const formattedItems = cart.items.map(i => `${i.name} x${i.qty}`).join(', ');
-    const waText = `Bonjour ${r.name}, je viens de passer la commande n°*${orderId}* sur THIES Resto de la part de *${firstname} ${lastname}* (${phone}).
- 
-🛍️ *Détail de la commande* :
-${formattedItems}
-${cart.loyaltyApplied ? `🎁 *Réduction Fidélité* : -2500 FCFA\n` : ''}💰 *Total* : ${cart.total} FCFA
-🛵 *Mode* : ${mode}
-${address ? `📍 *Adresse* : ${address}` : ''}
-${notes ? `📝 *Note* : ${notes}` : ''}
- 
-Merci de confirmer la réception !`;
-
-    const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
-    const smsLink = getSMSLink(r.whatsapp, waText);
-    
-    // Reset Cart
     cart = {
         restaurantId: null,
         items: [],
         total: 0,
         loyaltyApplied: false,
-        loyaltyPhone: null
+        loyaltyPhone: null,
+        deliveryFee: 0,
+        deliveryLat: null,
+        deliveryLng: null
     };
     saveCart();
-    updateFloatingCartBar(r);
-
-    // Show Confirmation screen
-    const isOffline = !navigator.onLine;
-    const waBtnClass = isOffline ? 'btn-secondary' : 'btn-success';
-    const smsBtnClass = isOffline ? 'btn-success' : 'btn-secondary';
+    if(typeof updateFloatingCartBar === 'function') updateFloatingCartBar(r);
     
-        const connectionAlert = "";
-
     if (typeof triggerCelebration === 'function') triggerCelebration();
 
     window.gotoTracking = function(phoneNumber) {
@@ -4839,7 +4894,7 @@ Merci de confirmer la réception !`;
     };
 
     const container = document.getElementById('checkout-content-container');
-    container.innerHTML = 
+    container.innerHTML = `
         <div class="confirmation-screen">
             <div class="confirmation-icon">🎊</div>
             <h2>Commande enregistrée !</h2>
@@ -4847,26 +4902,25 @@ Merci de confirmer la réception !`;
                 <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎁</div>
                 <h3 style="color: var(--success); margin-bottom: 0.5rem; font-size: 1.1rem;">Félicitations !</h3>
                 <p style="color: var(--text-primary); font-size: 0.9rem; margin-bottom: 1rem;">Vous venez de gagner <strong>+5 points de fidélité</strong> avec cette commande !</p>
-                <button class="btn btn-secondary btn-sm" onclick="window.openLoyaltyAndCheck('$({phone})')" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">
+                <button class="btn btn-secondary btn-sm" onclick="window.openLoyaltyAndCheck('${phone}')" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">
                     💳 Voir mon solde de points
                 </button>
             </div>
-            <p style="color: var(--text-secondary); margin: 1rem 0;">Votre commande n° <strong>$({orderId})</strong> a bien été envoyée au restaurant.</p>
+            <p style="color: var(--text-secondary); margin: 1rem 0;">Votre commande n° <strong>${order.id}</strong> a bien été envoyée au restaurant.</p>
             <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
                 <strong>Récapitulatif :</strong><br>
-                Client : $({firstname}) $({lastname})<br>
-                Mode : $({mode})<br>
-                Montant : <strong>$({order.total}) FCFA</strong> (espèces à la livraison/réception)
+                Client : ${firstname} ${lastname}<br>
+                Mode : ${mode}<br>
+                Montant : <strong>${order.total} FCFA</strong> (espèces à la livraison/réception)
             </div>
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <button onclick="window.gotoTracking('$({phone})')" class="btn btn-primary">
+                <button onclick="window.gotoTracking('${phone}')" class="btn btn-primary">
                     📍 Suivre ma commande en direct
                 </button>
                 <button class="btn btn-dark" onclick="router.navigate('/')">
                     Retourner à l'accueil
                 </button>
             </div>
-            
             <div class="review-section" id="checkout-review-section" style="margin-top: 2rem; background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
                 <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">Évaluez votre expérience</h3>
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Votre avis aide <strong>${r.name}</strong> à s'améliorer !</p>
@@ -4877,11 +4931,10 @@ Merci de confirmer la réception !`;
                         <option value="4" style="color: black;">⭐⭐⭐⭐ Très bien</option>
                         <option value="3" style="color: black;">⭐⭐⭐ Bien</option>
                         <option value="2" style="color: black;">⭐⭐ Moyen</option>
-                        <option value="1" style="color: black;">⭐ Décevant</option>
+                        <option value="1" style="color: black;">⭐ À améliorer</option>
                     </select>
                 </div>
                 <div class="form-group" style="text-align: left;">
-                    <label class="form-label">Commentaire (optionnel)</label>
                     <textarea id="review-comment" class="form-control" rows="2" placeholder="Qu'avez-vous pensé du repas ?" style="background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid rgba(255,255,255,0.2);"></textarea>
                 </div>
                 <button class="btn btn-primary btn-block" onclick="submitCustomerReview('${r.id}', '${(firstname + ' ' + lastname).replace(/'/g, "\\'")}')">Envoyer mon avis</button>
@@ -4892,7 +4945,8 @@ Merci de confirmer la réception !`;
     showToast("Commande enregistrée avec succès !", "success");
 }
 
-// 3. Commande de Groupe Panel
+
+  // 3. Commande de Groupe Panel
 function renderGroupTab(r, groupId = null) {
     const container = document.getElementById('group-content-container');
     
