@@ -1301,9 +1301,18 @@ function renderDashboardTabContent(r) {
                             </div>
                         </div>
 
+                                                <div class="form-group" style="background: rgba(242,107,33,0.05); padding: 1rem; border-radius: 12px; border: 1px dashed var(--primary); margin-bottom: 1.5rem;">
+                            <label class="form-label" style="color: var(--primary);">📍 Coordonnées GPS (Requis pour la livraison) <span class="required">*</span></label>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <input type="number" id="settings-lat" class="form-control" step="any" value="$({r.lat || ''})" placeholder="Latitude (ex: 14.79)" required style="margin-bottom: 0;">
+                                <input type="number" id="settings-lng" class="form-control" step="any" value="$({r.lng || ''})" placeholder="Longitude (ex: -16.92)" required style="margin-bottom: 0;">
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="captureGPSCoordinates()" style="width: 100%;">📌 Capturer ma position actuelle</button>
+                        </div>
+
                         <div class="form-group">
                             <label class="form-label">Numéro WhatsApp de réception <span class="required">*</span></label>
-                            <input type="tel" id="settings-whatsapp" class="form-control" value="${r.whatsapp}" required>
+                            <input type="tel" id="settings-whatsapp" class="form-control" value="$({r.whatsapp})" required>
                         </div>
                         
                         <div class="form-group">
@@ -1966,7 +1975,9 @@ function saveProfileSettings(e, restoId) {
     const r = store.getRestaurantById(restoId);
     const whatsapp = cleanPhoneNumber(document.getElementById('settings-whatsapp').value.trim());
     const hours = document.getElementById('settings-hours').value.trim();
-    const newPass = document.getElementById('settings-password').value;
+        const newPass = document.getElementById('settings-password').value;
+    const lat = parseFloat(document.getElementById('settings-lat').value);
+    const lng = parseFloat(document.getElementById('settings-lng').value);
     
     // Parse closed days checklist
     const checkboxes = document.querySelectorAll('input[name="closed-day-check"]:checked');
@@ -1977,10 +1988,12 @@ function saveProfileSettings(e, restoId) {
         return;
     }
     
-    const updates = {
+        const updates = {
         whatsapp,
         openHours: hours,
-        closedDays
+        closedDays,
+        lat,
+        lng
     };
     
     if (newPass) {
@@ -4810,42 +4823,45 @@ Merci de confirmer la réception !`;
     const waBtnClass = isOffline ? 'btn-secondary' : 'btn-success';
     const smsBtnClass = isOffline ? 'btn-success' : 'btn-secondary';
     
-    const connectionAlert = isOffline 
-        ? `<div style="background: rgba(220, 53, 69, 0.15); color: #ff6b6b; padding: 0.75rem; border-radius: 12px; font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(220, 53, 69, 0.3); text-align: center; font-weight: 500;">
-            🔌 Vous êtes HORS-LIGNE. Veuillez envoyer le récapitulatif par SMS classique sécurisé ci-dessous.
-           </div>`
-        : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate par le gérant, veuillez également envoyer le récapitulatif par WhatsApp via le bouton ci-dessous.</p>`;
+        const connectionAlert = "";
 
-    triggerCelebration();
+    if (typeof triggerCelebration === 'function') triggerCelebration();
+
+    window.gotoTracking = function(phoneNumber) {
+        router.navigate('#/tracking');
+        setTimeout(() => {
+            const phoneInput = document.getElementById('tracking-phone');
+            if (phoneInput) {
+                phoneInput.value = phoneNumber;
+                if(typeof window.fetchOrderTracking === 'function') window.fetchOrderTracking();
+            }
+        }, 200);
+    };
 
     const container = document.getElementById('checkout-content-container');
-    container.innerHTML = `
+    container.innerHTML = 
         <div class="confirmation-screen">
-            <div class="confirmation-icon">✅</div>
+            <div class="confirmation-icon">🎊</div>
             <h2>Commande enregistrée !</h2>
             <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 12px; margin: 1.5rem 0; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
-                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎉</div>
+                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎁</div>
                 <h3 style="color: var(--success); margin-bottom: 0.5rem; font-size: 1.1rem;">Félicitations !</h3>
                 <p style="color: var(--text-primary); font-size: 0.9rem; margin-bottom: 1rem;">Vous venez de gagner <strong>+5 points de fidélité</strong> avec cette commande !</p>
-                <button class="btn btn-secondary btn-sm" onclick="window.openLoyaltyAndCheck('${phone}')" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">
-                    🎁 Voir mon solde de points
+                <button class="btn btn-secondary btn-sm" onclick="window.openLoyaltyAndCheck('$({phone})')" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">
+                    💳 Voir mon solde de points
                 </button>
             </div>
-            <p style="color: var(--text-secondary); margin: 1rem 0;">Votre commande n° <strong>${orderId}</strong> a bien été enregistrée par le restaurant.</p>
+            <p style="color: var(--text-secondary); margin: 1rem 0;">Votre commande n° <strong>$({orderId})</strong> a bien été envoyée au restaurant.</p>
             <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
                 <strong>Récapitulatif :</strong><br>
-                Client : ${firstname} ${lastname}<br>
-                Mode : ${mode}<br>
-                Montant : <strong>${order.total} FCFA</strong> (espèces à la livraison/réception)
+                Client : $({firstname}) $({lastname})<br>
+                Mode : $({mode})<br>
+                Montant : <strong>$({order.total}) FCFA</strong> (espèces à la livraison/réception)
             </div>
-            ${connectionAlert}
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <a href="${waLink}" target="_blank" class="btn ${waBtnClass}">
-                    💬 Confirmer par WhatsApp
-                </a>
-                <a href="${smsLink}" class="btn ${smsBtnClass}">
-                    📱 Option Secours : Envoyer par SMS classique
-                </a>
+                <button onclick="window.gotoTracking('$({phone})')" class="btn btn-primary">
+                    📍 Suivre ma commande en direct
+                </button>
                 <button class="btn btn-dark" onclick="router.navigate('/')">
                     Retourner à l'accueil
                 </button>
@@ -6431,5 +6447,19 @@ window.geolocateRestaurants = function() {
         });
     } else {
         if(typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée par votre navigateur.", "error");
+    }
+};
+window.captureGPSCoordinates = function() {
+    if ("geolocation" in navigator) {
+        if(typeof showToast === 'function') showToast("Recherche GPS...", "info");
+        navigator.geolocation.getCurrentPosition(pos => {
+            document.getElementById('settings-lat').value = pos.coords.latitude;
+            document.getElementById('settings-lng').value = pos.coords.longitude;
+            if(typeof showToast === 'function') showToast("Coordonnées capturées !", "success");
+        }, err => {
+            if(typeof showToast === 'function') showToast("Veuillez autoriser la localisation.", "error");
+        });
+    } else {
+        if(typeof showToast === 'function') showToast("Non supporté par le navigateur.", "error");
     }
 };
