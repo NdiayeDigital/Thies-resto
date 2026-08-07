@@ -68,6 +68,7 @@ class Store {
 
             // 1. Sync Restaurants (Publiques)
             const { data: dbRestos, error: restosError } = await supabaseClient.from('public_restaurants').select('*');
+            const { data: dbMenuItems, error: itemsError } = await supabaseClient.from('menu_items').select('*');
             if (!restosError && dbRestos) {
                 if (dbRestos.length === 0) {
                     console.log("Database is empty. Seeding remote database with local restaurant data...");
@@ -93,7 +94,25 @@ class Store {
                         closedDays: Array.isArray(r.closed_days) ? r.closed_days : (r.closed_days ? JSON.parse(r.closed_days) : []),
                         isOpenManual: Boolean(r.is_open_manual),
                         coverImage: (r.cover_image && r.cover_image !== 'null' && r.cover_image !== 'undefined') ? r.cover_image : null,
-                        menu: Array.isArray(parsedMenu) ? parsedMenu : null,
+                        menu: (() => {
+                            let combinedMenu = Array.isArray(parsedMenu) ? parsedMenu : [];
+                            if (!itemsError && dbMenuItems) {
+                                const newItems = dbMenuItems.filter(item => item.restaurant_id === r.id).map(item => ({
+                                    id: item.id,
+                                    name: item.name,
+                                    description: item.description,
+                                    price: item.price,
+                                    category: item.category,
+                                    image: item.image_url,
+                                    available: item.is_available
+                                }));
+                                if (newItems.length > 0) {
+                                    const newNames = new Set(newItems.map(i => i.name));
+                                    combinedMenu = [...newItems, ...combinedMenu.filter(old => !newNames.has(old.name))];
+                                }
+                            }
+                            return combinedMenu.length > 0 ? combinedMenu : null;
+                        })(),
                         reviews: Array.isArray(parsedReviews) ? parsedReviews : []
                     };
                 });
