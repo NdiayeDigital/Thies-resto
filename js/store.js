@@ -93,6 +93,8 @@ class Store {
                         openHours: r.open_hours,
                         closedDays: Array.isArray(r.closed_days) ? r.closed_days : (r.closed_days ? JSON.parse(r.closed_days) : []),
                         isOpenManual: Boolean(r.is_open_manual),
+                        lat: r.lat ? Number(r.lat) : 14.7928, // Default Thiès center if not set
+                        lng: r.lng ? Number(r.lng) : -16.9260,
                         coverImage: (r.cover_image && r.cover_image !== 'null' && r.cover_image !== 'undefined') ? r.cover_image : null,
                         menu: (() => {
                             let combinedMenu = Array.isArray(parsedMenu) ? parsedMenu : [];

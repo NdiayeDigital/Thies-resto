@@ -3763,10 +3763,24 @@ function applyFilters() {
             : `<span class="badge badge-danger restaurant-card-badge">Fermé</span>`;
         
         const coverUrl = r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
-        const distanceBadge = r._tempDistance ? `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 ${r._tempDistance} km</div>` : '';
+                let distanceBadge = '';
+        let distanceOverlay = '';
+        if (r._tempDistance) {
+            distanceBadge = <div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 $({r._tempDistance}) km</div>;
+            if (r._tempDistance > 10) {
+                distanceBadge = <div style="position: absolute; top: 1rem; right: 1rem; background: var(--danger); color: white; padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">⚠️ Très loin ($({r._tempDistance}) km)</div>;
+                distanceOverlay = <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; color: white; text-align: center; padding: 1rem;">
+                    <span style="font-size: 2rem; margin-bottom: 0.5rem;">🚧</span>
+                    <h4 style="margin: 0 0 0.5rem 0;">Restaurant très loin</h4>
+                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); router.navigate('/r/$({r.slug})')">Commander quand même</button>
+                </div>;
+            }
+        }
             
-        cardsHtml += `
-            <div class="restaurant-card" onclick="router.navigate('/r/${r.slug}')">
+        cardsHtml += 
+            <div class="restaurant-card" style="position: relative;" onclick="if(!$({r._tempDistance > 10}) || event.target.tagName === 'BUTTON') router.navigate('/r/$({r.slug})')">
+                $({distanceOverlay})
+                $({distanceBadge})
                 ${distanceBadge}
                 <div class="restaurant-card-header">
                     <img src="${coverUrl}" class="restaurant-card-cover" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
@@ -4470,6 +4484,10 @@ function recalculateCart() {
     } else {
         cart.total = subtotal;
     }
+    if (cart.deliveryFee) {
+        cart.total += cart.deliveryFee;
+    }
+}
 }
 
 function updateFloatingCartBar(r) {
@@ -4604,9 +4622,13 @@ function renderCheckoutTab(r) {
                 </div>
             </div>
             
-            <div class="form-group" id="delivery-address-group" style="display: none;">
-                <label class="form-label">Adresse de Livraison (Thiès) <span class="required">*</span></label>
-                <input type="text" id="order-address" class="form-control" placeholder="Quartier Mbour 1, en face de la mosquée, Thiès">
+                        <div class="form-group" id="delivery-address-group" style="display: none;">
+                <label class="form-label">Pointer votre position sur la carte <span class="required">*</span></label>
+                <div id="delivery-map" style="height: 200px; width: 100%; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border);"></div>
+                <div id="delivery-fee-display" style="font-weight: bold; color: var(--primary); margin-bottom: 1rem; display: none;">Frais de livraison : <span id="fee-val">0</span> FCFA</div>
+                
+                <label class="form-label">Adresse Détaillée (Optionnel)</label>
+                <input type="text" id="order-address" class="form-control" placeholder="Indication supplémentaire...">
             </div>
             
                         <div class="form-group">
@@ -4628,17 +4650,60 @@ function renderCheckoutTab(r) {
     `;
 }
 
+let deliveryMap = null;
+let deliveryMarker = null;
+
 function toggleAddressField(show) {
     const group = document.getElementById('delivery-address-group');
-    const input = document.getElementById('order-address');
     if (show) {
         group.style.display = 'block';
-        input.required = true;
+        
+        setTimeout(() => {
+            if (!deliveryMap) {
+                deliveryMap = L.map('delivery-map').setView([14.7928, -16.9260], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(deliveryMap);
+                
+                const r = store.getRestaurantById(cart.restaurantId);
+                const rLat = r.lat || 14.7928;
+                const rLng = r.lng || -16.9260;
+                L.marker([rLat, rLng]).addTo(deliveryMap).bindPopup(r.name).openPopup();
+                
+                deliveryMarker = L.marker([14.7928, -16.9260], {draggable: true}).addTo(deliveryMap);
+                
+                deliveryMarker.on('dragend', function(e) {
+                    const pos = deliveryMarker.getLatLng();
+                    cart.deliveryLat = pos.lat;
+                    cart.deliveryLng = pos.lng;
+                    const dist = calculateDistance(rLat, rLng, pos.lat, pos.lng);
+                    if (dist > 10) {
+                        if(typeof showToast === 'function') showToast("Attention: Vous êtes à plus de 10km du restaurant.", "warning");
+                    }
+                    let fee = Math.floor(dist * 200);
+                    fee = Math.min(fee, 1500);
+                    cart.deliveryFee = fee;
+                    document.getElementById('delivery-fee-display').style.display = 'block';
+                    document.getElementById('fee-val').innerText = fee;
+                    recalculateCart();
+                    
+                    const totalEls = document.querySelectorAll('.cart-total-price');
+                    totalEls.forEach(el => el.innerText = cart.total + " FCFA");
+                });
+            } else {
+                deliveryMap.invalidateSize();
+            }
+        }, 100);
+        
     } else {
         group.style.display = 'none';
-        input.required = false;
-        input.value = '';
+        cart.deliveryFee = 0;
+        document.getElementById('delivery-fee-display').style.display = 'none';
+        recalculateCart();
+        const totalEls = document.querySelectorAll('.cart-total-price');
+        totalEls.forEach(el => el.innerText = cart.total + " FCFA");
     }
+}
 }
 
 // Rate Limiter to prevent spam
@@ -6336,4 +6401,35 @@ window.requestPushNotifications = function() {
             showToast("Les notifications sont bloquées ou refusées.", "warning");
         }
     });
+};
+
+window.geolocateRestaurants = function() {
+    if ("geolocation" in navigator) {
+        if(typeof showToast === 'function') showToast("Recherche de votre position...", "info");
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            window.userLat = lat;
+            window.userLng = lng;
+            
+            const restos = store.getRestaurants().filter(r => r.status === 'active');
+            restos.forEach(r => {
+                const rLat = r.lat || 14.7928;
+                const rLng = r.lng || -16.9260;
+                r._tempDistance = Math.round(calculateDistance(lat, lng, rLat, rLng) * 10) / 10;
+            });
+            
+            restos.sort((a, b) => a._tempDistance - b._tempDistance);
+            renderCatalogCards(restos);
+            
+            if(typeof showToast === 'function') showToast("Restaurants triés par distance !", "success");
+            
+            const grid = document.getElementById('catalog-grid');
+            if (grid) grid.scrollIntoView({behavior: 'smooth'});
+        }, (error) => {
+            if(typeof showToast === 'function') showToast("Erreur de géolocalisation. Veuillez autoriser l'accès.", "error");
+        });
+    } else {
+        if(typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée par votre navigateur.", "error");
+    }
 };
