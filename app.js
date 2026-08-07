@@ -60,624 +60,6 @@ class ClientTracker {
 
 // Initialize tracker later when router is defined
 
-// Supabase Configuration
-const SUPABASE_URL = 'https://eyrayquciqyswshiwtwb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cmF5cXVjaXF5c3dzaGl3dHdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDQyNjQsImV4cCI6MjA5NzQ4MDI2NH0.8_VJvm9xiwmqX3oLD9L1b9W7r7T-b9OfJ2WIyST3FoM';
-let supabaseClient = null;
-
-if (typeof supabase !== 'undefined' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-}
-
-// App Local Database state manager (with Supabase sync)
-class Store {
-    constructor() {
-        this.key = 'THIES_RESTO_DB_V3'; // Bumped version to clear all old local cached orders
-        this.data = this.load();
-        if (!this.data) {
-            this.seed();
-        }
-        // Background sync with Supabase
-        if (supabaseClient) {
-            this.syncFromSupabase();
-        }
-    }
-
-    load() {
-        try {
-            const val = localStorage.getItem(this.key);
-            return val ? JSON.parse(val) : null;
-        } catch (e) {
-            console.error("Failed to load local DB", e);
-            return null;
-        }
-    }
-
-    save() {
-        try {
-            localStorage.setItem(this.key, JSON.stringify(this.data));
-        } catch (e) {
-            console.error("Failed to save local DB", e);
-        }
-    }
-
-    seed() {
-        this.data = {
-            restaurants: [],
-            orders: [],
-            reservations: [],
-            groupOrders: []
-        };
-        this.save();
-    }
-
-    async syncFromSupabase() {
-        if (!supabaseClient) return;
-        try {
-            console.log("Syncing with Supabase...");
-
-            // 1. Sync Restaurants (Publiques)
-            const { data: dbRestos, error: restosError } = await supabaseClient.from('public_restaurants').select('*');
-            if (!restosError && dbRestos) {
-                if (dbRestos.length === 0) {
-                    console.log("Database is empty. Seeding remote database with local restaurant data...");
-                    await this.seedRemoteDatabase();
-                    return;
-                }
-                const mappedRestos = dbRestos.map(r => {
-                    let parsedMenu = r.menu;
-                    try { if (typeof r.menu === 'string') parsedMenu = JSON.parse(r.menu); } catch(e) {}
-                    let parsedReviews = r.reviews;
-                    try { if (typeof r.reviews === 'string') parsedReviews = JSON.parse(r.reviews); } catch(e) {}
-                    
-                    return {
-                        id: r.id,
-                        name: r.name,
-                        slug: r.slug,
-                        rating: Number(r.rating),
-                        reviewsCount: Number(r.reviews_count),
-                        category: r.category,
-                        address: r.address,
-                        whatsapp: r.whatsapp,
-                        openHours: r.open_hours,
-                        closedDays: Array.isArray(r.closed_days) ? r.closed_days : (r.closed_days ? JSON.parse(r.closed_days) : []),
-                        isOpenManual: Boolean(r.is_open_manual),
-                        coverImage: (r.cover_image && r.cover_image !== 'null' && r.cover_image !== 'undefined') ? r.cover_image : null,
-                        menu: Array.isArray(parsedMenu) ? parsedMenu : null,
-                        reviews: Array.isArray(parsedReviews) ? parsedReviews : []
-                    };
-                });
-                
-                // Merge locally saved credentials for normal operation if not fetched (public_restaurants hides them)
-                const mergedRestos = mappedRestos.map(dbR => {
-                    const localR = this.data.restaurants.find(lr => lr.id === dbR.id);
-                    if (localR) {
-                        const baseName = dbR.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                        return {
-                            ...dbR,
-                            menu: (dbR.menu && dbR.menu.length > 0) ? dbR.menu : localR.menu,
-                            coverImage: dbR.coverImage || localR.coverImage,
-                            username: localR.username || ('id_' + baseName),
-                            password: localR.password || (baseName + '221'),
-                            status: localR.status || dbR.status || 'active',
-                            subscriptionPack: localR.subscriptionPack || 'Aucun (Gratuit)',
-                            createdAt: localR.createdAt || '2026-06-25T00:00:00Z'
-                        };
-                    }
-                    const baseName = dbR.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                    return {
-                        ...dbR,
-                        menu: dbR.menu || [],
-                        username: 'id_' + baseName,
-                        password: baseName + '221',
-                        status: dbR.status || 'active',
-                        subscriptionPack: 'Aucun (Gratuit)',
-                        createdAt: dbR.created_at || '2026-06-25T00:00:00Z'
-                    };
-                });
-
-                this.data.restaurants = mergedRestos;
-            }
-
-            // 2. Fetch admin data or restaurant specific data
-            if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
-                const adminPass = sessionStorage.getItem('admin_password') || '';
-                const { data: adminData, error: adminError } = await supabaseClient.rpc('get_admin_data', {
-                    p_admin_password: adminPass
-                });
-                if (!adminError && adminData) {
-                    if (adminData.restaurants) {
-                        adminData.restaurants.forEach(dbR => {
-                            const localR = this.data.restaurants.find(lr => lr.id === dbR.id);
-                            if (localR) {
-                                localR.username = dbR.username;
-                                localR.password = dbR.password;
-                                localR.status = dbR.status;
-                            }
-                        });
-                    }
-                    if (adminData.orders) {
-                        const mappedOrders = adminData.orders.map(o => ({
-                            id: o.id,
-                            restaurantId: o.restaurant_id,
-                            customerName: o.customer_name,
-                            customerPhone: o.customer_phone,
-                            mode: o.mode,
-                            address: o.address,
-                            items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
-                            total: Number(o.total),
-                            note: o.note,
-                            status: o.status,
-                            date: o.date,
-                            time: o.time
-                        }));
-                        this.data.orders = mappedOrders.sort((a,b) => b.id.localeCompare(a.id));
-                    }
-                    if (adminData.reservations) {
-                        const mappedReservations = adminData.reservations.map(r => ({
-                            id: r.id,
-                            restaurantId: r.restaurant_id,
-                            customerName: r.customer_name,
-                            customerPhone: r.customer_phone,
-                            date: r.date,
-                            time: r.time,
-                            guests: Number(r.guests),
-                            note: r.note,
-                            status: r.status
-                        }));
-                        this.data.reservations = mappedReservations.sort((a,b) => b.id.localeCompare(a.id));
-                    }
-                }
-            } else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.password) {
-                // Fetch only for this restaurant via RPC
-                const { data: myOrders, error: ordersError } = await supabaseClient.rpc('get_restaurant_orders', {
-                    p_restaurant_id: currentRestaurantSession.id,
-                    p_password: currentRestaurantSession.password
-                });
-                if (!ordersError && myOrders) {
-                    const mappedOrders = myOrders.map(o => ({
-                        id: o.id,
-                        restaurantId: o.restaurant_id,
-                        customerName: o.customer_name,
-                        customerPhone: o.customer_phone,
-                        mode: o.mode,
-                        address: o.address,
-                        items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
-                        total: Number(o.total),
-                        note: o.note,
-                        status: o.status,
-                        date: o.date,
-                        time: o.time
-                    }));
-                    this.data.orders = mappedOrders.sort((a,b) => b.id.localeCompare(a.id));
-                }
-                
-                const { data: myRes, error: resError } = await supabaseClient.rpc('get_restaurant_reservations', {
-                    p_restaurant_id: currentRestaurantSession.id,
-                    p_password: currentRestaurantSession.password
-                });
-                if (!resError && myRes) {
-                    const mappedReservations = myRes.map(r => ({
-                        id: r.id,
-                        restaurantId: r.restaurant_id,
-                        customerName: r.customer_name,
-                        customerPhone: r.customer_phone,
-                        date: r.date,
-                        time: r.time,
-                        guests: Number(r.guests),
-                        note: r.note,
-                        status: r.status
-                    }));
-                    this.data.reservations = mappedReservations.sort((a,b) => b.id.localeCompare(a.id));
-                }
-            }
-
-            this.save();
-            console.log("Supabase synchronization completed successfully.");
-            if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
-            if (typeof applyFilters === 'function') {
-                applyFilters();
-            }
-        } catch (e) {
-            console.error("Supabase sync failed", e);
-        }
-    }
-
-    async seedRemoteDatabase() {
-        if (!supabaseClient) return;
-        try {
-            let localRestos = this.data.restaurants;
-            if (!localRestos || localRestos.length === 0) {
-                this.seed();
-                localRestos = this.data.restaurants;
-            }
-
-            const list = localRestos.map(r => {
-                let baseName = r.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-                let username = 'id_' + baseName;
-                let password = baseName + '221';
-                
-                return {
-                    id: r.id,
-                    name: r.name,
-                    slug: r.slug,
-                    rating: r.rating || 4.0,
-                    reviews_count: r.reviewsCount || 0,
-                    category: r.category,
-                    address: r.address || '',
-                    whatsapp: r.whatsapp || '',
-                    open_hours: r.openHours || '08:00 - 22:00',
-                    closed_days: r.closedDays || [],
-                    is_open_manual: r.isOpenManual !== undefined ? r.isOpenManual : true,
-                    status: 'active',
-                    username: username,
-                    password: password,
-                    cover_image: r.coverImage || '',
-                    menu: r.menu || [],
-                    reviews: r.reviews || []
-                };
-            });
-
-            const { error } = await supabaseClient.from('restaurants').insert(list);
-            if (error) {
-                console.error("Error seeding remote database:", error);
-            } else {
-                console.log("Successfully seeded remote database!");
-                await this.syncFromSupabase();
-            }
-        } catch (e) {
-            console.error("Failed to seed remote database:", e);
-        }
-    }
-
-    async pushRestaurantToSupabase(resto) {
-        if (!supabaseClient) return;
-        try {
-            const { error } = await supabaseClient.from('restaurants').insert({
-                id: resto.id,
-                name: resto.name,
-                slug: resto.slug,
-                rating: resto.rating,
-                reviews_count: resto.reviewsCount,
-                category: resto.category,
-                address: resto.address,
-                whatsapp: resto.whatsapp,
-                open_hours: resto.openHours,
-                closed_days: resto.closedDays,
-                is_open_manual: resto.isOpenManual,
-                status: resto.status,
-                username: resto.username,
-                password: resto.password,
-                cover_image: resto.coverImage,
-                menu: resto.menu,
-                reviews: resto.reviews,
-                subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
-            });
-
-            if (error && error.code === '23505') {
-                if (isSuperAdminSession) {
-                    const adminPass = sessionStorage.getItem('admin_password') || '';
-                    await supabaseClient.rpc('admin_update_restaurant', {
-                        p_admin_password: adminPass,
-                        p_restaurant_id: resto.id,
-                        p_updates: {
-                            name: resto.name,
-                            status: resto.status,
-                            username: resto.username,
-                            password: resto.password,
-                            subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
-                        }
-                    });
-                } else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === resto.id) {
-                    await supabaseClient.rpc('update_restaurant_data', {
-                        p_restaurant_id: resto.id,
-                        p_password: currentRestaurantSession.password,
-                        p_updates: {
-                            name: resto.name,
-                            address: resto.address,
-                            whatsapp: resto.whatsapp,
-                            open_hours: resto.openHours,
-                            closed_days: resto.closedDays,
-                            is_open_manual: resto.isOpenManual,
-                            cover_image: resto.coverImage,
-                            menu: resto.menu,
-                            reviews: resto.reviews
-                        }
-                    });
-                }
-            }
-        } catch (e) {
-            console.error("Failed to push restaurant to Supabase", e);
-        }
-    }
-
-    async deleteRestaurantFromSupabase(id) {
-        if (!supabaseClient) return;
-        try {
-            if (isSuperAdminSession) {
-                const adminPass = sessionStorage.getItem('admin_password') || '';
-                await supabaseClient.rpc('admin_delete_restaurant', {
-                    p_admin_password: adminPass,
-                    p_restaurant_id: id
-                });
-            } else {
-                console.warn("Unauthorized delete attempt on Supabase");
-            }
-        } catch (e) {
-            console.error("Failed to delete restaurant from Supabase", e);
-        }
-    }
-
-    async pushOrderToSupabase(order) {
-        if (!supabaseClient) return;
-        try {
-            await supabaseClient.from('orders').insert({
-                id: order.id,
-                restaurant_id: order.restaurantId,
-                customer_name: order.customerName,
-                customer_phone: order.customerPhone,
-                mode: order.mode,
-                address: order.address,
-                items: order.items,
-                total: order.total,
-                note: order.note,
-                status: order.status,
-                date: order.date,
-                time: order.time
-            });
-        } catch (e) {
-            console.error("Failed to push order to Supabase", e);
-        }
-    }
-
-    async pushReservationToSupabase(res) {
-        if (!supabaseClient) return;
-        try {
-            await supabaseClient.from('reservations').insert({
-                id: res.id,
-                restaurant_id: res.restaurantId,
-                customer_name: res.customerName,
-                customer_phone: res.customerPhone,
-                date: res.date,
-                time: res.time,
-                guests: res.guests,
-                note: res.note,
-                status: res.status
-            });
-        } catch (e) {
-            console.error("Failed to push reservation to Supabase", e);
-        }
-    }
-
-    async pushCustomerToSupabase(phone, name, usedRewards) {
-        if (!supabaseClient) return;
-        try {
-            await supabaseClient.rpc('upsert_customer_loyalty', {
-                p_phone: phone,
-                p_name: name,
-                p_used_rewards: usedRewards
-            });
-        } catch (e) {
-            console.error("Failed to push customer to Supabase", e);
-        }
-    }
-
-    applyLoyaltyRewardUsed(phone, name) {
-        if (!this.data.usedRewards) {
-            this.data.usedRewards = {};
-        }
-        this.data.usedRewards[phone] = (this.data.usedRewards[phone] || 0) + 1;
-        this.save();
-        this.pushCustomerToSupabase(phone, name, this.data.usedRewards[phone]);
-    }
-
-    
-    async saveClientInfo(name, phone) {
-        if (!supabaseClient) return;
-        try {
-            await supabaseClient.rpc('upsert_client', {
-                p_name: name,
-                p_phone: phone
-            });
-        } catch (error) {
-            console.error('Error saving client info:', error);
-        }
-    }
-    getRestaurants() {
-        const currentDate = new Date();
-        let changed = false;
-        
-        this.data.restaurants.forEach(r => {
-            // Mock created date if not present. In a real DB, this is the registration date.
-            const createdAt = new Date(r.createdAt || '2026-06-26T00:00:00Z');
-            const diffTime = Math.abs(currentDate - createdAt);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            // Suspend restaurant if 3 months (90 days) free trial has expired and no paid package is active
-            let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
-            if (diffDays > 90 && r.status === 'active' && packSubscribed === 'Aucun (Gratuit)') {
-                r.status = 'suspended';
-                changed = true;
-                this.pushRestaurantToSupabase(r);
-            }
-        });
-        
-        if (changed) {
-            this.save();
-        }
-        return this.data.restaurants;
-    }
-
-    getRestaurantBySlug(slug) {
-        return this.data.restaurants.find(r => r.slug === slug);
-    }
-
-    getRestaurantById(id) {
-        return this.data.restaurants.find(r => r.id === id);
-    }
-
-    updateRestaurant(id, fields) {
-        const idx = this.data.restaurants.findIndex(r => r.id === id);
-        if (idx !== -1) {
-            this.data.restaurants[idx] = { ...this.data.restaurants[idx], ...fields };
-            this.save();
-            this.pushRestaurantToSupabase(this.data.restaurants[idx]);
-            return this.data.restaurants[idx];
-        }
-        return null;
-    }
-
-    addRestaurant(resto) {
-        this.data.restaurants.push(resto);
-        this.save();
-        this.pushRestaurantToSupabase(resto);
-    }
-
-    deleteRestaurant(id) {
-        this.data.restaurants = this.data.restaurants.filter(r => r.id !== id);
-        this.save();
-        this.deleteRestaurantFromSupabase(id);
-    }
-
-    getOrdersByRestaurant(restaurantId) {
-        return this.data.orders.filter(o => o.restaurantId === restaurantId);
-    }
-
-    addOrder(order) {
-        
-        if (window.clientTracker) {
-            const behaviorStr = window.clientTracker.getBehaviorReport();
-            // Append to internal note for admin visibility (not necessarily to WhatsApp to not spam the restaurant)
-            order.note = order.note ? order.note + ' | [Analytics: ' + behaviorStr + ']' : '[Analytics: ' + behaviorStr + ']';
-        }
-        this.data.orders.unshift(order);
-
-        this.save();
-        this.pushOrderToSupabase(order);
-        
-        // Also save customer profile in Supabase
-        const usedRewards = (this.data.usedRewards && this.data.usedRewards[order.customerPhone]) || 0;
-        this.pushCustomerToSupabase(order.customerPhone, order.customerName, usedRewards);
-    }
-
-    async updateOrderStatus(orderId, status) {
-        const order = this.data.orders.find(o => o.id === orderId);
-        if (order) {
-            order.status = status;
-            this.save();
-            if (supabaseClient && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
-                await supabaseClient.rpc('update_order_status', {
-                    p_order_id: orderId,
-                    p_restaurant_id: currentRestaurantSession.id,
-                    p_password: currentRestaurantSession.password,
-                    p_status: status
-                });
-            } else {
-                this.pushOrderToSupabase(order);
-            }
-        }
-    }
-
-    getReservationsByRestaurant(restaurantId) {
-        return this.data.reservations.filter(r => r.restaurantId === restaurantId);
-    }
-
-    addReservation(res) {
-        this.data.reservations.unshift(res);
-        this.save();
-        this.pushReservationToSupabase(res);
-    }
-
-    async updateReservationStatus(resId, status) {
-        const res = this.data.reservations.find(r => r.id === resId);
-        if (res) {
-            res.status = status;
-            this.save();
-            if (supabaseClient && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
-                await supabaseClient.rpc('update_reservation_status', {
-                    p_res_id: resId,
-                    p_restaurant_id: currentRestaurantSession.id,
-                    p_password: currentRestaurantSession.password,
-                    p_status: status
-                });
-            } else {
-                this.pushReservationToSupabase(res);
-            }
-        }
-    }
-}
-
-const store = new Store();
-
-// ----------------------------------------------------
-// Global Router
-// ----------------------------------------------------
-class Router {
-    constructor() {
-        this.routes = {};
-        window.addEventListener('hashchange', () => this.resolve());
-        window.addEventListener('load', () => this.resolve());
-    }
-
-    add(path, handler) {
-        this.routes[path] = handler;
-    }
-
-    navigate(path) {
-        window.location.hash = path;
-    }
-
-    resolve() {
-        const hash = window.location.hash || '#/';
-        
-        const container = document.getElementById('main-content');
-        if (container) {
-            container.classList.remove('page-transition');
-            void container.offsetWidth; // Force reflow
-            container.classList.add('page-transition');
-        }
-        
-        // Parse params for restaurant view: #/r/la-licorne
-        let matched = false;
-        
-        // Match group route first: #/r/:slug/group/:groupId
-        const groupMatch = hash.match(/^#\/r\/([^/]+)\/group\/([^/]+)$/);
-        if (groupMatch) {
-            const slug = groupMatch[1];
-            const groupId = groupMatch[2];
-            if (this.routes['#/r/:slug']) {
-                this.routes['#/r/:slug'](slug, 'group', groupId);
-                matched = true;
-            }
-        }
-        
-        if (!matched) {
-            const restoMatch = hash.match(/^#\/r\/([^/]+)$/);
-            if (restoMatch) {
-                const slug = restoMatch[1];
-                if (this.routes['#/r/:slug']) {
-                    this.routes['#/r/:slug'](slug, 'menu');
-                    matched = true;
-                }
-            }
-        }
-
-        if (!matched) {
-            const handler = this.routes[hash] || this.routes['#/404'];
-            if (handler) {
-                handler();
-            } else {
-                this.navigate('/');
-            }
-        }
-        
-        // Refresh Navbar State
-        updateNavbar();
-    }
-}
-
-const router = new Router();
-
 // ----------------------------------------------------
 function logoutRestaurant() {
     try {
@@ -1006,11 +388,14 @@ async function handleRestaurantLogin(e) {
     
     currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: pass };
     try {
-        sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
+        sessionStorage.setItem('resto_session', btoa(JSON.stringify(currentRestaurantSession)));
     } catch (e) {}
     
     if (typeof updateNavbar === 'function') updateNavbar();
     if (typeof showToast === 'function') showToast(`Bienvenue, ${r.name} !`, "success");
+    setTimeout(() => {
+        if (typeof showToast === 'function') showToast("⚠️ Sécurité: Authentification temporaire active. Migration Supabase recommandée.", "warning");
+    }, 2500);
     
     setTimeout(() => {
         const modal = document.getElementById('auth-modal');
@@ -1090,8 +475,9 @@ function handleRestaurantRegister(e) {
 // ----------------------------------------------------
 // Page: RESTAURANT DASHBOARD (Gerer ses donnees)
 // ----------------------------------------------------
-let dashboardActiveTab = 'orders';
+let dashboardActiveTab = 'summary';
 let currentOrderStatusFilter = 'Tous';
+let currentAccountingFilter = 'all'; // all, today, week, month
 
 router.add('#/dashboard', () => {
     // Hide cart
@@ -1155,6 +541,7 @@ function renderDashboardShell() {
         ${trialAlertBanner}
         <div class="dashboard-grid">
             <aside class="sidebar">
+                <button class="sidebar-btn ${dashboardActiveTab === 'summary' ? 'active' : ''}" onclick="switchDashboardTab('summary')">📈 Résumé du Jour</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'orders' ? 'active' : ''}" onclick="switchDashboardTab('orders')">📦 Commandes${lockIcon}</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'reservations' ? 'active' : ''}" onclick="switchDashboardTab('reservations')">📅 Réservations${lockIcon}</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'menu' ? 'active' : ''}" onclick="switchDashboardTab('menu')">🍽️ Plats du Jour${lockIcon}</button>
@@ -1180,7 +567,7 @@ function switchDashboardTab(tab) {
     btns.forEach(b => b.classList.remove('active'));
     
     // Highlight active
-    const label = tab === 'orders' ? 'commandes' : tab === 'reservations' ? 'réservations' : tab === 'menu' ? 'plats' : tab === 'reviews' ? 'avis' : tab === 'accounting' ? 'comptabilité' : tab === 'subscription' ? 'abonnement' : 'paramètres';
+    const label = tab === 'summary' ? 'résumé' : tab === 'orders' ? 'commandes' : tab === 'reservations' ? 'réservations' : tab === 'menu' ? 'plats' : tab === 'reviews' ? 'avis' : tab === 'accounting' ? 'comptabilité' : tab === 'subscription' ? 'abonnement' : 'paramètres';
     btns.forEach(b => {
         if (b.innerText.toLowerCase().includes(label)) {
             b.classList.add('active');
@@ -1222,7 +609,53 @@ function renderDashboardTabContent(r) {
         return;
     }
     
-    if (dashboardActiveTab === 'orders') {
+    if (dashboardActiveTab === 'summary') {
+        const orders = store.getOrdersByRestaurant(r.id);
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayOrders = orders.filter(o => o.date === todayStr);
+        const pendingOrders = orders.filter(o => o.status === 'Reçue');
+        const todayRevenue = todayOrders.filter(o => o.status === 'Livrée').reduce((sum, o) => sum + o.total, 0);
+        
+        const reservations = store.getReservationsByRestaurant(r.id);
+        const upcomingRes = reservations.filter(res => res.status === 'En attente' || res.status === 'Confirmée').length;
+
+        panel.innerHTML = `
+            <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary);">Résumé du Jour</h2>
+                <button class="btn btn-primary btn-sm" onclick="requestPushNotifications()">🔔 Activer Notifications</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="stat-card" style="border-top: 4px solid var(--accent); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">⏳ Commandes en attente</span>
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--accent);">${pendingOrders.length}</span>
+                    ${pendingOrders.length > 0 ? `<button class="btn btn-primary btn-sm" style="margin-top: 1rem; width: 100%;" onclick="switchDashboardTab('orders')">Voir les commandes</button>` : ''}
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--success); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">💰 C.A. d'Aujourd'hui</span>
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--success);">${todayRevenue.toLocaleString()} FCFA</span>
+                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">${todayOrders.length} commandes aujourd'hui</div>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--primary); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">📅 Réservations Actives</span>
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--primary);">${upcomingRes}</span>
+                    <button class="btn btn-secondary btn-sm" style="margin-top: 1rem; width: 100%;" onclick="switchDashboardTab('reservations')">Voir l'agenda</button>
+                </div>
+            </div>
+            
+            <h3 style="font-family: var(--font-serif); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Action Rapide : Statut du Restaurant</h3>
+            <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.25rem;">${r.isOpenManual ? '🟢 Ouvert aux commandes' : '🔴 Actuellement fermé (Manuel)'}</strong>
+                    <span style="font-size: 0.9rem; color: var(--text-secondary);">Gérez l'ouverture exceptionnelle (ex: rupture de stock totale, fermeture inattendue)</span>
+                </div>
+                <button class="btn ${r.isOpenManual ? 'btn-danger' : 'btn-success'}" onclick="toggleRestaurantManualStatus('${r.id}')">
+                    ${r.isOpenManual ? 'Forcer la Fermeture 🔴' : 'Ré-ouvrir 🟢'}
+                </button>
+            </div>
+        `;
+    }
+    else if (dashboardActiveTab === 'orders') {
         const orders = store.getOrdersByRestaurant(r.id);
         const todayStr = new Date().toISOString().split('T')[0];
         
@@ -1641,9 +1074,22 @@ function renderDashboardTabContent(r) {
         `;
     }
     else if (dashboardActiveTab === 'accounting') {
-        const orders = store.getOrdersByRestaurant(r.id);
-        const completedOrders = orders.filter(o => o.status === 'Livrée');
+        let orders = store.getOrdersByRestaurant(r.id);
+        const todayStr = new Date().toISOString().split('T')[0];
         
+        if (currentAccountingFilter === 'today') {
+            orders = orders.filter(o => o.date === todayStr);
+        } else if (currentAccountingFilter === 'week') {
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            orders = orders.filter(o => o.date >= weekAgo && o.date <= todayStr);
+        } else if (currentAccountingFilter === 'month') {
+            const today = new Date();
+            const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            orders = orders.filter(o => o.date >= monthAgo && o.date <= todayStr);
+        }
+
+        const completedOrders = orders.filter(o => o.status === 'Livrée');
         const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
         const totalOrdersCount = orders.length;
         const completedOrdersCount = completedOrders.length;
@@ -1664,7 +1110,7 @@ function renderDashboardTabContent(r) {
             rowsHtml = `
                 <tr>
                     <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                        Aucune commande enregistrée pour le moment.
+                        Aucune commande enregistrée pour la période sélectionnée.
                     </td>
                 </tr>
             `;
@@ -1696,7 +1142,13 @@ function renderDashboardTabContent(r) {
                         <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: var(--text-primary);">📊 Journal de Comptabilité</h2>
                         <p style="color: var(--text-secondary); font-size: 0.85rem;">Suivi des chiffres d'affaires et historique complet des commandes clients.</p>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select class="form-control" style="width: auto; margin: 0; padding: 0.25rem 0.5rem; font-size: 0.85rem;" onchange="currentAccountingFilter = this.value; renderDashboardTabContent(store.getRestaurantById('${r.id}'))">
+                            <option value="all" ${currentAccountingFilter === 'all' ? 'selected' : ''}>Toutes les dates</option>
+                            <option value="today" ${currentAccountingFilter === 'today' ? 'selected' : ''}>Aujourd'hui</option>
+                            <option value="week" ${currentAccountingFilter === 'week' ? 'selected' : ''}>7 derniers jours</option>
+                            <option value="month" ${currentAccountingFilter === 'month' ? 'selected' : ''}>30 derniers jours</option>
+                        </select>
                         <button class="btn btn-primary btn-sm" onclick="exportOrdersCSV('${r.id}')">💾 Exporter CSV</button>
                         <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Imprimer</button>
                     </div>
@@ -3231,21 +2683,18 @@ function exportReservationsToCSV() {
         ].join(';');
         csvContent += row + "\n";
     });
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const encodedUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUrl);
-    link.setAttribute("download", `reservations_${r.slug}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `reservations_$($r.slug)_$(new Date().toISOString().split('T')[0]).csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     showToast("Fichier CSV des réservations téléchargé !", "success");
 }
 
-// ----------------------------------------------------
-// Hamburger & Drawer Logic
-// ----------------------------------------------------
 function toggleMobileMenu() {
     const drawer = document.getElementById('mobile-drawer');
     const backdrop = document.getElementById('drawer-backdrop');
@@ -3257,16 +2706,32 @@ function toggleMobileMenu() {
     }
 }
 
-// ----------------------------------------------------
-// Page: POLITIQUE CLIENT
-// ----------------------------------------------------
-// ----------------------------------------------------
-// THIES Resto - Core JavaScript Application
-// ----------------------------------------------------
+    // ----------------------------------------------------
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.toString().replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[m];
+    });
+}
 
-// Cover images by category (real restaurant-style photos)
-// Global State
-// ----------------------------------------------------
+// Current Session (with safe storage check for file:// protocol support)
+let currentRestaurantSession = null;
+let isSuperAdminSession = false;
+try {
+    const sessionStr = sessionStorage.getItem('resto_session');
+    if (sessionStr) {
+        currentRestaurantSession = JSON.parse(atob(sessionStr));
+    }
+    isSuperAdminSession = sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true';
+} catch (e) {
+    console.warn("sessionStorage is not accessible or invalid. Session data will be held in memory only.", e);
+}
 let cart = {
     restaurantId: null,
     items: [],
@@ -3409,6 +2874,7 @@ function loadCart() {
         }
     } catch(e) {}
 }
+loadCart();
 
 function pulseCartBar() {
     const bar = document.getElementById('floating-cart-bar');
@@ -3498,6 +2964,14 @@ function startOrderPolling(restaurantId) {
                         if (!exists) {
                             playNotificationSound();
                             if (typeof showToast === 'function') showToast(`🔔 Nouvelle commande reçue !`, 'success');
+                            
+                            // Trigger Push Notification if permission granted
+                            if ("Notification" in window && Notification.permission === "granted") {
+                                new Notification("Nouvelle Commande 🔔", { 
+                                    body: `Commande reçue de ${newOrder.customer_name} pour ${newOrder.total} FCFA`,
+                                    icon: "icon.png" 
+                                });
+                            }
                             
                             const formatted = {
                                 id: newOrder.id,
@@ -3843,7 +3317,7 @@ router.add('#/', () => {
 
     container.innerHTML = `
         <!-- ========== HERO SECTION ========== -->
-        <section class="hero-section" style="background: linear-gradient(rgba(10, 10, 12, 0.8), rgba(10, 10, 12, 0.95)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
+        <section class="hero-section" style="background: linear-gradient(var(--glass-bg), var(--bg-primary)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
             <div class="hero-split-container">
                 <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col">
@@ -3939,7 +3413,7 @@ router.add('#/', () => {
             </div>
             
             <div class="side-content">
-                <h2 style="font-family: var(--font-serif); font-weight: 400; color: #ffffff;">Une Plateforme Commune & Solidaire</h2>
+                <h2 style="font-family: var(--font-serif); font-weight: 400; color: var(--text-primary);">Une Plateforme Commune & Solidaire</h2>
                 <p>Né d'une étude sur le terrain à Thiès, ce projet répond au constat que 95% des restaurateurs de la ville ne disposent d'aucun outil numérique propre. Nous réunissons les 20 tables les mieux notées sous un même toit virtuel pour leur offrir une présence en ligne immédiate et gratuite.</p>
                 <div style="display: flex; gap: 2rem;">
                     <div>
@@ -3957,7 +3431,7 @@ router.add('#/', () => {
         <!-- ========== SIGNATURE MENU SECTION (List Left, Big Image Right) ========== -->
         <section class="signature-section">
             <div class="sig-list">
-                <h2 style="font-family: var(--font-serif); font-weight: 400; color: #ffffff; font-size: 2.25rem; margin-bottom: 0.5rem;">Les Saveurs Emblématiques de Thiès</h2>
+                <h2 style="font-family: var(--font-serif); font-weight: 400; color: var(--text-primary); font-size: 2.25rem; margin-bottom: 0.5rem;">Les Saveurs Emblématiques de Thiès</h2>
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.6;">Découvrez notre sélection de plats phares issus des cartes de nos restaurants partenaires.</p>
                 
                 <div class="sig-item">
@@ -4749,9 +4223,7 @@ function switchRestoTab(tabName) {
     if (tabsNav) tabsNav.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function openCartTab() {
-    switchRestoTab('checkout');
-}
+// openCartTab is now globally defined at the bottom of the file
 
 
 // ----------------------------------------------------
@@ -5113,9 +4585,16 @@ function renderCheckoutTab(r) {
                 <input type="text" id="order-address" class="form-control" placeholder="Quartier Mbour 1, en face de la mosquée, Thiès">
             </div>
             
-            <div class="form-group">
+                        <div class="form-group">
                 <label class="form-label">Notes Spéciales / Allergies (Optionnel)</label>
                 <textarea id="order-notes" class="form-control" placeholder="Sans piment, sauce à part..."></textarea>
+            </div>
+            
+            <div class="form-group" style="margin-top: 1rem;">
+                <label style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer;">
+                    <input type="checkbox" id="order-gdpr" required style="margin-top: 0.2rem;">
+                    <span>J'accepte que mes données (nom, téléphone) soient transmises au restaurateur pour le traitement de ma commande.</span>
+                </label>
             </div>
             
             <button type="submit" class="btn btn-primary btn-block">
@@ -6792,9 +6271,45 @@ window.scrollToCatalog = function() {
 };
 
 window.openCartTab = function() {
-    if (typeof switchRestoTab === 'function') {
+    if (cart && cart.restaurantId && cart.items.length > 0) {
+        const r = store.getRestaurantById(cart.restaurantId);
+        if (r) {
+            if (!window.location.hash.startsWith('#/r/' + r.slug)) {
+                router.navigate('/r/' + r.slug);
+                setTimeout(() => {
+                    if (typeof switchRestoTab === 'function') {
+                        switchRestoTab('checkout');
+                    }
+                }, 100);
+            } else {
+                if (typeof switchRestoTab === 'function') {
+                    switchRestoTab('checkout');
+                }
+            }
+            return;
+        }
+    }
+    
+    if (typeof switchRestoTab === 'function' && document.getElementById('panel-checkout')) {
         switchRestoTab('checkout');
     } else {
-        showToast("Ouvrez le menu d'un restaurant pour voir votre panier", "info");
+        showToast("Votre panier est vide. Choisissez un restaurant !", "warning");
+        if (typeof scrollToCatalog === 'function') scrollToCatalog();
     }
+};
+
+// ---------- PUSH NOTIFICATIONS ----------
+window.requestPushNotifications = function() {
+    if (!("Notification" in window)) {
+        showToast("Ce navigateur ne supporte pas les notifications système", "danger");
+        return;
+    }
+    Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+            showToast("Notifications activées ! Vous serez alerté des nouvelles commandes.", "success");
+            new Notification("THIES Resto", { body: "Les notifications fonctionnent parfaitement !", icon: "icon.png" });
+        } else {
+            showToast("Les notifications sont bloquées ou refusées.", "warning");
+        }
+    });
 };

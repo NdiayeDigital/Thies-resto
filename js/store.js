@@ -10,7 +10,7 @@ if (typeof supabase !== 'undefined' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON
 // App Local Database state manager (with Supabase sync)
 class Store {
     constructor() {
-        this.key = 'THIES_RESTO_DB_V2';
+        this.key = 'THIES_RESTO_DB_V3'; // Bumped version to clear all old local cached orders
         this.data = this.load();
         if (!this.data) {
             this.seed();
@@ -40,89 +40,10 @@ class Store {
     }
 
     seed() {
-        // Initialize base structure
-        const restaurants = SEED_RESTAURANTS.map(r => {
-            // Pick a matching menu template based on category
-            const menuType = MENU_TEMPLATES[r.category] ? r.category : "Traditionnel";
-            const menu = JSON.parse(JSON.stringify(MENU_TEMPLATES[menuType]));
-            
-            // Generate reviews list
-            const reviews = SAMPLE_REVIEWS.map((rev, index) => ({
-                id: `rev_${r.id}_${index}`,
-                author: rev.author,
-                rating: rev.rating,
-                comment: rev.comment,
-                date: rev.date,
-                reply: rev.reply
-            }));
-
-            const baseName = r.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-            return {
-                ...r,
-                username: 'id_' + baseName,
-                password: baseName + '221',
-                coverImage: RESTAURANT_COVERS[r.id] || COVER_IMAGES[r.category] || COVER_IMAGES["Traditionnel"],
-                menu,
-                reviews
-            };
-        });
-
-        // Initialize orders
-        const orders = [
-            {
-                id: "ORD-9821",
-                restaurantId: "r18",
-                customerName: "Moussa Ndiaye",
-                customerPhone: "+221776541234",
-                mode: "Livraison",
-                address: "Cité Lamy, Villa 104, Thiès",
-                items: [
-                    { name: 'Lotte rôtie sauce vanille de Casamance', price: 7500, qty: 1 },
-                    { name: 'Moelleux au Chocolat & Coulis Bissap', price: 2500, qty: 2 }
-                ],
-                total: 12500,
-                note: "Sans piment s'il vous plaît",
-                status: "Confirmée",
-                date: "2026-06-18",
-                time: "14:15"
-            },
-            {
-                id: "ORD-1204",
-                restaurantId: "r18",
-                customerName: "Awa Diop",
-                customerPhone: "+221768884422",
-                mode: "A emporter",
-                address: "",
-                items: [
-                    { name: 'Filet de Bœuf braisé au Café Touba', price: 8000, qty: 1 }
-                ],
-                total: 8000,
-                note: "",
-                status: "Reçue",
-                date: "2026-06-18",
-                time: "17:05"
-            }
-        ];
-
-        // Initialize reservations
-        const reservations = [
-            {
-                id: "RES-4482",
-                restaurantId: "r18",
-                customerName: "Babacar Sy",
-                customerPhone: "+221774443322",
-                date: "2026-06-20",
-                time: "20:30",
-                guests: 4,
-                note: "Table en terrasse si possible",
-                status: "Confirmée"
-            }
-        ];
-
         this.data = {
-            restaurants,
-            orders,
-            reservations,
+            restaurants: [],
+            orders: [],
+            reservations: [],
             groupOrders: []
         };
         this.save();
@@ -176,7 +97,9 @@ class Store {
                             coverImage: dbR.coverImage || localR.coverImage,
                             username: localR.username || ('id_' + baseName),
                             password: localR.password || (baseName + '221'),
-                            status: localR.status || dbR.status || 'active'
+                            status: localR.status || dbR.status || 'active',
+                            subscriptionPack: localR.subscriptionPack || 'Aucun (Gratuit)',
+                            createdAt: localR.createdAt || '2026-06-25T00:00:00Z'
                         };
                     }
                     const baseName = dbR.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -185,7 +108,9 @@ class Store {
                         menu: dbR.menu || [],
                         username: 'id_' + baseName,
                         password: baseName + '221',
-                        status: dbR.status || 'active'
+                        status: dbR.status || 'active',
+                        subscriptionPack: 'Aucun (Gratuit)',
+                        createdAt: dbR.created_at || '2026-06-25T00:00:00Z'
                     };
                 });
 
@@ -363,7 +288,8 @@ class Store {
                 password: resto.password,
                 cover_image: resto.coverImage,
                 menu: resto.menu,
-                reviews: resto.reviews
+                reviews: resto.reviews,
+                subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
             });
 
             if (error && error.code === '23505') {
@@ -376,7 +302,8 @@ class Store {
                             name: resto.name,
                             status: resto.status,
                             username: resto.username,
-                            password: resto.password
+                            password: resto.password,
+                            subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
                         }
                     });
                 } else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === resto.id) {
@@ -495,6 +422,27 @@ class Store {
         }
     }
     getRestaurants() {
+        const currentDate = new Date();
+        let changed = false;
+        
+        this.data.restaurants.forEach(r => {
+            // Mock created date if not present. In a real DB, this is the registration date.
+            const createdAt = new Date(r.createdAt || '2026-06-26T00:00:00Z');
+            const diffTime = Math.abs(currentDate - createdAt);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Suspend restaurant if 3 months (90 days) free trial has expired and no paid package is active
+            let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
+            if (diffDays > 90 && r.status === 'active' && packSubscribed === 'Aucun (Gratuit)') {
+                r.status = 'suspended';
+                changed = true;
+                this.pushRestaurantToSupabase(r);
+            }
+        });
+        
+        if (changed) {
+            this.save();
+        }
         return this.data.restaurants;
     }
 
@@ -598,7 +546,3 @@ class Store {
 }
 
 const store = new Store();
-
-// ----------------------------------------------------
-// Global Router
-// ----------------------------------------------------

@@ -3207,3 +3207,9 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     background: rgba(255,255,255,0.03);
     border-color: var(--border);
 }
+
+@media (max-width: 768px) {
+    #hamburger-btn {
+        display: none !important;
+    }
+}
