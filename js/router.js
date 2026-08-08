@@ -3,6 +3,7 @@ class Router {
         this.routes = {};
         window.addEventListener('hashchange', () => this.resolve());
         window.addEventListener('load', () => this.resolve());
+        window.addEventListener('DOMContentLoaded', () => this.resolve());
     }
 
     add(path, handler) {
