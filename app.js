@@ -3246,6 +3246,18 @@ router.add('#/', () => {
     else greeting = "Bonsoir ! Ne cuisinez pas ce soir.";
 
 
+    const activeRestaurants = store.getRestaurants().filter(r => r.status === 'active');
+    let carouselItemsHtml = '';
+    if (activeRestaurants.length > 0) {
+        const itemsToScroll = [...activeRestaurants, ...activeRestaurants, ...activeRestaurants];
+        carouselItemsHtml = itemsToScroll.map(r => `
+            <div class="carousel-item" onclick="router.navigate('/resto/${r.slug}')" style="cursor: pointer;">
+                <img src="${r.coverImage}" alt="${r.name}" loading="lazy">
+                <div class="carousel-item-overlay">${r.name}</div>
+            </div>
+        `).join('');
+    }
+
     container.innerHTML = `
         <!-- ========== HERO SECTION ========== -->
         <section class="hero-section" style="background: linear-gradient(var(--glass-bg), var(--bg-primary)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
