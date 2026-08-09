@@ -2728,18 +2728,7 @@ function escapeHTML(str) {
     });
 }
 
-// Current Session (with safe storage check for file:// protocol support)
-let currentRestaurantSession = null;
-let isSuperAdminSession = false;
-try {
-    const sessionStr = sessionStorage.getItem('resto_session');
-    if (sessionStr) {
-        currentRestaurantSession = JSON.parse(atob(sessionStr));
-    }
-    isSuperAdminSession = sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true';
-} catch (e) {
-    console.warn("sessionStorage is not accessible or invalid. Session data will be held in memory only.", e);
-}
+// Session is managed in store.js
 let cart = {
     restaurantId: null,
     items: [],
