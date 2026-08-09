@@ -2784,76 +2784,10 @@ let activeFilter = 'Tous';
 let activeSortBy = 'default';
 
 // ---------- LOADING STATE ----------
-let isFirstLoad = true;
-let firstLoadTimeoutId = null;
-
+// Loading overlay has been completely removed. Keeping an empty function for compatibility.
 function hideLoadingOverlay() {
-    if (isFirstLoad) {
-        if (!firstLoadTimeoutId) {
-            firstLoadTimeoutId = setTimeout(() => {
-                const overlay = document.getElementById('loading-overlay');
-                if (overlay) {
-                    overlay.classList.add('hidden');
-                    setTimeout(() => overlay.remove(), 600);
-                }
-                isFirstLoad = false;
-            }, 500);
-        }
-    } else {
-        const overlay = document.getElementById('loading-overlay');
-        if (overlay) {
-            overlay.classList.add('hidden');
-            setTimeout(() => overlay.remove(), 600);
-        }
-    }
+    // No-op
 }
-
-// Safety net: force-hide the loading overlay after 10 seconds maximum
-setTimeout(function() {
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay && !overlay.classList.contains('hidden')) {
-        console.warn('[THIES Resto] Loading safety timeout (10s) reached — forcing overlay removal.');
-        overlay.classList.add('hidden');
-        setTimeout(() => overlay.remove(), 600);
-        isFirstLoad = false;
-    }
-}, 10000);
-
-// Start smooth progress animation for the 5-second load
-(function startLoadingAnimation() {
-    const progressBar = document.getElementById('loading-progress-bar');
-    const loadingText = document.getElementById('loading-text');
-    if (!progressBar) return;
-
-    const messages = [
-        "Chargement de THIES Resto… 🍲",
-        "Connexion avec les restaurants de Thiès… 🏪",
-        "Mise à jour des plats du jour… 🍽️",
-        "Vérification des disponibilités… ⌛",
-        "Presque prêt, préparez vos papilles ! 🧑‍🍳"
-    ];
-
-    let start = null;
-    const duration = 10000;
-
-    function animate(timestamp) {
-        if (!start) start = timestamp;
-        const elapsed = timestamp - start;
-        const progress = Math.min((elapsed / duration) * 100, 100);
-        
-        progressBar.style.width = progress + '%';
-
-        const msgIndex = Math.min(Math.floor((progress / 100) * messages.length), messages.length - 1);
-        if (loadingText) {
-            loadingText.textContent = messages[msgIndex];
-        }
-
-        if (elapsed < duration) {
-            requestAnimationFrame(animate);
-        }
-    }
-    requestAnimationFrame(animate);
-})();
 
 // ---------- THEME TOGGLE ----------
 function toggleTheme() {
