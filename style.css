@@ -2648,6 +2648,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     gap: 2rem;
     max-width: 900px;
     margin: 0 auto;
+    justify-content: center;
 }
 .timeline-card {
     background: var(--bg-card);
