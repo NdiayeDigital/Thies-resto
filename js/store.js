@@ -3,7 +3,7 @@ let isSuperAdminSession = false;
 try {
     const sessionStr = sessionStorage.getItem('resto_session');
     if (sessionStr) {
-        currentRestaurantSession = JSON.parse(atob(sessionStr));
+        currentRestaurantSession = JSON.parse(sessionStr);
     }
     isSuperAdminSession = sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true';
 } catch (e) {

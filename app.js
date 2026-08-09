@@ -1,4 +1,4 @@
-﻿
+
 // Client Behavior Analytics Tracker
 class ClientTracker {
     constructor() {
@@ -348,52 +348,26 @@ async function handleRestaurantLogin(e) {
     
     let r = null;
     
-    // 1. Vérification sécurisée via Supabase Auth
+    // Vérification via Supabase RPC
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         try {
-            // Tentative de connexion via le nouveau système (Supabase Auth)
-            const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
-                email: username + '@thiesresto.com',
-                password: pass
+            const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
+                p_username: username,
+                p_password: pass
             });
-            
-            if (!authError && authData && authData.user) {
-                // Fetch restaurant metadata using the restaurant_id stored in user_metadata
-                const restoId = authData.user.user_metadata?.restaurant_id;
-                if (restoId) {
-                    const { data: rData } = await supabaseClient.from('public_restaurants').select('*').eq('id', restoId).single();
-                    if (rData) {
-                        r = {
-                            id: rData.id,
-                            name: rData.name,
-                            slug: rData.slug,
-                            status: rData.status || 'active',
-                            password: pass
-                        };
-                    }
-                }
-            } else {
-                // FALLBACK : Ancien système RPC (si la migration SQL n'a pas encore été exécutée)
-                const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
-                    p_username: username,
-                    p_password: pass
-                });
-                if (!error && data && data.length > 0) {
-                    r = {
-                        id: data[0].id,
-                        name: data[0].name,
-                        slug: data[0].slug,
-                        status: data[0].status,
-                        password: pass
-                    };
-                }
+            if (!error && data && data.length > 0) {
+                r = {
+                    id: data[0].id,
+                    name: data[0].name,
+                    slug: data[0].slug,
+                    status: data[0].status,
+                    password: pass
+                };
             }
         } catch(err) {
             console.error("Supabase login error", err);
         }
     }
-    
-    // Fallback local désactivé en production pour des raisons de sécurité.
     
     if (!r) {
         if (typeof showToast === 'function') showToast("Identifiant ou mot de passe introuvable", "danger");
@@ -412,14 +386,11 @@ async function handleRestaurantLogin(e) {
     
     currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: pass };
     try {
-        sessionStorage.setItem('resto_session', btoa(JSON.stringify(currentRestaurantSession)));
+        sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
     } catch (e) {}
     
     if (typeof updateNavbar === 'function') updateNavbar();
     if (typeof showToast === 'function') showToast(`Bienvenue, ${r.name} !`, "success");
-    setTimeout(() => {
-        if (typeof showToast === 'function') showToast("⚠️ Sécurité: Authentification temporaire active. Migration Supabase recommandée.", "warning");
-    }, 2500);
     
     setTimeout(() => {
         const modal = document.getElementById('auth-modal');
@@ -2837,6 +2808,17 @@ function hideLoadingOverlay() {
     }
 }
 
+// Safety net: force-hide the loading overlay after 10 seconds maximum
+setTimeout(function() {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay && !overlay.classList.contains('hidden')) {
+        console.warn('[THIES Resto] Loading safety timeout (10s) reached — forcing overlay removal.');
+        overlay.classList.add('hidden');
+        setTimeout(() => overlay.remove(), 600);
+        isFirstLoad = false;
+    }
+}, 10000);
+
 // Start smooth progress animation for the 5-second load
 (function startLoadingAnimation() {
     const progressBar = document.getElementById('loading-progress-bar');
@@ -2852,7 +2834,7 @@ function hideLoadingOverlay() {
     ];
 
     let start = null;
-    const duration = 5000;
+    const duration = 10000;
 
     function animate(timestamp) {
         if (!start) start = timestamp;
@@ -3239,7 +3221,7 @@ function updateNavbar() {
             `;
             drawerHtml = `
                 <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
-                    <span style="color: var(--danger); font-weight: bold; font-size: 0.9rem;">👑 SUPER-ADMINISTRAETUR</span>
+                    <span style="color: var(--danger); font-weight: bold; font-size: 0.9rem;">👑 SUPER-ADMINISTRATEUR</span>
                 </div>
                 <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;">📊 Console Admin</a>
                 <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: bold;">🚪 Déconnexion Admin</a>
@@ -3742,7 +3724,7 @@ function applyFilters() {
             return r.name.toLowerCase().includes(query) || 
                    r.category.toLowerCase().includes(query) || 
                    r.address.toLowerCase().includes(query) ||
-                   r.menu.some(m => m.name.toLowerCase().includes(query) || m.description.toLowerCase().includes(query));
+                   (Array.isArray(r.menu) && r.menu.some(m => (m.name || '').toLowerCase().includes(query) || (m.description || '').toLowerCase().includes(query)));
         });
     }
 
@@ -6292,24 +6274,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortSelect = document.getElementById('sort-select');
         if (sortSelect) {
             sortSelect.addEventListener('change', (e) => {
-                const val = e.target.value;
-                if(val === 'rating') {
-                    // Trier par note (Meilleure en premier)
-                    Store.restaurants.sort((a, b) => b.rating - a.rating);
-                } else if(val === 'alpha') {
-                    // Trier de A à Z
-                    Store.restaurants.sort((a, b) => a.name.localeCompare(b.name));
-                } else {
-                    // Revenir à l'ordre par défaut (pas de tri spécifique ou ordre ID)
-                    // On pourrait recharger depuis SEED_RESTAURANTS pour l'ordre original
-                    Store.restaurants = [...SEED_RESTAURANTS];
-                }
-                
-                // Re-render
-                if (window.renderCatalogCards) {
-                    renderCatalogCards(Store.restaurants);
-                } else {
-                    renderHome();
+                activeSortBy = e.target.value;
+                if (typeof applyFilters === 'function') {
+                    applyFilters();
                 }
             });
         }
@@ -6368,7 +6335,7 @@ window.handleLogout = function() {
     }
     const mobileLogoutBtn = document.getElementById('mobile-logout-btn');
     if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
-    updateNav();
+    updateNavbar();
     router.navigate('/');
 };
 
@@ -6490,7 +6457,7 @@ window.geolocateRestaurants = function() {
             });
             
             restos.sort((a, b) => a._tempDistance - b._tempDistance);
-            renderCatalogCards(restos);
+            if (typeof applyFilters === 'function') applyFilters();
             
             if(typeof showToast === 'function') showToast("Restaurants triés par distance !", "success");
             
