@@ -2763,18 +2763,7 @@ function sanitizeHTML(html) {
     });
 }
 
-// Current Session (with safe storage check for file:// protocol support)
-let currentRestaurantSession = null;
-let isSuperAdminSession = false;
-try {
-    const sessionStr = sessionStorage.getItem('resto_session');
-    if (sessionStr) {
-        currentRestaurantSession = JSON.parse(sessionStr);
-    }
-    isSuperAdminSession = sessionStorage.getItem('admin_session') === 'true';
-} catch (e) {
-    console.warn("sessionStorage is not accessible (e.g. running locally via file:// protocol). Session data will be held in memory only.", e);
-}
+// Current Session is managed in store.js
 
 // Temporary Group Order object in memory
 let activeGroupOrder = null;
@@ -3242,7 +3231,7 @@ router.add('#/', () => {
                 <div class="history-item">
                     <div>
                         <strong>${h.id}</strong> — ${h.restaurantName || 'Restaurant'}
-                        <div class="history-item-meta">${h.items.map(i => i.name).join(', ')}</div>
+                        <div class="history-item-meta">${(Array.isArray(h.items) ? h.items : []).map(i => i.name || 'Produit').join(', ')}</div>
                     </div>
                     <div style="text-align:right;">
                         <strong style="color:var(--primary)">${h.total} FCFA</strong>
