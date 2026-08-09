@@ -3610,9 +3610,8 @@ router.add('#/', () => {
     } catch (err) {
         console.error("Error in home route:", err);
         hideLoadingOverlay();
-        const container = document.getElementById('main-content');
-        if (container) {
-            container.innerHTML = `<div style="padding: 100px; text-align: center; color: red;">Une erreur est survenue lors du chargement : ${err.message}</div>`;
+        if (typeof showToast === 'function') {
+            showToast("Une erreur non critique est survenue lors du chargement.", "warning");
         }
     }
 });
@@ -5845,9 +5844,11 @@ window.startSocialProof = function() {
     
     const allDishes = [];
     store.getRestaurants().filter(r => r.status === 'active').forEach(r => {
-        if(r.menu) {
+        if(r.menu && Array.isArray(r.menu)) {
             r.menu.forEach(c => {
-                if(c.items) c.items.forEach(i => allDishes.push({ dish: i.name, resto: r.name }));
+                if(c.items && Array.isArray(c.items)) {
+                    c.items.forEach(i => allDishes.push({ dish: i.name, resto: r.name }));
+                }
             });
         }
     });
