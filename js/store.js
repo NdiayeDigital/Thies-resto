@@ -22,43 +22,25 @@ if (typeof supabase !== 'undefined' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON
 // App Local Database state manager (with Supabase sync)
 class Store {
     constructor() {
-        this.key = 'THIES_RESTO_DB_V3'; // Bumped version to clear all old local cached orders
-        this.data = this.load();
-        if (!this.data) {
-            this.seed();
-        }
-        // Background sync with Supabase
-        if (supabaseClient) {
-            this.syncFromSupabase();
-        }
-    }
-
-    load() {
-        try {
-            const val = localStorage.getItem(this.key);
-            return val ? JSON.parse(val) : null;
-        } catch (e) {
-            console.error("Failed to load local DB", e);
-            return null;
-        }
-    }
-
-    save() {
-        try {
-            localStorage.setItem(this.key, JSON.stringify(this.data));
-        } catch (e) {
-            console.error("Failed to save local DB", e);
-        }
-    }
-
-    seed() {
+        // Enregistrement exclusif sur Supabase (pas de localStorage local)
         this.data = {
             restaurants: [],
             orders: [],
             reservations: [],
             groupOrders: []
         };
-        this.save();
+        
+        // Background sync with Supabase
+        if (supabaseClient) {
+            this.syncFromSupabase();
+        }
+    }
+
+    // load() has been removed as data is exclusively fetched from Supabase
+    
+    // save() is now a no-op to prevent errors, all data is pushed to Supabase directly
+    save() {
+        // No local storage saving anymore.
     }
 
     async syncFromSupabase() {
@@ -259,8 +241,8 @@ class Store {
         try {
             let localRestos = this.data.restaurants;
             if (!localRestos || localRestos.length === 0) {
-                this.seed();
-                localRestos = this.data.restaurants;
+                console.log("No local restaurants to seed from.");
+                return;
             }
 
             const list = localRestos.map(r => {

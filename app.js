@@ -5727,25 +5727,34 @@ window.fetchOrderTracking = async function() {
     
     container.innerHTML = '<div style="text-align:center;"><div class="spinner-ring" style="width:30px;height:30px;border-width:3px;"></div></div>';
     
-    if (!supabaseClient) {
-        container.innerHTML = '<p style="color: var(--danger); text-align: center;">Erreur de connexion. Veuillez réessayer.</p>';
+    let ordersData = [];
+    
+    try {
+        if (supabaseClient) {
+            try {
+            const { data, error } = await supabaseClient.rpc('get_order_tracking', {
+                p_phone: phone
+            });
+            if (!error && data) {
+                ordersData = data;
+            } else {
+                throw error || new Error("Supabase RPC failed");
+            }
+        } catch (err) {
+            console.warn("Supabase fetch failed, falling back to local memory:", err);
+            ordersData = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone);
+        }
+    } else {
+        ordersData = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone);
+    }
+    
+    if (!ordersData || ordersData.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding: 2rem 0; color: var(--text-secondary);">Aucune commande récente trouvée pour ce numéro.</div>';
         return;
     }
     
-    try {
-        const { data, error } = await supabaseClient.rpc('get_order_tracking', {
-            p_phone: phone
-        });
-            
-        if (error) throw error;
-        
-        if (!data || data.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 2rem 0; color: var(--text-secondary);">Aucune commande récente trouvée pour ce numéro.</div>';
-            return;
-        }
-        
-        let html = '';
-        data.forEach(order => {
+    let html = '';
+    ordersData.forEach(order => {
             const r = store.getRestaurantById(order.restaurant_id);
             const rName = r ? r.name : 'Restaurant inconnu';
             
@@ -5996,6 +6005,9 @@ function renderCGV() {
                 
                 <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">3.2 Paiement</h3>
                 <p>Aucun paiement n'est traité directement sur la plateforme THIES Resto. Le règlement s'effectue exclusivement en espèces (ou via un service de mobile money selon l'accord du restaurant) au moment de la livraison ou du retrait sur place.</p>
+
+                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">3.3 Politique d'Annulation et de Remboursement</h3>
+                <p>Étant donné que les paiements s'effectuent à la livraison, THIES Resto ne procède à <strong>aucun remboursement</strong>. Toute demande d'annulation de commande doit être formulée directement auprès du restaurant (via WhatsApp ou par appel) dans les plus brefs délais avant la préparation du repas. Si le repas livré n'est pas conforme, le litige commercial et la demande de dédommagement se règlent exclusivement entre le client et le restaurant partenaire.</p>
 
                 <h2 style="color: var(--text-primary); margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.5rem;">4. Protection des Données (CDP Sénégal)</h2>
                 <p>Dans le cadre de l'utilisation du service, les données suivantes sont collectées : Prénom et Numéro de téléphone. Ces données sont strictement utilisées pour :</p>
