@@ -1865,19 +1865,74 @@ window.handleDishImageUpload = async function(event) {
 
     try {
         const { data, error } = await supabaseClient.storage
-            .from('restaurant_images')
+            .from('restaurant-images')
             .upload(filePath, file);
 
         if (error) throw error;
 
         const { data: publicUrlData } = supabaseClient.storage
-            .from('restaurant_images')
+            .from('restaurant-images')
             .getPublicUrl(filePath);
 
         customInput.value = publicUrlData.publicUrl;
         
         if (statusText) {
             statusText.innerHTML = `✅ Photo uploadée et hébergée sur Supabase !`;
+            statusText.style.color = "var(--success)";
+        }
+    } catch (e) {
+        console.error("Upload error:", e);
+        if (statusText) {
+            statusText.innerHTML = `❌ Échec de l'envoi (${e.message})`;
+            statusText.style.color = "var(--danger)";
+        }
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+window.handleRestaurantLogoUpload = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!supabaseClient) {
+        showToast("Service Storage non disponible", "danger");
+        return;
+    }
+
+    const previewImg = document.getElementById('settings-logo-preview');
+    const statusText = document.getElementById('settings-logo-status');
+    const urlInput = document.getElementById('settings-logo-url');
+    const submitBtn = document.getElementById('settings-submit-btn');
+
+    if (previewImg) previewImg.src = URL.createObjectURL(file);
+    if (statusText) {
+        statusText.style.display = 'block';
+        statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        statusText.style.color = "var(--warning)";
+    }
+    if (submitBtn) submitBtn.disabled = true;
+
+    // Build unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `restaurants/${currentRestaurantSession.id}/${fileName}`;
+
+    try {
+        const { data, error } = await supabaseClient.storage
+            .from('restaurant-images')
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabaseClient.storage
+            .from('restaurant-images')
+            .getPublicUrl(filePath);
+
+        urlInput.value = publicUrlData.publicUrl;
+        
+        if (statusText) {
+            statusText.innerHTML = `✅ Photo uploadée et hébergée !`;
             statusText.style.color = "var(--success)";
         }
     } catch (e) {
