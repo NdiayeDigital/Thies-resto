@@ -281,17 +281,18 @@ async function handleRestaurantLogin(e) {
     }
     
     // Restaurant Login verification
-    const { data: result, error } = await supabaseClient.rpc('verify_restaurant_login', {
-        p_username: username,
-        p_password: password
-    });
+    const { data: dbResult, error } = await supabaseClient
+        .from('restaurants')
+        .select('*')
+        .eq('username', username)
+        .eq('password', password);
 
-    if (error || !result || !result.success) {
-        showToast(result?.message || "Identifiant ou mot de passe incorrect", "danger");
+    if (error || !dbResult || dbResult.length === 0) {
+        showToast("Identifiant ou mot de passe incorrect", "danger");
         return;
     }
 
-    const r = result.data;
+    const r = dbResult[0];
 
     if (r.status === 'pending') {
         showToast("Votre compte est en cours de validation.", "warning");
