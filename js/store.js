@@ -239,7 +239,7 @@ class Store {
     async seedRemoteDatabase() {
         if (!supabaseClient) return;
         try {
-            let localRestos = this.data.restaurants;
+            let localRestos = typeof SEED_RESTAURANTS !== 'undefined' ? SEED_RESTAURANTS : [];
             if (!localRestos || localRestos.length === 0) {
                 console.log("No local restaurants to seed from.");
                 return;
