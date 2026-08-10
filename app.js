@@ -1220,7 +1220,7 @@ function renderDashboardTabContent(r) {
     }
     else if (dashboardActiveTab === 'settings') {
         const clientLink = `${window.location.origin}${window.location.pathname}#/r/${r.slug}`;
-        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(clientLink)}`;
+        const qrCodeUrl = `https://quickchart.io/qr?size=200&text=${encodeURIComponent(clientLink)}`;
 
         // Days checklist
         let daysHtml = '';

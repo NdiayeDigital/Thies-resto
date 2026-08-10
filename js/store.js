@@ -49,7 +49,7 @@ class Store {
             console.log("Syncing with Supabase...");
 
             // 1. Sync Restaurants (Publiques)
-            const { data: dbRestos, error: restosError } = await supabaseClient.from('restaurants').select('*');
+            const { data: dbRestos, error: restosError } = await supabaseClient.from('public_restaurants').select('*');
             const { data: dbMenuItems, error: itemsError } = await supabaseClient.from('menu_items').select('*');
             if (!restosError && dbRestos) {
                 if (dbRestos.length === 0) {
