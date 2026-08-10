@@ -3273,9 +3273,9 @@ router.add('#/', () => {
                         <button class="search-btn" style="color: var(--primary);">🔍</button>
                     </div>
 
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; margin-top: 1rem;">
                         <button class="btn btn-primary" onclick="scrollToCatalog()" style="box-shadow: 0 4px 15px rgba(242,107,33,0.4); display: flex; align-items: center; gap: 0.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Explorer nos Menus</button>
-                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px); display: flex; align-items: center; gap: 0.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Trouver autour de moi</button>
+                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: white; color: var(--primary); border: 1px solid var(--primary); display: flex; align-items: center; gap: 0.5rem;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> Localisation</button>
                     </div>
                 </div>
                 
@@ -3352,7 +3352,7 @@ router.add('#/', () => {
         <!-- ========== PRESENTATION SECTION (Side by Side: Image Left, Text Right) ========== -->
         <section class="side-by-side-section">
             <div class="side-img-box">
-                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=700&auto=format&fit=crop&q=80" alt="Plat Traditionnel Sénégalais">
+                <img src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=700&auto=format&fit=crop&q=80" alt="Plat Traditionnel Sénégalais">
             </div>
             
             <div class="side-content">
@@ -3436,25 +3436,25 @@ router.add('#/', () => {
                 <div class="timeline-steps">
                     <div class="timeline-card">
                         <div class="timeline-badge">1</div>
-                        <span class="timeline-icon" style="text-align:center;">🏪</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg></span>
                         <h3>Sélection du restaurant</h3>
                         <p>Choisissez parmi les meilleurs établissements de Thiès, filtrez par envie et ouvrez la carte du jour.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">2</div>
-                        <span class="timeline-icon" style="text-align:center;">🛒</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg></span>
                         <h3>Panier instantané</h3>
                         <p>Ajoutez vos plats préférés, spécifiez vos préférences et validez en un clic, sans création de compte fastidieuse.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">3</div>
-                        <span class="timeline-icon" style="text-align:center;">💬</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>
                         <h3>Envoi WhatsApp</h3>
                         <p>Votre commande est transmise de manière ultra-rapide par WhatsApp au restaurant. Payez en espèces ou Wave à la livraison.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">4</div>
-                        <span class="timeline-icon" style="text-align:center;">🎁</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg></span>
                         <h3>Fidélité cumulée</h3>
                         <p>Cumulez automatiquement 5 points fidélité à chaque commande livrée pour obtenir des plats offerts.</p>
                     </div>
@@ -3466,25 +3466,25 @@ router.add('#/', () => {
                 <div class="timeline-steps">
                     <div class="timeline-card">
                         <div class="timeline-badge">1</div>
-                        <span class="timeline-icon" style="text-align:center;">📅</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></span>
                         <h3>Choix de la date</h3>
                         <p>Sélectionnez votre restaurant préféré, l'onglet "Réserver", définissez la date, l'heure et le nombre de convives.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">2</div>
-                        <span class="timeline-icon" style="text-align:center;">👤</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></span>
                         <h3>Détails du contact</h3>
                         <p>Entrez vos coordonnées de contact pour que le gérant puisse bloquer et préparer votre table attitrée.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">3</div>
-                        <span class="timeline-icon" style="text-align:center;">✨</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span>
                         <h3>Confirmation reçue</h3>
                         <p>Le restaurateur valide votre créneau directement sur son tableau de bord et vous envoie une confirmation par message.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">4</div>
-                        <span class="timeline-icon" style="text-align:center;">🍽️</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg></span>
                         <h3>Installez-vous !</h3>
                         <p>Présentez-vous au restaurant à l'heure convenue : votre table est prête et des points fidélité vous sont offerts.</p>
                     </div>
@@ -3496,25 +3496,25 @@ router.add('#/', () => {
                 <div class="timeline-steps">
                     <div class="timeline-card">
                         <div class="timeline-badge">1</div>
-                        <span class="timeline-icon" style="text-align:center;">👥</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
                         <h3>Création du groupe</h3>
                         <p>Lancez un panier partagé pour vos collègues de bureau ou vos amis en cliquant sur "Commande de Groupe".</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">2</div>
-                        <span class="timeline-icon" style="text-align:center;">🔗</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></span>
                         <h3>Partage du lien</h3>
                         <p>Copiez et envoyez le lien unique généré dans votre discussion de groupe (WhatsApp, Slack, etc.).</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">3</div>
-                        <span class="timeline-icon" style="text-align:center;">🍕</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></span>
                         <h3>Choix individuels</h3>
                         <p>Chaque membre ajoute ses plats préférés depuis son propre appareil. Le restaurant reçoit le tout regroupé et clair !</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">4</div>
-                        <span class="timeline-icon" style="text-align:center;">👑</span>
+                        <span class="timeline-icon" style="display:flex;align-items:center;justify-content:center;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
                         <h3>Validation & Envoi</h3>
                         <p>L'initiateur du groupe valide le panier commun et l'envoie par WhatsApp. Le restaurant livre tout en une fois !</p>
                     </div>
@@ -5815,6 +5815,46 @@ window.fetchOrderTracking = async function() {
         container.innerHTML = '<p style="color: var(--danger); text-align: center;">Une erreur est survenue.</p>';
     }
 };
+// ----------------------------------------------------
+// Catalog View (Dedicated Menu Page)
+// ----------------------------------------------------
+router.add('#/catalog', () => {
+    document.getElementById('main-content').innerHTML = `
+        <div style="padding: 100px 0 2rem 0; min-height: 80vh;">
+            <section id="catalog-section">
+                <div class="section-header">
+                    <h2 class="section-title">Nos Restaurants Partenaires</h2>
+                </div>
+
+                <!-- FILTERS BAR -->
+                <div class="filter-bar" id="filter-bar">
+                    <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')">Tous</button>
+                    <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')">Traditionnel</button>
+                    <button class="filter-btn ${activeFilter === 'Fast Food' ? 'active' : ''}" onclick="setFilter('Fast Food')">Fast Food</button>
+                    <button class="filter-btn ${activeFilter === 'Grillades / Dibi' ? 'active' : ''}" onclick="setFilter('Grillades / Dibi')">Grillades</button>
+                    <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')">Gastronomique</button>
+                    <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')">Pâtisserie</button>
+                </div>
+
+                <!-- SORTING BAR -->
+                <div class="sort-bar">
+                    <label for="sort-select">Trier par :</label>
+                    <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
+                        <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
+                        <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
+                        <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
+                        <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
+                    </select>
+                </div>
+                
+                <div class="restaurant-grid" id="restaurants-list-grid"></div>
+            </section>
+        </div>
+    `;
+    updateNavUI();
+    if (typeof applyFilters === 'function') applyFilters();
+});
+
 // ----------------------------------------------------
 // 404 View
 // ----------------------------------------------------
