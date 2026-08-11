@@ -292,17 +292,14 @@ async function handleRestaurantLogin(e) {
     let dbResult = null;
     let loginError = null;
 
-    const { data, error } = await supabaseClient
-        .from('restaurants')
-        .select('*')
-        .eq('username', username)
-        .eq('password', password);
-    
-    dbResult = data;
-    loginError = error;
+    // Call the secure RPC to verify credentials
+    const { data: rpcData, error: rpcError } = await supabaseClient.rpc('verify_restaurant_login', {
+        p_username: username,
+        p_password: password
+    });
 
-    if (loginError || !dbResult || dbResult.length === 0) {
-        // Fallback: try public_restaurants view if base table is blocked by RLS
+    if (rpcError || !rpcData || rpcData.length === 0) {
+        // Fallback: try public_restaurants view for backward compatibility
         const { data: fallbackData, error: fallbackError } = await supabaseClient
             .from('public_restaurants')
             .select('*')
@@ -311,13 +308,19 @@ async function handleRestaurantLogin(e) {
             
         if (!fallbackError && fallbackData && fallbackData.length > 0) {
             dbResult = fallbackData;
-            loginError = null;
+        } else {
+            showToast("Identifiant ou mot de passe incorrect", "danger");
+            return;
         }
-    }
-
-    if (loginError || !dbResult || dbResult.length === 0) {
-        showToast("Identifiant ou mot de passe incorrect", "danger");
-        return;
+    } else {
+        // RPC returned the basic info, now fetch the full profile from public_restaurants
+        const restoId = rpcData[0].id;
+        const { data: fullData } = await supabaseClient.from('public_restaurants').select('*').eq('id', restoId);
+        if (fullData && fullData.length > 0) {
+            dbResult = fullData;
+        } else {
+            dbResult = rpcData; // fallback to basic data
+        }
     }
 
     const r = dbResult[0];
