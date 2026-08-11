@@ -141,25 +141,28 @@
     <!-- ========== LOADING OVERLAY REMOVED ========== -->
 
     <div class="app-container">
-        <!-- ========== REDESIGNED MOBILE HEADER ========== -->
-        <header class="mobile-header" id="main-navbar">
-            <div class="mobile-header-left">
-                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()" style="background:none; border:none; font-size:1.5rem; color:var(--text-primary); cursor:pointer;">
-                    ☰
+        <!-- ========== NAVIGATION BAR ========== -->
+        <header class="navbar" id="main-navbar">
+            <!-- Left: Burger & Navigation links (Desktop) -->
+            <div class="nav-left">
+                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
                 </button>
             </div>
-            <div class="mobile-header-center" onclick="router.navigate('/')" style="cursor:pointer;">
-                <div style="font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <img src="icon.png" alt="Logo" style="width: 24px; height: 24px; border-radius: 50%;">
-                    <span>THIES Resto</span>
-                </div>
-                <div class="location-badge" style="justify-content: center; margin-top: 2px;">
-                    📍 Thiès <span style="font-size: 0.7rem;">▼</span>
-                </div>
+
+            <!-- Center: Logo -->
+            <div class="logo-container" onclick="router.navigate('/')">
+                <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
+                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+                <span class="logo-text">THIES Resto</span>
             </div>
-            <div class="mobile-header-right" id="nav-actions">
-                <!-- Notifications & Profile will be injected here by app.js -->
-            </div>
+
+            <!-- Right: Session Actions -->
+            <nav class="nav-links" id="nav-actions">
+                <!-- Dynamic actions populated by JS -->
+            </nav>
 
             <!-- Mobile Drawer Overlay -->
             <div class="mobile-drawer" id="mobile-drawer">
@@ -173,7 +176,7 @@
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
                     <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/catalog'); return false;">Nos Restaurants</a>
+                    <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
                         Partenaire 🤝</a>
                     <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
@@ -191,30 +194,7 @@
             <!-- Dynamic views will be injected here by app.js -->
         </main>
 
-        <!-- ========== REDESIGNED BOTTOM NAVIGATION ========== -->
-        <nav class="mobile-bottom-nav">
-            <button class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); this.classList.add('active');">
-                <i>🏠</i>
-                <span>Accueil</span>
-            </button>
-            <button class="nav-item" onclick="router.navigate('/catalog'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); this.classList.add('active');">
-                <i>🍽️</i>
-                <span>Explorer</span>
-            </button>
-            <button class="nav-item nav-item-cart" onclick="openCartTab();">
-                <i>🛒</i>
-                <span>Panier</span>
-                <div class="cart-badge-nav" id="bottom-nav-cart-badge" style="display:none;">0</div>
-            </button>
-            <button class="nav-item" onclick="router.navigate('/tracking'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); this.classList.add('active');">
-                <i>🏷️</i>
-                <span>Bons Plans</span>
-            </button>
-            <button class="nav-item" onclick="if(typeof isSuperAdminSession!=='undefined' && isSuperAdminSession){router.navigate('/admin')}else if(typeof currentRestaurantSession!=='undefined' && currentRestaurantSession){router.navigate('/restaurant-admin')}else{document.getElementById('auth-modal').style.display='flex'};">
-                <i>👤</i>
-                <span>Profil</span>
-            </button>
-        </nav>
+
         <!-- ========== FLOATING CART BAR ========== -->
         <div id="floating-cart-bar" class="floating-cart-bar" style="display: none;" onclick="openCartTab()">
             <div class="floating-cart-info">
@@ -315,27 +295,27 @@
         <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
         <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
             <a href="#" class="nav-item active" onclick="router.navigate('/'); return false;">
-                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+                <span class="icon">🏠</span>
                 <span class="label">Accueil</span>
             </a>
             <a href="#" class="nav-item" onclick="scrollToCatalog(); return false;">
-                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></span>
+                <span class="icon">🍽️</span>
                 <span class="label">Menus</span>
             </a>
             <a href="#" class="nav-item" onclick="openCartTab(); return false;" id="bottom-nav-cart">
                 <div class="icon-wrapper">
-                    <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></span>
+                    <span class="icon">🛒</span>
                     <span class="badge-qty" id="bottom-nav-cart-qty" style="display: none;">0</span>
                 </div>
                 <span class="label">Panier</span>
             </a>
             <a href="#" class="nav-item" onclick="router.navigate('/tracking'); return false;">
-                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                <span class="icon">📍</span>
                 <span class="label">Suivi</span>
             </a>
-            <a href="#" class="nav-item" onclick="if(typeof isSuperAdminSession!=='undefined' && isSuperAdminSession){router.navigate('/admin')}else if(typeof currentRestaurantSession!=='undefined' && currentRestaurantSession){router.navigate('/restaurant-admin')}else{document.getElementById('auth-modal').style.display='flex'}; return false;">
-                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-                <span class="label">Profil</span>
+            <a href="#" class="nav-item" onclick="router.navigate('/partnership'); return false;">
+                <span class="icon">🤝</span>
+                <span class="label">Partenaire</span>
             </a>
         </nav>
     </div>

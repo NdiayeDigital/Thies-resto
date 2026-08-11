@@ -335,7 +335,6 @@ async function handleRestaurantLogin(e) {
         try {
             sessionStorage.setItem('thies_admin_logged', 'true');
             sessionStorage.setItem('admin_session', 'true');
-            sessionStorage.setItem('admin_password', pass);
         } catch (e) {}
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         if (typeof updateNavbar === 'function') updateNavbar();
@@ -2113,7 +2112,6 @@ async function handleAdminLogin(e) {
             try {
                 sessionStorage.setItem('admin_session', 'true');
                 sessionStorage.setItem('thies_admin_logged', 'true');
-                sessionStorage.setItem('admin_password', pass);
             } catch (err) {
                 console.warn("Failed to save admin_session to sessionStorage", err);
             }
@@ -3224,7 +3222,6 @@ function updateNavbar() {
     if (drawerLinks) {
         drawerLinks.innerHTML = drawerHtml;
     }
-    if (typeof updateBottomNavState === 'function') updateBottomNavState();
 }
 
 // logoutRestaurant moved to js/auth.js
@@ -3297,94 +3294,347 @@ router.add('#/', () => {
         `;
     }
 
-    const activeRestaurants = store.getRestaurants().filter(r => r.status === 'active');
-    
+    const hour = new Date().getHours();
+    let greeting = "Bonjour";
+    if (hour < 11) greeting = "Bonjour ! Prêt pour le déjeuner ?";
+    else if (hour < 17) greeting = "Une petite faim ?";
+    else greeting = "Bonsoir ! Ne cuisinez pas ce soir.";
+
+
     container.innerHTML = `
-        <!-- ========== REDESIGNED HOME ========== -->
-        
-        <!-- Search Bar -->
-        <div class="search-container-modern">
-            <div class="search-input-modern">
-                <i style="display:flex;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></i>
-                <input type="text" id="search-input-field" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()">
-            </div>
-        </div>
-
-        <!-- Quick Filters (Chips) -->
-        <div class="h-scroll" style="margin-bottom: 8px;" id="filter-bar">
-            <button class="chip active filter-btn" onclick="setFilter('Tous')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> Tous</button>
-            <button class="chip filter-btn" onclick="setFilter('Fast Food')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> Fast Food</button>
-            <button class="chip filter-btn" onclick="setFilter('Traditionnel')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg> Sénégalais</button>
-            <button class="chip filter-btn" onclick="setFilter('Grillades / Dibi')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Dibi</button>
-            <button class="chip" onclick="geolocateRestaurants()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> Près de moi</button>
-        </div>
-
-        <!-- Hero Banner -->
-        <div class="hero-banner">
-            <h2>Commandez vos plats préférés</h2>
-            <p>Découvrez les meilleures tables de Thiès, livrées chez vous.</p>
-            <button class="btn" onclick="scrollToCatalog()">Commander</button>
-        </div>
-
-        <!-- Categories -->
-        <div class="section-header">
-            <span class="section-title">Catégories</span>
-        </div>
-        <div class="h-scroll">
-            <div class="category-item" onclick="setFilter('Fast Food')" style="cursor: pointer;">
-                <div class="category-icon" style="background:none; border: 1px solid var(--border);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
-                <span class="category-name">Burgers</span>
-            </div>
-            <div class="category-item" onclick="setFilter('Traditionnel')" style="cursor: pointer;">
-                <div class="category-icon" style="background:none; border: 1px solid var(--border);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-                <span class="category-name">Local</span>
-            </div>
-            <div class="category-item" onclick="setFilter('Grillades / Dibi')" style="cursor: pointer;">
-                <div class="category-icon" style="background:none; border: 1px solid var(--border);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
-                <span class="category-name">Poulet</span>
-            </div>
-            <div class="category-item" onclick="setFilter('Pâtisserie')" style="cursor: pointer;">
-                <div class="category-icon" style="background:none; border: 1px solid var(--border);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
-                <span class="category-name">Desserts</span>
-            </div>
-            <div class="category-item" onclick="setFilter('Gastronomique')" style="cursor: pointer;">
-                <div class="category-icon" style="background:none; border: 1px solid var(--border);"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
-                <span class="category-name">Premium</span>
-            </div>
-        </div>
-
-        <!-- Popular Restaurants -->
-        <div class="section-header">
-            <span class="section-title">Populaires</span>
-            <span class="section-link" style="cursor: pointer;" onclick="scrollToCatalog()">Voir tout →</span>
-        </div>
-        <div class="h-scroll" style="padding-bottom: 16px;">
-            ${activeRestaurants.slice(0, 5).map(r => `
-                <div class="restaurant-card-modern" onclick="router.navigate('/r/${r.slug}')" style="cursor: pointer;">
-                    <div class="cover" style="background-image: url('${r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'}');">
-                        <div class="badge-time">25-35 min</div>
+        <!-- ========== HERO SECTION ========== -->
+        <section class="hero-section" style="background: linear-gradient(var(--glass-bg), var(--bg-primary)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
+            <div class="hero-split-container">
+                <!-- Left: Title, Description and Search -->
+                <div class="hero-left-col">
+                    <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
+                    <h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
+                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+                    
+                    <div class="search-container" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px;">
+                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
+                        <button class="search-btn" style="color: var(--primary);">🔍</button>
                     </div>
-                    <div class="content">
-                        <div class="title-row">
-                            <h3>${r.name}</h3>
-                            <div class="rating">⭐ ${r.rating.toFixed(1)}</div>
-                        </div>
-                        <div class="tags">${r.category} • Thiès</div>
+
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
+                        <button class="btn btn-primary" onclick="scrollToCatalog()" style="box-shadow: 0 4px 15px rgba(242,107,33,0.4);">Explorer nos Menus 🍽️</button>
+                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">📍 Trouver autour de moi</button>
                     </div>
                 </div>
-            `).join('')}
-        </div>
-
-        <!-- Catalog / All Restaurants -->
-        <section id="catalog-section" style="padding: 16px;">
-            <div class="section-header" style="padding: 0 0 16px 0;">
-                <h2 class="section-title">Près de vous</h2>
+                
             </div>
-            <div id="restaurants-list-grid" class="restaurant-grid"></div>
         </section>
+        <!-- VOS DERNIERES COMMANDES PERSISTANT -->
+        ${historyHtml}
+
+        <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
+        <section class="presentation-section" style="padding: 1rem 0 0 0;">
+            <div class="reference-row-cards">
+                <!-- Left Card: Zero Account -->
+                <div class="ref-card-text">
+                    <div class="ref-card-icon-circle">🚫</div>
+                    <h3>Zéro Inscription</h3>
+                    <p>Commandez et réservez sans jamais avoir besoin de créer un compte. Aucun mot de passe à retenir.</p>
+                </div>
+                
+                <!-- Middle Card: Premium Dish Image -->
+                <div class="ref-card-image-box">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80" alt="Gourmet Bowl">
+                </div>
+                
+                <!-- Right Card: Direct WhatsApp -->
+                <div class="ref-card-text">
+                    <div class="ref-card-icon-circle">💬</div>
+                    <h3>Direct WhatsApp</h3>
+                    <p>Votre panier est transformé en un message structuré envoyé en un clic au restaurateur pour confirmation.</p>
+                </div>
+            </div>
+        </section>
+
         
-        <!-- Padding for Bottom Nav -->
-        <div style="height: 100px;"></div>
+
+        <section id="catalog-section">
+            <div class="section-header">
+                <h2 class="section-title">Les Restaurants Partenaires</h2>
+            </div>
+
+            <!-- FILTERS BAR -->
+            <div class="filter-bar" id="filter-bar">
+                <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')">Tous</button>
+                <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')">🍲 Traditionnel</button>
+                <button class="filter-btn ${activeFilter === 'Fast Food' ? 'active' : ''}" onclick="setFilter('Fast Food')">🍔 Fast Food</button>
+                <button class="filter-btn ${activeFilter === 'Grillades / Dibi' ? 'active' : ''}" onclick="setFilter('Grillades / Dibi')">🔥 Grillades</button>
+                <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')">✨ Gastronomique</button>
+                <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')">🥐 Pâtisserie</button>
+            </div>
+
+            <!-- SORTING BAR -->
+            <div class="sort-bar">
+                <label for="sort-select">Trier par :</label>
+                <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
+                    <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
+                    <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
+                    <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
+                    <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
+                </select>
+            </div>
+            
+            <div class="restaurant-grid" id="restaurants-list-grid"></div>
+
+            <!-- RESTAURANT SUGGESTION CTA -->
+            <div style="background: rgba(207, 168, 83, 0.1); border: 1px dashed var(--primary); border-radius: 16px; padding: 2rem; text-align: center; max-width: 600px; margin: 3rem auto 1rem auto;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤔</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.2rem;">Votre restaurant préféré n'est pas là ?</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Nous ajoutons continuellement de nouvelles tables à Thiès. Aidez-nous à découvrir les meilleures !</p>
+                <a href="https://wa.me/221784799882?text=Bonjour,%20j'aimerais%20suggérer%20ce%20restaurant%20sur%20Thiès%20à%20Table%20:%20[Insérez le nom]" target="_blank" class="btn btn-primary" style="background: var(--bg-card); color: var(--primary); border: 1px solid var(--primary); text-decoration: none;">
+                    Suggérer un restaurant 💡
+                </a>
+            </div>
+        </section>
+
+        <!-- ========== PRESENTATION SECTION (Side by Side: Image Left, Text Right) ========== -->
+        <section class="side-by-side-section">
+            <div class="side-img-box">
+                <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=700&auto=format&fit=crop&q=80" alt="Plat Traditionnel Sénégalais">
+            </div>
+            
+            <div class="side-content">
+                <h2 style="font-family: var(--font-serif); font-weight: 400; color: var(--text-primary);">Une Plateforme Commune & Solidaire</h2>
+                <p>Né d'une étude sur le terrain à Thiès, ce projet répond au constat que 95% des restaurateurs de la ville ne disposent d'aucun outil numérique propre. Nous réunissons les 20 tables les mieux notées sous un même toit virtuel pour leur offrir une présence en ligne immédiate et gratuite.</p>
+                <div style="display: flex; gap: 2rem;">
+                    <div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary); font-family: var(--font-serif);">95%</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Établissements sans site</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 1.8rem; font-weight: 700; color: var(--primary); font-family: var(--font-serif);">20+</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase;">Tables Partenaires</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== SIGNATURE MENU SECTION (List Left, Big Image Right) ========== -->
+        <section class="signature-section">
+            <div class="sig-list">
+                <h2 style="font-family: var(--font-serif); font-weight: 400; color: var(--text-primary); font-size: 2.25rem; margin-bottom: 0.5rem;">Les Saveurs Emblématiques de Thiès</h2>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.6;">Découvrez notre sélection de plats phares issus des cartes de nos restaurants partenaires.</p>
+                
+                <div class="sig-item">
+                    <div class="sig-item-num">01</div>
+                    <div class="sig-item-body">
+                        <h4>Thiéboudiène Traditionnel</h4>
+                        <p>Le riz au poisson emblématique du Sénégal, cuisiné avec du poisson frais du jour et ses légumes de saison.</p>
+                    </div>
+                </div>
+                
+                <div class="sig-item">
+                    <div class="sig-item-num">02</div>
+                    <div class="sig-item-body">
+                        <h4>Dibi d'Agneau au Feu de Bois</h4>
+                        <p>De tendres morceaux de viande grillés façon dibiterie, relevés d'oignons caramélisés et de moutarde.</p>
+                    </div>
+                </div>
+                
+                <div class="sig-item">
+                    <div class="sig-item-num">03</div>
+                    <div class="sig-item-body">
+                        <h4>Pastels Dorés Croustillants</h4>
+                        <p>De savoureux beignets farcis au poisson épicé ou à la viande, accompagnés d'une sauce tomate piquante maison.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sig-img-container">
+                <img src="https://images.unsplash.com/photo-1547592180-85f173990554?w=700&auto=format&fit=crop&q=80" alt="Mijoté Mafé Sénégalais">
+            </div>
+        </section>
+
+        <!-- ONBOARDING COMMENT CA MARCHE -->
+        <section class="how-it-works" id="how-it-works-section">
+            <span class="study-title-tag">💡 Mode d'emploi</span>
+            <h2 class="section-title" style="text-align:center; margin-bottom: 0.5rem; color: var(--text-primary);">Comment fonctionne la plateforme ?</h2>
+            <p class="study-subtitle">Découvrez la simplicité et la flexibilité de THIES Resto à travers nos trois services phares.</p>
+            
+            <div class="how-it-works-tabs">
+                <button class="hw-tab-btn active" onclick="switchHowItWorksTab('hw-order')">🛍️ Commander un plat</button>
+                <button class="hw-tab-btn" onclick="switchHowItWorksTab('hw-reserve')">📅 Réserver une table</button>
+                <button class="hw-tab-btn" onclick="switchHowItWorksTab('hw-group')">👥 Commande de groupe</button>
+            </div>
+
+            <!-- Tab 1: Commander -->
+            <div class="hw-tab-content active" id="hw-order">
+                <div class="timeline-steps">
+                    <div class="timeline-card">
+                        <div class="timeline-badge">1</div>
+                        <span class="timeline-icon">🏪</span>
+                        <h3>Sélection du restaurant</h3>
+                        <p>Choisissez parmi les meilleurs établissements de Thiès, filtrez par envie et ouvrez la carte du jour.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">2</div>
+                        <span class="timeline-icon">🛒</span>
+                        <h3>Panier instantané</h3>
+                        <p>Ajoutez vos plats préférés, spécifiez vos préférences et validez en un clic, sans création de compte fastidieuse.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">3</div>
+                        <span class="timeline-icon">💬</span>
+                        <h3>Envoi WhatsApp</h3>
+                        <p>Votre commande est transmise de manière ultra-rapide par WhatsApp au restaurant. Payez en espèces ou Wave à la livraison.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">4</div>
+                        <span class="timeline-icon">🎁</span>
+                        <h3>Fidélité cumulée</h3>
+                        <p>Cumulez automatiquement 5 points fidélité à chaque commande livrée pour obtenir des plats offerts.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Réserver -->
+            <div class="hw-tab-content" id="hw-reserve">
+                <div class="timeline-steps">
+                    <div class="timeline-card">
+                        <div class="timeline-badge">1</div>
+                        <span class="timeline-icon">📅</span>
+                        <h3>Choix de la date</h3>
+                        <p>Sélectionnez votre restaurant préféré, l'onglet "Réserver", définissez la date, l'heure et le nombre de convives.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">2</div>
+                        <span class="timeline-icon">👤</span>
+                        <h3>Détails du contact</h3>
+                        <p>Entrez vos coordonnées de contact pour que le gérant puisse bloquer et préparer votre table attitrée.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">3</div>
+                        <span class="timeline-icon">✨</span>
+                        <h3>Confirmation reçue</h3>
+                        <p>Le restaurateur valide votre créneau directement sur son tableau de bord et vous envoie une confirmation par message.</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">4</div>
+                        <span class="timeline-icon">🍽️</span>
+                        <h3>Installez-vous !</h3>
+                        <p>Présentez-vous au restaurant à l'heure convenue : votre table est prête et des points fidélité vous sont offerts.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Commande de Groupe -->
+            <div class="hw-tab-content" id="hw-group">
+                <div class="timeline-steps">
+                    <div class="timeline-card">
+                        <div class="timeline-badge">1</div>
+                        <span class="timeline-icon">👥</span>
+                        <h3>Création du groupe</h3>
+                        <p>Lancez un panier partagé pour vos collègues de bureau ou vos amis en clicking sur "Commande de Groupe".</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">2</div>
+                        <span class="timeline-icon">🔗</span>
+                        <h3>Partage du lien</h3>
+                        <p>Copiez et envoyez le lien unique généré dans votre discussion de groupe (WhatsApp, Slack, etc.).</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">3</div>
+                        <span class="timeline-icon">🍕</span>
+                        <h3>Choix individuels</h3>
+                        <p>Chaque membre ajoute ses plats préférés depuis son propre appareil. Le restaurant reçoit le tout regroupé et clair !</p>
+                    </div>
+                    <div class="timeline-card">
+                        <div class="timeline-badge">4</div>
+                        <span class="timeline-icon">👑</span>
+                        <h3>Validation & Envoi</h3>
+                        <p>L'initiateur du groupe valide le panier commun et l'envoie par WhatsApp. Le restaurant livre tout en une fois !</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ========== LOYALTY CARD SECTION ========== -->
+        <section class="loyalty-checker-section" style="padding: 2.5rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); margin: 2rem auto; max-width: 1200px;">
+            <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <span class="study-title-tag" style="background: rgba(207, 168, 83, 0.1); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(207, 168, 83, 0.2);">🎁 Programme de Fidélisation</span>
+                <h2 style="font-family: var(--font-serif); font-size: 2rem; color: var(--text-primary); margin: 0.75rem 0 0.5rem 0;">Consultez votre Statut & Plats Offerts</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">Saisissez votre numéro WhatsApp pour suivre vos points fidélité (5 pts/commande livrée, 5 pts/réservation) et réclamer vos cadeaux.</p>
+                
+                <div style="display: flex; gap: 0.75rem; justify-content: center; max-width: 480px; margin: 0 auto 1.5rem auto;">
+                    <input type="tel" id="loyalty-phone" class="form-control" placeholder="+221 77 123 45 67" style="margin-bottom: 0;">
+                    <button class="btn btn-primary" onclick="checkLoyaltyPoints()" style="white-space: nowrap;">Consulter ➔</button>
+                </div>
+                
+                <div id="loyalty-result-card" style="display: none; margin-top: 1.5rem; animation: fadeIn 0.4s ease;">
+                    <!-- Result card dynamically rendered by checkLoyaltyPoints -->
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== ÉTUDE DE TERRAIN & NOTRE SOLUTION ========== -->
+        <section class="field-study-section" id="field-study-section">
+            <div style="text-align: center;">
+                <span class="study-title-tag">📊 Analyse & Impact</span>
+                <h2 class="section-title" style="margin-bottom: 0.5rem; color: var(--text-primary);">L'Étude de Terrain & Notre Solution</h2>
+                <p class="study-subtitle">Comment THIES Resto répond à la réalité chiffrée de la restauration à Thiès.</p>
+            </div>
+
+            <div class="study-split-grid">
+                <!-- Left: Problems / Metrics -->
+                <div class="study-left-col">
+                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Le Constat Local (Étude Juin 2025)</h3>
+                    
+                    <div class="study-carousel-wrapper">
+                        <div class="study-metric-card square-stat-card">
+                            <span class="stat-number">85%</span>
+                            <span class="stat-label">Désert Numérique Complet</span>
+                        </div>
+
+                        <div class="study-metric-card square-stat-card">
+                            <span class="stat-number">0%</span>
+                            <span class="stat-label">Absence de Contenu Moderne</span>
+                        </div>
+
+                        <div class="study-metric-card square-stat-card">
+                            <span class="stat-number">90%</span>
+                            <span class="stat-label">Avis Négatifs Ignorés</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Our Solutions -->
+                <div class="study-right-col">
+                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Les Réponses de THIES Resto</h3>
+
+                    <div class="solution-carousel-wrapper">
+                        <div class="solution-feature-card">
+                            <span class="solution-icon">✨</span>
+                            <div class="solution-text">
+                                <h3>1. Vitrine Digitale Premium</h3>
+                                <p>Chaque partenaire bénéficie d'une page personnalisée, moderne, rapide et optimisée pour le référencement local à Thiès.</p>
+                            </div>
+                        </div>
+
+                        <div class="solution-feature-card">
+                            <span class="solution-icon">⚡</span>
+                            <div class="solution-text">
+                                <h3>2. Précommande Réduisant l'Attente</h3>
+                                <p>Les clients commandent et réservent à l'avance, ce qui réduit de moitié les temps d'attente souvent pointés du doigt.</p>
+                            </div>
+                        </div>
+
+                        <div class="solution-feature-card">
+                            <span class="solution-icon">📶</span>
+                            <div class="solution-text">
+                                <h3>3. Mode Hybride (SMS en Secours)</h3>
+                                <p>En cas de coupure ou faiblesse du réseau internet à Thiès, la commande bascule automatiquement par SMS classique sécurisé.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     `;
 
     if (typeof applyFilters === 'function') applyFilters();
@@ -3477,11 +3727,11 @@ function applyFilters() {
         let distanceBadge = '';
         let distanceOverlay = '';
         if (r._tempDistance) {
-            distanceBadge = `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2; display: flex; align-items: center; gap: 4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${r._tempDistance} km</div>`;
+            distanceBadge = `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 ${r._tempDistance} km</div>`;
             if (r._tempDistance > 10) {
-                distanceBadge = `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--danger); color: white; padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2; display: flex; align-items: center; gap: 4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg> Très loin (${r._tempDistance} km)</div>`;
+                distanceBadge = `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--danger); color: white; padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">⚠️ Très loin (${r._tempDistance} km)</div>`;
                 distanceOverlay = `<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; color: white; text-align: center; padding: 1rem;">
-                    <span style="font-size: 2rem; margin-bottom: 0.5rem;"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h20"/><path d="M12 2v20"/><path d="m4.93 4.93 14.14 14.14"/><path d="m19.07 4.93-14.14 14.14"/></svg></span>
+                    <span style="font-size: 2rem; margin-bottom: 0.5rem;">🚧</span>
                     <h4 style="margin: 0 0 0.5rem 0;">Restaurant très loin</h4>
                     <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); router.navigate('/r/${r.slug}')">Commander quand même</button>
                 </div>`;
@@ -3499,11 +3749,11 @@ function applyFilters() {
                 <div class="restaurant-card-body">
                     <h3 class="restaurant-card-name">${r.name}</h3>
                     <div class="restaurant-card-meta">
-                        <span class="stars-rating">⭐ ${r.rating.toFixed(1)}</span>
+                        <span class="stars-rating">★ ${r.rating.toFixed(1)}</span>
                         <span>(${r.reviewsCount} avis)</span>
                     </div>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 4px;">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${r.address}
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                        📍 ${r.address}
                     </p>
                     <span class="restaurant-card-cuisine">${r.category}</span>
                 </div>
@@ -4498,34 +4748,30 @@ function submitSimpleOrder(e, restaurantId) {
         supabaseClient.auth.signInWithOtp({ phone: phone }).then(({ data, error }) => {
             if (error) {
                 console.error("OTP Error", error);
-                if(typeof showToast === 'function') showToast("Erreur d'envoi du SMS de vérification. Impossible de valider la commande.", "danger");
-                // Return to checkout tab
-                if (typeof renderCheckoutTab === 'function') {
-                    renderCheckoutTab(store.getRestaurantById(cart.restaurantId));
-                }
+                if(typeof showToast === 'function') showToast("Erreur d'envoi du SMS.", "danger");
             } else {
                 if(typeof showToast === 'function') showToast("SMS Envoyé ! Vérifiez votre téléphone.", "info");
-                
-                container.innerHTML = `
-                    <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
-                        <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
-                        <h2>Vérification de Sécurité</h2>
-                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Veuillez entrer le code à 6 chiffres envoyé au <strong>${phone}</strong>.</p>
-                        
-                        <div class="form-group">
-                            <input type="text" id="otp-input-code" class="form-control" placeholder="Ex: 123456" style="font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-weight: bold; margin-bottom: 1rem;" maxlength="6">
-                        </div>
-                        
-                        <button class="btn btn-primary" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 1rem;" id="btn-verify-otp">
-                            ✅ Vérifier et Commander
-                        </button>
-                        
-                        <button class="btn btn-secondary" onclick="renderCheckoutTab(store.getRestaurantById(cart.restaurantId))" style="width: 100%; background: transparent; color: var(--text-primary); border: 1px solid var(--border);">
-                            Annuler
-                        </button>
-                    </div>
-                `;
             }
+            
+            container.innerHTML += `
+                <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
+                    <h2>Vérification de Sécurité</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Veuillez entrer le code à 6 chiffres envoyé au <strong>${phone}</strong>.</p>
+                    
+                    <div class="form-group">
+                        <input type="text" id="otp-input-code" class="form-control" placeholder="Ex: 123456" style="font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-weight: bold; margin-bottom: 1rem;" maxlength="6">
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 1rem;" id="btn-verify-otp">
+                        ✅ Vérifier et Commander
+                    </button>
+                    
+                    <button class="btn btn-secondary" onclick="renderCheckoutTab(store.getRestaurantById(cart.restaurantId))" style="width: 100%; background: transparent; color: var(--text-primary); border: 1px solid var(--border);">
+                        Annuler
+                    </button>
+                </div>
+            `;
         });
     } else {
         executePendingOrder();
@@ -5610,46 +5856,6 @@ window.fetchOrderTracking = async function() {
     }
 };
 // ----------------------------------------------------
-// Catalog View (Dedicated Menu Page)
-// ----------------------------------------------------
-router.add('#/catalog', () => {
-    document.getElementById('main-content').innerHTML = `
-        <div style="padding: 100px 0 2rem 0; min-height: 80vh;">
-            <section id="catalog-section">
-                <div class="section-header">
-                    <h2 class="section-title">Nos Restaurants Partenaires</h2>
-                </div>
-
-                <!-- FILTERS BAR -->
-                <div class="filter-bar" id="filter-bar">
-                    <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')">Tous</button>
-                    <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')">Traditionnel</button>
-                    <button class="filter-btn ${activeFilter === 'Fast Food' ? 'active' : ''}" onclick="setFilter('Fast Food')">Fast Food</button>
-                    <button class="filter-btn ${activeFilter === 'Grillades / Dibi' ? 'active' : ''}" onclick="setFilter('Grillades / Dibi')">Grillades</button>
-                    <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')">Gastronomique</button>
-                    <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')">Pâtisserie</button>
-                </div>
-
-                <!-- SORTING BAR -->
-                <div class="sort-bar">
-                    <label for="sort-select">Trier par :</label>
-                    <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
-                        <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
-                        <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
-                        <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
-                        <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
-                    </select>
-                </div>
-                
-                <div class="restaurant-grid" id="restaurants-list-grid"></div>
-            </section>
-        </div>
-    `;
-    updateNavUI();
-    if (typeof applyFilters === 'function') applyFilters();
-});
-
-// ----------------------------------------------------
 // 404 View
 // ----------------------------------------------------
 router.add('#/404', () => {
@@ -6256,20 +6462,5 @@ window.captureGPSCoordinates = function() {
         });
     } else {
         if(typeof showToast === 'function') showToast("Non supporté par le navigateur.", "error");
-    }
-};
-
-window.updateBottomNavState = function() {
-    const hash = window.location.hash || '#/';
-    document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
-    
-    let activeIndex = 0; // Accueil by default
-    if (hash.startsWith('#/catalog') || hash.startsWith('#/r/')) activeIndex = 1; // Explorer
-    else if (hash.startsWith('#/tracking')) activeIndex = 3; // Bons Plans (reused slot for now)
-    else if (hash.startsWith('#/admin') || hash.startsWith('#/restaurant-admin')) activeIndex = 4; // Profil
-    
-    const items = document.querySelectorAll('.mobile-bottom-nav .nav-item');
-    if (items[activeIndex]) {
-        items[activeIndex].classList.add('active');
     }
 };

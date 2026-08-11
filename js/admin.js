@@ -1288,7 +1288,6 @@ async function handleAdminLogin(e) {
             try {
                 sessionStorage.setItem('admin_session', 'true');
                 sessionStorage.setItem('thies_admin_logged', 'true');
-                sessionStorage.setItem('admin_password', pass);
             } catch (err) { console.warn('Failed to save admin_session', err); }
             showToast("Connexion Super-Admin établie", "success");
             router.navigate('/admin');
