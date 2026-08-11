@@ -3213,6 +3213,7 @@ function updateNavbar() {
     // User links template
     const userDrawerLinks = `
         <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
+        <a href="#" onclick="toggleMobileMenu(); router.navigate('/profile'); return false;" style="color: var(--primary); font-weight: bold;">👤 Mon Profil / Historique</a>
         <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
         <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
         <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
@@ -3272,6 +3273,7 @@ function updateNavbar() {
         `;
     } else {
         html = `
+            <button class="btn btn-primary btn-sm" onclick="router.navigate('/profile')">👤 Mon Profil</button>
             <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')">Espace Resto</button>
         `;
         drawerHtml = userDrawerLinks;
@@ -5914,6 +5916,97 @@ window.fetchOrderTracking = async function() {
         container.innerHTML = '<p style="color: var(--danger); text-align: center;">Une erreur est survenue.</p>';
     }
 };
+// ----------------------------------------------------
+// Profile View (Mon Espace)
+// ----------------------------------------------------
+router.add('#/profile', () => {
+    const container = document.getElementById('main-content');
+    
+    // Load local data
+    const history = getOrderHistory();
+    const customerPhone = localStorage.getItem('customerPhone') || '';
+    const customerName = localStorage.getItem('customerName') || '';
+    const customerAddress = localStorage.getItem('customerAddress') || '';
+    
+    let historyHtml = '';
+    if (history.length === 0) {
+        historyHtml = `<div class="empty-history">Aucune commande passée pour le moment. Découvrez nos restaurants ! <br><button class="btn btn-primary" style="margin-top: 1rem;" onclick="router.navigate('/')">Voir les restaurants</button></div>`;
+    } else {
+        history.forEach(order => {
+            const date = new Date(order.savedAt || order.created_at || Date.now()).toLocaleString('fr-FR', {
+                day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'
+            });
+            let itemsText = '';
+            if (Array.isArray(order.items)) {
+                itemsText = order.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
+            } else {
+                itemsText = "Détails non disponibles";
+            }
+            
+            historyHtml += `
+                <div class="history-card">
+                    <div class="history-header">
+                        <strong>${order.restaurantName || 'Restaurant Inconnu'}</strong>
+                        <span style="color: var(--primary); font-weight: bold;">${order.total} FCFA</span>
+                    </div>
+                    <div class="history-items">
+                        <p style="margin-bottom: 0.5rem;">${itemsText}</p>
+                        <small style="color: var(--text-secondary);">📅 ${date}</small>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    container.innerHTML = `
+        <div id="profile-view">
+            <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem;">
+                👤 Mon Espace Personnel
+            </h2>
+            
+            <div class="profile-section">
+                <h3 style="margin-bottom: 1rem; color: var(--primary);">Mes Informations</h3>
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Ces informations sont stockées localement sur votre appareil pour faciliter vos prochaines commandes.</p>
+                <form id="profile-form" onsubmit="saveProfile(event)">
+                    <div class="form-group">
+                        <label>Nom Complet</label>
+                        <input type="text" id="profile-name" class="form-control" value="${customerName}" placeholder="Votre nom" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Numéro de Téléphone</label>
+                        <input type="tel" id="profile-phone" class="form-control" value="${customerPhone}" placeholder="Ex: 77 123 45 67" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Adresse de Livraison par défaut</label>
+                        <input type="text" id="profile-address" class="form-control" value="${customerAddress}" placeholder="Quartier, Rue...">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Enregistrer mes informations</button>
+                </form>
+            </div>
+            
+            <div class="profile-section">
+                <h3 style="margin-bottom: 1rem; color: var(--accent);">Historique de Commandes</h3>
+                <div class="history-list">
+                    ${historyHtml}
+                </div>
+            </div>
+        </div>
+    `;
+});
+
+window.saveProfile = function(e) {
+    e.preventDefault();
+    const name = document.getElementById('profile-name').value.trim();
+    const phone = document.getElementById('profile-phone').value.trim();
+    const address = document.getElementById('profile-address').value.trim();
+    
+    if (name) localStorage.setItem('customerName', name);
+    if (phone) localStorage.setItem('customerPhone', phone);
+    if (address) localStorage.setItem('customerAddress', address);
+    
+    showToast("Profil enregistré avec succès !", "success");
+};
+
 // ----------------------------------------------------
 // 404 View
 // ----------------------------------------------------
