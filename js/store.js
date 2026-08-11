@@ -53,8 +53,10 @@ class Store {
             const { data: dbMenuItems, error: itemsError } = await supabaseClient.from('menu_items').select('*');
             if (!restosError && dbRestos) {
                 if (dbRestos.length === 0) {
-                    console.log("Database is empty. Seeding remote database with local restaurant data...");
+                    console.log("Database is empty. Attempting to seed remote database with local restaurant data...");
                     await this.seedRemoteDatabase();
+                    console.log("Falling back to local dummy data temporarily.");
+                    this.data.restaurants = typeof SEED_RESTAURANTS !== 'undefined' ? JSON.parse(JSON.stringify(SEED_RESTAURANTS)) : [];
                     return;
                 }
                 const mappedRestos = dbRestos.map(r => {
