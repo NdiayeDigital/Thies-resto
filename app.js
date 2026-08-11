@@ -3786,22 +3786,12 @@ function applyFilters() {
         
         const coverUrl = r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
         let distanceBadge = '';
-        let distanceOverlay = '';
         if (r._tempDistance) {
             distanceBadge = `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 ${r._tempDistance} km</div>`;
-            if (r._tempDistance > 10) {
-                distanceBadge = `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--danger); color: white; padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">⚠️ Très loin (${r._tempDistance} km)</div>`;
-                distanceOverlay = `<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 20px; color: white; text-align: center; padding: 1rem;">
-                    <span style="font-size: 2rem; margin-bottom: 0.5rem;">🚧</span>
-                    <h4 style="margin: 0 0 0.5rem 0;">Restaurant très loin</h4>
-                    <button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); router.navigate('/r/${r.slug}')">Commander quand même</button>
-                </div>`;
-            }
         }
             
         cardsHtml += `
-            <div class="restaurant-card" style="position: relative;" onclick="if(!(${r._tempDistance > 10}) || event.target.tagName === 'BUTTON') router.navigate('/r/${r.slug}')">
-                ${distanceOverlay}
+            <div class="restaurant-card" style="position: relative;" onclick="router.navigate('/r/${r.slug}')">
                 ${distanceBadge}
                 <div class="restaurant-card-header">
                     <img src="${coverUrl}" class="restaurant-card-cover" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
