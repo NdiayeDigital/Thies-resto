@@ -56,12 +56,13 @@ class Store {
                     console.log("Database is empty. Attempting to seed remote database with local restaurant data...");
                     await this.seedRemoteDatabase();
                     console.log("Falling back to local dummy data temporarily.");
-                    this.data.restaurants = typeof SEED_RESTAURANTS !== 'undefined' ? JSON.parse(JSON.stringify(SEED_RESTAURANTS)) : [];
+                    this.data.restaurants = this.getEnrichedFallbackData();
                     return;
                 }
-                const mappedRestos = dbRestos.map(r => {
-                    let parsedMenu = r.menu;
-                    try { if (typeof r.menu === 'string') parsedMenu = JSON.parse(r.menu); } catch(e) {}
+                try {
+                    const mappedRestos = dbRestos.map(r => {
+                        let parsedMenu = r.menu;
+                        try { if (typeof r.menu === 'string') parsedMenu = JSON.parse(r.menu); } catch(e) {}
                     let parsedReviews = r.reviews;
                     try { if (typeof r.reviews === 'string') parsedReviews = JSON.parse(r.reviews); } catch(e) {}
                     
@@ -153,6 +154,13 @@ class Store {
                 });
 
                 this.data.restaurants = mergedRestos;
+                } catch(err) {
+                    console.error("Error during restaurant mapping, falling back to local data:", err);
+                    this.data.restaurants = this.getEnrichedFallbackData();
+                }
+            } else {
+                console.error("Failed to fetch from public_restaurants, falling back to local data:", restosError);
+                this.data.restaurants = this.getEnrichedFallbackData();
             }
 
             // 2. Fetch admin data or restaurant specific data
@@ -254,9 +262,37 @@ class Store {
             if (typeof applyFilters === 'function') {
                 applyFilters();
             }
+
         } catch (e) {
-            console.error("Supabase sync failed", e);
+            console.error("Error connecting to Supabase during sync:", e);
+            this.data.restaurants = this.getEnrichedFallbackData();
         }
+    }
+
+    getEnrichedFallbackData() {
+        if (typeof SEED_RESTAURANTS === 'undefined') return [];
+        const baseData = JSON.parse(JSON.stringify(SEED_RESTAURANTS));
+        return baseData.map(r => {
+            const baseName = String(r.name || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+            let fallbackCover = '';
+            if (typeof RESTAURANT_COVERS !== 'undefined' && RESTAURANT_COVERS[r.id]) {
+                fallbackCover = RESTAURANT_COVERS[r.id];
+            } else if (typeof COVER_IMAGES !== 'undefined' && COVER_IMAGES[r.category]) {
+                fallbackCover = COVER_IMAGES[r.category];
+            }
+            let fallbackMenu = [];
+            if (typeof MENU_TEMPLATES !== 'undefined' && MENU_TEMPLATES[r.category]) {
+                fallbackMenu = JSON.parse(JSON.stringify(MENU_TEMPLATES[r.category]));
+            }
+            return {
+                ...r,
+                coverImage: r.coverImage || fallbackCover,
+                menu: r.menu || fallbackMenu,
+                username: 'id_' + baseName,
+                password: baseName + '221',
+                status: 'active'
+            };
+        });
     }
 
     async seedRemoteDatabase() {
