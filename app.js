@@ -937,6 +937,9 @@ function renderDashboardTabContent(r) {
                             <div style="color: var(--primary); font-weight: 700; font-size: 0.85rem;">${d.price} FCFA</div>
                         </div>
                         <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn ${d.available === false ? 'btn-danger' : 'btn-success'} btn-sm" style="padding: 0.35rem 0.5rem;" onclick="toggleDishAvailability('${d.id}', ${d.available !== false})">
+                                ${d.available === false ? '❌ Rupture' : '✅ Dispo'}
+                            </button>
                             <button class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.5rem;" onclick="openEditDishForm('${d.id}')">✏️</button>
                             <button class="btn btn-danger btn-sm" style="padding: 0.35rem 0.5rem;" onclick="deleteDish('${d.id}')">🗑️</button>
                         </div>
@@ -4291,18 +4294,30 @@ function renderDishesTab(r) {
 
     r.menu.forEach(d => {
         const isCurrentlyOpen = isRestaurantOpenNow(r);
-        const actionBtn = isCurrentlyOpen
-            ? `<button class="btn btn-primary btn-block" onclick="openProductModal('${r.id}', '${d.id}')">Choisir & Ajouter 🛒</button>`
-            : `<button class="btn btn-secondary btn-block" disabled>Fermé temporairement</button>`;
+        const isAvailable = d.available !== false;
+        
+        let actionBtn = '';
+        if (!isCurrentlyOpen) {
+            actionBtn = `<button class="btn btn-secondary btn-block" disabled>Fermé temporairement</button>`;
+        } else if (!isAvailable) {
+            actionBtn = `<button class="btn btn-danger btn-block" disabled>Rupture de Stock</button>`;
+        } else {
+            actionBtn = `<button class="btn btn-primary btn-block" onclick="openProductModal('${r.id}', '${d.id}')">Choisir & Ajouter 🛒</button>`;
+        }
+
+        const outOfStockBadge = !isAvailable ? `<span style="position:absolute; top:10px; left:10px; background:var(--danger); color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.8rem; z-index:10;">ÉPUISÉ</span>` : '';
+        const imgStyle = !isAvailable ? `filter: grayscale(100%); opacity: 0.6;` : '';
+        const cardOpacity = !isAvailable ? `opacity: 0.8;` : '';
 
         html += `
-            <div class="dish-card" onclick="if(isRestaurantOpenNow(store.getRestaurantById('${r.id}'))) openProductModal('${r.id}', '${d.id}')" style="cursor: pointer;">
-                <div class="dish-img-container">
-                    <img src="${d.image}" class="dish-image" alt="${d.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'">
+            <div class="dish-card" onclick="${isAvailable && isCurrentlyOpen ? `openProductModal('${r.id}', '${d.id}')` : ''}" style="${isAvailable && isCurrentlyOpen ? 'cursor: pointer;' : 'cursor: not-allowed;'} ${cardOpacity}">
+                <div class="dish-img-container" style="position:relative;">
+                    ${outOfStockBadge}
+                    <img src="${d.image}" class="dish-image" alt="${d.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'" style="${imgStyle}">
                     <span class="dish-price-tag">${d.price} FCFA</span>
                 </div>
                 <div class="dish-body">
-                    <h3 class="dish-title">${d.name}</h3>
+                    <h3 class="dish-title" style="${!isAvailable ? 'text-decoration: line-through; color: var(--text-secondary);' : ''}">${d.name}</h3>
                     <p class="dish-desc">${d.description}</p>
                     ${actionBtn}
                 </div>
@@ -6576,27 +6591,22 @@ window.requestPushNotifications = function() {
 
 window.geolocateRestaurants = function() {
     if ("geolocation" in navigator) {
-        if(typeof showToast === 'function') showToast("Recherche de votre position...", "info");
-        navigator.geolocation.getCurrentPosition((position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            window.userLat = lat;
-            window.userLng = lng;
+        if(typeof showToast === 'function') showToast("Recherche GPS...", "info");
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            window.userLat = position.coords.latitude;
+            window.userLng = position.coords.longitude;
             
-            const restos = store.getRestaurants().filter(r => r.status === 'active');
-            restos.forEach(r => {
-                const rLat = r.lat || 14.7928;
-                const rLng = r.lng || -16.9260;
-                r._tempDistance = Math.round(calculateDistance(lat, lng, rLat, rLng) * 10) / 10;
-            });
+            if(typeof showToast === 'function') showToast("Position trouvée ! Recherche des restaurants...", "info");
             
-            restos.sort((a, b) => a._tempDistance - b._tempDistance);
-            if (typeof applyFilters === 'function') applyFilters();
-            
-            if(typeof showToast === 'function') showToast("Restaurants triés par distance !", "success");
-            
-            const grid = document.getElementById('catalog-grid');
-            if (grid) grid.scrollIntoView({behavior: 'smooth'});
+            // Re-sync with Supabase which will now use PostGIS RPC to fetch nearest 10
+            if (typeof store !== 'undefined' && store.syncFromSupabase) {
+                await store.syncFromSupabase();
+                if (typeof applyFilters === 'function') applyFilters();
+                if(typeof showToast === 'function') showToast("Restaurants triés par proximité !", "success");
+                
+                const grid = document.getElementById('catalog-grid');
+                if (grid) grid.scrollIntoView({behavior: 'smooth'});
+            }
         }, (error) => {
             if(typeof showToast === 'function') showToast("Erreur de géolocalisation. Veuillez autoriser l'accès.", "error");
         });
@@ -6749,3 +6759,20 @@ window.addEventListener('appinstalled', () => {
     const banner = document.getElementById('pwa-install-banner');
     if (banner) banner.remove();
 });
+
+window.toggleDishAvailability = function(dishId, currentStatus) {
+    if (!currentRestaurantSession) return;
+    const newStatus = !currentStatus;
+    const dish = currentRestaurantSession.menu.find(d => d.id === dishId);
+    if (dish) dish.available = newStatus;
+    
+    store.updateRestaurantData(currentRestaurantSession.id, { menu: JSON.stringify(currentRestaurantSession.menu) }).then(() => {
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            supabaseClient.from('menu_items').update({ is_available: newStatus }).eq('id', dishId).then(({error}) => {
+                if (error) console.warn("Could not update menu_items table", error);
+            });
+        }
+        if(typeof showToast === 'function') showToast(newStatus ? "Plat disponible !" : "Plat marqué en rupture.", newStatus ? "success" : "warning");
+        renderDashboardTabContent(currentRestaurantSession);
+    });
+};

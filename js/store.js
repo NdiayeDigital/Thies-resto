@@ -48,8 +48,14 @@ class Store {
         try {
             console.log("Syncing with Supabase...");
 
-            // 1. Sync Restaurants (Publiques)
-            const { data: dbRestos, error: restosError } = await supabaseClient.from('public_restaurants').select('*');
+            // 1. Sync Restaurants (Publiques) via PostGIS
+            const searchLat = window.userLat || 14.7928;
+            const searchLng = window.userLng || -16.9260;
+            const { data: dbRestos, error: restosError } = await supabaseClient.rpc('get_nearby_restaurants', {
+                user_lat: searchLat,
+                user_lng: searchLng,
+                max_limit: 50 // Load up to 50 for catalog
+            });
             const { data: dbMenuItems, error: itemsError } = await supabaseClient.from('menu_items').select('*');
             if (!restosError && dbRestos) {
                 if (dbRestos.length === 0) {
@@ -430,13 +436,24 @@ class Store {
                 customer_phone: order.customerPhone,
                 mode: order.mode,
                 address: order.address,
-                items: order.items,
+                items: order.items, // Kept for backwards compatibility
                 total: order.total,
                 note: order.note,
                 status: order.status,
                 date: order.date,
                 time: order.time
             });
+            
+            // PHASE 2 MIGRATION: Insert into order_items for relational stats
+            if (order.items && order.items.length > 0) {
+                const orderItemsToInsert = order.items.map(item => ({
+                    order_id: order.id,
+                    item_name: item.name,
+                    price: item.price,
+                    quantity: item.qty || 1
+                }));
+                await supabaseClient.from('order_items').insert(orderItemsToInsert);
+            }
         } catch (e) {
             console.error("Failed to push order to Supabase", e);
         }
