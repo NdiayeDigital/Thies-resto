@@ -53,6 +53,11 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+html {
+    /* Responsive Typography: minimum 14px, scales with screen width, max 18px */
+    font-size: clamp(14px, 1vw + 10px, 18px);
+}
+
 body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
@@ -99,6 +104,11 @@ a:hover {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    /* Responsive Desktop wrapper */
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: var(--bg-primary);
+    box-shadow: 0 0 40px rgba(0,0,0,0.5); /* subtle shadow on large screens */
 }
 
 main {

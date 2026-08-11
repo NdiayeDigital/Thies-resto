@@ -4283,6 +4283,13 @@ function switchRestoTab(tabName) {
 // ----------------------------------------------------
 
 // 1. Menu Panel
+/**
+ * Affiche l'onglet du menu pour un restaurant spécifique.
+ * @param {Object} r - L'objet contenant les données du restaurant.
+ * @param {string} r.id - L'identifiant unique du restaurant.
+ * @param {Array} r.menu - La liste des plats disponibles.
+ * @returns {void} Modifie le DOM directement.
+ */
 function renderDishesTab(r) {
     const grid = document.getElementById('dishes-list-grid');
     let html = '';
