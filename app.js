@@ -4786,73 +4786,80 @@ function submitSimpleOrder(e, restaurantId) {
 
     window.pendingOrderContext = { order, r, firstname, lastname, mode, phone };
     
+    const isVerified = localStorage.getItem('phoneVerified_' + phone) === 'true';
+    if (isVerified) {
+        // Déjà vérifié, on soumet directement
+        executePendingOrder();
+        return;
+    }
+
+    // Sinon, on demande la vérification OTP
     const container = document.getElementById('checkout-content-container');
     container.innerHTML = `
         <div class="confirmation-screen">
             <div class="spinner-ring" style="width:40px;height:40px;border-width:4px;margin: 0 auto 1rem;"></div>
             <h2>Vérification du numéro...</h2>
-            <p style="color: var(--text-secondary);">Un code SMS est en cours d'envoi au <strong>${phone}</strong></p>
+            <p style="color: var(--text-secondary);">Une simulation de code SMS est en cours de préparation pour le <strong>${phone}</strong></p>
         </div>
     `;
     
-    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        supabaseClient.auth.signInWithOtp({ phone: phone }).then(({ data, error }) => {
-            if (error) {
-                console.error("OTP Error", error);
-                if(typeof showToast === 'function') showToast("Erreur d'envoi du SMS.", "danger");
-            } else {
-                if(typeof showToast === 'function') showToast("SMS Envoyé ! Vérifiez votre téléphone.", "info");
-            }
+    // MOCK OTP LOGIC (Since Twilio isn't configured, we simulate an SMS)
+    if(typeof showToast === 'function') showToast("Vérification en cours... Simulation SMS", "info");
+    window.verifyOtpAndSubmitOrder = async function() {
+        const code = document.getElementById('otp-input-code').value.trim();
+        if (!code || code.length < 6) {
+            if(typeof showToast === 'function') showToast("Veuillez entrer le code à 6 chiffres", "warning");
+            return;
+        }
+        
+        const btn = document.getElementById('btn-verify-otp');
+        btn.disabled = true;
+        btn.innerHTML = `<div class="spinner-ring" style="width:20px;height:20px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Vérification...`;
+        
+        const { phone } = window.pendingOrderContext;
+        
+        // MOCK VERIFICATION
+        if (code === '123456') {
+            // Validation réussie !
+            localStorage.setItem('phoneVerified_' + phone, 'true');
+            btn.innerHTML = '✅ Code Valide !';
             
-            container.innerHTML += `
-                <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
-                    <h2>Vérification de Sécurité</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Veuillez entrer le code à 6 chiffres envoyé au <strong>${phone}</strong>.</p>
-                    
-                    <div class="form-group">
-                        <input type="text" id="otp-input-code" class="form-control" placeholder="Ex: 123456" style="font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-weight: bold; margin-bottom: 1rem;" maxlength="6">
-                    </div>
-                    
-                    <button class="btn btn-primary" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 1rem;" id="btn-verify-otp">
-                        ✅ Vérifier et Commander
-                    </button>
-                    
-                    <button class="btn btn-secondary" onclick="renderCheckoutTab(store.getRestaurantById(cart.restaurantId))" style="width: 100%; background: transparent; color: var(--text-primary); border: 1px solid var(--border);">
-                        Annuler
-                    </button>
-                </div>
-            `;
-        });
-    } else {
-        executePendingOrder();
+            // On soumet la vraie commande
+            executePendingOrder();
+        } else {
+            if(typeof showToast === 'function') showToast("Code invalide. Veuillez réessayer.", "danger");
+            btn.innerHTML = '✅ Vérifier et Commander';
+            btn.disabled = false;
+        }
     }
+    
+    // Simulate network delay
+    setTimeout(() => {
+        if(typeof showToast === 'function') showToast("SMS de démo envoyé ! Code : 123456", "info");
+        
+        container.innerHTML = `
+            <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
+                <h2>Vérification de Sécurité</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Veuillez entrer le code à 6 chiffres envoyé au <strong>${phone}</strong>.</p>
+                <p style="font-size:0.8rem; color:var(--primary); margin-bottom: 1rem;">(Mode Démo : Tapez 123456)</p>
+                
+                <div class="form-group">
+                    <input type="text" id="otp-input-code" class="form-control" placeholder="Ex: 123456" style="font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-weight: bold; margin-bottom: 1rem;" maxlength="6">
+                </div>
+                
+                <button class="btn btn-primary" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 1rem;" id="btn-verify-otp">
+                    ✅ Vérifier et Commander
+                </button>
+                
+                <button class="btn btn-secondary" onclick="router.navigate('/')" style="width: 100%;">
+                    Annuler
+                </button>
+            </div>
+        `;
+    }, 1500);
 }
 
-window.verifyOtpAndSubmitOrder = async function() {
-    const code = document.getElementById('otp-input-code').value.trim();
-    if (!code || code.length < 6) {
-        if(typeof showToast === 'function') showToast("Veuillez entrer le code à 6 chiffres", "warning");
-        return;
-    }
-    
-    const btn = document.getElementById('btn-verify-otp');
-    btn.disabled = true;
-    btn.innerHTML = `<div class="spinner-ring" style="width:20px;height:20px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Vérification...`;
-    
-    const { phone } = window.pendingOrderContext;
-    
-    const { data, error } = await supabaseClient.auth.verifyOtp({ phone, token: code, type: 'sms' });
-    
-    if (error) {
-        if(typeof showToast === 'function') showToast("Code invalide ou expiré.", "danger");
-        btn.disabled = false;
-        btn.innerHTML = "✅ Vérifier et Commander";
-    } else {
-        if(typeof showToast === 'function') showToast("Numéro vérifié avec succès !", "success");
-        executePendingOrder();
-    }
-};
 
 window.executePendingOrder = function() {
     if (!window.pendingOrderContext) return;
@@ -6390,8 +6397,13 @@ window.addEventListener('error', function(e) {
     console.error("Uncaught Error:", e.message);
 });
 
-// ==================== SORTING LOGIC ====================
+// ==================== SORTING & REALTIME LOGIC ====================
 document.addEventListener('DOMContentLoaded', () => {
+    // Setup Supabase Realtime
+    if (typeof setupRealtime === 'function') {
+        setupRealtime();
+    }
+    
     setTimeout(() => {
         const sortSelect = document.getElementById('sort-select');
         if (sortSelect) {
@@ -6592,6 +6604,65 @@ window.geolocateRestaurants = function() {
         if(typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée par votre navigateur.", "error");
     }
 };
+
+// ==================== SUPABASE REALTIME ====================
+let globalOrderSubscription = null;
+window.setupRealtime = function() {
+    if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
+    if (globalOrderSubscription) return; // Already subscribed
+
+    globalOrderSubscription = supabaseClient
+        .channel('public:orders')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
+            console.log('Realtime Order Event:', payload);
+            
+            // 1. Dashboard Restaurateur Live Update
+            if (window.location.hash === '#/dashboard' && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+                if (payload.new && payload.new.restaurant_id === currentRestaurantSession.id) {
+                    if (payload.eventType === 'INSERT') {
+                        playNotificationSound();
+                        if(typeof showToast === 'function') showToast("🔔 NOUVELLE COMMANDE REÇUE !", "success");
+                    }
+                    // Force refresh data
+                    if (typeof store !== 'undefined' && store.syncFromSupabase) {
+                        store.syncFromSupabase().then(() => {
+                            if (typeof renderDashboardTabContent === 'function') {
+                                renderDashboardTabContent(currentRestaurantSession);
+                            }
+                        });
+                    }
+                }
+            }
+            
+            // 2. Client Order Tracking Live Update
+            if (window.location.hash === '#/tracking') {
+                const trackingOrderId = localStorage.getItem('trackingOrderId');
+                if (trackingOrderId && payload.new && payload.new.id === trackingOrderId) {
+                    // Mettre à jour l'interface de suivi
+                    if (typeof store !== 'undefined' && store.syncFromSupabase) {
+                        store.syncFromSupabase().then(() => {
+                            if (typeof fetchOrderTracking === 'function') fetchOrderTracking();
+                        });
+                    }
+                    if (payload.eventType === 'UPDATE') {
+                        if(typeof showToast === 'function') showToast(`Statut mis à jour : ${payload.new.status}`, "info");
+                    }
+                }
+            }
+        })
+        .subscribe((status) => {
+            console.log('Supabase Realtime Status:', status);
+        });
+};
+
+window.playNotificationSound = function() {
+    try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play().catch(e => console.warn("Audio play requires user interaction first", e));
+    } catch(e) {
+        console.error("Audio play failed:", e);
+    }
+};
 window.captureGPSCoordinates = function() {
     if ("geolocation" in navigator) {
         if(typeof showToast === 'function') showToast("Recherche GPS...", "info");
@@ -6606,3 +6677,75 @@ window.captureGPSCoordinates = function() {
         if(typeof showToast === 'function') showToast("Non supporté par le navigateur.", "error");
     }
 };
+
+// ==================== PWA INSTALLATION (A2HS) ====================
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    setTimeout(() => {
+        const isInstalled = localStorage.getItem('pwa_installed');
+        if (!isInstalled) {
+            showInstallPromotion();
+        }
+    }, 5000);
+});
+
+function showInstallPromotion() {
+    if (document.getElementById('pwa-install-banner')) return;
+    
+    const installBanner = document.createElement('div');
+    installBanner.id = 'pwa-install-banner';
+    installBanner.style.cssText = `
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--bg-card);
+        color: var(--text-primary);
+        padding: 1rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        border: 2px solid var(--primary);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        width: 90%;
+        max-width: 400px;
+        animation: fadeUp 0.5s ease-out;
+    `;
+    installBanner.innerHTML = `
+        <img src="icon.png" style="width: 50px; height: 50px; border-radius: 12px; border: 1px solid var(--border);">
+        <div style="flex-grow: 1;">
+            <strong style="display:block; margin-bottom: 0.25rem;">Installer THIES Resto</strong>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">Pour commander en un clic !</span>
+        </div>
+        <button id="pwa-install-btn" class="btn btn-primary" style="padding: 0.5rem 1rem;">Installer</button>
+        <button id="pwa-close-btn" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer;">&times;</button>
+    `;
+    document.body.appendChild(installBanner);
+    
+    document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+        installBanner.remove();
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                localStorage.setItem('pwa_installed', 'true');
+                if(typeof showToast === 'function') showToast("Merci d'avoir installé l'application !", "success");
+            }
+            deferredPrompt = null;
+        }
+    });
+    
+    document.getElementById('pwa-close-btn').addEventListener('click', () => {
+        installBanner.remove();
+        localStorage.setItem('pwa_installed', 'dismissed'); // Don't show again immediately
+    });
+}
+window.addEventListener('appinstalled', () => {
+    localStorage.setItem('pwa_installed', 'true');
+    const banner = document.getElementById('pwa-install-banner');
+    if (banner) banner.remove();
+});
