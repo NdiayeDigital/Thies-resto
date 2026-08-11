@@ -81,15 +81,28 @@ class Store {
                         menu: (() => {
                             let combinedMenu = Array.isArray(parsedMenu) ? parsedMenu : [];
                             if (!itemsError && dbMenuItems) {
-                                const newItems = dbMenuItems.filter(item => item.restaurant_id === r.id).map(item => ({
-                                    id: item.id,
-                                    name: item.name,
-                                    description: item.description,
-                                    price: item.price,
-                                    category: item.category,
-                                    image: item.image_url,
-                                    available: item.is_available
-                                }));
+                                const newItems = dbMenuItems.filter(item => item.restaurant_id === r.id).map(item => {
+                                    let fallbackImg = item.image_url;
+                                    if (!fallbackImg || (typeof fallbackImg === 'string' && fallbackImg.trim() === '')) {
+                                        if (typeof DISH_IMAGE_OPTIONS !== 'undefined' && DISH_IMAGE_OPTIONS.length > 0) {
+                                            let str = item.id || item.name || '';
+                                            let hash = 0;
+                                            for (let i = 0; i < str.length; i++) {
+                                                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                                            }
+                                            fallbackImg = DISH_IMAGE_OPTIONS[Math.abs(hash) % DISH_IMAGE_OPTIONS.length].url;
+                                        }
+                                    }
+                                    return {
+                                        id: item.id,
+                                        name: item.name,
+                                        description: item.description,
+                                        price: item.price,
+                                        category: item.category,
+                                        image: fallbackImg,
+                                        available: item.is_available
+                                    };
+                                });
                                 if (newItems.length > 0) {
                                     const newNames = new Set(newItems.map(i => i.name));
                                     combinedMenu = [...newItems, ...combinedMenu.filter(old => !newNames.has(old.name))];
@@ -105,7 +118,7 @@ class Store {
                 const mergedRestos = mappedRestos.map(dbR => {
                     const localR = this.data.restaurants.find(lr => lr.id === dbR.id);
                     if (localR) {
-                        const baseName = dbR.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                        const baseName = (dbR.name || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
                         return {
                             ...dbR,
                             menu: (dbR.menu && dbR.menu.length > 0) ? dbR.menu : localR.menu,
@@ -117,7 +130,14 @@ class Store {
                             createdAt: localR.createdAt || '2026-06-25T00:00:00Z'
                         };
                     }
-                    const baseName = dbR.name.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                    const baseName = (dbR.name || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                    let fallbackCover = '';
+                    if (typeof RESTAURANT_COVERS !== 'undefined' && RESTAURANT_COVERS[dbR.id]) {
+                        fallbackCover = RESTAURANT_COVERS[dbR.id];
+                    } else if (typeof COVER_IMAGES !== 'undefined' && COVER_IMAGES[dbR.category]) {
+                        fallbackCover = COVER_IMAGES[dbR.category];
+                    }
+                    
                     return {
                         ...dbR,
                         menu: dbR.menu || [],
@@ -125,7 +145,8 @@ class Store {
                         password: baseName + '221',
                         status: dbR.status || 'active',
                         subscriptionPack: 'Aucun (Gratuit)',
-                        createdAt: dbR.created_at || '2026-06-25T00:00:00Z'
+                        createdAt: dbR.created_at || '2026-06-25T00:00:00Z',
+                        coverImage: dbR.cover_image || fallbackCover
                     };
                 });
 
