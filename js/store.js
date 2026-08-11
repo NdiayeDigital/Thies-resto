@@ -581,6 +581,33 @@ class Store {
             }
         }
     }
+
+    async uploadImage(file) {
+        if (!supabaseClient) return null;
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
+            
+            const { data, error } = await supabaseClient.storage
+                .from('images')
+                .upload(fileName, file);
+
+            if (error) {
+                console.error("Storage error details:", error);
+                throw error;
+            }
+            
+            const { data: publicUrlData } = supabaseClient.storage
+                .from('images')
+                .getPublicUrl(fileName);
+                
+            return publicUrlData.publicUrl;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert("Erreur lors de l'upload de l'image. Avez-vous créé le bucket 'images' en mode public sur Supabase ?");
+            return null;
+        }
+    }
 }
 
 const store = new Store();

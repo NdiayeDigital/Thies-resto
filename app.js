@@ -979,15 +979,22 @@ function renderDashboardTabContent(r) {
                                 <input type="number" id="dish-price" class="form-control" placeholder="2500" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Photo du plat (URL ou preset) <span class="required">*</span></label>
-                                <select id="dish-image-select" class="form-control" onchange="document.getElementById('dish-image-custom').value = this.value">
-                                    <option value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">Poisson Rouge / Thieb</option>
-                                    <option value="https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500">Poulet / Yassa</option>
-                                    <option value="https://images.unsplash.com/photo-1544025162-d76694265947?w=500">Grillades / Viandes / Dibi</option>
-                                    <option value="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500">Burger / Sandwich</option>
-                                    <option value="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500">Frites dorées</option>
-                                    <option value="https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500">Boisson / Jus maison</option>
-                                </select>
+                                <label class="form-label">Photo du plat <span class="required">*</span></label>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <input type="file" id="dish-image-file" class="form-control" accept="image/*" onchange="handleDishImageUpload(event)" style="padding: 0.35rem; height: auto;">
+                                    <span id="dish-image-status" style="font-size: 0.75rem; color: var(--success); display: none;">Upload en cours...</span>
+                                    <input type="hidden" id="dish-image-custom" value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">
+                                    <div style="text-align: center; margin: 0.25rem 0; font-size: 0.8rem; color: var(--text-secondary);">OU choisir une image par défaut</div>
+                                    <select id="dish-image-select" class="form-control" onchange="document.getElementById('dish-image-custom').value = this.value">
+                                        <option value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">Poisson Rouge / Thieb</option>
+                                        <option value="https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500">Poulet / Yassa</option>
+                                        <option value="https://images.unsplash.com/photo-1544025162-d76694265947?w=500">Grillades / Viandes / Dibi</option>
+                                        <option value="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500">Burger / Sandwich</option>
+                                        <option value="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500">Frites dorées</option>
+                                        <option value="https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500">Boisson / Jus maison</option>
+                                    </select>
+                                </div>
+                            </div>
                             </div>
                         </div>
 
@@ -1919,6 +1926,58 @@ window.handleRestaurantLogoUpload = async function(event) {
     const filePath = `restaurants/${currentRestaurantSession.id}/${fileName}`;
 
     try {
+        const { data, error } = await supabaseClient.storage
+            .from('restaurant-images')
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabaseClient.storage
+            .from('restaurant-images')
+            .getPublicUrl(filePath);
+
+        urlInput.value = publicUrlData.publicUrl;
+        
+        if (statusText) {
+            statusText.innerHTML = `✅ Photo uploadée et hébergée !`;
+            statusText.style.color = "var(--success)";
+        }
+    } catch (e) {
+        console.error("Upload error:", e);
+        if (statusText) {
+            statusText.innerHTML = `❌ Échec de l'envoi (${e.message})`;
+            statusText.style.color = "var(--danger)";
+        }
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+};
+
+window.handleDishImageUpload = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!supabaseClient) {
+        showToast("Service Storage non disponible", "danger");
+        return;
+    }
+
+    const statusText = document.getElementById('dish-image-status');
+    const urlInput = document.getElementById('dish-image-custom');
+    const submitBtn = document.querySelector('#dish-editor-form button[type="submit"]');
+
+    if (statusText) {
+        statusText.style.display = 'block';
+        statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        statusText.style.color = "var(--warning)";
+    }
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `dishes/${currentRestaurantSession.id}/${fileName}`;
+
         const { data, error } = await supabaseClient.storage
             .from('restaurant-images')
             .upload(filePath, file);
