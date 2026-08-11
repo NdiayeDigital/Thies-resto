@@ -85,7 +85,7 @@ class Store {
                                     let fallbackImg = item.image_url;
                                     if (!fallbackImg || (typeof fallbackImg === 'string' && fallbackImg.trim() === '')) {
                                         if (typeof DISH_IMAGE_OPTIONS !== 'undefined' && DISH_IMAGE_OPTIONS.length > 0) {
-                                            let str = item.id || item.name || '';
+                                            let str = String(item.id || item.name || '');
                                             let hash = 0;
                                             for (let i = 0; i < str.length; i++) {
                                                 hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -118,7 +118,7 @@ class Store {
                 const mergedRestos = mappedRestos.map(dbR => {
                     const localR = this.data.restaurants.find(lr => lr.id === dbR.id);
                     if (localR) {
-                        const baseName = (dbR.name || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                        const baseName = String(dbR.name || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
                         return {
                             ...dbR,
                             menu: (dbR.menu && dbR.menu.length > 0) ? dbR.menu : localR.menu,
@@ -130,7 +130,7 @@ class Store {
                             createdAt: localR.createdAt || '2026-06-25T00:00:00Z'
                         };
                     }
-                    const baseName = (dbR.name || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+                    const baseName = String(dbR.name || '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
                     let fallbackCover = '';
                     if (typeof RESTAURANT_COVERS !== 'undefined' && RESTAURANT_COVERS[dbR.id]) {
                         fallbackCover = RESTAURANT_COVERS[dbR.id];
@@ -145,8 +145,8 @@ class Store {
                         password: baseName + '221',
                         status: dbR.status || 'active',
                         subscriptionPack: 'Aucun (Gratuit)',
-                        createdAt: dbR.created_at || '2026-06-25T00:00:00Z',
-                        coverImage: dbR.cover_image || fallbackCover
+                        createdAt: dbR.createdAt || '2026-06-25T00:00:00Z',
+                        coverImage: dbR.coverImage || fallbackCover
                     };
                 });
 
