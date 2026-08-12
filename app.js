@@ -961,17 +961,16 @@ function logoutAdmin() {
 // ----------------------------------------------------
 router.add('#/', () => {
     updateSEO('home');
-    // Hide cart bar
-    const cartBar = document.getElementById('floating-cart-bar');
-    if (cartBar) cartBar.style.display = 'none';
-    
-    if (typeof stopOrderPolling === 'function') stopOrderPolling();
-    if (typeof loadCart === 'function') loadCart();
-    
-    // Generate a stable session/visit specific random shuffle for restaurants
-    const allRestos = store.getRestaurants().filter(r => r.status === 'active');
-    const shuffledIds = allRestos.map(r => r.id);
-    for (let i = shuffledIds.length - 1; i > 0; i--) {
+    try {
+        const cartBar = document.getElementById('floating-cart-bar');
+        if (cartBar) cartBar.style.display = 'none';
+        
+        if (typeof stopOrderPolling === 'function') stopOrderPolling();
+        if (typeof loadCart === 'function') loadCart();
+        
+        const allRestos = store.getRestaurants().filter(r => r.status === 'active');
+        const shuffledIds = allRestos.map(r => r.id);
+        for (let i = shuffledIds.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffledIds[i], shuffledIds[j]] = [shuffledIds[j], shuffledIds[i]];
     }
