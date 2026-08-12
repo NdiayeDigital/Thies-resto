@@ -174,6 +174,43 @@ function toggleAddressField(show) {
                     const totalEls = document.querySelectorAll('.cart-total-price');
                     totalEls.forEach(el => el.innerText = cart.total + " FCFA");
                 });
+                
+                // Bouton de géolocalisation automatique
+                const GeoControl = L.Control.extend({
+                    options: { position: 'topright' },
+                    onAdd: function () {
+                        const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
+                        btn.innerHTML = '📍 Me localiser';
+                        btn.style.backgroundColor = 'white';
+                        btn.style.padding = '5px 10px';
+                        btn.style.cursor = 'pointer';
+                        btn.style.fontWeight = 'bold';
+                        btn.style.border = '2px solid rgba(0,0,0,0.2)';
+                        btn.style.borderRadius = '4px';
+                        btn.style.color = 'var(--primary, #d35400)';
+                        
+                        btn.onclick = function(e) {
+                            e.preventDefault();
+                            if(navigator.geolocation) {
+                                btn.innerHTML = '⏳...';
+                                navigator.geolocation.getCurrentPosition(pos => {
+                                    const lat = pos.coords.latitude;
+                                    const lng = pos.coords.longitude;
+                                    deliveryMap.setView([lat, lng], 15);
+                                    deliveryMarker.setLatLng([lat, lng]);
+                                    deliveryMarker.fire('dragend'); // Recalculate distance & fees
+                                    btn.innerHTML = '📍 Me localiser';
+                                    if(navigator.vibrate) navigator.vibrate(50);
+                                }, err => {
+                                    if(typeof showToast === 'function') showToast("Géolocalisation refusée ou impossible.", "error");
+                                    btn.innerHTML = '📍 Me localiser';
+                                });
+                            }
+                        };
+                        return btn;
+                    }
+                });
+                deliveryMap.addControl(new GeoControl());
             } else {
                 deliveryMap.invalidateSize();
             }

@@ -574,15 +574,21 @@ function loadCart() {
 loadCart();
 
 function pulseCartBar() {
+    // Haptic feedback (vibration) for mobile users
+    if (navigator.vibrate) {
+        navigator.vibrate(50);
+    }
+    
     const bar = document.getElementById('floating-cart-bar');
     const qty = document.getElementById('floating-cart-qty');
     const btn = document.getElementById('floating-cart-btn');
+    const bottomNavQty = document.getElementById('bottom-nav-cart-qty');
     
-    [bar, qty, btn].forEach(el => {
+    [bar, qty, btn, bottomNavQty].forEach(el => {
         if (el) {
-            el.classList.remove('cart-pulse');
+            el.classList.remove('cart-pulse', 'bounce');
             void el.offsetWidth; // Trigger reflow
-            el.classList.add('cart-pulse');
+            el.classList.add('cart-pulse', 'bounce');
         }
     });
 }
