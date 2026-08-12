@@ -1,3 +1,9 @@
+// Page: RESTAURANT DASHBOARD (Gerer ses donnees)
+// ----------------------------------------------------
+let dashboardActiveTab = 'summary';
+let currentOrderStatusFilter = 'Tous';
+let currentAccountingFilter = 'all'; // all, today, week, month
+
 router.add('#/dashboard', () => {
     // Hide cart
     document.getElementById('floating-cart-bar').style.display = 'none';
@@ -20,25 +26,54 @@ function renderDashboardShell() {
     let impersonateBanner = '';
     if (isSuperAdminSession) {
         impersonateBanner = `
-            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); color: white; padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; border-radius: 12px; margin: 1rem 1.5rem 0 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.1);">
+            <div style="background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); color: var(--primary); padding: 0.75rem 1.5rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 700; border-radius: 12px; margin: 1rem 1.5rem 0 1.5rem; box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.1);">
                 <span>👑 Mode Super-Admin : Vous gérez actuellement le profil de "<strong>${r.name}</strong>"</span>
-                <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()" style="background: rgba(255,255,255,0.25); border-color: transparent; color: white; font-weight: 700;">
+                <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()" style="background: rgba(255,255,255,0.25); border-color: transparent; color: var(--primary); font-weight: 700;">
                     Retourner à la Console 🔐
                 </button>
             </div>
         `;
     }
     
+    // Check trial expiry for paywall
+    const _createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+    const _diffTime = Math.abs(new Date() - _createdAt);
+    const _diffDays = Math.ceil(_diffTime / (1000 * 60 * 60 * 24));
+    const _packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
+    const isTrialExpired = _diffDays > 90 && _packSubscribed === 'Aucun (Gratuit)' && !isSuperAdminSession;
+    const _daysLeft = Math.max(0, 90 - _diffDays);
+
+    // Locked tab icon for expired trials
+    const lockIcon = isTrialExpired ? ' 🔒' : '';
+
+    // Alert banner for expired trials
+    let trialAlertBanner = '';
+    if (isTrialExpired) {
+        trialAlertBanner = `
+            <div style="background: linear-gradient(135deg, #dc3545 0%, #ff4b4b 100%); color: white; padding: 1rem 1.5rem; border-radius: 12px; margin: 1rem 1.5rem 0 1.5rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 15px rgba(220,53,69,0.3); animation: pulseMainCircle 2s infinite;">
+                <span style="font-size: 2rem;">⚠️</span>
+                <div>
+                    <strong style="font-size: 1.1rem;">Votre page est indisponible sur la plateforme</strong>
+                    <p style="margin: 0.25rem 0 0; opacity: 0.9; font-size: 0.9rem;">Votre période d'essai gratuit de 3 mois est terminée. Souscrivez à un abonnement pour réactiver votre restaurant.</p>
+                </div>
+                <button class="btn btn-sm" onclick="switchDashboardTab('subscription')" style="background: white; color: #dc3545; font-weight: 700; white-space: nowrap;">💳 Voir les offres</button>
+            </div>
+        `;
+    }
+
     container.innerHTML = `
         ${impersonateBanner}
+        ${trialAlertBanner}
         <div class="dashboard-grid">
             <aside class="sidebar">
-                <button class="sidebar-btn ${dashboardActiveTab === 'orders' ? 'active' : ''}" onclick="switchDashboardTab('orders')">📦 Commandes</button>
-                <button class="sidebar-btn ${dashboardActiveTab === 'reservations' ? 'active' : ''}" onclick="switchDashboardTab('reservations')">📅 Réservations</button>
-                <button class="sidebar-btn ${dashboardActiveTab === 'menu' ? 'active' : ''}" onclick="switchDashboardTab('menu')">🍽️ Plats du Jour</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'summary' ? 'active' : ''}" onclick="switchDashboardTab('summary')">📈 Résumé du Jour</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'orders' ? 'active' : ''}" onclick="switchDashboardTab('orders')">📦 Commandes${lockIcon}</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'reservations' ? 'active' : ''}" onclick="switchDashboardTab('reservations')">📅 Réservations${lockIcon}</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'menu' ? 'active' : ''}" onclick="switchDashboardTab('menu')">🍽️ Plats du Jour${lockIcon}</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'reviews' ? 'active' : ''}" onclick="switchDashboardTab('reviews')">💬 Avis Clients</button>
-                <button class="sidebar-btn ${dashboardActiveTab === 'accounting' ? 'active' : ''}" onclick="switchDashboardTab('accounting')">📊 Comptabilité</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'accounting' ? 'active' : ''}" onclick="switchDashboardTab('accounting')">📊 Comptabilité${lockIcon}</button>
                 <button class="sidebar-btn ${dashboardActiveTab === 'settings' ? 'active' : ''}" onclick="switchDashboardTab('settings')">⚙️ Paramètres</button>
+                <button class="sidebar-btn ${dashboardActiveTab === 'subscription' ? 'active' : ''}" onclick="switchDashboardTab('subscription')">💳 Abonnement</button>
             </aside>
             <main class="dashboard-content" id="dashboard-tab-panel">
                 <!-- Sub tab contents injected here -->
@@ -57,7 +92,7 @@ function switchDashboardTab(tab) {
     btns.forEach(b => b.classList.remove('active'));
     
     // Highlight active
-    const label = tab === 'orders' ? 'commandes' : tab === 'reservations' ? 'réservations' : tab === 'menu' ? 'plats' : tab === 'reviews' ? 'avis' : tab === 'accounting' ? 'comptabilité' : 'paramètres';
+    const label = tab === 'summary' ? 'résumé' : tab === 'orders' ? 'commandes' : tab === 'reservations' ? 'réservations' : tab === 'menu' ? 'plats' : tab === 'reviews' ? 'avis' : tab === 'accounting' ? 'comptabilité' : tab === 'subscription' ? 'abonnement' : 'paramètres';
     btns.forEach(b => {
         if (b.innerText.toLowerCase().includes(label)) {
             b.classList.add('active');
@@ -70,7 +105,82 @@ function switchDashboardTab(tab) {
 function renderDashboardTabContent(r) {
     const panel = document.getElementById('dashboard-tab-panel');
     
-    if (dashboardActiveTab === 'orders') {
+    // Check trial expiry for paywall
+    const _cr = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+    const _dt = Math.abs(new Date() - _cr);
+    const _dd = Math.ceil(_dt / (1000 * 60 * 60 * 24));
+    const _pk = r.subscriptionPack || 'Aucun (Gratuit)';
+    const trialExpired = _dd > 90 && _pk === 'Aucun (Gratuit)' && !isSuperAdminSession;
+    
+    // Block restricted tabs if trial expired
+    const lockedTabs = ['orders', 'reservations', 'menu', 'accounting'];
+    if (trialExpired && lockedTabs.includes(dashboardActiveTab)) {
+        const adminWhatsApp = '221781056721';
+        const reactivateMsg = encodeURIComponent(`Bonjour Thiès à Table 👋\n\nMa période d'essai gratuit est terminée et je souhaite réactiver mon restaurant.\n\n🏪 Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
+        panel.innerHTML = `
+            <div style="text-align: center; padding: 4rem 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;">
+                <div style="font-size: 4rem; margin-bottom: 1.5rem;">🔒</div>
+                <h2 style="color: var(--text-primary); font-size: 1.8rem; margin-bottom: 1rem;">Disponible en mode Pro</h2>
+                <p style="color: var(--text-secondary); font-size: 1rem; max-width: 500px; margin: 0 auto 1.5rem auto; line-height: 1.6;">Votre période d'essai gratuit de 3 mois est terminée. Cette fonctionnalité est réservée aux restaurants ayant un abonnement actif.</p>
+                <div style="background: rgba(220, 53, 69, 0.1); border: 1px solid rgba(220, 53, 69, 0.3); padding: 1rem; border-radius: 12px; margin-bottom: 2rem; max-width: 500px; margin-left: auto; margin-right: auto;">
+                    <p style="color: #ff6b6b; font-weight: 600; margin: 0;">⚠️ Votre page restaurant est actuellement indisponible sur la plateforme pour les clients.</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; max-width: 350px; margin: 0 auto;">
+                    <button class="btn btn-primary" onclick="switchDashboardTab('subscription')" style="font-weight: 700;">💳 Voir les offres d'abonnement</button>
+                    <a href="https://wa.me/${adminWhatsApp}?text=${reactivateMsg}" target="_blank" class="btn btn-success" style="font-weight: 700; background: #25D366; border-color: #25D366; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Contacter le support WhatsApp</a>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    if (dashboardActiveTab === 'summary') {
+        const orders = store.getOrdersByRestaurant(r.id);
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayOrders = orders.filter(o => o.date === todayStr);
+        const pendingOrders = orders.filter(o => o.status === 'Reçue');
+        const todayRevenue = todayOrders.filter(o => o.status === 'Livrée').reduce((sum, o) => sum + o.total, 0);
+        
+        const reservations = store.getReservationsByRestaurant(r.id);
+        const upcomingRes = reservations.filter(res => res.status === 'En attente' || res.status === 'Confirmée').length;
+
+        panel.innerHTML = `
+            <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary);">Résumé du Jour</h2>
+                <button class="btn btn-primary btn-sm" onclick="requestPushNotifications()">🔔 Activer Notifications</button>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="stat-card" style="border-top: 4px solid var(--accent); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">⏳ Commandes en attente</span>
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--accent);">${pendingOrders.length}</span>
+                    ${pendingOrders.length > 0 ? `<button class="btn btn-primary btn-sm" style="margin-top: 1rem; width: 100%;" onclick="switchDashboardTab('orders')">Voir les commandes</button>` : ''}
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--success); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">💰 C.A. d'Aujourd'hui</span>
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--success);">${todayRevenue.toLocaleString()} FCFA</span>
+                    <div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--text-secondary);">${todayOrders.length} commandes aujourd'hui</div>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--primary); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">📅 Réservations Actives</span>
+                    <span style="font-size: 2rem; font-weight: 800; color: var(--primary);">${upcomingRes}</span>
+                    <button class="btn btn-secondary btn-sm" style="margin-top: 1rem; width: 100%;" onclick="switchDashboardTab('reservations')">Voir l'agenda</button>
+                </div>
+            </div>
+            
+            <h3 style="font-family: var(--font-serif); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Action Rapide : Statut du Restaurant</h3>
+            <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.25rem;">${r.isOpenManual ? '🟢 Ouvert aux commandes' : '🔴 Actuellement fermé (Manuel)'}</strong>
+                    <span style="font-size: 0.9rem; color: var(--text-secondary);">Gérez l'ouverture exceptionnelle (ex: rupture de stock totale, fermeture inattendue)</span>
+                </div>
+                <button class="btn ${r.isOpenManual ? 'btn-danger' : 'btn-success'}" onclick="toggleRestaurantManualStatus('${r.id}')">
+                    ${r.isOpenManual ? 'Forcer la Fermeture 🔴' : 'Ré-ouvrir 🟢'}
+                </button>
+            </div>
+        `;
+    }
+    else if (dashboardActiveTab === 'orders') {
         const orders = store.getOrdersByRestaurant(r.id);
         const todayStr = new Date().toISOString().split('T')[0];
         
@@ -107,27 +217,52 @@ function renderDashboardTabContent(r) {
                 if (o.status === 'Reçue') {
                     statusBadge = `<span class="badge badge-warning" style="animation: pulseMainCircle 2s infinite;">Reçue</span>`;
                     actionBtns = `
-                        <button class="btn btn-primary btn-block" onclick="changeOrderStatus('${o.id}', 'Confirmée')" style="font-weight: 700;">
-                            ✅ Accepter la commande & notifier 💬
-                        </button>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="changeOrderStatus('${o.id}', 'Confirmée')" style="font-weight: 700; flex: 1;">
+                                ✅ Accepter & notifier 💬
+                            </button>
+                            <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700; flex: 1;">
+                                ❌ Refuser la commande
+                            </button>
+                        </div>
                     `;
                 } else if (o.status === 'Confirmée') {
                     statusBadge = `<span class="badge badge-info">En Préparation</span>`;
                     actionBtns = `
-                        <button class="btn btn-success btn-block" onclick="changeOrderStatus('${o.id}', 'Prête')" style="font-weight: 700; background: #007bff; border-color: #007bff;">
-                            🛵 Commande Prête & notifier client 💬
-                        </button>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="changeOrderStatus('${o.id}', 'Prête')" style="font-weight: 700; flex: 1; background: #007bff; border-color: #007bff;">
+                                🛵 Prête & notifier client 💬
+                            </button>
+                            <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700;">
+                                ❌ Annuler
+                            </button>
+                        </div>
                     `;
                 } else if (o.status === 'Prête') {
                     statusBadge = `<span class="badge badge-success">Prête</span>`;
                     actionBtns = `
-                        <button class="btn btn-success btn-block" onclick="changeOrderStatus('${o.id}', 'Livrée')" style="font-weight: 700; background: var(--success); border-color: var(--success);">
-                            📦 Marquer comme Livrée / Récupérée 💬
-                        </button>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="changeOrderStatus('${o.id}', 'Livrée')" style="font-weight: 700; flex: 1; background: var(--success); border-color: var(--success);">
+                                📦 Livrée / Récupérée 💬
+                            </button>
+                            <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700;">
+                                ❌ Annuler
+                            </button>
+                        </div>
                     `;
+                } else if (o.status === 'Annulée') {
+                    statusBadge = `<span class="badge badge-danger">Annulée</span>`;
+                    actionBtns = `<span style="font-size: 0.85rem; color: var(--danger); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: rgba(var(--danger-rgb,220,53,69), 0.1); border-radius: 8px;">❌ Commande refusée / annulée</span>`;
                 } else {
                     statusBadge = `<span class="badge badge-success" style="opacity: 0.6">Livrée / Récupérée</span>`;
-                    actionBtns = `<span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: var(--bg-secondary); border-radius: 8px;">✅ Commande traitée et archivée</span>`;
+                    const reviewText = `Bonjour ${o.customerName}, avez-vous aimé votre commande chez ${r.name} ? Laissez-nous un avis sur Thiès Resto ! https://thies-resto.com/#/r/${r.slug}`;
+                    const waLink = `https://wa.me/${o.customerPhone.replace(/\+/g, '')}?text=${encodeURIComponent(reviewText)}`;
+                    actionBtns = `
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: var(--bg-secondary); border-radius: 8px;">✅ Commande traitée et archivée</span>
+                            <a href="${waLink}" target="_blank" class="btn btn-primary" style="font-weight: 700; background: #25D366; border-color: #25D366; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">⭐ Relance Avis (WhatsApp)</a>
+                        </div>
+                    `;
                 }
 
                 listHtml += `
@@ -332,6 +467,9 @@ function renderDashboardTabContent(r) {
                             <div style="color: var(--primary); font-weight: 700; font-size: 0.85rem;">${d.price} FCFA</div>
                         </div>
                         <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn ${d.available === false ? 'btn-danger' : 'btn-success'} btn-sm" style="padding: 0.35rem 0.5rem;" onclick="toggleDishAvailability('${d.id}', ${d.available !== false})">
+                                ${d.available === false ? '❌ Rupture' : '✅ Dispo'}
+                            </button>
                             <button class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.5rem;" onclick="openEditDishForm('${d.id}')">✏️</button>
                             <button class="btn btn-danger btn-sm" style="padding: 0.35rem 0.5rem;" onclick="deleteDish('${d.id}')">🗑️</button>
                         </div>
@@ -374,15 +512,22 @@ function renderDashboardTabContent(r) {
                                 <input type="number" id="dish-price" class="form-control" placeholder="2500" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Photo du plat (URL ou preset) <span class="required">*</span></label>
-                                <select id="dish-image-select" class="form-control" onchange="document.getElementById('dish-image-custom').value = this.value">
-                                    <option value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">Poisson Rouge / Thieb</option>
-                                    <option value="https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500">Poulet / Yassa</option>
-                                    <option value="https://images.unsplash.com/photo-1544025162-d76694265947?w=500">Grillades / Viandes / Dibi</option>
-                                    <option value="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500">Burger / Sandwich</option>
-                                    <option value="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500">Frites dorées</option>
-                                    <option value="https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500">Boisson / Jus maison</option>
-                                </select>
+                                <label class="form-label">Photo du plat <span class="required">*</span></label>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    <input type="file" id="dish-image-file" class="form-control" accept="image/*" onchange="handleDishImageUpload(event)" style="padding: 0.35rem; height: auto;">
+                                    <span id="dish-image-status" style="font-size: 0.75rem; color: var(--success); display: none;">Upload en cours...</span>
+                                    <input type="hidden" id="dish-image-custom" value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">
+                                    <div style="text-align: center; margin: 0.25rem 0; font-size: 0.8rem; color: var(--text-secondary);">OU choisir une image par défaut</div>
+                                    <select id="dish-image-select" class="form-control" onchange="document.getElementById('dish-image-custom').value = this.value">
+                                        <option value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">Poisson Rouge / Thieb</option>
+                                        <option value="https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500">Poulet / Yassa</option>
+                                        <option value="https://images.unsplash.com/photo-1544025162-d76694265947?w=500">Grillades / Viandes / Dibi</option>
+                                        <option value="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500">Burger / Sandwich</option>
+                                        <option value="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500">Frites dorées</option>
+                                        <option value="https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500">Boisson / Jus maison</option>
+                                    </select>
+                                </div>
+                            </div>
                             </div>
                         </div>
 
@@ -464,9 +609,22 @@ function renderDashboardTabContent(r) {
         `;
     }
     else if (dashboardActiveTab === 'accounting') {
-        const orders = store.getOrdersByRestaurant(r.id);
-        const completedOrders = orders.filter(o => o.status === 'Livrée');
+        let orders = store.getOrdersByRestaurant(r.id);
+        const todayStr = new Date().toISOString().split('T')[0];
         
+        if (currentAccountingFilter === 'today') {
+            orders = orders.filter(o => o.date === todayStr);
+        } else if (currentAccountingFilter === 'week') {
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            orders = orders.filter(o => o.date >= weekAgo && o.date <= todayStr);
+        } else if (currentAccountingFilter === 'month') {
+            const today = new Date();
+            const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            orders = orders.filter(o => o.date >= monthAgo && o.date <= todayStr);
+        }
+
+        const completedOrders = orders.filter(o => o.status === 'Livrée');
         const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
         const totalOrdersCount = orders.length;
         const completedOrdersCount = completedOrders.length;
@@ -487,7 +645,7 @@ function renderDashboardTabContent(r) {
             rowsHtml = `
                 <tr>
                     <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                        Aucune commande enregistrée pour le moment.
+                        Aucune commande enregistrée pour la période sélectionnée.
                     </td>
                 </tr>
             `;
@@ -516,10 +674,16 @@ function renderDashboardTabContent(r) {
             <div class="accounting-dashboard">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: #fff;">📊 Journal de Comptabilité</h2>
+                        <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: var(--text-primary);">📊 Journal de Comptabilité</h2>
                         <p style="color: var(--text-secondary); font-size: 0.85rem;">Suivi des chiffres d'affaires et historique complet des commandes clients.</p>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <select class="form-control" style="width: auto; margin: 0; padding: 0.25rem 0.5rem; font-size: 0.85rem;" onchange="currentAccountingFilter = this.value; renderDashboardTabContent(store.getRestaurantById('${r.id}'))">
+                            <option value="all" ${currentAccountingFilter === 'all' ? 'selected' : ''}>Toutes les dates</option>
+                            <option value="today" ${currentAccountingFilter === 'today' ? 'selected' : ''}>Aujourd'hui</option>
+                            <option value="week" ${currentAccountingFilter === 'week' ? 'selected' : ''}>7 derniers jours</option>
+                            <option value="month" ${currentAccountingFilter === 'month' ? 'selected' : ''}>30 derniers jours</option>
+                        </select>
                         <button class="btn btn-primary btn-sm" onclick="exportOrdersCSV('${r.id}')">💾 Exporter CSV</button>
                         <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Imprimer</button>
                     </div>
@@ -567,7 +731,7 @@ function renderDashboardTabContent(r) {
 
                 <div class="accounting-table-container">
                     <div class="accounting-header-actions">
-                        <h3 style="font-size: 1.1rem; color: #fff; font-family: var(--font-serif);">Historique Général des Commandes</h3>
+                        <h3 style="font-size: 1.1rem; color: var(--text-primary); font-family: var(--font-serif);">Historique Général des Commandes</h3>
                         <input type="text" placeholder="Rechercher par client ou N°..." class="accounting-search" oninput="filterAccountingTable(this.value)">
                     </div>
 
@@ -596,7 +760,7 @@ function renderDashboardTabContent(r) {
     }
     else if (dashboardActiveTab === 'settings') {
         const clientLink = `${window.location.origin}${window.location.pathname}#/r/${r.slug}`;
-        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(clientLink)}`;
+        const qrCodeUrl = `https://quickchart.io/qr?size=200&text=${encodeURIComponent(clientLink)}`;
 
         // Days checklist
         let daysHtml = '';
@@ -648,6 +812,15 @@ function renderDashboardTabContent(r) {
                             </div>
                         </div>
 
+                        <div class="form-group" style="background: rgba(242,107,33,0.05); padding: 1rem; border-radius: 12px; border: 1px dashed var(--primary); margin-bottom: 1.5rem;">
+                            <label class="form-label" style="color: var(--primary);">📍 Coordonnées GPS (Requis pour la livraison) <span class="required">*</span></label>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <input type="number" id="settings-lat" class="form-control" step="any" value="${r.lat || ''}" placeholder="Latitude (ex: 14.79)" required style="margin-bottom: 0;">
+                                <input type="number" id="settings-lng" class="form-control" step="any" value="${r.lng || ''}" placeholder="Longitude (ex: -16.92)" required style="margin-bottom: 0;">
+                            </div>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="captureGPSCoordinates()" style="width: 100%;">📌 Capturer ma position actuelle</button>
+                        </div>
+
                         <div class="form-group">
                             <label class="form-label">Numéro WhatsApp de réception <span class="required">*</span></label>
                             <input type="tel" id="settings-whatsapp" class="form-control" value="${r.whatsapp}" required>
@@ -687,6 +860,110 @@ function renderDashboardTabContent(r) {
             </div>
         `;
     }
+
+    else if (dashboardActiveTab === 'subscription') {
+        const currentDate = new Date();
+        const createdAt = new Date(r.createdAt || '2026-06-26T00:00:00Z');
+        const diffTime = Math.abs(currentDate - createdAt);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const daysLeft = Math.max(0, 90 - diffDays);
+        
+        // WhatsApp admin number for subscription requests
+        const adminWhatsApp = '221781056721';
+        const buildWhatsAppLink = (pack, price) => {
+            const msg = encodeURIComponent(`Bonjour Thiès à Table 👋\n\nJe souhaite souscrire au *${pack}* (${price} FCFA/mois) pour réactiver mon restaurant.\n\n🏪 Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n📦 Pack choisi : ${pack}\n\nMerci de procéder à l'activation !`);
+            return 'https://wa.me/' + adminWhatsApp + '?text=' + msg;
+        };
+        
+        let freePeriodHtml = '';
+        if (daysLeft > 0) {
+            freePeriodHtml = `
+                <div style="background: linear-gradient(135deg, var(--success) 0%, #20c997 100%); color: var(--primary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h3 style="margin: 0 0 0.5rem 0; font-size: 1.4rem;">🎉 Période de Gratuité en cours</h3>
+                        <p style="margin: 0; font-size: 1rem; opacity: 0.9;">Il vous reste <strong>${daysLeft} jours</strong> d'accès gratuit. Profitez-en pour développer votre chiffre d'affaires !</p>
+                    </div>
+                    <div style="font-size: 2.5rem;">🎁</div>
+                </div>
+            `;
+        } else {
+            const reactivateMsg = encodeURIComponent(`Bonjour Thiès à Table 👋\n\nMa période d'essai gratuit est terminée et je souhaite réactiver mon restaurant.\n\n🏪 Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
+            freePeriodHtml = `
+                <div style="background: linear-gradient(135deg, var(--danger) 0%, #ff4b4b 100%); color: var(--primary); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.4rem;">⚠️ Période d'essai terminée</h3>
+                            <p style="margin: 0; font-size: 1rem; opacity: 0.9;">Vos 3 mois gratuits sont écoulés. <strong>Votre restaurant a été automatiquement désactivé.</strong> Choisissez un pack ci-dessous et envoyez-nous un message WhatsApp pour réactiver votre boutique.</p>
+                        </div>
+                        <div style="font-size: 2.5rem;">🔒</div>
+                    </div>
+                    <a href="https://wa.me/${adminWhatsApp}?text=${reactivateMsg}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; background: white; color: #25D366; padding: 0.6rem 1.2rem; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 0.95rem;">
+                        💬 Contacter Thiès à Table sur WhatsApp
+                    </a>
+                </div>
+            `;
+        }
+        
+        panel.innerHTML = `
+            <div style="background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); max-width: 1000px; margin: 0 auto;">
+                <h2 style="margin-bottom: 1rem; color: var(--text-primary); font-size: 1.8rem; font-weight: 800; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem;">💳 Mon Abonnement & Visibilité</h2>
+                
+                ${freePeriodHtml}
+
+                <h3 style="margin-bottom: 0.5rem; color: var(--text-primary); font-size: 1.3rem;">Des forfaits Gagnant-Gagnant</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 2rem;">Nos tarifs sont pensés pour s'adapter à la taille de votre activité. Pour souscrire, cliquez sur le bouton du pack qui vous convient et envoyez-nous un message WhatsApp avec vos identifiants.</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <!-- Pack Simple -->
+                    <div style="border: 2px solid var(--border); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; transition: transform 0.3s ease; background: var(--bg-secondary);">
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 1.3rem; color: var(--text-primary);">Pack Simple</h4>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">5 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">L'essentiel pour exister en ligne et recevoir des commandes.</p>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                            <li style="margin-bottom: 0.5rem;">✅ Menu digital accessible 24/7</li>
+                            <li style="margin-bottom: 0.5rem;">✅ Réception illimitée de commandes</li>
+                            <li style="margin-bottom: 0.5rem;">✅ Visibilité standard sur l'application</li>
+                            <li style="margin-bottom: 0.5rem;">✅ Rapport d'activité trimestriel</li>
+                            <li style="margin-bottom: 0.5rem;">✅ Support technique par e-mail</li>
+                        </ul>
+                        <a href="${buildWhatsAppLink('Pack Simple', '5 000')}" target="_blank" class="btn btn-outline" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
+                    </div>
+
+                    <!-- Pack Startup -->
+                    <div style="border: 2px solid var(--primary); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; position: relative; background: rgba(var(--primary-rgb), 0.03); box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.1);">
+                        <div style="position: absolute; top: -12px; right: 20px; background: var(--primary); color: var(--primary); padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">Recommandé</div>
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 1.3rem; color: var(--text-primary);">Pack Startup</h4>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">15 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Pour booster vos ventes avec une meilleure visibilité.</p>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-primary); font-size: 0.95rem; line-height: 1.6; font-weight: 500;">
+                            <li style="margin-bottom: 0.5rem;">✅ <strong>Tout du Pack Simple</strong></li>
+                            <li style="margin-bottom: 0.5rem;">🚀 <strong>Positionnement prioritaire</strong> dans votre catégorie</li>
+                            <li style="margin-bottom: 0.5rem;">⭐ Badge "Restaurant Certifié"</li>
+                            <li style="margin-bottom: 0.5rem;">📊 Rapport détaillé des ventes (Mensuel)</li>
+                            <li style="margin-bottom: 0.5rem;">💬 Support direct et rapide via WhatsApp</li>
+                        </ul>
+                        <a href="${buildWhatsAppLink('Pack Startup', '15 000')}" target="_blank" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
+                    </div>
+
+                    <!-- Pack Entreprise -->
+                    <div style="border: 2px solid var(--accent); border-radius: 16px; padding: 1.5rem; display: flex; flex-direction: column; background: rgba(var(--accent-rgb), 0.03);">
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 1.3rem; color: var(--text-primary);">Pack Entreprise</h4>
+                        <div style="font-size: 1.8rem; font-weight: 800; color: var(--accent); margin-bottom: 0.5rem;">25 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.5rem;">La solution complète pour dominer le marché local.</p>
+                        <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6;">
+                            <li style="margin-bottom: 0.5rem;">✅ <strong>Tout du Pack Startup</strong></li>
+                            <li style="margin-bottom: 0.5rem;">📢 <strong>Bannière publicitaire</strong> sur l'accueil</li>
+                            <li style="margin-bottom: 0.5rem;">📱 1 Post sponsorisé par mois sur nos réseaux</li>
+                            <li style="margin-bottom: 0.5rem;">🎁 Outils de fidélisation (Coupons promo)</li>
+                            <li style="margin-bottom: 0.5rem;">📈 Statistiques avancées (Hebdomadaire)</li>
+                        </ul>
+                        <a href="${buildWhatsAppLink('Pack Entreprise', '25 000')}" target="_blank" class="btn btn-outline" style="width: 100%; border-color: var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none;">💬 Souscrire via WhatsApp</a>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
 }
 
 // Global helper for accounting search filtering
@@ -719,6 +996,27 @@ window.switchHowItWorksTab = function(tabId) {
     if (activeContent) activeContent.classList.add('active');
 };
 
+
+// Navigate to loyalty tab and check points
+window.openLoyaltyAndCheck = function(phone) {
+    if (window.location.hash !== '#/' && window.location.hash !== '') {
+        router.navigate('/');
+    }
+    setTimeout(() => {
+        if (typeof switchHowItWorksTab === 'function') {
+            switchHowItWorksTab('hw-loyalty');
+        }
+        const hwSection = document.getElementById('how-it-works-section');
+        if (hwSection) {
+            hwSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        const phoneInput = document.getElementById('loyalty-phone');
+        if (phoneInput) {
+            phoneInput.value = phone;
+            window.checkLoyaltyPoints();
+        }
+    }, 200);
+};
 
 // Global helper for checking customer loyalty points
 window.checkLoyaltyPoints = async function() {
@@ -784,7 +1082,7 @@ window.checkLoyaltyPoints = async function() {
             <div class="reward-claim-box" style="margin-top: 1.5rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 1.25rem; border-radius: 16px; display: flex; align-items: center; gap: 1rem;">
                 <span class="gift-icon" style="font-size: 2.2rem;">🎁</span>
                 <div style="flex: 1; text-align: left;">
-                    <h4 style="color: #fff; margin: 0 0 0.25rem 0; font-family: var(--font-serif); font-size: 1.05rem;">Vous avez ${activeRewards} plat(s) offert(s) disponible(s) !</h4>
+                    <h4 style="color: var(--text-primary); margin: 0 0 0.25rem 0; font-family: var(--font-serif); font-size: 1.05rem;">Vous avez ${activeRewards} plat(s) offert(s) disponible(s) !</h4>
                     <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0 0 0.5rem 0;">Profitez de votre récompense de fidélité lors de votre prochaine commande en ligne.</p>
                     <button class="btn btn-sm btn-success" onclick="applyLoyaltyRewardToCart('${phone}')">Appliquer au panier actif 🛒</button>
                 </div>
@@ -796,7 +1094,7 @@ window.checkLoyaltyPoints = async function() {
         <div class="loyalty-card-inner" style="background: linear-gradient(135deg, #071a11 0%, #0c2b1d 100%); border: 1px solid var(--border); border-radius: 24px; padding: 1.75rem; text-align: left; position: relative; overflow: hidden; box-shadow: var(--shadow);">
             <div class="loyalty-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
                 <div>
-                    <h3 style="font-family: var(--font-serif); color: #fff; margin: 0; font-size: 1.3rem;">Carte de Fidélité</h3>
+                    <h3 style="font-family: var(--font-serif); color: var(--text-primary); margin: 0; font-size: 1.3rem;">Carte de Fidélité</h3>
                     <span class="loyalty-phone-lbl" style="font-size: 0.8rem; color: var(--text-secondary); font-family: monospace;">WhatsApp: ${phone}</span>
                 </div>
                 <div class="loyalty-tier-badge ${tierClass}" style="font-size: 0.8rem; font-weight: bold; padding: 0.35rem 0.75rem; border-radius: 20px; text-transform: uppercase; background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid rgba(207,168,83,0.3);">${tier}</div>
@@ -809,7 +1107,7 @@ window.checkLoyaltyPoints = async function() {
                         <span class="points-lbl" style="font-size: 0.6rem; text-transform: uppercase; color: var(--text-secondary); margin-top: 2px;">Points</span>
                     </div>
                     <div class="loyalty-progress-text" style="flex: 1; min-width: 200px;">
-                        <p style="font-size: 1.1rem; font-weight: bold; color: #fff; margin: 0;">${totalPoints % 100} / 100 pts</p>
+                        <p style="font-size: 1.1rem; font-weight: bold; color: var(--text-primary); margin: 0;">${totalPoints % 100} / 100 pts</p>
                         <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">
                             Plus que <strong style="color: var(--primary);">${nextRewardPoints} points</strong> pour obtenir votre prochain plat gratuit !
                         </p>
@@ -822,15 +1120,15 @@ window.checkLoyaltyPoints = async function() {
 
                 <div class="loyalty-stats-summary" style="display: flex; justify-content: space-around; gap: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.25rem; margin-top: 1rem; text-align: center; flex-wrap: wrap;">
                     <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
-                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${ordersCount}</span>
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">${ordersCount}</span>
                         <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Commandes livrées</span>
                     </div>
                     <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
-                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${resCount}</span>
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">${resCount}</span>
                         <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Tables réservées</span>
                     </div>
                     <div class="loyalty-stat-col" style="flex: 1; min-width: 80px;">
-                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: #fff; display: block; margin-bottom: 0.25rem;">${usedRewards}</span>
+                        <span class="stat-num" style="font-size: 1.25rem; font-weight: bold; color: var(--text-primary); display: block; margin-bottom: 0.25rem;">${usedRewards}</span>
                         <span class="stat-lbl" style="font-size: 0.75rem; color: var(--text-secondary); display: block;">Cadeaux réclamés</span>
                     </div>
                 </div>
@@ -916,26 +1214,27 @@ function changeOrderStatus(orderId, nextStatus) {
     
     store.updateOrderStatus(orderId, nextStatus);
     
-    // Simulate push notification to the client
+    // Build notification message for the client
     let pushText = '';
+    const restoName = currentRestaurantSession ? currentRestaurantSession.name || '' : '';
     
     if (nextStatus === 'Confirmée') {
-        pushText = `La commande n°${o.id} a été validée et part en cuisine ! 🍳`;
+        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* a été *acceptée* et part en cuisine ! 🍳\n\nMontant : ${o.total} FCFA\nMode : ${o.mode}\n\nMerci pour votre confiance !`;
     } else if (nextStatus === 'Prête') {
-        pushText = `La commande n°${o.id} est PRÊTE ! 🛵`;
+        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* est *PRÊTE* ! 🛵\n\n${o.mode === 'Livraison' ? 'Elle est en cours de livraison.' : 'Vous pouvez venir la récupérer.'}\n\nBon appétit !`;
     } else if (nextStatus === 'Livrée') {
-        pushText = `La commande n°${o.id} a été livrée avec succès. Bon appétit ! 😋`;
+        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* a été *livrée avec succès*. 😋\n\nMerci et à bientôt sur Thiès à Table !`;
+    } else if (nextStatus === 'Annulée') {
+        pushText = `Bonjour ${o.customerName} 👋\n\nNous sommes désolés, votre commande n°${o.id} chez *${restoName}* a été *annulée* par le restaurant. ❌\n\nVeuillez nous excuser pour ce désagrément. N'hésitez pas à passer une nouvelle commande.`;
     }
     
-    showToast(`Commande mise à jour vers : ${nextStatus}`, "success");
-    if (pushText) {
-        showToast(`📲 Notification push envoyée au client !`, "success");
-        if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification('Push Envoyé au Client', {
-                body: pushText,
-                icon: 'icon.png'
-            });
-        }
+    showToast(`Commande mise à jour vers : ${nextStatus}`, nextStatus === 'Annulée' ? 'warning' : 'success');
+    
+    // Open WhatsApp to notify the client directly
+    if (pushText && o.customerPhone) {
+        const waLink = 'https://wa.me/' + o.customerPhone.replace(/\+/g, '') + '?text=' + encodeURIComponent(pushText);
+        window.open(waLink, '_blank');
+        showToast(`📲 WhatsApp ouvert pour notifier le client !`, 'success');
     }
     
     // Reload dashboard list
@@ -1106,19 +1405,126 @@ window.handleDishImageUpload = async function(event) {
 
     try {
         const { data, error } = await supabaseClient.storage
-            .from('restaurant_images')
+            .from('restaurant-images')
             .upload(filePath, file);
 
         if (error) throw error;
 
         const { data: publicUrlData } = supabaseClient.storage
-            .from('restaurant_images')
+            .from('restaurant-images')
             .getPublicUrl(filePath);
 
         customInput.value = publicUrlData.publicUrl;
         
         if (statusText) {
             statusText.innerHTML = `✅ Photo uploadée et hébergée sur Supabase !`;
+            statusText.style.color = "var(--success)";
+        }
+    } catch (e) {
+        console.error("Upload error:", e);
+        if (statusText) {
+            statusText.innerHTML = `❌ Échec de l'envoi (${e.message})`;
+            statusText.style.color = "var(--danger)";
+        }
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+window.handleRestaurantLogoUpload = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!supabaseClient) {
+        showToast("Service Storage non disponible", "danger");
+        return;
+    }
+
+    const previewImg = document.getElementById('settings-logo-preview');
+    const statusText = document.getElementById('settings-logo-status');
+    const urlInput = document.getElementById('settings-logo-url');
+    const submitBtn = document.getElementById('settings-submit-btn');
+
+    if (previewImg) previewImg.src = URL.createObjectURL(file);
+    if (statusText) {
+        statusText.style.display = 'block';
+        statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        statusText.style.color = "var(--warning)";
+    }
+    if (submitBtn) submitBtn.disabled = true;
+
+    // Build unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `restaurants/${currentRestaurantSession.id}/${fileName}`;
+
+    try {
+        const { data, error } = await supabaseClient.storage
+            .from('restaurant-images')
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabaseClient.storage
+            .from('restaurant-images')
+            .getPublicUrl(filePath);
+
+        urlInput.value = publicUrlData.publicUrl;
+        
+        if (statusText) {
+            statusText.innerHTML = `✅ Photo uploadée et hébergée !`;
+            statusText.style.color = "var(--success)";
+        }
+    } catch (e) {
+        console.error("Upload error:", e);
+        if (statusText) {
+            statusText.innerHTML = `❌ Échec de l'envoi (${e.message})`;
+            statusText.style.color = "var(--danger)";
+        }
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+};
+
+window.handleDishImageUpload = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!supabaseClient) {
+        showToast("Service Storage non disponible", "danger");
+        return;
+    }
+
+    const statusText = document.getElementById('dish-image-status');
+    const urlInput = document.getElementById('dish-image-custom');
+    const submitBtn = document.querySelector('#dish-editor-form button[type="submit"]');
+
+    if (statusText) {
+        statusText.style.display = 'block';
+        statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        statusText.style.color = "var(--warning)";
+    }
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `dishes/${currentRestaurantSession.id}/${fileName}`;
+
+        const { data, error } = await supabaseClient.storage
+            .from('restaurant-images')
+            .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabaseClient.storage
+            .from('restaurant-images')
+            .getPublicUrl(filePath);
+
+        urlInput.value = publicUrlData.publicUrl;
+        
+        if (statusText) {
+            statusText.innerHTML = `✅ Photo uploadée et hébergée !`;
             statusText.style.color = "var(--success)";
         }
     } catch (e) {
@@ -1187,7 +1593,9 @@ function saveProfileSettings(e, restoId) {
     const r = store.getRestaurantById(restoId);
     const whatsapp = cleanPhoneNumber(document.getElementById('settings-whatsapp').value.trim());
     const hours = document.getElementById('settings-hours').value.trim();
-    const newPass = document.getElementById('settings-password').value;
+        const newPass = document.getElementById('settings-password').value;
+    const lat = parseFloat(document.getElementById('settings-lat').value);
+    const lng = parseFloat(document.getElementById('settings-lng').value);
     
     // Parse closed days checklist
     const checkboxes = document.querySelectorAll('input[name="closed-day-check"]:checked');
@@ -1198,10 +1606,12 @@ function saveProfileSettings(e, restoId) {
         return;
     }
     
-    const updates = {
+        const updates = {
         whatsapp,
         openHours: hours,
-        closedDays
+        closedDays,
+        lat,
+        lng
     };
     
     if (newPass) {
@@ -1281,14 +1691,22 @@ async function handleAdminLogin(e) {
     const pass = document.getElementById('admin-pass').value.trim();
     
     const isAdmin = ['admin', 'idadmin', 'thiesresto', '784799882'].includes(user);
-    if (isAdmin && supabaseClient) {
-        const { data: isValid, error } = await supabaseClient.rpc('verify_admin_login', { p_password: pass });
+    if (isAdmin) {
+        if (!supabaseClient) {
+            showToast("Erreur de connexion serveur", "danger");
+            return;
+        }
+        const { data: isValid, error } = await supabaseClient.rpc('verify_admin_login', {
+            p_password: pass
+        });
         if (!error && isValid) {
             isSuperAdminSession = true;
             try {
                 sessionStorage.setItem('admin_session', 'true');
                 sessionStorage.setItem('thies_admin_logged', 'true');
-            } catch (err) { console.warn('Failed to save admin_session', err); }
+            } catch (err) {
+                console.warn("Failed to save admin_session to sessionStorage", err);
+            }
             showToast("Connexion Super-Admin établie", "success");
             router.navigate('/admin');
             return;
@@ -1324,8 +1742,10 @@ function renderAdminView() {
     const orders = store.data.orders;
     const reservations = store.data.reservations;
     
-    // Estimated Gross Merchandise Volume
-    const totalGmv = orders.reduce((sum, o) => sum + o.total, 0);
+    // Estimated Gross Merchandise Volume (Chiffre d'Affaires global)
+    // On calcule la somme exacte des chiffres d'affaires de toutes les commandes validées (livrées ou terminées)
+    const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'delivered');
+    const totalGmv = completedOrders.reduce((sum, o) => sum + o.total, 0);
 
     container.innerHTML = `
         <div style="padding: 2rem 1.5rem; max-width: 1000px; margin: 0 auto;">
@@ -1334,8 +1754,9 @@ function renderAdminView() {
                     <h1 style="font-size: 1.75rem;">Super-Admin Console</h1>
                     <p style="color: var(--text-secondary); font-size: 0.85rem;">Supervisez l'intégralité du réseau de restauration de Thiès.</p>
                 </div>
-                <div style="display: flex; gap: 0.5rem;">
+                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
                     <span class="badge badge-danger">Live Monitor</span>
+                    <button class="btn btn-outline" style="color: var(--danger); border-color: var(--danger); font-size: 0.8rem; padding: 0.3rem 0.6rem;" onclick="handleLogout()">🚪 Déconnexion</button>
                 </div>
             </div>
 
@@ -1350,7 +1771,7 @@ function renderAdminView() {
                 </div>
                 <div class="stat-card">
                     <span class="stat-card-title">Volume d'affaires généré</span>
-                    <span class="stat-card-value">${totalGmv} FCFA</span>
+                    <span class="stat-card-value">${totalGmv.toLocaleString()} FCFA</span>
                 </div>
                 <div class="stat-card">
                     <span class="stat-card-title">Commandes / Réservations</span>
@@ -1358,11 +1779,72 @@ function renderAdminView() {
                 </div>
             </div>
 
+            <!-- Section Abonnements -->
+            ${(function() {
+                let totalPlatformRevenue = 0;
+                let rowsHtml = restos.filter(r => r.status !== 'pending').map(r => {
+                    const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+                    const diffTime = Math.abs(new Date() - createdAt);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    let daysLeft = 90 - diffDays;
+                    let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
+                    let revenue = 0;
+                    
+                    if (packSubscribed === 'Pack Simple') revenue = 5000;
+                    else if (packSubscribed === 'Pack Startup') revenue = 15000;
+                    else if (packSubscribed === 'Pack Entreprise') revenue = 25000;
+                    
+                    if (r.status === 'active' || r.status === 'suspended') {
+                        totalPlatformRevenue += revenue;
+                    }
+                    
+                    let statusHtml = '';
+                    if (daysLeft > 0) {
+                        statusHtml = `<span class="badge badge-success">En cours (${daysLeft} jrs restants)</span>`;
+                    } else {
+                        statusHtml = `<span class="badge badge-danger">Expiré</span>`;
+                    }
+                    
+                    return `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 1rem;"><strong>${r.name}</strong></td>
+                        <td style="padding: 1rem;">${statusHtml}</td>
+                        <td style="padding: 1rem;"><span class="badge" style="background: ${packSubscribed === 'Aucun (Gratuit)' ? '#e2e8f0' : 'rgba(var(--accent-rgb), 0.1)'}; color: ${packSubscribed === 'Aucun (Gratuit)' ? '#64748b' : 'var(--accent)'};">${packSubscribed}</span></td>
+                        <td style="padding: 1rem; font-weight: 700; color: var(--text-secondary);">${revenue > 0 ? revenue.toLocaleString() + ' FCFA' : '0 FCFA'}</td>
+                    </tr>`;
+                }).join('');
+                
+                return `
+                <section style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 2rem; border: 1px solid var(--border);">
+                    <h3 style="margin-top: 0; color: var(--text-primary); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <span>💳 Abonnements & Revenus Plateforme</span>
+                        <span style="color: var(--success); font-weight: 800; font-size: 1.2rem; background: rgba(var(--success-rgb), 0.1); padding: 0.4rem 0.8rem; border-radius: 8px;">Revenus Plateforme: ${totalPlatformRevenue.toLocaleString()} FCFA / mois</span>
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Suivi des packs d'hébergement souscrits par les restaurants après leurs 3 mois gratuits.</p>
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+                            <thead>
+                                <tr style="background: var(--bg-secondary); text-align: left; border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 1rem;">Restaurant</th>
+                                    <th style="padding: 1rem;">Statut Gratuité</th>
+                                    <th style="padding: 1rem;">Pack Souscrit</th>
+                                    <th style="padding: 1rem;">Revenu (Mensuel)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml || '<tr><td colspan="4" style="padding: 1rem; text-align: center; color: var(--text-secondary);">Aucun restaurant actif</td></tr>'}
+                            </tbody>
+                        </table>
+                    </div>
+                </section>`;
+            })()}
+
             <!-- Tab selections -->
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;">
-                <button class="btn btn-sm ${adminActiveTab === 'pending' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('pending')">Demandes en attente (${pendingCount})</button>
-                <button class="btn btn-sm ${adminActiveTab === 'active' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('active')">Réseau Actif (${activeRestos.length})</button>
-                <button class="btn btn-sm ${adminActiveTab === 'create' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('create')">Ajouter un Restaurant ➕</button>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap;">
+                <button class="btn btn-sm ${adminActiveTab === 'pending' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('pending')">⏳ Demandes (${pendingCount})</button>
+                <button class="btn btn-sm ${adminActiveTab === 'active' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('active')">🏪 Réseau Actif (${activeRestos.length})</button>
+                <button class="btn btn-sm ${adminActiveTab === 'create' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('create')">➕ Ajouter</button>
+                <button class="btn btn-sm ${adminActiveTab === 'accounting' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('accounting')">📊 Comptabilité</button>
             </div>
 
 
@@ -1439,8 +1921,11 @@ function renderAdminTabTable() {
 
         let rowsHtml = '';
         activeOrSuspended.forEach(r => {
-            const rOrders = store.getOrdersByRestaurant(r.id).length;
+            const rOrdersList = store.getOrdersByRestaurant(r.id);
             const rReservations = store.getReservationsByRestaurant(r.id).length;
+            const rCompletedOrders = rOrdersList.filter(o => o.status === 'completed' || o.status === 'delivered');
+            const rRevenue = rCompletedOrders.reduce((sum, o) => sum + o.total, 0);
+            
             const statusLabel = r.status === 'active' 
                 ? `<span class="badge badge-success">Actif</span>` 
                 : `<span class="badge badge-danger">Suspendu</span>`;
@@ -1449,17 +1934,27 @@ function renderAdminTabTable() {
                 ? `<button class="btn btn-danger btn-sm" onclick="suspendRestaurant('${r.id}')">Suspendre 🔒</button>`
                 : `<button class="btn btn-success btn-sm" onclick="reactivateRestaurant('${r.id}')">Réactiver 🔓</button>`;
 
+            let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
+            let selectPackHtml = `
+                <select class="form-control" style="padding: 0.2rem; font-size: 0.8rem; height: auto;" onchange="updateRestaurantPack('${r.id}', this.value)">
+                    <option value="Aucun (Gratuit)" ${packSubscribed === 'Aucun (Gratuit)' ? 'selected' : ''}>Gratuit (0 FCFA)</option>
+                    <option value="Pack Simple" ${packSubscribed === 'Pack Simple' ? 'selected' : ''}>Simple (5k FCFA)</option>
+                    <option value="Pack Startup" ${packSubscribed === 'Pack Startup' ? 'selected' : ''}>Startup (15k FCFA)</option>
+                    <option value="Pack Entreprise" ${packSubscribed === 'Pack Entreprise' ? 'selected' : ''}>Entreprise (25k FCFA)</option>
+                </select>
+            `;
+
             rowsHtml += `
                 <tr>
                     <td><strong>${r.name}</strong></td>
                     <td>${statusLabel}</td>
-                    <td>★ ${r.rating.toFixed(1)} (${r.reviewsCount} avis)</td>
-                    <td>${rOrders} commande(s)</td>
-                    <td>${rReservations} résa(s)</td>
+                    <td>${selectPackHtml}</td>
+                    <td>${rOrdersList.length} Cmd(s)</td>
+                    <td style="color: var(--success); font-weight: bold;">${rRevenue.toLocaleString()} FCFA</td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="impersonateRestaurant('${r.id}')">Gérer ⚙️</button>
+                        <button class="btn btn-primary btn-sm" onclick="impersonateRestaurant('${r.id}')" title="Gérer ce restaurant">⚙️</button>
                         ${actionBtn}
-                        <button class="btn btn-secondary btn-sm" onclick="router.navigate('/r/${r.slug}')">Visiter la Page</button>
+                        <button class="btn btn-secondary btn-sm" onclick="router.navigate('/r/${r.slug}')" title="Visiter la page">🌐</button>
                     </td>
                 </tr>
             `;
@@ -1472,9 +1967,9 @@ function renderAdminTabTable() {
                         <tr>
                             <th>Restaurant</th>
                             <th>Statut</th>
-                            <th>Note Moyenne</th>
+                            <th>Pack Abonnement</th>
                             <th>Commandes</th>
-                            <th>Réservations</th>
+                            <th>C.A. Généré</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -1486,7 +1981,7 @@ function renderAdminTabTable() {
     else if (adminActiveTab === 'create') {
         tableContainer.innerHTML = `
             <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 2rem; border-radius: 24px; max-width: 600px; margin: 0 auto; box-shadow: var(--shadow);">
-                <h3 style="font-family: var(--font-serif); font-size: 1.35rem; margin-bottom: 1.5rem; text-align: center; color: #fff;">Créer un Nouveau Partenaire Restaurant</h3>
+                <h3 style="font-family: var(--font-serif); font-size: 1.35rem; margin-bottom: 1.5rem; text-align: center; color: var(--text-primary);">Créer un Nouveau Partenaire Restaurant</h3>
                 
                 <form id="admin-create-resto-form" onsubmit="handleAdminCreateRestaurant(event)">
                     <div class="form-group" style="margin-bottom: 1rem;">
@@ -1541,6 +2036,100 @@ function renderAdminTabTable() {
                     
                     <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700;">Ajouter le Restaurant au Réseau 🚀</button>
                 </form>
+            </div>
+        `;
+    }
+    else if (adminActiveTab === 'accounting') {
+        const allOrders = store.data.orders;
+        const completedOrders = allOrders.filter(o => o.status === 'Livrée');
+        const cancelledOrders = allOrders.filter(o => o.status === 'Annulée');
+        const pendingOrders = allOrders.filter(o => o.status === 'Reçue' || o.status === 'Confirmée' || o.status === 'Prête');
+        const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
+        
+        // Revenue per restaurant
+        let revenueByResto = {};
+        completedOrders.forEach(o => {
+            const resto = restos.find(r => r.id === o.restaurantId);
+            const name = resto ? resto.name : o.restaurantId;
+            revenueByResto[name] = (revenueByResto[name] || 0) + o.total;
+        });
+        
+        let revenueRowsHtml = '';
+        Object.entries(revenueByResto).sort((a,b) => b[1] - a[1]).forEach(([name, rev]) => {
+            const orderCount = completedOrders.filter(o => {
+                const r = restos.find(r => r.name === name);
+                return r && o.restaurantId === r.id;
+            }).length;
+            revenueRowsHtml += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.75rem;"><strong>${name}</strong></td>
+                    <td style="padding: 0.75rem;">${orderCount}</td>
+                    <td style="padding: 0.75rem; font-weight: 700; color: var(--success);">${rev.toLocaleString()} FCFA</td>
+                </tr>
+            `;
+        });
+        
+        if (!revenueRowsHtml) {
+            revenueRowsHtml = '<tr><td colspan="3" style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">Aucune commande livrée pour le moment.</td></tr>';
+        }
+
+        // All orders list
+        let allOrdersHtml = '';
+        const sortedOrders = [...allOrders].sort((a,b) => (b.date + b.time).localeCompare(a.date + a.time));
+        sortedOrders.forEach(o => {
+            const resto = restos.find(r => r.id === o.restaurantId);
+            const restoName = resto ? resto.name : o.restaurantId;
+            const statusClass = o.status === 'Livrée' ? 'badge-success' : o.status === 'Annulée' ? 'badge-danger' : o.status === 'Reçue' ? 'badge-warning' : 'badge-info';
+            allOrdersHtml += `
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.6rem; font-weight: 600;">${o.id}</td>
+                    <td style="padding: 0.6rem;">${restoName}</td>
+                    <td style="padding: 0.6rem;">${o.customerName}</td>
+                    <td style="padding: 0.6rem;">${o.date} ${o.time}</td>
+                    <td style="padding: 0.6rem;"><span class="badge ${statusClass}">${o.status}</span></td>
+                    <td style="padding: 0.6rem; font-weight: 700; color: var(--primary);">${o.total.toLocaleString()} FCFA</td>
+                </tr>
+            `;
+        });
+        
+        if (!allOrdersHtml) {
+            allOrdersHtml = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">Aucune commande enregistrée sur la plateforme.</td></tr>';
+        }
+
+        tableContainer.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="stat-card" style="border-top: 4px solid var(--success); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">💰 Chiffre d'Affaires Global</span>
+                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--success);">${totalRevenue.toLocaleString()} FCFA</span>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--primary); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">📦 Total Commandes</span>
+                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">${allOrders.length}</span>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--accent); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">⏳ En Attente</span>
+                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--accent);">${pendingOrders.length}</span>
+                </div>
+                <div class="stat-card" style="border-top: 4px solid var(--danger); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">❌ Annulées</span>
+                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--danger);">${cancelledOrders.length}</span>
+                </div>
+            </div>
+            
+            <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">📊 Revenus par Restaurant</h3>
+            <div class="table-responsive" style="margin-bottom: 2rem;">
+                <table class="admin-table" style="width: 100%;">
+                    <thead><tr><th style="padding: 0.75rem;">Restaurant</th><th style="padding: 0.75rem;">Commandes Livrées</th><th style="padding: 0.75rem;">C.A. Généré</th></tr></thead>
+                    <tbody>${revenueRowsHtml}</tbody>
+                </table>
+            </div>
+
+            <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">📋 Historique de toutes les Commandes</h3>
+            <div class="table-responsive">
+                <table class="admin-table" style="width: 100%;">
+                    <thead><tr><th style="padding: 0.6rem;">N°</th><th style="padding: 0.6rem;">Restaurant</th><th style="padding: 0.6rem;">Client</th><th style="padding: 0.6rem;">Date</th><th style="padding: 0.6rem;">Statut</th><th style="padding: 0.6rem;">Montant</th></tr></thead>
+                    <tbody>${allOrdersHtml}</tbody>
+                </table>
             </div>
         `;
     }
@@ -1606,20 +2195,14 @@ function approveRestaurant(id) {
     store.updateRestaurant(id, { status: "active" });
     showToast(`Restaurant ${r.name} activé avec succès !`, "success");
     
-    // Create WhatsApp confirmation message with credentials
-    const waText = `🎉 Félicitations ${r.name} !
+    // Create WhatsApp confirmation message
+    const waText = `Bonjour ${r.name}, nous avons le plaisir de vous informer que votre inscription sur THIES Resto a été validée par notre équipe ! 🥳
 
-Votre inscription sur *THIES Resto* a été validée avec succès !
+Vous pouvez dès à présent vous connecter à votre Tableau de Bord avec vos identifiants pour gérer vos plats du jour, commandes et réservations.
 
-Vous pouvez dès maintenant vous connecter à votre Tableau de Bord :
+Lien d'accès : ${window.location.origin}${window.location.pathname}#/auth
 
-🔗 Lien : ${window.location.origin}${window.location.pathname}#/auth
-👤 Identifiant : *${r.username || r.slug}*
-🔑 Mot de passe : le mot de passe que vous avez choisi lors de l'inscription.
-
-En cas d'oubli de mot de passe, utilisez le lien "Mot de passe oublié ?" sur la page de connexion pour nous contacter.
-
-Bienvenue dans le réseau ! 🍽️`;
+Bienvenue dans le réseau !`;
     const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
     
     renderAdminView();
@@ -1630,15 +2213,11 @@ function rejectRestaurant(id) {
     const r = store.getRestaurantById(id);
     if (!r) return;
     
-    window.showConfirmModal(
-        "Confirmer le rejet",
-        `Voulez-vous rejeter et supprimer définitivement la demande de "${r.name}" ?`,
-        function() {
-            store.deleteRestaurant(id);
-            showToast("Demande supprimée", "info");
-            renderAdminView();
-        }
-    );
+    if (confirm(`Voulez-vous rejeter et supprimer définitivement la demande de "${r.name}" ?`)) {
+        store.deleteRestaurant(id);
+        showToast("Demande supprimée", "info");
+        renderAdminView();
+    }
 }
 
 function suspendRestaurant(id) {
@@ -1659,17 +2238,31 @@ function reactivateRestaurant(id) {
     renderAdminView();
 }
 
+window.updateRestaurantPack = function(id, packName) {
+    const r = store.getRestaurantById(id);
+    if (!r) return;
+    
+    // Si on attribue un pack payant, le restaurant doit être réactivé
+    const newStatus = r.status === 'suspended' && packName !== 'Aucun (Gratuit)' ? 'active' : r.status;
+    
+    store.updateRestaurant(id, { subscriptionPack: packName, status: newStatus });
+    showToast(`Pack ${packName} attribué à ${r.name}`, "success");
+    renderAdminView();
+};
+
 function impersonateRestaurant(id) {
     const r = store.getRestaurantById(id);
     if (!r) return;
     
     currentRestaurantSession = r;
+    sessionStorage.setItem('restaurantSession', JSON.stringify(r));
     showToast(`Session administrateur activée pour "${r.name}"`, "success");
     router.navigate('/dashboard');
 }
 
 function exitImpersonation() {
     currentRestaurantSession = null;
+    sessionStorage.removeItem('restaurantSession');
     showToast("Retour à la console Super-Admin", "info");
     router.navigate('/admin');
 }
@@ -1745,7 +2338,7 @@ function exportReservationsToCSV() {
         ].join(';');
         csvContent += row + "\n";
     });
-    
+
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const encodedUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -1756,21 +2349,3 @@ function exportReservationsToCSV() {
     document.body.removeChild(link);
     showToast("Fichier CSV des réservations téléchargé !", "success");
 }
-
-// ----------------------------------------------------
-// Hamburger & Drawer Logic
-// ----------------------------------------------------
-function toggleMobileMenu() {
-    const drawer = document.getElementById('mobile-drawer');
-    const backdrop = document.getElementById('drawer-backdrop');
-    const btn = document.getElementById('hamburger-btn');
-    if (drawer && backdrop) {
-        drawer.classList.toggle('active');
-        backdrop.classList.toggle('active');
-        btn.classList.toggle('active');
-    }
-}
-
-// ----------------------------------------------------
-// Page: POLITIQUE CLIENT
-// ----------------------------------------------------
