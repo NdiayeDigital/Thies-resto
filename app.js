@@ -4087,7 +4087,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
                 <button class="btn btn-outline btn-sm" id="pwa-dismiss-btn" style="border:none; background:transparent; color:var(--text-secondary)">Plus tard</button>
             </div>
         `;
-        banner.style.cssText = "position: fixed; bottom: 70px; left: 10px; right: 10px; background: var(--bg-card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; z-index: 1000; border: 1px solid var(--primary);";
+        banner.style.cssText = "position: fixed; bottom: 85px; left: 10px; right: 10px; background: var(--bg-card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; z-index: 1000; border: 1px solid var(--primary);";
         document.body.appendChild(banner);
         
         document.getElementById('pwa-install-btn').addEventListener('click', async () => {
@@ -4117,7 +4117,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="btn btn-sm" id="reject-cookies" style="background:transparent; border:none; color:var(--text-secondary)">Non</button>
                 </div>
             `;
-            consentDiv.style.cssText = "position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); color: var(--text-primary); padding: 15px; z-index: 9999; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: row; align-items: center; justify-content: space-between;";
+            consentDiv.style.cssText = "position: fixed; top: 0; left: 0; right: 0; background: var(--bg-card); color: var(--text-primary); padding: 15px; z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: row; align-items: center; justify-content: space-between;";
             document.body.appendChild(consentDiv);
 
             document.getElementById('accept-cookies').addEventListener('click', () => {

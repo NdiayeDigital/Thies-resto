@@ -1520,17 +1520,6 @@ window.handleRestaurantLogoUpload = async function(event) {
     }
 };
 
-        }
-    } catch (e) {
-        console.error("Upload error:", e);
-        if (statusText) {
-            statusText.innerHTML = `❌ Échec de l'envoi (${e.message})`;
-            statusText.style.color = "var(--danger)";
-        }
-    } finally {
-        if (submitBtn) submitBtn.disabled = false;
-    }
-};
 
 function saveDish(e) {
     e.preventDefault();
