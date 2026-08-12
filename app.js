@@ -3487,6 +3487,10 @@ window.requestNotificationPermission = function() {
 window.setupRealtimeSubscriptions = function() {
     if (!supabaseClient || !currentRestaurantSession || !currentRestaurantSession.id) return;
     if (window.currentRealtimeSubscription) return; // Already setup
+
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
     
     window.currentRealtimeSubscription = supabaseClient.channel('custom-insert-channel')
       .on(
@@ -4060,3 +4064,70 @@ if (typeof store !== 'undefined' && store.syncPromise) {
     if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
     router.start();
 }
+
+// ==================== PHASE 5: PWA INSTALLATION ====================
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    if(localStorage.getItem('pwa_install_dismissed')) return;
+
+    let banner = document.getElementById('pwa-install-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'pwa-install-banner';
+        banner.innerHTML = `
+            <div style="flex: 1;">
+                <strong style="display:block; margin-bottom: 2px;">Installez Thies Resto 🚀</strong>
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">Pour commander plus rapidement.</span>
+            </div>
+            <div>
+                <button class="btn btn-primary btn-sm" id="pwa-install-btn" style="margin-right: 5px;">Installer</button>
+                <button class="btn btn-outline btn-sm" id="pwa-dismiss-btn" style="border:none; background:transparent; color:var(--text-secondary)">Plus tard</button>
+            </div>
+        `;
+        banner.style.cssText = "position: fixed; bottom: 70px; left: 10px; right: 10px; background: var(--bg-card); padding: 15px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: space-between; z-index: 1000; border: 1px solid var(--primary);";
+        document.body.appendChild(banner);
+        
+        document.getElementById('pwa-install-btn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                banner.remove();
+            }
+        });
+        document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+            localStorage.setItem('pwa_install_dismissed', 'true');
+            banner.remove();
+        });
+    }
+});
+
+// ==================== PHASE 5: COOKIE CONSENT ====================
+document.addEventListener('DOMContentLoaded', () => {
+    if (!localStorage.getItem('cookie_consent')) {
+        setTimeout(() => {
+            const consentDiv = document.createElement('div');
+            consentDiv.innerHTML = `
+                <div style="font-size: 0.85rem; flex: 1; padding-right: 15px;">Nous utilisons des cookies pour des analyses statistiques. Acceptez-vous ?</div>
+                <div style="display:flex; gap: 10px; align-items: center;">
+                    <button class="btn btn-primary btn-sm" id="accept-cookies">Oui</button>
+                    <button class="btn btn-sm" id="reject-cookies" style="background:transparent; border:none; color:var(--text-secondary)">Non</button>
+                </div>
+            `;
+            consentDiv.style.cssText = "position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); color: var(--text-primary); padding: 15px; z-index: 9999; box-shadow: 0 -4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: row; align-items: center; justify-content: space-between;";
+            document.body.appendChild(consentDiv);
+
+            document.getElementById('accept-cookies').addEventListener('click', () => {
+                localStorage.setItem('cookie_consent', 'true');
+                consentDiv.remove();
+            });
+            document.getElementById('reject-cookies').addEventListener('click', () => {
+                localStorage.setItem('cookie_consent', 'false');
+                consentDiv.remove();
+            });
+        }, 3000);
+    }
+});

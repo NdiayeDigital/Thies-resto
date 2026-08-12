@@ -13,13 +13,20 @@
     <link rel="canonical" href="https://thies-resto.com/">
     
     <script>
-        // Minimal safety handler: if a critical error happens before logger.js loads,
-        // ensure the loading overlay is removed so the user isn't stuck.
-        window.__earlyErrorHandler = function(msg, url, line) {
+        // Global Error Tracking (Phase 5)
+        window.thiesRestoErrors = [];
+        window.__earlyErrorHandler = function(msg, url, line, col, error) {
+            window.thiesRestoErrors.push({msg, url, line, col, error: error ? error.stack : null, time: new Date()});
             var loader = document.getElementById('loading-overlay');
             if(loader) loader.style.display = 'none';
+            // In a real production environment, send this to Sentry/DataDog/Supabase RPC
+            console.error("[SENTRY MOCK] Global Error Caught:", msg, url, line);
         };
         window.onerror = window.__earlyErrorHandler;
+        window.addEventListener('unhandledrejection', function(event) {
+            window.thiesRestoErrors.push({msg: event.reason, time: new Date(), type: 'unhandledrejection'});
+            console.error("[SENTRY MOCK] Unhandled Promise Rejection:", event.reason);
+        });
     </script>
 
     <meta name="theme-color" content="#ff6b35">

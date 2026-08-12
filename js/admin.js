@@ -1355,9 +1355,6 @@ function openEditDishForm(dishId) {
     }
     
     document.getElementById('dish-cancel-edit-btn').style.display = 'block';
-    document.getElementById('dish-form-card').scrollIntoView({ behavior: 'smooth' });
-}
-
 function resetDishForm() {
     document.getElementById('dish-form-title').innerText = "Ajouter un nouveau plat";
     document.getElementById('dish-edit-id').value = '';
@@ -1375,8 +1372,42 @@ function resetDishForm() {
     if (previewContainer) previewContainer.style.display = 'none';
 }
 
+window.compressImage = function(file, maxWidth = 800, quality = 0.7) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = event => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    const fileName = file.name.replace(/\.[^/.]+$/, "") + ".webp";
+                    const newFile = new File([blob], fileName, {
+                        type: 'image/webp',
+                        lastModified: Date.now()
+                    });
+                    resolve(newFile);
+                }, 'image/webp', quality);
+            };
+            img.onerror = error => reject(error);
+        };
+        reader.onerror = error => reject(error);
+    });
+};
+
 window.handleDishImageUpload = async function(event) {
-    const file = event.target.files[0];
+    let file = event.target.files[0];
     if (!file) return;
 
     if (!supabaseClient) {
@@ -1386,24 +1417,26 @@ window.handleDishImageUpload = async function(event) {
 
     const previewImg = document.getElementById('dish-image-preview');
     const container = document.getElementById('dish-image-preview-container');
-    const statusText = document.getElementById('dish-image-upload-status');
+    const statusText = document.getElementById('dish-image-upload-status') || document.getElementById('dish-image-status');
     const customInput = document.getElementById('dish-image-custom');
     const submitBtn = document.querySelector('#dish-editor-form button[type="submit"]');
 
     if (container) container.style.display = 'flex';
     if (previewImg) previewImg.src = URL.createObjectURL(file);
     if (statusText) {
-        statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        statusText.style.display = 'block';
+        statusText.innerHTML = `⏳ Compression de l'image...`;
         statusText.style.color = "var(--warning)";
     }
     if (submitBtn) submitBtn.disabled = true;
 
-    // Build unique filename
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `dishes/${currentRestaurantSession.id}/${fileName}`;
-
     try {
+        file = await compressImage(file, 800, 0.7);
+        if (statusText) statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.webp`;
+        const filePath = `dishes/${currentRestaurantSession.id}/${fileName}`;
+
         const { data, error } = await supabaseClient.storage
             .from('restaurant-images')
             .upload(filePath, file);
@@ -1417,7 +1450,7 @@ window.handleDishImageUpload = async function(event) {
         customInput.value = publicUrlData.publicUrl;
         
         if (statusText) {
-            statusText.innerHTML = `✅ Photo uploadée et hébergée sur Supabase !`;
+            statusText.innerHTML = `✅ Photo compressée et hébergée !`;
             statusText.style.color = "var(--success)";
         }
     } catch (e) {
@@ -1429,10 +1462,10 @@ window.handleDishImageUpload = async function(event) {
     } finally {
         if (submitBtn) submitBtn.disabled = false;
     }
-}
+};
 
 window.handleRestaurantLogoUpload = async function(event) {
-    const file = event.target.files[0];
+    let file = event.target.files[0];
     if (!file) return;
 
     if (!supabaseClient) {
@@ -1448,17 +1481,18 @@ window.handleRestaurantLogoUpload = async function(event) {
     if (previewImg) previewImg.src = URL.createObjectURL(file);
     if (statusText) {
         statusText.style.display = 'block';
-        statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        statusText.innerHTML = `⏳ Compression de l'image...`;
         statusText.style.color = "var(--warning)";
     }
     if (submitBtn) submitBtn.disabled = true;
 
-    // Build unique filename
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `restaurants/${currentRestaurantSession.id}/${fileName}`;
-
     try {
+        file = await compressImage(file, 500, 0.7); // logos can be smaller
+        if (statusText) statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
+        
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.webp`;
+        const filePath = `restaurants/${currentRestaurantSession.id}/${fileName}`;
+
         const { data, error } = await supabaseClient.storage
             .from('restaurant-images')
             .upload(filePath, file);
@@ -1472,7 +1506,7 @@ window.handleRestaurantLogoUpload = async function(event) {
         urlInput.value = publicUrlData.publicUrl;
         
         if (statusText) {
-            statusText.innerHTML = `✅ Photo uploadée et hébergée !`;
+            statusText.innerHTML = `✅ Photo compressée et hébergée !`;
             statusText.style.color = "var(--success)";
         }
     } catch (e) {
@@ -1486,46 +1520,6 @@ window.handleRestaurantLogoUpload = async function(event) {
     }
 };
 
-window.handleDishImageUpload = async function(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    if (!supabaseClient) {
-        showToast("Service Storage non disponible", "danger");
-        return;
-    }
-
-    const statusText = document.getElementById('dish-image-status');
-    const urlInput = document.getElementById('dish-image-custom');
-    const submitBtn = document.querySelector('#dish-editor-form button[type="submit"]');
-
-    if (statusText) {
-        statusText.style.display = 'block';
-        statusText.innerHTML = `⏳ Téléchargement vers Supabase...`;
-        statusText.style.color = "var(--warning)";
-    }
-    if (submitBtn) submitBtn.disabled = true;
-
-    try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `dishes/${currentRestaurantSession.id}/${fileName}`;
-
-        const { data, error } = await supabaseClient.storage
-            .from('restaurant-images')
-            .upload(filePath, file);
-
-        if (error) throw error;
-
-        const { data: publicUrlData } = supabaseClient.storage
-            .from('restaurant-images')
-            .getPublicUrl(filePath);
-
-        urlInput.value = publicUrlData.publicUrl;
-        
-        if (statusText) {
-            statusText.innerHTML = `✅ Photo uploadée et hébergée !`;
-            statusText.style.color = "var(--success)";
         }
     } catch (e) {
         console.error("Upload error:", e);
