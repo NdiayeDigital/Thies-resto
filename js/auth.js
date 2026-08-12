@@ -252,7 +252,7 @@ async function handleRestaurantLogin(e) {
 
     showToast("Vérification des identifiants...", "info");
 
-    const isAdmin = ['admin', 'idadmin', 'thiesresto', '784799882'].includes(username);
+    const isAdmin = username === 'thiesresto';
 
     if (isAdmin) {
         let isValid = false;

@@ -317,7 +317,7 @@ async function handleRestaurantLogin(e) {
     const username = document.getElementById('login-username').value.trim().toLowerCase();
     const pass = document.getElementById('login-password').value.trim();
     
-    const isAdmin = ['admin', 'idadmin', 'thiesresto', '784799882'].includes(username);
+    const isAdmin = username === 'thiesresto';
 
     if (isAdmin) {
         if (!supabaseClient) {

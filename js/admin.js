@@ -1690,7 +1690,7 @@ async function handleAdminLogin(e) {
     const user = document.getElementById('admin-user').value.trim().toLowerCase();
     const pass = document.getElementById('admin-pass').value.trim();
     
-    const isAdmin = ['admin', 'idadmin', 'thiesresto', '784799882'].includes(user);
+    const isAdmin = user === 'thiesresto';
     if (isAdmin) {
         if (!supabaseClient) {
             showToast("Erreur de connexion serveur", "danger");
