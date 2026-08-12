@@ -427,30 +427,22 @@ class Store {
     async pushOrderToSupabase(order) {
         if (!supabaseClient) return;
         try {
-            await supabaseClient.from('orders').insert({
-                id: order.id,
-                restaurant_id: order.restaurantId,
-                customer_name: order.customerName,
-                customer_phone: order.customerPhone,
-                mode: order.mode,
-                address: order.address,
-                items: order.items, // Kept for backwards compatibility
-                total: order.total,
-                note: order.note,
-                status: order.status,
-                date: order.date,
-                time: order.time
+            const { data, error } = await supabaseClient.rpc('place_secure_order', {
+                p_order_id: order.id,
+                p_restaurant_id: order.restaurantId,
+                p_customer_name: order.customerName,
+                p_customer_phone: order.customerPhone,
+                p_mode: order.mode,
+                p_address: order.address,
+                p_note: order.note,
+                p_items: order.items,
+                p_date: order.date,
+                p_time: order.time,
+                p_delivery_fee: order.deliveryFee || 0,
+                p_loyalty_applied: order.loyaltyApplied || false
             });
-            
-            // PHASE 2 MIGRATION: Insert into order_items for relational stats
-            if (order.items && order.items.length > 0) {
-                const orderItemsToInsert = order.items.map(item => ({
-                    order_id: order.id,
-                    item_name: item.name,
-                    price: item.price,
-                    quantity: item.qty || 1
-                }));
-                await supabaseClient.from('order_items').insert(orderItemsToInsert);
+            if (error) {
+                console.error("RPC Error place_secure_order:", error);
             }
         } catch (e) {
             console.error("Failed to push order to Supabase", e);
