@@ -1355,6 +1355,8 @@ function openEditDishForm(dishId) {
     }
     
     document.getElementById('dish-cancel-edit-btn').style.display = 'block';
+}
+
 function resetDishForm() {
     document.getElementById('dish-form-title').innerText = "Ajouter un nouveau plat";
     document.getElementById('dish-edit-id').value = '';

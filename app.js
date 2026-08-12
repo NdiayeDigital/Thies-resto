@@ -4064,7 +4064,7 @@ if (typeof store !== 'undefined' && store.syncPromise) {
 }
 
 // ==================== PHASE 5: PWA INSTALLATION ====================
-let deferredPrompt;
+// deferredPrompt already declared
 window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
