@@ -161,12 +161,12 @@ class Store {
                 });
 
                 this.data.restaurants = mergedRestos;
+                } catch(error) {
+                    console.error("Error during Supabase mapping:", error);
+                }
             } else {
                 console.error("Error fetching nearby restaurants", restosError);
             }
-        } catch (error) {
-            console.error("Error during Supabase sync:", error);
-        }
             // 2. Fetch admin data or restaurant specific data
             if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
                 const adminPass = sessionStorage.getItem('admin_password') || '';
