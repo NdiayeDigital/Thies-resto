@@ -335,7 +335,7 @@ async function handleRestaurantLogin(e) {
         return;
     }
     
-    currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug };
+    currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: password };
     try {
         sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
     } catch (err) {}
