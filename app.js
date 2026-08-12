@@ -4134,3 +4134,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000);
     }
 });
+
+// ========== CONSENT & GEO LOGIC ==========
+window.checkConsent = function() {
+    if (!localStorage.getItem('thies_resto_consent')) {
+        var banner = document.getElementById('consent-banner');
+        if (banner) banner.style.display = 'block';
+    }
+};
+window.acceptConsent = function() {
+    localStorage.setItem('thies_resto_consent', 'true');
+    var banner = document.getElementById('consent-banner');
+    if (banner) banner.style.display = 'none';
+};
+
+// Start check on load
+document.addEventListener('DOMContentLoaded', window.checkConsent);
+setTimeout(window.checkConsent, 1000); // fallback
+
+window.closeGeoModal = function() {
+    var modal = document.getElementById('geo-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+window.geolocateRestaurants = function() {
+    // Show pedagogical modal first instead of native prompt
+    var modal = document.getElementById('geo-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+    } else {
+        window.requestNativeGeolocation();
+    }
+};
+
+window.requestNativeGeolocation = function() {
+    var modal = document.getElementById('geo-modal');
+    if (modal) modal.style.display = 'none';
+    if ("geolocation" in navigator) {
+        if(typeof showToast === 'function') showToast("Recherche GPS...", "info");
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            window.userLat = position.coords.latitude;
+            window.userLng = position.coords.longitude;
+            
+            if(typeof showToast === 'function') showToast("Position trouvée ! Recherche des restaurants...", "info");
+            
+            // Re-sync with Supabase which will now use PostGIS RPC to fetch nearest 10
+            if (typeof store !== 'undefined' && store.syncFromSupabase) {
+                await store.syncFromSupabase();
+                if (typeof applyFilters === 'function') applyFilters();
+                if (typeof showMapModal === 'function') showMapModal(window.userLat, window.userLng, store.data.restaurants);
+            }
+        }, (error) => {
+            if(typeof showToast === 'function') showToast("Accès refusé ou erreur GPS.", "danger");
+        }, { timeout: 10000 });
+    } else {
+        if(typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée par votre navigateur.", "danger");
+    }
+};

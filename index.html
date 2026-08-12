@@ -129,6 +129,9 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Professional Icons (Remix Icon) -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- QR Code Library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
@@ -315,32 +318,7 @@
             </div>
         </footer>
 
-        <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
-        <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
-            <a href="#" class="nav-item active" onclick="router.navigate('/'); return false;">
-                <span class="icon">🏠</span>
-                <span class="label">Accueil</span>
-            </a>
-            <a href="#" class="nav-item" onclick="scrollToCatalog(); return false;">
-                <span class="icon">🍽️</span>
-                <span class="label">Menus</span>
-            </a>
-            <a href="#" class="nav-item" onclick="openCartTab(); return false;" id="bottom-nav-cart">
-                <div class="icon-wrapper">
-                    <span class="icon">🛒</span>
-                    <span class="badge-qty" id="bottom-nav-cart-qty" style="display: none;">0</span>
-                </div>
-                <span class="label">Panier</span>
-            </a>
-            <a href="#" class="nav-item" onclick="router.navigate('/tracking'); return false;">
-                <span class="icon">📍</span>
-                <span class="label">Suivi</span>
-            </a>
-            <a href="#" class="nav-item" onclick="router.navigate('/partnership'); return false;">
-                <span class="icon">🤝</span>
-                <span class="label">Partenaire</span>
-            </a>
-        </nav>
+
     </div>
 
     <!-- ========== JSON-LD STRUCTURED DATA ========== -->
@@ -385,20 +363,20 @@
     <!-- ========== MOBILE BOTTOM NAV ========== -->
     <nav class="mobile-bottom-nav">
         <a href="#" class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
-            <div class="nav-icon">🏠</div>
+            <div class="nav-icon"><i class="ri-home-5-line"></i></div>
             <span>Accueil</span>
         </a>
         <a href="#" class="nav-item" onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
-            <div class="nav-icon">📍</div>
+            <div class="nav-icon"><i class="ri-map-pin-2-line"></i></div>
             <span>Proche</span>
         </a>
         <a href="#" class="nav-item cart-nav-item" onclick="openCartTab(); return false;">
-            <div class="nav-icon">🛒</div>
+            <div class="nav-icon"><i class="ri-shopping-cart-2-line"></i></div>
             <span>Panier</span>
             <span id="mobile-nav-cart-badge" class="cart-badge" style="display: none;">0</span>
         </a>
         <a href="#" class="nav-item" onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
-            <div class="nav-icon">👤</div>
+            <div class="nav-icon"><i class="ri-user-line"></i></div>
             <span>Profil</span>
         </a>
     </nav>
@@ -440,6 +418,27 @@
             navigator.serviceWorker.register('sw.js');
         }
     </script>
+    
+    <!-- ========== CONSENT BANNER ========== -->
+    <div id="consent-banner" class="consent-banner" style="display: none;">
+        <div class="consent-content">
+            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#" onclick="router.navigate('/cgv'); return false;">CGV</a> et notre <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique de Confidentialité</a>.</p>
+            <button class="btn btn-primary btn-sm" onclick="acceptConsent()">J'accepte</button>
+        </div>
+    </div>
+
+    <!-- ========== GEOLOCATION MODAL ========== -->
+    <div id="geo-modal" class="geo-modal" style="display: none;">
+        <div class="geo-modal-content">
+            <div class="geo-icon">📍</div>
+            <h3>Où êtes-vous ?</h3>
+            <p>Pour vous afficher les meilleurs restaurants ouverts autour de vous (à moins de 5 km), nous avons besoin d'accéder à votre position GPS.</p>
+            <div class="geo-actions">
+                <button class="btn btn-secondary" onclick="closeGeoModal()">Plus tard</button>
+                <button class="btn btn-primary" onclick="requestNativeGeolocation()">Autoriser l'accès</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
