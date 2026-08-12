@@ -32,7 +32,9 @@ class Store {
         
         // Background sync with Supabase
         if (supabaseClient) {
-            this.syncFromSupabase();
+            this.syncPromise = this.syncFromSupabase();
+        } else {
+            this.syncPromise = Promise.resolve();
         }
     }
 
@@ -59,10 +61,9 @@ class Store {
             const { data: dbMenuItems, error: itemsError } = await supabaseClient.from('menu_items').select('*');
             if (!restosError && dbRestos) {
                 if (dbRestos.length === 0) {
-                    console.log("Database is empty. Attempting to seed remote database with local restaurant data...");
-                    await this.seedRemoteDatabase();
-                    console.log("Falling back to local dummy data temporarily.");
-                    this.data.restaurants = this.getEnrichedFallbackData();
+                    console.log("Database is empty. Returning early...");
+                    // await this.seedRemoteDatabase(); // Remove auto-seed from client
+                    this.data.restaurants = []; // Start empty
                     return;
                 }
                 try {
@@ -160,15 +161,12 @@ class Store {
                 });
 
                 this.data.restaurants = mergedRestos;
-                } catch(err) {
-                    console.error("Error during restaurant mapping, falling back to local data:", err);
-                    this.data.restaurants = this.getEnrichedFallbackData();
-                }
             } else {
-                console.error("Failed to fetch from public_restaurants, falling back to local data:", restosError);
-                this.data.restaurants = this.getEnrichedFallbackData();
+                console.error("Error fetching nearby restaurants", restosError);
             }
-
+        } catch (error) {
+            console.error("Error during Supabase sync:", error);
+        }
             // 2. Fetch admin data or restaurant specific data
             if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
                 const adminPass = sessionStorage.getItem('admin_password') || '';

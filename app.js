@@ -4432,3 +4432,18 @@ window.toggleDishAvailability = function(dishId, currentStatus) {
         renderDashboardTabContent(currentRestaurantSession);
     });
 };
+
+// Initialize app when data is ready
+if (typeof store !== 'undefined' && store.syncPromise) {
+    store.syncPromise.then(() => {
+        if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+        router.start();
+    }).catch(err => {
+        console.error("Failed to load initial data:", err);
+        if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+        router.start();
+    });
+} else {
+    if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+    router.start();
+}

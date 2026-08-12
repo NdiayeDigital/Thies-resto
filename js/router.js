@@ -1,9 +1,15 @@
 class Router {
     constructor() {
         this.routes = {};
+        this.isReady = false;
         window.addEventListener('hashchange', () => this.resolve());
-        window.addEventListener('load', () => this.resolve());
-        window.addEventListener('DOMContentLoaded', () => this.resolve());
+        // window.addEventListener('load', () => this.resolve());
+        // window.addEventListener('DOMContentLoaded', () => this.resolve());
+    }
+
+    start() {
+        this.isReady = true;
+        this.resolve();
     }
 
     add(path, handler) {
@@ -15,6 +21,7 @@ class Router {
     }
 
     resolve() {
+        if (!this.isReady) return;
         const hash = window.location.hash || '#/';
         
         const container = document.getElementById('main-content');
