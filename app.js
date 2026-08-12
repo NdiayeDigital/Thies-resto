@@ -960,7 +960,7 @@ function logoutAdmin() {
 // Page: LANDING PAGE (catalog)
 // ----------------------------------------------------
 router.add('#/', () => {
-    setDynamicMeta('THIES Resto — Plateforme de Restauration Commune à Thiès, Sénégal', 'icon.png');
+    updateSEO('home');
     try {
         // Hide cart bar
         const cartBar = document.getElementById('floating-cart-bar');
@@ -1748,37 +1748,7 @@ router.add('#/r/:slug', (slug, startTab = 'menu', groupId = null) => {
     }
 
     // Dynamic SEO / JSON-LD Injection
-    let seoScript = document.getElementById('dynamic-jsonld');
-    if (!seoScript) {
-        seoScript = document.createElement('script');
-        seoScript.id = 'dynamic-jsonld';
-        seoScript.type = 'application/ld+json';
-        document.head.appendChild(seoScript);
-    }
-    const jsonLdData = {
-        "@context": "https://schema.org",
-        "@type": "Restaurant",
-        "name": r.name,
-        "image": r.coverImage || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60",
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": r.address,
-            "addressLocality": "Thiès",
-            "addressCountry": "SN"
-        },
-        "telephone": r.whatsapp,
-        "priceRange": "1500 - 8000 FCFA",
-        "servesCuisine": r.category,
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": r.rating.toString(),
-            "reviewCount": r.reviewsCount.toString()
-        }
-    };
-    seoScript.text = JSON.stringify(jsonLdData);
-
-    // Update document title for SEO
-    document.title = `${r.name} - Commander en Ligne à Thiès | THIES Resto`;
+    updateSEO('restaurant', r);
 
     renderRestaurantView(r, startTab, groupId);
 });
@@ -3766,6 +3736,67 @@ function setDynamicMeta(title, image) {
     if(ogImage) ogImage.setAttribute('content', image);
     let twImage = document.querySelector("meta[name='twitter:image']");
     if(twImage) twImage.setAttribute('content', image);
+}
+
+// ==================== PHASE 4: SEO & JSON-LD ====================
+function updateSEO(pageType, data) {
+    let oldScript = document.getElementById('seo-json-ld');
+    if (oldScript) oldScript.remove();
+
+    let schema = {};
+
+    if (pageType === 'home') {
+        setDynamicMeta('THIES Resto — Plateforme de Restauration Commune à Thiès', 'icon.png');
+        schema = {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "THIES Resto",
+            "url": "https://thies-resto.com/",
+            "description": "L'application n°1 pour commander à manger et se faire livrer à Thiès."
+        };
+    } else if (pageType === 'restaurant' && data) {
+        setDynamicMeta(`Menu de ${data.name} - Livraison à Thiès`, data.coverImage || 'icon.png');
+        
+        let menuItemsSchema = [];
+        if (data.menu && data.menu.length > 0) {
+            menuItemsSchema = data.menu.map(item => ({
+                "@type": "MenuItem",
+                "name": item.name,
+                "description": item.description,
+                "offers": { "@type": "Offer", "price": item.price, "priceCurrency": "XOF" }
+            }));
+        }
+
+        schema = {
+            "@context": "https://schema.org",
+            "@type": "Restaurant",
+            "name": data.name,
+            "image": data.coverImage || "https://thies-resto.com/icon.png",
+            "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Thiès",
+                "addressCountry": "SN",
+                "streetAddress": data.address || "Thiès"
+            },
+            "servesCuisine": data.category,
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": data.rating || "4.5",
+                "reviewCount": data.reviewsCount || "10"
+            },
+            "hasMenu": {
+                "@type": "Menu",
+                "name": `Menu de ${data.name}`,
+                "hasMenuItem": menuItemsSchema
+            }
+        };
+    }
+
+    const script = document.createElement('script');
+    script.id = 'seo-json-ld';
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify(schema);
+    document.head.appendChild(script);
 }
 
 

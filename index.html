@@ -177,7 +177,7 @@
                     <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
                         style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
                     <span class="logo-text">THIES Resto</span>
-                    <button class="close-drawer-btn" onclick="toggleMobileMenu()">✕</button>
+                    <button class="close-drawer-btn" aria-label="Fermer le menu" onclick="toggleMobileMenu()">✕</button>
                 </div>
                 <div class="drawer-links">
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
@@ -208,7 +208,7 @@
                 <span id="floating-cart-qty" class="floating-cart-qty">0 articles</span>
                 <span id="floating-cart-total" class="floating-cart-total">0 FCFA</span>
             </div>
-            <button class="btn btn-primary btn-sm" id="floating-cart-btn">
+            <button class="btn btn-primary btn-sm" id="floating-cart-btn" aria-label="Ouvrir le panier">
                 Voir le Panier 🛒
             </button>
         </div>
@@ -286,7 +286,7 @@
                 <!-- Theme Toggle Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Apparence</h4>
-                    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()">
+                    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Changer le thème" onclick="toggleTheme()">
                         <span id="theme-toggle-icon">☀️</span>
                         <span id="theme-toggle-label">Mode Clair</span>
                     </button>
