@@ -1020,22 +1020,22 @@ router.add('#/', () => {
 
     container.innerHTML = `
         <!-- ========== HERO SECTION ========== -->
-        <section class="hero-section" style="background: linear-gradient(var(--glass-bg), var(--bg-primary)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
+        <section class="hero-section page-transition" style="background: linear-gradient(var(--glass-bg), var(--bg-primary)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
             <div class="hero-split-container">
                 <!-- Left: Title, Description and Search -->
-                <div class="hero-left-col">
+                <div class="hero-left-col hover-3d" style="padding: 2rem; border-radius: 24px; background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--border); box-shadow: var(--shadow);">
                     <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
-                    <h1 class="hero-title" style="color: var(--primary); text-shadow: 0 2px 10px rgba(0,0,0,0.5);">Découvrez les Meilleures Tables de <span>Thiès</span></h1>
-                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+                    <h1 class="hero-title" style="color: var(--text-primary); text-shadow: 0 4px 20px rgba(0,0,0,0.8); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.5rem;">Découvrez les Meilleures Tables de <span style="color: var(--primary);">Thiès</span></h1>
+                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.2rem; line-height: 1.6; margin-bottom: 2.5rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
-                    <div class="search-container" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px;">
-                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px);">
-                        <button class="search-btn" style="color: var(--primary);">🔍</button>
+                    <div class="search-container hover-3d" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px; position: relative;">
+                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem 3rem 1.2rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth);">
+                        <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem;">🔍</button>
                     </div>
 
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;">
-                        <button class="btn btn-primary" onclick="scrollToCatalog()" style="box-shadow: 0 4px 15px rgba(242,107,33,0.4);">Explorer nos Menus 🍽️</button>
-                        <button class="btn btn-secondary" onclick="geolocateRestaurants()" style="background: rgba(255,255,255,0.1); color: var(--primary); border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(5px);">📍 Trouver autour de moi</button>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start;">
+                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); padding: 1rem 2rem; border-radius: 12px; font-weight: 600;">Explorer nos Menus 🍽️</button>
+                        <button class="btn btn-secondary ripple hover-3d" onclick="geolocateRestaurants()" style="background: var(--glass-bg); color: var(--text-primary); border: 1px solid var(--border); padding: 1rem 2rem; border-radius: 12px; font-weight: 500;">📍 Trouver autour de moi</button>
                     </div>
                 </div>
                 
@@ -1447,22 +1447,27 @@ function applyFilters() {
         }
             
         cardsHtml += `
-            <div class="restaurant-card" style="position: relative;" onclick="router.navigate('/r/${r.slug}')">
+            <div class="restaurant-card hover-3d glass-panel" style="position: relative; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; border: 1px solid var(--border);" onclick="router.navigate('/r/${r.slug}')">
                 ${distanceBadge}
-                <div class="restaurant-card-header">
-                    <img src="${coverUrl}" class="restaurant-card-cover" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
-                    ${statusBadge}
-                </div>
-                <div class="restaurant-card-body">
-                    <h3 class="restaurant-card-name">${r.name}</h3>
-                    <div class="restaurant-card-meta">
-                        <span class="stars-rating">★ ${r.rating.toFixed(1)}</span>
-                        <span>(${r.reviewsCount} avis)</span>
+                <div class="restaurant-card-header" style="height: 200px; position: relative;">
+                    <img src="${coverUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
+                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
+                    <div style="position: absolute; top: 1rem; left: 1rem; z-index: 2;">
+                        ${statusBadge}
                     </div>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-                        📍 ${r.address}
+                </div>
+                <div class="restaurant-card-body" style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; background: var(--bg-card);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                        <h3 class="restaurant-card-name" style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin: 0; line-height: 1.2;">${r.name}</h3>
+                        <span class="stars-rating" style="background: var(--bg-primary); padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: #fbbf24; border: 1px solid var(--border);">★ ${r.rating.toFixed(1)}</span>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.3rem;">
+                        <span>📍</span> <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.address}</span>
                     </p>
-                    <span class="restaurant-card-cuisine">${r.category}</span>
+                    <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
+                        <span class="restaurant-card-cuisine" style="background: rgba(242,107,33,0.1); color: var(--primary); padding: 0.4rem 1rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">${r.category}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">(${r.reviewsCount} avis)</span>
+                    </div>
                 </div>
             </div>
         `;
