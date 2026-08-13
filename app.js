@@ -87,7 +87,7 @@ router.add('#/auth', () => {
 
             <!-- LOGIN FORM -->
             <form id="login-form" onsubmit="handleRestaurantLogin(event)">
-                <div class="form-group" style="margin-bottom: 1.25rem;">
+                <div class="form-group" class="cgu-text">
                     <label class="form-label">Identifiant unique (slug)</label>
                     <input type="text" id="login-username" class="form-control" placeholder="la-licorne" required>
                 </div>
@@ -142,17 +142,17 @@ router.add('#/partnership', () => {
 
             <!-- REGISTRATION FORM -->
             <form id="register-form" onsubmit="handleRestaurantRegister(event)">
-                <div class="form-group" style="margin-bottom: 1.25rem;">
+                <div class="form-group" class="cgu-text">
                     <label class="form-label">Nom de votre restaurant <span class="required" style="color: var(--accent);">*</span></label>
                     <input type="text" id="reg-name" class="form-control" placeholder="ex: Le Teranga du Rail" required oninput="handleRestaurantNameInput(this.value, 'reg-username', 'reg-password', 'slug-availability-badge')">
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.25rem;">
+                <div class="form-group" class="cgu-text">
                     <label class="form-label">Adresse physique à Thiès <span class="required" style="color: var(--accent);">*</span></label>
                     <input type="text" id="reg-address" class="form-control" placeholder="ex: Quartier Escale, Thiès" required>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.25rem;">
+                <div class="form-group" class="cgu-text">
                     <label class="form-label">Catégorie de cuisine <span class="required" style="color: var(--accent);">*</span></label>
                     <select id="reg-category" class="form-control" required style="width: 100%;">
                         <option value="Traditionnel">Traditionnel (Thiéb, Yassa, Mafé)</option>
@@ -163,13 +163,13 @@ router.add('#/partnership', () => {
                     </select>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.25rem;">
+                <div class="form-group" class="cgu-text">
                     <label class="form-label">Numéro WhatsApp de réception <span class="required" style="color: var(--accent);">*</span></label>
                     <input type="tel" id="reg-whatsapp" class="form-control" placeholder="ex: +221 77 123 45 67" required>
                     <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">C'est sur ce numéro que vous recevrez les commandes clients.</small>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.25rem;">
+                <div class="form-group" class="cgu-text">
                     <label class="form-label">Photo du Restaurant / Logo (Optionnel)</label>
                     <input type="file" id="reg-image-file" class="form-control" accept="image/*" onchange="handleRegImageUpload(event)" style="padding: 0.35rem; height: auto;">
                     <input type="hidden" id="reg-image-url" value="">
@@ -190,7 +190,7 @@ router.add('#/partnership', () => {
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 1.25rem;">
+                <div class="form-group" class="cgu-text">
                     <label class="form-label">Identifiant de connexion souhaité (slug) <span class="required" style="color: var(--accent);">*</span></label>
                     <input type="text" id="reg-username" class="form-control" placeholder="ex: le-teranga-rail" required oninput="checkSlugAvailability()">
                     <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement (modifiable).</small>
@@ -665,69 +665,7 @@ function playNotificationSound() {
     }
 }
 
-// ---------- ORDER POLLING (Supabase Realtime WebSockets) ----------
-let orderChannel = null;
-function startOrderPolling(restaurantId) {
-    stopOrderPolling();
-    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        orderChannel = supabaseClient
-            .channel('realtime-orders')
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'orders' },
-                (payload) => {
-                    const newOrder = payload.new;
-                    if (newOrder.restaurant_id === restaurantId) {
-                        // Avoid duplicates if sync already caught it
-                        const exists = store.data.orders.find(o => o.id === newOrder.id);
-                        if (!exists) {
-                            playNotificationSound();
-                            if (typeof showToast === 'function') showToast(`🔔 Nouvelle commande reçue !`, 'success');
-                            
-                            // Trigger Push Notification if permission granted
-                            if ("Notification" in window && Notification.permission === "granted") {
-                                new Notification("Nouvelle Commande 🔔", { 
-                                    body: `Commande reçue de ${newOrder.customer_name} pour ${newOrder.total} FCFA`,
-                                    icon: "icon.png" 
-                                });
-                            }
-                            
-                            const formatted = {
-                                id: newOrder.id,
-                                restaurantId: newOrder.restaurant_id,
-                                customerName: newOrder.customer_name,
-                                customerPhone: newOrder.customer_phone,
-                                mode: newOrder.mode,
-                                address: newOrder.address,
-                                items: typeof newOrder.items === 'string' ? JSON.parse(newOrder.items) : newOrder.items,
-                                total: newOrder.total,
-                                note: newOrder.note,
-                                status: newOrder.status,
-                                date: newOrder.date
-                            };
-                            store.data.orders.unshift(formatted);
-                            store.save();
-                            
-                            // Re-render dashboard if open
-                            if (typeof renderDashboardTabContent === 'function') {
-                                const r = store.getRestaurantById(restaurantId);
-                                if (r && document.getElementById('dashboard-view-orders') && document.getElementById('dashboard-view-orders').classList.contains('active')) {
-                                    renderDashboardTabContent(r);
-                                }
-                            }
-                        }
-                    }
-                }
-            )
-            .subscribe();
-    }
-}
-function stopOrderPolling() {
-    if (orderChannel && typeof supabaseClient !== 'undefined' && supabaseClient) {
-        supabaseClient.removeChannel(orderChannel);
-        orderChannel = null;
-    }
-}
+// ---------- ORDER POLLING removed: consolidated into setupRealtime() ----------
 
 // ---------- SCROLL HELPERS ----------
 function scrollToHowItWorks() {
@@ -2969,12 +2907,12 @@ router.add('#/politique-client', () => {
             </div>
             
             <div class="policy-content" style="color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem;">
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">1. Aucun compte requis</h3>
+                <h3 class="cgu-heading-2">1. Aucun compte requis</h3>
                 <p>Thiès Resto ne demande jamais la création d'un compte ni d'identifiants pour commander, réserver ou participer à une commande de groupe. Vous fournissez uniquement les informations nécessaires au traitement de votre demande : nom, prénom, et numéro de téléphone.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">2. Informations que vous transmettez</h3>
+                <h3 class="cgu-heading-2">2. Informations que vous transmettez</h3>
                 <p>Lorsque vous passez une commande, réservez une table, ou laissez un avis, vous transmettez au restaurant concerné :</p>
-                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
+                <ul class="cgu-list">
                     <li>Votre nom et prénom</li>
                     <li>Votre numéro de téléphone (utilisé pour vous contacter sur WhatsApp au sujet de votre commande ou réservation)</li>
                     <li>Le détail de votre commande, votre mode de récupération choisi, et toute note ou demande particulière que vous indiquez</li>
@@ -2982,31 +2920,31 @@ router.add('#/politique-client', () => {
                 </ul>
                 <p>Ces informations sont transmises uniquement au restaurant concerné. Thiès Resto ne les revend à aucun tiers et ne les utilise pas à des fins publicitaires.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">3. Commande de groupe</h3>
+                <h3 class="cgu-heading-2">3. Commande de groupe</h3>
                 <p>Si vous participez à une commande de groupe créée par une autre personne, votre prénom et le plat que vous choisissez sont visibles par les autres participants au sein de cette commande de groupe, ainsi que par le restaurant au moment de l'envoi de la commande complète.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">4. Exactitude de vos informations</h3>
+                <h3 class="cgu-heading-2">4. Exactitude de vos informations</h3>
                 <p>Vous êtes responsable de l'exactitude des informations que vous transmettez, notamment votre numéro de téléphone. Un numéro incorrect peut empêcher le restaurant de vous contacter pour confirmer votre commande ou votre réservation.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">5. Paiement</h3>
+                <h3 class="cgu-heading-2">5. Paiement</h3>
                 <p>Thiès Resto ne collecte aucun paiement en ligne. Le règlement de votre commande se fait directement auprès du restaurant, en espèces, à la livraison ou sur place, selon le mode que vous avez choisi. Thiès Resto n'intervient à aucune étape de cette transaction financière.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">6. Avis clients</h3>
+                <h3 class="cgu-heading-2">6. Avis clients</h3>
                 <p>Si vous laissez un avis (note et commentaire) après une commande ou une réservation, celui-ci est rendu public sur la page du restaurant concerné. Le restaurant peut y répondre publiquement. Vous vous engagez à rédiger un avis sincère et respectueux. Thiès Resto se réserve le droit de masquer un avis manifestement abusif, injurieux ou sans rapport avec une expérience réelle.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">7. Statut et disponibilité du restaurant</h3>
+                <h3 class="cgu-heading-2">7. Statut et disponibilité du restaurant</h3>
                 <p>Les informations affichées (statut Ouvert/Fermé, menu du jour, créneaux de réservation disponibles) sont saisies et mises à jour par le restaurant lui-même. Thiès Resto ne garantit pas en temps réel l'exactitude absolue de ces informations en cas de retard de mise à jour par le restaurant. En cas de doute, le bouton de confirmation WhatsApp vous permet de vérifier directement auprès du restaurant.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">8. Confirmation par WhatsApp</h3>
+                <h3 class="cgu-heading-2">8. Confirmation par WhatsApp</h3>
                 <p>Après l'envoi d'une commande ou d'une réservation, un bouton vous permet d'envoyer également un message de confirmation directement au restaurant via WhatsApp. Cette étape est facultative mais recommandée, notamment en cas de connexion internet instable, pour vous assurer que votre demande a bien été reçue.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">9. Programme de fidélité</h3>
+                <h3 class="cgu-heading-2">9. Programme de fidélité</h3>
                 <p>Si le restaurant propose un programme de fidélité, vos points sont associés à votre numéro de téléphone et cumulés automatiquement à chaque commande validée. Aucune carte physique ni application n'est nécessaire. Les conditions exactes du programme (seuil de récompense, type de récompense) sont définies librement par chaque restaurant.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">10. Responsabilité</h3>
+                <h3 class="cgu-heading-2">10. Responsabilité</h3>
                 <p>Thiès Resto met en relation le client et le restaurant mais n'est pas partie à la transaction commerciale elle-même (préparation du repas, qualité du service, respect des horaires annoncés). Toute réclamation relative au déroulement d'une commande ou d'une réservation doit être adressée directement au restaurant concerné.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">11. Évolutions de cette politique</h3>
+                <h3 class="cgu-heading-2">11. Évolutions de cette politique</h3>
                 <p>Cette politique peut évoluer à mesure que de nouvelles fonctionnalités sont ajoutées à la plateforme. La version la plus récente est toujours disponible sur cette page.</p>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
@@ -3035,13 +2973,13 @@ router.add('#/politique-admin', () => {
             </div>
             
             <div class="policy-content" style="color: var(--text-secondary); line-height: 1.7; font-size: 0.95rem;">
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">1. Accès et compte</h3>
+                <h3 class="cgu-heading-2">1. Accès et compte</h3>
                 <p>L'accès au tableau de bord administrateur est protégé par un identifiant et un mot de passe propres à votre restaurant. Vous êtes responsable de la confidentialité de ces identifiants. Ne les partagez qu'avec les membres de votre équipe autorisés à gérer les commandes et le menu.</p>
                 <p>En cas de doute sur une utilisation non autorisée de votre compte, changez votre mot de passe immédiatement depuis l'onglet Paramètres.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">2. Exactitude des informations publiées</h3>
+                <h3 class="cgu-heading-2">2. Exactitude des informations publiées</h3>
                 <p>Vous vous engagez à maintenir à jour les informations suivantes, visibles publiquement par vos clients :</p>
-                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
+                <ul class="cgu-list">
                     <li>Le statut Ouvert / Fermé de votre restaurant, reflété en temps réel</li>
                     <li>Le menu du jour : plats disponibles, prix en FCFA, descriptions</li>
                     <li>Les horaires d'ouverture et les créneaux de réservation proposés</li>
@@ -3049,31 +2987,31 @@ router.add('#/politique-admin', () => {
                 </ul>
                 <p>Une information erronée (plat indisponible affiché comme disponible, statut « Ouvert » alors que le restaurant est fermé) peut entraîner une mauvaise expérience client et nuire à votre réputation. Il est de votre responsabilité de garder ces données exactes.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">3. Traitement des commandes et réservations</h3>
+                <h3 class="cgu-heading-2">3. Traitement des commandes et réservations</h3>
                 <p>Chaque commande ou réservation reçue déclenche une notification immédiate sur votre tableau de bord et une option d'envoi WhatsApp. Vous vous engagez à :</p>
-                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
+                <ul class="cgu-list">
                     <li>Traiter les commandes en attente dans un délai raisonnable</li>
                     <li>Mettre à jour le statut de chaque commande (Confirmée, Prête, Livrée) afin que le client soit informé automatiquement</li>
                     <li>Confirmer ou annuler les réservations de table dans un délai raisonnable avant la date prévue</li>
                     <li>Ne pas annuler une commande ou une réservation déjà confirmée sans en informer le client par WhatsApp</li>
                 </ul>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">4. Gestion des avis clients</h3>
+                <h3 class="cgu-heading-2">4. Gestion des avis clients</h3>
                 <p>Les avis laissés par les clients sur votre page sont publics et ne peuvent pas être supprimés by the restaurant. Vous disposez d'un droit de réponse publique à chaque avis depuis votre tableau de bord. Les réponses doivent rester professionnelles et respectueuses, y compris face à un avis négatif ou injuste.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">5. Paiement</h3>
+                <h3 class="cgu-heading-2">5. Paiement</h3>
                 <p>Thiès Resto ne traite aucun paiement en ligne. Toutes les transactions financières (espèces ou tout autre moyen que vous acceptez) se déroulent directement entre vous et le client, à la livraison ou sur place. Thiès Resto n'intervient à aucun moment dans cette transaction et n'en est pas responsable.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">6. Données collectées sur vos clients</h3>
+                <h3 class="cgu-heading-2">6. Données collectées sur vos clients</h3>
                 <p>Dans le cadre de l'utilisation de la plateforme, vous avez accès aux informations suivantes transmises par vos clients : nom, prénom, numéro de téléphone, contenu de leur commande ou réservation. Ces informations doivent être utilisées uniquement dans le cadre du service que vous proposez (traitement de la commande, organisation de la réservation, programme de fidélité) et ne doivent pas être réutilisées à d'autres fins, notamment commerciales, sans le consentement du client.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">7. Disponibilité du service</h3>
+                <h3 class="cgu-heading-2">7. Disponibilité du service</h3>
                 <p>Thiès Resto met tout en œuvre pour assurer la disponibilité continue du tableau de bord et de la page client. En cas de panne, de maintenance ou d'interruption de service, le restaurant en sera informé dans la mesure du possible. Thiès Resto ne peut être tenu responsable des pertes de commandes liées à une interruption de connexion internet ou de réseau mobile, locale au restaurant ou au client.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">8. Modification ou suspension du compte</h3>
+                <h3 class="cgu-heading-2">8. Modification ou suspension du compte</h3>
                 <p>Le restaurant peut demander la suspension ou la fermeture de son espace à tout moment. Thiès Resto se réserve le droit de suspendre un compte en cas de non-respect manifeste de cette politique, notamment en cas d'informations délibérément trompeuses publiées sur la page client.</p>
 
-                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin: 1.5rem 0 0.5rem; font-family: var(--font-sans);">9. Évolutions de cette politique</h3>
+                <h3 class="cgu-heading-2">9. Évolutions de cette politique</h3>
                 <p>Cette politique peut être amenée à évoluer à mesure que de nouvelles fonctionnalités sont ajoutées à la plateforme. Le restaurant sera informé de toute modification significative.</p>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
@@ -3436,12 +3374,12 @@ function renderCGV() {
                 <p>La plateforme THIES Resto est un annuaire et un outil de mise en relation dématérialisé dédié à la restauration dans la région de Thiès (Sénégal).</p>
 
                 <h2 style="color: var(--text-primary); margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.5rem;">2. Conditions Générales d'Utilisation (CGU)</h2>
-                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">2.1 Rôle de THIES Resto</h3>
+                <h3 class="cgu-heading-3">2.1 Rôle de THIES Resto</h3>
                 <p>THIES Resto agit exclusivement en tant qu'intermédiaire technique de mise en relation. La plateforme permet aux clients de consulter les menus et d'envoyer des commandes ou des réservations aux restaurants partenaires via WhatsApp et le tableau de bord de la plateforme.</p>
                 
-                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">2.2 Responsabilités</h3>
+                <h3 class="cgu-heading-3">2.2 Responsabilités</h3>
                 <p><strong>THIES Resto ne prépare pas, ne vend pas et ne livre pas de repas.</strong> Par conséquent, les restaurants partenaires sont seuls responsables de :</p>
-                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
+                <ul class="cgu-list">
                     <li>L'exactitude de leurs menus, prix et disponibilités.</li>
                     <li>La qualité, la conformité et l'hygiène des plats préparés.</li>
                     <li>Les délais de préparation et les conditions de livraison.</li>
@@ -3449,18 +3387,18 @@ function renderCGV() {
                 <p>En cas de litige, de retard, de non-conformité de la commande ou de problème d'intoxication alimentaire, <strong>le client s'engage à se retourner exclusivement et directement contre le restaurant concerné</strong>. La responsabilité de THIES Resto ne saurait être engagée à quelque titre que ce soit concernant la prestation de restauration.</p>
 
                 <h2 style="color: var(--text-primary); margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.5rem;">3. Conditions Générales de Vente (CGV)</h2>
-                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">3.1 Commandes et Tarifs</h3>
+                <h3 class="cgu-heading-3">3.1 Commandes et Tarifs</h3>
                 <p>Les prix affichés sur la plateforme sont définis par les restaurants et incluent les taxes applicables au Sénégal. Les frais de livraison, s'ils existent, sont communiqués directement par le restaurant au client (notamment via WhatsApp) avant la confirmation finale.</p>
                 
-                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">3.2 Paiement</h3>
+                <h3 class="cgu-heading-3">3.2 Paiement</h3>
                 <p>Aucun paiement n'est traité directement sur la plateforme THIES Resto. Le règlement s'effectue exclusivement en espèces (ou via un service de mobile money selon l'accord du restaurant) au moment de la livraison ou du retrait sur place.</p>
 
-                <h3 style="color: var(--text-primary); margin-top: 1rem; font-size: 1.1rem;">3.3 Politique d'Annulation et de Remboursement</h3>
+                <h3 class="cgu-heading-3">3.3 Politique d'Annulation et de Remboursement</h3>
                 <p>Étant donné que les paiements s'effectuent à la livraison, THIES Resto ne procède à <strong>aucun remboursement</strong>. Toute demande d'annulation de commande doit être formulée directement auprès du restaurant (via WhatsApp ou par appel) dans les plus brefs délais avant la préparation du repas. Si le repas livré n'est pas conforme, le litige commercial et la demande de dédommagement se règlent exclusivement entre le client et le restaurant partenaire.</p>
 
                 <h2 style="color: var(--text-primary); margin-top: 2.5rem; margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.5rem;">4. Protection des Données (CDP Sénégal)</h2>
                 <p>Dans le cadre de l'utilisation du service, les données suivantes sont collectées : Prénom et Numéro de téléphone. Ces données sont strictement utilisées pour :</p>
-                <ul style="margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: disc;">
+                <ul class="cgu-list">
                     <li>La transmission de la commande au restaurant.</li>
                     <li>Le suivi du programme de fidélité.</li>
                 </ul>
@@ -3570,69 +3508,17 @@ window.requestNotificationPermission = function() {
     }
 };
 
-window.setupRealtimeSubscriptions = function() {
-    if (!supabaseClient || !currentRestaurantSession || !currentRestaurantSession.id) return;
-    if (window.currentRealtimeSubscription) return; // Already setup
-
-    if ('Notification' in window && Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
-    
-    window.currentRealtimeSubscription = supabaseClient.channel('custom-insert-channel')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'orders', filter: `restaurant_id=eq.${currentRestaurantSession.id}` },
-        (payload) => {
-          console.log('New order via Realtime!', payload);
-          const newOrder = {
-              id: payload.new.id,
-              restaurantId: payload.new.restaurant_id,
-              customerName: payload.new.customer_name,
-              customerPhone: payload.new.customer_phone,
-              mode: payload.new.mode,
-              address: payload.new.address,
-              items: typeof payload.new.items === 'string' ? JSON.parse(payload.new.items) : payload.new.items,
-              total: Number(payload.new.total),
-              note: payload.new.note,
-              status: payload.new.status,
-              date: payload.new.date,
-              time: payload.new.time
-          };
-          
-          if (!store.data.orders.find(o => o.id === newOrder.id)) {
-              store.data.orders.unshift(newOrder);
-              store.save();
-              
-              if ('Notification' in window && Notification.permission === 'granted') {
-                  navigator.serviceWorker.ready.then(reg => {
-                      reg.showNotification('🔔 Nouvelle Commande!', {
-                          body: `${newOrder.customerName} a commandé pour ${newOrder.total} FCFA.`,
-                          icon: '/icon.png',
-                          vibrate: [200, 100, 200]
-                      });
-                  });
-              } else {
-                  showToast(`🔔 Nouvelle commande de ${newOrder.total} FCFA!`, "success");
-              }
-              
-              if (window.location.hash === '#/dashboard') {
-                  const r = store.getRestaurantById(currentRestaurantSession.id);
-                  if (r) renderDashboardTabContent(r);
-              }
-          }
-        }
-      )
-      .subscribe();
-};
-
+// setupRealtimeSubscriptions removed: consolidated into setupRealtime()
 // Hook into login to start realtime
-const originalHandleRestaurantLogin = window.handleRestaurantLogin;
-if (originalHandleRestaurantLogin) {
+const _origLogin = window.handleRestaurantLogin;
+if (_origLogin) {
     window.handleRestaurantLogin = async function(event) {
-        await originalHandleRestaurantLogin(event);
-        if (currentRestaurantSession) {
-            requestNotificationPermission();
-            setupRealtimeSubscriptions();
+        await _origLogin(event);
+        if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission();
+            }
+            setupRealtime();
         }
     };
 }
@@ -3677,7 +3563,7 @@ window.addEventListener('offline', () => {
     if (!banner) {
         banner = document.createElement('div');
         banner.id = 'offline-banner';
-        banner.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:var(--danger);color:white;text-align:center;padding:12px;z-index:999999;font-weight:bold;font-size:0.9rem;box-shadow:0 4px 6px rgba(0,0,0,0.2);animation:slideDown 0.3s ease-out;';
+        banner.className = 'offline-banner';
         banner.innerHTML = '⚠️ Vous êtes hors connexion. Veuillez vérifier votre réseau.';
         document.body.appendChild(banner);
     }
@@ -3702,7 +3588,7 @@ try {
 } catch (err) {
     console.error("Global Initialization Error:", err);
     hideLoadingOverlay();
-    document.body.innerHTML += `<div style="position:fixed;top:0;left:0;right:0;background:red;color:white;padding:20px;z-index:999999;">Erreur Critique d'Initialisation: ${err.message}</div>`;
+    document.body.innerHTML += `<div class="critical-error-banner">Erreur Critique d'Initialisation: ${err.message}</div>`;
 }
 
 window.addEventListener('error', function(e) {
@@ -3788,7 +3674,7 @@ if (typeof supabaseClient !== 'undefined' && supabaseClient) {
                         if (!itemCard.querySelector('.realtime-badge')) {
                             const badge = document.createElement('div');
                             badge.className = 'realtime-badge';
-                            badge.style.cssText = 'position:absolute;top:10px;left:10px;background:var(--danger);color:white;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;z-index:5;';
+                            badge.className = 'realtime-badge-danger';
                             badge.textContent = 'ÉPUISÉ';
                             itemCard.style.position = 'relative';
                             itemCard.appendChild(badge);
@@ -4045,27 +3931,74 @@ window.geolocateRestaurants = function() {
     }
 };
 
-// ==================== SUPABASE REALTIME ====================
+// ==================== SUPABASE REALTIME (Unique Source of Truth) ====================
 let globalOrderSubscription = null;
 window.setupRealtime = function() {
     if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
     if (globalOrderSubscription) return; // Already subscribed
 
+    // Request notification permission on first setup
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
     globalOrderSubscription = supabaseClient
-        .channel('public:orders')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
-            console.log('Realtime Order Event:', payload);
+        .channel('unified-orders-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, (payload) => {
+            console.log('📡 Realtime Order Event:', payload.eventType, payload.new?.id);
             
-            // 1. Dashboard Restaurateur Live Update
-            if (window.location.hash === '#/dashboard' && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+            // ─── 1. Dashboard Restaurateur: Live Update ───
+            if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
                 if (payload.new && payload.new.restaurant_id === currentRestaurantSession.id) {
+                    
                     if (payload.eventType === 'INSERT') {
-                        playNotificationSound();
-                        if(typeof showToast === 'function') showToast("🔔 NOUVELLE COMMANDE REÇUE !", "success");
+                        // Avoid duplicates
+                        if (!store.data.orders.find(o => o.id === payload.new.id)) {
+                            const newOrder = {
+                                id: payload.new.id,
+                                restaurantId: payload.new.restaurant_id,
+                                customerName: payload.new.customer_name,
+                                customerPhone: payload.new.customer_phone,
+                                mode: payload.new.mode,
+                                address: payload.new.address,
+                                items: typeof payload.new.items === 'string' ? JSON.parse(payload.new.items) : payload.new.items,
+                                total: Number(payload.new.total),
+                                note: payload.new.note,
+                                status: payload.new.status,
+                                date: payload.new.date,
+                                time: payload.new.time
+                            };
+                            store.data.orders.unshift(newOrder);
+                            
+                            // 🔊 Sound
+                            if (typeof playNotificationSound === 'function') playNotificationSound();
+                            
+                            // 📱 Push Notification
+                            if ('Notification' in window && Notification.permission === 'granted') {
+                                try {
+                                    navigator.serviceWorker.ready.then(reg => {
+                                        reg.showNotification('🔔 Nouvelle Commande!', {
+                                            body: newOrder.customerName + ' a commandé pour ' + newOrder.total + ' FCFA.',
+                                            icon: '/icon.png',
+                                            vibrate: [200, 100, 200]
+                                        });
+                                    });
+                                } catch(e) {
+                                    new Notification('🔔 Nouvelle Commande!', { 
+                                        body: newOrder.customerName + ' a commandé pour ' + newOrder.total + ' FCFA.',
+                                        icon: 'icon.png'
+                                    });
+                                }
+                            }
+                            
+                            // 🍞 Toast
+                            if (typeof showToast === 'function') showToast('🔔 NOUVELLE COMMANDE REÇUE !', 'success');
+                        }
                     }
-                    // Force refresh data
-                    if (typeof store !== 'undefined' && store.syncFromSupabase) {
-                        store.syncFromSupabase().then(() => {
+                    
+                    // Force refresh dashboard (bypass cache)
+                    if (window.location.hash === '#/dashboard') {
+                        store.syncFromSupabase(true).then(() => {
                             if (typeof renderDashboardTabContent === 'function') {
                                 renderDashboardTabContent(currentRestaurantSession);
                             }
@@ -4074,24 +4007,21 @@ window.setupRealtime = function() {
                 }
             }
             
-            // 2. Client Order Tracking Live Update
+            // ─── 2. Client Order Tracking: Live Update ───
             if (window.location.hash === '#/tracking') {
                 const trackingOrderId = localStorage.getItem('trackingOrderId');
                 if (trackingOrderId && payload.new && payload.new.id === trackingOrderId) {
-                    // Mettre à jour l'interface de suivi
-                    if (typeof store !== 'undefined' && store.syncFromSupabase) {
-                        store.syncFromSupabase().then(() => {
-                            if (typeof fetchOrderTracking === 'function') fetchOrderTracking();
-                        });
-                    }
-                    if (payload.eventType === 'UPDATE') {
-                        if(typeof showToast === 'function') showToast(`Statut mis à jour : ${payload.new.status}`, "info");
+                    store.syncFromSupabase(true).then(() => {
+                        if (typeof fetchOrderTracking === 'function') fetchOrderTracking();
+                    });
+                    if (payload.eventType === 'UPDATE' && typeof showToast === 'function') {
+                        showToast('Statut mis à jour : ' + payload.new.status, 'info');
                     }
                 }
             }
         })
         .subscribe((status) => {
-            console.log('Supabase Realtime Status:', status);
+            console.log('📡 Supabase Realtime Status:', status);
         });
 };
 
@@ -4365,8 +4295,6 @@ window.checkSlugAvailabilityRealtime = checkSlugAvailabilityRealtime;
 window.saveOrderToHistory = saveOrderToHistory;
 window.getOrderHistory = getOrderHistory;
 window.playNotificationSound = playNotificationSound;
-window.startOrderPolling = startOrderPolling;
-window.stopOrderPolling = stopOrderPolling;
 window.scrollToHowItWorks = scrollToHowItWorks;
 window.scrollToCatalog = scrollToCatalog;
 window.handleRestaurantNameInput = handleRestaurantNameInput;
@@ -4409,9 +4337,6 @@ window.cart = cart;
 window.activeGroupOrder = activeGroupOrder;
 window.activeFilter = activeFilter;
 window.activeSortBy = activeSortBy;
-window.orderChannel = orderChannel;
 window.currentSelectedRating = currentSelectedRating;
 window.socialProofInterval = socialProofInterval;
-window.originalHandleRestaurantLogin = originalHandleRestaurantLogin;
-window.globalOrderSubscription = globalOrderSubscription;
 window.ClientTracker = ClientTracker;

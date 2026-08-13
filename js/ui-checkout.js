@@ -5,8 +5,8 @@ function renderCheckoutTab(r) {
     
     if (cart.items.length === 0) {
         container.innerHTML = `
-            <div style="text-align: center; padding: 4rem 1rem;">
-                <span style="font-size: 3rem;">🛒</span>
+            <div class="text-center-p4">
+                <span class="checkout-icon">🛒</span>
                 <h3 style="margin-top: 1rem;">Votre panier est vide</h3>
                 <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">Parcourez notre menu du jour et ajoutez des délices !</p>
                 <button class="btn btn-primary" onclick="switchRestoTab('menu')">Voir le Menu</button>
@@ -353,10 +353,10 @@ function submitSimpleOrder(e, restaurantId) {
             if (typeof showToast === 'function') showToast("Code de sécurité SMS envoyé !", "info");
             
             container.innerHTML = `
-                <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
+                <div class="confirmation-screen" class="checkout-card">
+                    <div class="checkout-icon">📱</div>
                     <h2>Vérification SMS</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Veuillez entrer le code de sécurité reçu par SMS au <strong>${phone}</strong>.</p>
+                    <p class="checkout-subtitle">Veuillez entrer le code de sécurité reçu par SMS au <strong>${phone}</strong>.</p>
                     
                     <div class="form-group">
                         <input type="text" id="otp-input-code" class="form-control" placeholder="Ex: 839102" style="font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-weight: bold; margin-bottom: 1rem;" maxlength="6">
@@ -374,10 +374,10 @@ function submitSimpleOrder(e, restaurantId) {
         } else {
             if (typeof showToast === 'function') showToast("Impossible d'envoyer le SMS. Format de numéro incorrect ?", "danger");
             container.innerHTML = `
-                <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                <div class="confirmation-screen" class="checkout-card">
                     <div style="font-size: 3rem; color: var(--danger); margin-bottom: 1rem;">⚠️</div>
                     <h2>Échec de l'envoi</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Nous n'avons pas pu valider votre numéro <strong>${phone}</strong>.</p>
+                    <p class="checkout-subtitle">Nous n'avons pas pu valider votre numéro <strong>${phone}</strong>.</p>
                     <button class="btn btn-secondary" onclick="router.navigate('/')" style="width: 100%;">
                         Retour à l'accueil
                     </button>
@@ -396,7 +396,7 @@ window.executePendingOrder = async function() {
     
     const container = document.getElementById('checkout-content-container');
     container.innerHTML = `
-        <div style="text-align: center; padding: 3rem 1rem;">
+        <div class="text-center-p3">
             <div class="spinner" style="border: 4px solid var(--border); border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
             <p style="color: var(--text-primary); font-weight: 500;">Sécurisation et validation de votre commande...</p>
         </div>
@@ -477,8 +477,8 @@ window.executePendingOrder = async function() {
     } catch (err) {
         console.error("Order error", err);
         container.innerHTML = `
-            <div style="text-align: center; padding: 3rem 1rem;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+            <div class="text-center-p3">
+                <div class="checkout-icon">❌</div>
                 <h3 style="color: var(--danger);">Erreur de sécurisation</h3>
                 <p style="color: var(--text-secondary);">Impossible de valider votre commande. Veuillez réessayer.</p>
                 <button class="btn btn-primary" onclick="window.executePendingOrder()" style="margin-top: 1rem;">Réessayer</button>
