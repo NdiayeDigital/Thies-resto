@@ -53,12 +53,21 @@ class Store {
             // 1. Sync Restaurants (Publiques) via PostGIS
             const searchLat = window.userLat || 14.7928;
             const searchLng = window.userLng || -16.9260;
-        const { data: dbRestos, error: restosError } = await supabaseClient.rpc('get_nearby_restaurants', {
-            user_lat: searchLat,
-            user_lng: searchLng,
-            max_limit: 50 // Load up to 50 for catalog
-        });
-        // We NO LONGER fetch all menu_items globally for performance reasons (Lazy Loading)
+            let { data: dbRestos, error: restosError } = await supabaseClient.rpc('get_nearby_restaurants', {
+                user_lat: searchLat,
+                user_lng: searchLng,
+                max_limit: 50 // Load up to 50 for catalog
+            });
+
+            // Fallback si la fonction SQL 'get_nearby_restaurants' plante (ex: à cause de l'ajout de vendor_pin)
+            if (restosError || !dbRestos) {
+                console.warn("RPC get_nearby_restaurants a échoué, utilisation du fallback direct:", restosError);
+                const fallback = await supabaseClient.from('restaurants').select('*');
+                dbRestos = fallback.data;
+                restosError = fallback.error;
+            }
+
+            // We NO LONGER fetch all menu_items globally for performance reasons (Lazy Loading)
             if (!restosError && dbRestos) {
                 if (dbRestos.length === 0) {
                     console.log("Database is empty. Returning early...");
