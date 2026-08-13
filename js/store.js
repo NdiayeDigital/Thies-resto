@@ -625,6 +625,21 @@ class Store {
         }
     }
 
+    async createSecureOrder(payload) {
+        if (!supabaseClient) {
+            console.error("Supabase client not initialized.");
+            return null;
+        }
+        try {
+            const { data, error } = await supabaseClient.rpc('create_secure_order', { payload: payload });
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error("Error creating secure order:", error);
+            throw error;
+        }
+    }
+
     async uploadImage(file) {
         if (!supabaseClient) return null;
         try {

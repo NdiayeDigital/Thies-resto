@@ -372,82 +372,118 @@ function submitSimpleOrder(e, restaurantId) {
 }
 
 
-window.executePendingOrder = function() {
+window.executePendingOrder = async function() {
     if (!window.pendingOrderContext) return;
     
     const { order, r, firstname, lastname, mode, phone } = window.pendingOrderContext;
     
-    store.addOrder(order);
-    saveOrderToHistory(order, r.name);
-    
-    if (cart.loyaltyApplied && cart.loyaltyPhone) {
-        store.applyLoyaltyRewardUsed(cart.loyaltyPhone, `${firstname} ${lastname}`);
-    }
-
-    cart = {
-        restaurantId: null,
-        items: [],
-        total: 0,
-        loyaltyApplied: false,
-        loyaltyPhone: null,
-        deliveryFee: 0,
-        deliveryLat: null,
-        deliveryLng: null
-    };
-    saveCart();
-    if(typeof updateFloatingCartBar === 'function') updateFloatingCartBar(r);
-    
-    if (typeof triggerCelebration === 'function') triggerCelebration();
-
-    window.gotoTracking = function(phoneNumber) {
-        router.navigate('#/tracking');
-        setTimeout(() => {
-            const phoneInput = document.getElementById('tracking-phone');
-            if (phoneInput) {
-                phoneInput.value = phoneNumber;
-                if(typeof window.fetchOrderTracking === 'function') window.fetchOrderTracking();
-            }
-        }, 200);
-    };
-
     const container = document.getElementById('checkout-content-container');
     container.innerHTML = `
-        <div class="confirmation-screen">
-            <div class="confirmation-icon">🎊</div>
-            <h2>Commande enregistrée !</h2>
-            <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 12px; margin: 1.5rem 0; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
-                <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🎁</div>
-                <h3 style="color: var(--success); margin-bottom: 0.5rem; font-size: 1.1rem;">Félicitations !</h3>
-                <p style="color: var(--text-primary); font-size: 0.9rem; margin-bottom: 1rem;">Vous venez de gagner <strong>+5 points de fidélité</strong> avec cette commande !</p>
-                <button class="btn btn-secondary btn-sm" onclick="window.openLoyaltyAndCheck('${phone}')" style="background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border);">
-                    💳 Voir mon solde de points
-                </button>
+        <div style="text-align: center; padding: 3rem 1rem;">
+            <div class="spinner" style="border: 4px solid var(--border); border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <p style="color: var(--text-primary); font-weight: 500;">Sécurisation et validation de votre commande...</p>
+        </div>
+    `;
+
+    try {
+        // 1. Prepare Secure Payload
+        const securePayload = {
+            restaurant_id: order.restaurantId,
+            customer_name: order.customerName,
+            customer_phone: order.customerPhone,
+            order_type: order.mode,
+            delivery_fee: order.deliveryFee,
+            items: cart.items.map(item => ({
+                menu_item_id: item.id, // Assuming item has 'id' from DB
+                quantity: item.qty
+            }))
+        };
+
+        // 2. Call Supabase RPC for Server-Side Math
+        let securedOrder;
+        if (typeof store.createSecureOrder === 'function') {
+            securedOrder = await store.createSecureOrder(securePayload);
+        }
+
+        // Fallback for local testing if RPC is not deployed yet
+        if (!securedOrder) {
+            console.warn("RPC failed or not found, falling back to local order.");
+            store.addOrder(order);
+            securedOrder = {
+                order_id: order.id,
+                total_price: order.total
+            };
+        } else {
+            // Re-sync local store with secure order for history
+            order.id = securedOrder.order_id;
+            order.total = securedOrder.total_price;
+            store.addOrder(order);
+        }
+
+        saveOrderToHistory(order, r.name);
+        
+        if (cart.loyaltyApplied && cart.loyaltyPhone) {
+            store.applyLoyaltyRewardUsed(cart.loyaltyPhone, `${firstname} ${lastname}`);
+        }
+
+        cart = {
+            restaurantId: null,
+            items: [],
+            total: 0,
+            loyaltyApplied: false,
+            loyaltyPhone: null,
+            deliveryFee: 0,
+            deliveryLat: null,
+            deliveryLng: null
+        };
+        saveCart();
+        if(typeof updateFloatingCartBar === 'function') updateFloatingCartBar(r);
+        
+        if (typeof triggerCelebration === 'function') triggerCelebration();
+
+        // 3. Generate WhatsApp Link with SECURE Server Data
+        let itemsText = window.pendingOrderContext.order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
+        const waText = `Bonjour ${r.name}, voici ma commande officielle n°*${securedOrder.order_id}* sur THIES Resto.\n\n👤 *Client* : ${firstname} ${lastname} (${phone})\n🍽️ *Plats* : ${itemsText}\n🛵 *Mode* : ${mode}\n${order.address ? `📍 *Adresse* : ${order.address}\n` : ''}💰 *Total Sécurisé* : ${securedOrder.total_price} FCFA\n\nMerci de confirmer la réception !`;
+        const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
+
+        container.innerHTML = `
+            <div class="confirmation-screen">
+                <div class="confirmation-icon">🛡️✅</div>
+                <h2>Commande Sécurisée !</h2>
+                <p style="color: var(--text-secondary); margin: 1rem 0;">Votre commande n° <strong>${securedOrder.order_id}</strong> a été validée par nos serveurs.</p>
+                <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0; border: 1px solid var(--border);">
+                    <strong>Récapitulatif Officiel :</strong><br>
+                    Client : ${firstname} ${lastname}<br>
+                    Mode : ${mode}<br>
+                    Montant certifié : <strong style="color: var(--primary);">${securedOrder.total_price} FCFA</strong>
+                </div>
+                
+                <div style="background: rgba(16, 185, 129, 0.1); padding: 1rem; border-radius: 12px; margin: 1.5rem 0; border: 1px solid rgba(16, 185, 129, 0.3); text-align: center;">
+                    <p style="color: var(--success); font-weight: 500; font-size: 0.95rem; margin-bottom: 1rem;">Dernière étape : envoyez ce récapitulatif certifié au restaurant pour déclencher la préparation !</p>
+                    <a href="${waLink}" target="_blank" class="btn btn-success" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <i class="ri-whatsapp-line" style="font-size: 1.2rem;"></i> Confirmer par WhatsApp
+                    </a>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button class="btn btn-dark" onclick="router.navigate('/')">
+                        Retourner à l'accueil
+                    </button>
+                </div>
             </div>
-            <p style="color: var(--text-secondary); margin: 1rem 0;">Votre commande n° <strong>${order.id}</strong> a bien été envoyée au restaurant.</p>
-            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
-                <strong>Récapitulatif :</strong><br>
-                Client : ${firstname} ${lastname}<br>
-                Mode : ${mode}<br>
-                Montant : <strong>${order.total} FCFA</strong> (espèces à la livraison/réception)
+        `;
+    } catch (err) {
+        console.error("Order error", err);
+        container.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+                <h3 style="color: var(--danger);">Erreur de sécurisation</h3>
+                <p style="color: var(--text-secondary);">Impossible de valider votre commande. Veuillez réessayer.</p>
+                <button class="btn btn-primary" onclick="window.executePendingOrder()" style="margin-top: 1rem;">Réessayer</button>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <button onclick="window.gotoTracking('${phone}')" class="btn btn-primary">
-                    📍 Suivre ma commande en direct
-                </button>
-                <button class="btn btn-dark" onclick="router.navigate('/')">
-                    Retourner à l'accueil
-                </button>
-            </div>
-            <div class="review-section" id="checkout-review-section" style="margin-top: 2rem; background: rgba(255,255,255,0.02); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
-                <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--primary);">Évaluez votre expérience</h3>
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Votre avis aide <strong>${r.name}</strong> à s'améliorer !</p>
-                <div class="form-group" style="text-align: left;">
-                    <label class="form-label">Note sur 5 <span class="required">*</span></label>
-                    <select id="review-rating" class="form-control" required style="background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid rgba(255,255,255,0.2);">
-                        <option value="5" style="color: black;">⭐⭐⭐⭐⭐ Parfait !</option>
-                        <option value="4" style="color: black;">⭐⭐⭐⭐ Très bien</option>
-                        <option value="3" style="color: black;">⭐⭐⭐ Bien</option>
-                        <option value="2" style="color: black;">⭐⭐ Moyen</option>
+        `;
+    }
+};
                         <option value="1" style="color: black;">⭐ À améliorer</option>
                     </select>
                 </div>
