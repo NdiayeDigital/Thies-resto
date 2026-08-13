@@ -2114,43 +2114,17 @@ window.openProductModal = function(restaurantId, dishId) {
 
 window.addModalItemToCart = function(restaurantId, dishId) {
     const qty = window.currentProductQty || 1;
-    
-    // Re-use logic from addToCart but with quantity
     const r = store.getRestaurantById(restaurantId);
     const dish = r.menu.find(d => d.id === dishId);
     if (!dish) return;
-    
-    if (cart.restaurantId && cart.restaurantId !== restaurantId && cart.items.length > 0) {
-        const oldResto = store.getRestaurantById(cart.restaurantId);
-        const oldName = oldResto ? oldResto.name : "un autre restaurant";
-        const confirmClear = confirm(`Votre panier contient déjà des plats de "${oldName}". Voulez-vous vider votre panier actuel pour commander chez "${r.name}" ?`);
-        if (!confirmClear) return;
-        cart = { restaurantId: restaurantId, items: [], total: 0 };
-    }
 
-    if (!cart.restaurantId) cart.restaurantId = restaurantId;
-
-    const existingItem = cart.items.find(i => i.id === dishId);
-    if (existingItem) {
-        existingItem.qty += qty;
-    } else {
-        cart.items.push({
-            id: dish.id,
-            name: dish.name,
-            price: dish.price,
-            qty: qty
-        });
+    if (Alpine.store('cart').add(restaurantId, dish, qty)) {
+        if (document.getElementById('panel-checkout')) {
+            renderCheckoutTab(store.getRestaurantById(restaurantId));
+        }
+        pulseCartBar();
+        showToast(`(${qty}) ${dish.name} ajouté(s) au panier ! 🛒`, "success");
     }
-
-    cart.total += dish.price * qty;
-    saveCart();
-    
-    if (document.getElementById('panel-checkout')) {
-        renderCheckoutTab(store.getRestaurantById(restaurantId));
-    }
-    updateFloatingCartBar(store.getRestaurantById(restaurantId));
-    
-    showToast(`(${qty}) ${dish.name} ajouté(s) au panier ! 🛒`, "success");
 }
 
 // Cart updates

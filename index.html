@@ -221,10 +221,13 @@
 
 
         <!-- ========== FLOATING CART BAR ========== -->
-        <div id="floating-cart-bar" class="floating-cart-bar" style="display: none;" onclick="openCartTab()">
+        <div id="floating-cart-bar" class="floating-cart-bar" 
+             x-show="$store.cart.itemCount > 0" 
+             style="display: none;" 
+             onclick="openCartTab()">
             <div class="floating-cart-info">
-                <span id="floating-cart-qty" class="floating-cart-qty">0 articles</span>
-                <span id="floating-cart-total" class="floating-cart-total">0 FCFA</span>
+                <span id="floating-cart-qty" class="floating-cart-qty" x-text="$store.cart.itemCount + ($store.cart.itemCount > 1 ? ' articles' : ' article')">0 articles</span>
+                <span id="floating-cart-total" class="floating-cart-total" x-text="$store.cart.total + ' FCFA'">0 FCFA</span>
             </div>
             <button class="btn btn-primary btn-sm" id="floating-cart-btn" aria-label="Ouvrir le panier">
                 Voir le Panier 🛒

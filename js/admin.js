@@ -207,7 +207,11 @@ function renderDashboardTabContent(r) {
                 </div>
             `;
         } else {
-            filteredOrders.forEach(o => {
+            const ITEMS_PER_PAGE = 20;
+            window.vendorOrdersPage = window.vendorOrdersPage || 1;
+            const paginatedOrders = filteredOrders.slice(0, window.vendorOrdersPage * ITEMS_PER_PAGE);
+
+            paginatedOrders.forEach(o => {
                 const itemsStr = o.items.map(i => `<span style="background: var(--bg-secondary); padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border); display: inline-block; margin: 0.15rem 0.15rem 0.15rem 0;">${i.name} <strong>x${i.qty}</strong></span>`).join(' ');
                 
                 // Status styles
@@ -298,6 +302,16 @@ function renderDashboardTabContent(r) {
                     </div>
                 `;
             });
+            
+            if (filteredOrders.length > paginatedOrders.length) {
+                listHtml += `
+                    <div style="text-align: center; margin-top: 1rem;">
+                        <button class="btn btn-secondary" onclick="window.vendorOrdersPage++; renderDashboardTabContent(store.getRestaurantById('${r.id}'));">
+                            Charger plus de commandes
+                        </button>
+                    </div>
+                `;
+            }
         }
 
         const filterBtnsHtml = ['Tous', 'En attente', 'Confirmées', 'Livrées'].map(f => {
@@ -1314,7 +1328,9 @@ function saveManualReservation(e, restaurantId) {
 }
 
 function filterOrdersDashboard(status) {
+    window.vendorOrdersPage = 1;
     currentOrderStatusFilter = status;
+    window.vendorOrdersPage = 1;
     const r = store.getRestaurantById(currentRestaurantSession.id);
     renderDashboardTabContent(r);
 }
@@ -1713,6 +1729,11 @@ router.add('#/admin', () => {
 });
 
 function renderAdminView() {
+    window.adminOrdersPage = 1;
+    renderAdminTab();
+}
+
+function renderAdminTab() {
     const container = document.getElementById('main-content');
     
     // Calculate network figures
@@ -2057,7 +2078,11 @@ function renderAdminTabTable() {
         // All orders list
         let allOrdersHtml = '';
         const sortedOrders = [...allOrders].sort((a,b) => (b.date + b.time).localeCompare(a.date + a.time));
-        sortedOrders.forEach(o => {
+        
+        const ITEMS_PER_PAGE = 50;
+        const paginatedAdminOrders = sortedOrders.slice(0, window.adminOrdersPage * ITEMS_PER_PAGE);
+
+        paginatedAdminOrders.forEach(o => {
             const resto = restos.find(r => r.id === o.restaurantId);
             const restoName = resto ? resto.name : o.restaurantId;
             const statusClass = o.status === 'Livrée' ? 'badge-success' : o.status === 'Annulée' ? 'badge-danger' : o.status === 'Reçue' ? 'badge-warning' : 'badge-info';
