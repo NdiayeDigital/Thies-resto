@@ -501,11 +501,21 @@ function escapeHTML(str) {
 }
 
 // Session is managed in store.js
-let cart = {
-    restaurantId: null,
-    items: [],
-    total: 0
-};
+// cart is now managed by Alpine store. Legacy proxy for compatibility:
+Object.defineProperty(window, 'cart', {
+    get() {
+        return typeof Alpine !== 'undefined' && Alpine.store('cart') ? Alpine.store('cart') : { items: [], total: 0 };
+    },
+    set(val) {
+        if (typeof Alpine !== 'undefined' && Alpine.store('cart')) {
+            const store = Alpine.store('cart');
+            store.clear();
+            store.restaurantId = val.restaurantId || null;
+            store.items = val.items || [];
+            store.total = val.total || 0;
+        }
+    }
+});
 
 // Safe HTML escaping helper using DOMPurify
 function sanitizeHTML(html) {

@@ -1,5 +1,6 @@
 // 2. Checkout Panel
 function renderCheckoutTab(r) {
+    const cart = typeof Alpine !== 'undefined' ? Alpine.store('cart') : window.cart;
     const container = document.getElementById('checkout-content-container');
     
     if (cart.items.length === 0) {
@@ -138,6 +139,7 @@ let deliveryMap = null;
 let deliveryMarker = null;
 
 function toggleAddressField(show) {
+    const cart = typeof Alpine !== 'undefined' ? Alpine.store('cart') : window.cart;
     const group = document.getElementById('delivery-address-group');
     if (show) {
         group.style.display = 'block';
@@ -248,6 +250,7 @@ function checkOrderRateLimit() {
 
 // Submission of client order
 function submitSimpleOrder(e, restaurantId) {
+    const cart = typeof Alpine !== 'undefined' ? Alpine.store('cart') : window.cart;
     e.preventDefault();
     
     if (!checkOrderRateLimit()) return;
@@ -386,6 +389,7 @@ function submitSimpleOrder(e, restaurantId) {
 
 
 window.executePendingOrder = async function() {
+    const cart = typeof Alpine !== 'undefined' ? Alpine.store('cart') : window.cart;
     if (!window.pendingOrderContext) return;
     
     const { order, r, firstname, lastname, mode, phone } = window.pendingOrderContext;
@@ -434,17 +438,7 @@ window.executePendingOrder = async function() {
             store.applyLoyaltyRewardUsed(cart.loyaltyPhone, `${firstname} ${lastname}`);
         }
 
-        cart = {
-            restaurantId: null,
-            items: [],
-            total: 0,
-            loyaltyApplied: false,
-            loyaltyPhone: null,
-            deliveryFee: 0,
-            deliveryLat: null,
-            deliveryLng: null
-        };
-        saveCart();
+        cart.clear();
         if(typeof updateFloatingCartBar === 'function') updateFloatingCartBar(r);
         
         if (typeof triggerCelebration === 'function') triggerCelebration();
