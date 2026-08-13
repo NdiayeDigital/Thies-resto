@@ -45,7 +45,19 @@ class Store {
         // No local storage saving anymore.
     }
 
-    async syncFromSupabase() {
+    // Cache configuration
+    lastSyncTime = 0;
+    CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+    async syncFromSupabase(force = false) {
+        if (!supabaseClient) return;
+        
+        const now = Date.now();
+        if (!force && (now - this.lastSyncTime < this.CACHE_TTL_MS)) {
+            console.log("Using cached Supabase data (TTL 5m).");
+            return;
+        }
+
         if (!supabaseClient) return;
         try {
             console.log("Syncing with Supabase...");
@@ -125,6 +137,10 @@ class Store {
                 });
 
                 this.data.restaurants = mergedRestos;
+                this.lastSyncTime = Date.now();
+                if (typeof Alpine !== 'undefined' && Alpine.store('global')) {
+                    Alpine.store('global', this.data);
+                }
                 } catch(error) {
                     console.error("Error during Supabase mapping:", error);
                 }
@@ -641,6 +657,7 @@ class Store {
 
         this.save();
         this.pushOrderToSupabase(order);
+        this.lastSyncTime = 0; // Invalidate cache
         
         // Also save customer profile in Supabase
         const usedRewards = (this.data.usedRewards && this.data.usedRewards[order.customerPhone]) || 0;
@@ -726,6 +743,7 @@ class Store {
     }
 
     async createSecureOrder(payload) {
+        this.lastSyncTime = 0; // Invalidate cache
         if (!supabaseClient) {
             console.error("Supabase client not initialized.");
             return null;
