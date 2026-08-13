@@ -22,5 +22,8 @@
   "homepage": "https://github.com/NdiayeDigital/Thies-resto#readme",
   "devDependencies": {
     "vite": "^8.2.1"
+  },
+  "dependencies": {
+    "alpinejs": "^3.16.1"
   }
 }

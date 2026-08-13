@@ -1,4 +1,3 @@
-
 // Client Behavior Analytics Tracker
 class ClientTracker {
     constructor() {
@@ -1028,15 +1027,13 @@ router.add('#/', () => {
     container.innerHTML = `
         <!-- ========== HERO SECTION ========== -->
         <section class="hero-section page-transition" style="background: linear-gradient(var(--glass-bg), var(--bg-primary)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
-            <div class="hero-split-container">
-                <!-- Left: Title, Description and Search -->
                 <div class="hero-left-col hover-3d" style="padding: 2rem; border-radius: 24px; background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--border); box-shadow: var(--shadow);">
                     <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
                     <h1 class="hero-title" style="color: var(--text-primary); text-shadow: 0 4px 20px rgba(0,0,0,0.8); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.5rem;">Découvrez les Meilleures Tables de <span style="color: var(--primary);">Thiès</span></h1>
                     <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.2rem; line-height: 1.6; margin-bottom: 2.5rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
                     <div class="search-container hover-3d" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px; position: relative;">
-                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem 3rem 1.2rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth);">
+                        <input type="text" x-model="searchQuery" class="search-input" placeholder="Rechercher un plat, un restaurant..." style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem 3rem 1.2rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth);">
                         <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem;">🔍</button>
                     </div>
 
@@ -1077,33 +1074,68 @@ router.add('#/', () => {
 
         
 
-        <section id="catalog-section">
+        <section id="catalog-section" x-data="catalogComponent()">
             <div class="section-header">
                 <h2 class="section-title">Les Restaurants Partenaires</h2>
             </div>
 
             <!-- FILTERS BAR -->
             <div class="filter-bar" id="filter-bar">
-                <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')">Tous</button>
-                <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')">🍲 Traditionnel</button>
-                <button class="filter-btn ${activeFilter === 'Fast Food' ? 'active' : ''}" onclick="setFilter('Fast Food')">🍔 Fast Food</button>
-                <button class="filter-btn ${activeFilter === 'Grillades / Dibi' ? 'active' : ''}" onclick="setFilter('Grillades / Dibi')">🔥 Grillades</button>
-                <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')">✨ Gastronomique</button>
-                <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')">🥐 Pâtisserie</button>
+                <button class="filter-btn" :class="activeFilter === 'Tous' ? 'active' : ''" @click="activeFilter = 'Tous'">Tous</button>
+                <button class="filter-btn" :class="activeFilter === 'Traditionnel' ? 'active' : ''" @click="activeFilter = 'Traditionnel'">🍲 Traditionnel</button>
+                <button class="filter-btn" :class="activeFilter === 'Fast Food' ? 'active' : ''" @click="activeFilter = 'Fast Food'">🍔 Fast Food</button>
+                <button class="filter-btn" :class="activeFilter === 'Grillades / Dibi' ? 'active' : ''" @click="activeFilter = 'Grillades / Dibi'">🔥 Grillades</button>
+                <button class="filter-btn" :class="activeFilter === 'Gastronomique' ? 'active' : ''" @click="activeFilter = 'Gastronomique'">✨ Gastronomique</button>
+                <button class="filter-btn" :class="activeFilter === 'Pâtisserie' ? 'active' : ''" @click="activeFilter = 'Pâtisserie'">🥐 Pâtisserie</button>
             </div>
 
             <!-- SORTING BAR -->
             <div class="sort-bar">
                 <label for="sort-select">Trier par :</label>
-                <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
-                    <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
-                    <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
-                    <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
-                    <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
+                <select class="sort-select" id="sort-select" x-model="sortBy">
+                    <option value="default">Recommandé</option>
+                    <option value="rating">Meilleure note ★</option>
+                    <option value="reviews">Nombre d'avis</option>
+                    <option value="name">Nom de A à Z</option>
                 </select>
             </div>
             
-            <div class="restaurant-grid" id="restaurants-list-grid"></div>
+            <div class="restaurant-grid" id="restaurants-list-grid">
+                <template x-if="filteredRestaurants.length === 0">
+                    <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem 0;">Aucun restaurant ne correspond à vos critères.</div>
+                </template>
+                
+                <template x-for="r in filteredRestaurants" :key="r.id">
+                    <div class="restaurant-card hover-3d glass-panel" style="position: relative; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; border: 1px solid var(--border);" @click="openRestaurant(r.slug)">
+                        <template x-if="r._tempDistance">
+                            <div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;" x-text="'📍 ' + r._tempDistance + ' km'"></div>
+                        </template>
+                        <div class="restaurant-card-header" style="height: 200px; position: relative;">
+                            <img :src="r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'" style="width: 100%; height: 100%; object-fit: cover;" :alt="r.name" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
+                            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
+                            <div style="position: absolute; top: 1rem; left: 1rem; z-index: 2;">
+                                <template x-if="isCurrentlyOpen(r)">
+                                    <span class="badge badge-success restaurant-card-badge">Ouvert</span>
+                                </template>
+                                <template x-if="!isCurrentlyOpen(r)">
+                                    <span class="badge badge-danger restaurant-card-badge">Fermé</span>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="restaurant-card-body" style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; background: var(--bg-card);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);" x-text="r.name"></h3>
+                                <div style="display: flex; align-items: center; background: rgba(255, 184, 0, 0.1); padding: 0.25rem 0.5rem; border-radius: 8px;">
+                                    <span style="color: #ffb800; margin-right: 4px;">★</span>
+                                    <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);" x-text="r.rating + ' (' + r.reviewsCount + ')'"></span>
+                                </div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem; flex: 1;" x-text="r.category + ' • ' + r.address"></p>
+                            <button class="btn btn-primary btn-block" style="border-radius: 12px; padding: 0.75rem; font-weight: 600;">Voir le Menu ➔</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
 
             <!-- RESTAURANT SUGGESTION CTA -->
             <div style="background: rgba(207, 168, 83, 0.1); border: 1px dashed var(--primary); border-radius: 16px; padding: 2rem; text-align: center; max-width: 600px; margin: 3rem auto 1rem auto;">
@@ -1361,7 +1393,14 @@ router.add('#/', () => {
         </section>
     `;
 
-    if (typeof applyFilters === 'function') applyFilters();
+    // Wait a tick for Alpine to initialize the injected HTML
+    setTimeout(() => {
+        // Force Alpine to process the new container content
+        if (typeof Alpine !== 'undefined') {
+            Alpine.initTree(container);
+        }
+    }, 50);
+
     if (typeof startSocialProof === 'function') startSocialProof();
     hideLoadingOverlay();
     } catch (err) {
@@ -1373,6 +1412,46 @@ router.add('#/', () => {
     }
 });
 
+document.addEventListener('alpine:init', () => {
+    Alpine.data('catalogComponent', () => ({
+        activeFilter: 'Tous',
+        searchQuery: '',
+        sortBy: 'default',
+        get filteredRestaurants() {
+            let restos = store.getRestaurants().filter(r => r.status === 'active');
+            
+            if (this.activeFilter !== 'Tous') {
+                restos = restos.filter(r => r.category === this.activeFilter);
+            }
+            if (this.searchQuery) {
+                const q = this.searchQuery.toLowerCase();
+                restos = restos.filter(r => 
+                    r.name.toLowerCase().includes(q) || 
+                    r.category.toLowerCase().includes(q) ||
+                    r.address.toLowerCase().includes(q)
+                );
+            }
+            if (this.sortBy === 'rating') {
+                restos.sort((a,b) => b.rating - a.rating);
+            } else if (this.sortBy === 'reviews') {
+                restos.sort((a,b) => b.reviewsCount - a.reviewsCount);
+            } else if (this.sortBy === 'name') {
+                restos.sort((a,b) => a.name.localeCompare(b.name));
+            } else {
+                if (window.shuffledRestaurantIds) {
+                    restos.sort((a, b) => window.shuffledRestaurantIds.indexOf(a.id) - window.shuffledRestaurantIds.indexOf(b.id));
+                }
+            }
+            return restos;
+        },
+        openRestaurant(slug) {
+            router.navigate('/r/' + slug);
+        },
+        isCurrentlyOpen(r) {
+            return isRestaurantOpenNow(r);
+        }
+    }));
+});
 
 function setFilter(category) {
     activeFilter = category;
@@ -1386,14 +1465,6 @@ function setFilter(category) {
             }
         });
     }
-    applyFilters();
-}
-
-function applyFilters() {
-    const searchInput = document.getElementById('search-input-field');
-    const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
-    const grid = document.getElementById('restaurants-list-grid');
-    if (!grid) return;
 
     let restos = store.getRestaurants().filter(r => r.status === 'active');
 
@@ -4321,147 +4392,7 @@ window.cleanPhoneNumber = cleanPhoneNumber;
 window.updateNavbar = updateNavbar;
 window.logoutAdmin = logoutAdmin;
 window.setFilter = setFilter;
-window.applyFilters = applyFilters;
-window.calculateDistance = calculateDistance;
-window.showMapModal = showMapModal;
-window.filterRestaurantsList = filterRestaurantsList;
-window.isRestaurantOpenNow = isRestaurantOpenNow;
-window.getDayName = getDayName;
-window.renderRestaurantView = renderRestaurantView;
-window.switchRestoTab = switchRestoTab;
-window.renderDishesTab = renderDishesTab;
-window.addToCart = addToCart;
-window.updateCartQty = updateCartQty;
-window.recalculateCart = recalculateCart;
-window.updateFloatingCartBar = updateFloatingCartBar;
-window.renderGroupTab = renderGroupTab;
-window.toggleGroupAddressField = toggleGroupAddressField;
-window.copyGroupLink = copyGroupLink;
-window.submitGroupOrder = submitGroupOrder;
-window.renderBookingTab = renderBookingTab;
-window.validateBookingDate = validateBookingDate;
-window.submitBooking = submitBooking;
-window.renderReviewsTab = renderReviewsTab;
-window.setStarsSelector = setStarsSelector;
-window.submitReview = submitReview;
-window.renderCGV = renderCGV;
-window.updateNav = updateNav;
-window.updateDynamicSEO = updateDynamicSEO;
-window.setDynamicMeta = setDynamicMeta;
-window.updateSEO = updateSEO;
-window.showInstallPromotion = showInstallPromotion;
-window.cart = cart;
-window.activeGroupOrder = activeGroupOrder;
-window.activeFilter = activeFilter;
-window.activeSortBy = activeSortBy;
-window.orderChannel = orderChannel;
-window.currentSelectedRating = currentSelectedRating;
-window.socialProofInterval = socialProofInterval;
-window.originalHandleRestaurantLogin = originalHandleRestaurantLogin;
-window.globalOrderSubscription = globalOrderSubscription;
-window.ClientTracker = ClientTracker;
-
-
-// Export to window for Vite
-window.logoutRestaurant = logoutRestaurant;
-window.handleForgotPassword = handleForgotPassword;
-window.handleRestaurantRegister = handleRestaurantRegister;
-window.toggleMobileMenu = toggleMobileMenu;
-window.escapeHTML = escapeHTML;
-window.sanitizeHTML = sanitizeHTML;
-window.hideLoadingOverlay = hideLoadingOverlay;
-window.toggleTheme = toggleTheme;
-window.updateThemeToggleUI = updateThemeToggleUI;
-window.loadSavedTheme = loadSavedTheme;
-window.saveCart = saveCart;
-window.loadCart = loadCart;
-window.pulseCartBar = pulseCartBar;
-window.checkSlugAvailabilityRealtime = checkSlugAvailabilityRealtime;
-window.saveOrderToHistory = saveOrderToHistory;
-window.getOrderHistory = getOrderHistory;
-window.playNotificationSound = playNotificationSound;
-window.startOrderPolling = startOrderPolling;
-window.stopOrderPolling = stopOrderPolling;
-window.scrollToHowItWorks = scrollToHowItWorks;
-window.scrollToCatalog = scrollToCatalog;
-window.handleRestaurantNameInput = handleRestaurantNameInput;
-window.checkSlugAvailability = checkSlugAvailability;
-window.showToast = showToast;
-window.cleanPhoneNumber = cleanPhoneNumber;
-window.updateNavbar = updateNavbar;
-window.logoutAdmin = logoutAdmin;
-window.setFilter = setFilter;
-window.applyFilters = applyFilters;
-window.calculateDistance = calculateDistance;
-window.showMapModal = showMapModal;
-window.filterRestaurantsList = filterRestaurantsList;
-window.isRestaurantOpenNow = isRestaurantOpenNow;
-window.getDayName = getDayName;
-window.renderRestaurantView = renderRestaurantView;
-window.switchRestoTab = switchRestoTab;
-window.renderDishesTab = renderDishesTab;
-window.addToCart = addToCart;
-window.updateCartQty = updateCartQty;
-window.recalculateCart = recalculateCart;
-window.updateFloatingCartBar = updateFloatingCartBar;
-window.renderGroupTab = renderGroupTab;
-window.toggleGroupAddressField = toggleGroupAddressField;
-window.copyGroupLink = copyGroupLink;
-window.submitGroupOrder = submitGroupOrder;
-window.renderBookingTab = renderBookingTab;
-window.validateBookingDate = validateBookingDate;
-window.submitBooking = submitBooking;
-window.renderReviewsTab = renderReviewsTab;
-window.setStarsSelector = setStarsSelector;
-window.submitReview = submitReview;
-window.renderCGV = renderCGV;
-window.updateNav = updateNav;
-window.updateDynamicSEO = updateDynamicSEO;
-window.setDynamicMeta = setDynamicMeta;
-window.updateSEO = updateSEO;
-window.showInstallPromotion = showInstallPromotion;
-window.cart = cart;
-window.activeGroupOrder = activeGroupOrder;
-window.activeFilter = activeFilter;
-window.activeSortBy = activeSortBy;
-window.orderChannel = orderChannel;
-window.currentSelectedRating = currentSelectedRating;
-window.socialProofInterval = socialProofInterval;
-window.originalHandleRestaurantLogin = originalHandleRestaurantLogin;
-window.globalOrderSubscription = globalOrderSubscription;
-window.ClientTracker = ClientTracker;
-
-
-// Export to window for Vite
-window.logoutRestaurant = logoutRestaurant;
-window.handleForgotPassword = handleForgotPassword;
-window.handleRestaurantRegister = handleRestaurantRegister;
-window.toggleMobileMenu = toggleMobileMenu;
-window.escapeHTML = escapeHTML;
-window.sanitizeHTML = sanitizeHTML;
-window.hideLoadingOverlay = hideLoadingOverlay;
-window.toggleTheme = toggleTheme;
-window.updateThemeToggleUI = updateThemeToggleUI;
-window.loadSavedTheme = loadSavedTheme;
-window.saveCart = saveCart;
-window.loadCart = loadCart;
-window.pulseCartBar = pulseCartBar;
-window.checkSlugAvailabilityRealtime = checkSlugAvailabilityRealtime;
-window.saveOrderToHistory = saveOrderToHistory;
-window.getOrderHistory = getOrderHistory;
-window.playNotificationSound = playNotificationSound;
-window.startOrderPolling = startOrderPolling;
-window.stopOrderPolling = stopOrderPolling;
-window.scrollToHowItWorks = scrollToHowItWorks;
-window.scrollToCatalog = scrollToCatalog;
-window.handleRestaurantNameInput = handleRestaurantNameInput;
-window.checkSlugAvailability = checkSlugAvailability;
-window.showToast = showToast;
-window.cleanPhoneNumber = cleanPhoneNumber;
-window.updateNavbar = updateNavbar;
-window.logoutAdmin = logoutAdmin;
-window.setFilter = setFilter;
-window.applyFilters = applyFilters;
+window.applyFilters = function() {};
 window.calculateDistance = calculateDistance;
 window.showMapModal = showMapModal;
 window.filterRestaurantsList = filterRestaurantsList;

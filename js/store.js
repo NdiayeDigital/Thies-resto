@@ -890,34 +890,4 @@ window.currentRestaurantSession = currentRestaurantSession;
 window.isSuperAdminSession = isSuperAdminSession;  
 window.supabaseClient = supabaseClient;  
 window.Store = Store;  
-window.store = store; 
-
-
-// Export to window for Vite
-window.currentRestaurantSession = currentRestaurantSession;
-window.isSuperAdminSession = isSuperAdminSession;
-window.SUPABASE_URL = SUPABASE_URL;
-window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
-window.supabaseClient = supabaseClient;
 window.store = store;
-window.Store = Store;
-
-
-// Export to window for Vite
-window.currentRestaurantSession = currentRestaurantSession;
-window.isSuperAdminSession = isSuperAdminSession;
-window.SUPABASE_URL = SUPABASE_URL;
-window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
-window.supabaseClient = supabaseClient;
-window.store = store;
-window.Store = Store;
-
-
-// Export to window for Vite
-window.currentRestaurantSession = currentRestaurantSession;
-window.isSuperAdminSession = isSuperAdminSession;
-window.SUPABASE_URL = SUPABASE_URL;
-window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
-window.supabaseClient = supabaseClient;
-window.store = store;
-window.Store = Store;
