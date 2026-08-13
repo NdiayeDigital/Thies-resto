@@ -2330,3 +2330,111 @@ function exportReservationsToCSV() {
     document.body.removeChild(link);
     showToast("Fichier CSV des réservations téléchargé !", "success");
 }
+
+
+// Export to window for Vite
+window.renderDashboardShell = renderDashboardShell;
+window.switchDashboardTab = switchDashboardTab;
+window.renderDashboardTabContent = renderDashboardTabContent;
+window.changeOrderStatus = changeOrderStatus;
+window.changeReservationStatus = changeReservationStatus;
+window.toggleManualReservationForm = toggleManualReservationForm;
+window.saveManualReservation = saveManualReservation;
+window.filterOrdersDashboard = filterOrdersDashboard;
+window.deleteDish = deleteDish;
+window.openEditDishForm = openEditDishForm;
+window.resetDishForm = resetDishForm;
+window.saveDish = saveDish;
+window.toggleStoreOpenStatus = toggleStoreOpenStatus;
+window.saveProfileSettings = saveProfileSettings;
+window.openReplyForm = openReplyForm;
+window.closeReplyForm = closeReplyForm;
+window.submitReply = submitReply;
+window.renderAdminView = renderAdminView;
+window.switchAdminTab = switchAdminTab;
+window.renderAdminTabTable = renderAdminTabTable;
+window.handleAdminCreateRestaurant = handleAdminCreateRestaurant;
+window.approveRestaurant = approveRestaurant;
+window.rejectRestaurant = rejectRestaurant;
+window.suspendRestaurant = suspendRestaurant;
+window.reactivateRestaurant = reactivateRestaurant;
+window.impersonateRestaurant = impersonateRestaurant;
+window.exitImpersonation = exitImpersonation;
+window.exportOrdersToCSV = exportOrdersToCSV;
+window.exportReservationsToCSV = exportReservationsToCSV;
+window.dashboardActiveTab = dashboardActiveTab;
+window.currentOrderStatusFilter = currentOrderStatusFilter;
+window.currentAccountingFilter = currentAccountingFilter;
+window.adminActiveTab = adminActiveTab;
+
+
+// Export to window for Vite
+window.renderDashboardShell = renderDashboardShell;
+window.switchDashboardTab = switchDashboardTab;
+window.renderDashboardTabContent = renderDashboardTabContent;
+window.changeOrderStatus = changeOrderStatus;
+window.changeReservationStatus = changeReservationStatus;
+window.toggleManualReservationForm = toggleManualReservationForm;
+window.saveManualReservation = saveManualReservation;
+window.filterOrdersDashboard = filterOrdersDashboard;
+window.deleteDish = deleteDish;
+window.openEditDishForm = openEditDishForm;
+window.resetDishForm = resetDishForm;
+window.saveDish = saveDish;
+window.toggleStoreOpenStatus = toggleStoreOpenStatus;
+window.saveProfileSettings = saveProfileSettings;
+window.openReplyForm = openReplyForm;
+window.closeReplyForm = closeReplyForm;
+window.submitReply = submitReply;
+window.renderAdminView = renderAdminView;
+window.switchAdminTab = switchAdminTab;
+window.renderAdminTabTable = renderAdminTabTable;
+window.handleAdminCreateRestaurant = handleAdminCreateRestaurant;
+window.approveRestaurant = approveRestaurant;
+window.rejectRestaurant = rejectRestaurant;
+window.suspendRestaurant = suspendRestaurant;
+window.reactivateRestaurant = reactivateRestaurant;
+window.impersonateRestaurant = impersonateRestaurant;
+window.exitImpersonation = exitImpersonation;
+window.exportOrdersToCSV = exportOrdersToCSV;
+window.exportReservationsToCSV = exportReservationsToCSV;
+window.dashboardActiveTab = dashboardActiveTab;
+window.currentOrderStatusFilter = currentOrderStatusFilter;
+window.currentAccountingFilter = currentAccountingFilter;
+window.adminActiveTab = adminActiveTab;
+
+
+// Export to window for Vite
+window.renderDashboardShell = renderDashboardShell;
+window.switchDashboardTab = switchDashboardTab;
+window.renderDashboardTabContent = renderDashboardTabContent;
+window.changeOrderStatus = changeOrderStatus;
+window.changeReservationStatus = changeReservationStatus;
+window.toggleManualReservationForm = toggleManualReservationForm;
+window.saveManualReservation = saveManualReservation;
+window.filterOrdersDashboard = filterOrdersDashboard;
+window.deleteDish = deleteDish;
+window.openEditDishForm = openEditDishForm;
+window.resetDishForm = resetDishForm;
+window.saveDish = saveDish;
+window.toggleStoreOpenStatus = toggleStoreOpenStatus;
+window.saveProfileSettings = saveProfileSettings;
+window.openReplyForm = openReplyForm;
+window.closeReplyForm = closeReplyForm;
+window.submitReply = submitReply;
+window.renderAdminView = renderAdminView;
+window.switchAdminTab = switchAdminTab;
+window.renderAdminTabTable = renderAdminTabTable;
+window.handleAdminCreateRestaurant = handleAdminCreateRestaurant;
+window.approveRestaurant = approveRestaurant;
+window.rejectRestaurant = rejectRestaurant;
+window.suspendRestaurant = suspendRestaurant;
+window.reactivateRestaurant = reactivateRestaurant;
+window.impersonateRestaurant = impersonateRestaurant;
+window.exitImpersonation = exitImpersonation;
+window.exportOrdersToCSV = exportOrdersToCSV;
+window.exportReservationsToCSV = exportReservationsToCSV;
+window.dashboardActiveTab = dashboardActiveTab;
+window.currentOrderStatusFilter = currentOrderStatusFilter;
+window.currentAccountingFilter = currentAccountingFilter;
+window.adminActiveTab = adminActiveTab;

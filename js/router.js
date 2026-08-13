@@ -71,3 +71,22 @@ class Router {
 }
 
 const router = new Router();
+
+// Export to window for Vite
+window.Router = Router;
+window.router = router;
+
+
+// Export to window for Vite
+window.router = router;
+window.Router = Router;
+
+
+// Export to window for Vite
+window.router = router;
+window.Router = Router;
+
+
+// Export to window for Vite
+window.router = router;
+window.Router = Router;

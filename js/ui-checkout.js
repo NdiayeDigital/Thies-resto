@@ -420,12 +420,7 @@ window.executePendingOrder = async function() {
 
         // Fallback for local testing if RPC is not deployed yet
         if (!securedOrder) {
-            console.warn("RPC failed or not found, falling back to local order.");
-            store.addOrder(order);
-            securedOrder = {
-                order_id: order.id,
-                total_price: order.total
-            };
+            throw new Error("Impossible de sécuriser la commande sur nos serveurs.");
         } else {
             // Re-sync local store with secure order for history
             order.id = securedOrder.order_id;
@@ -459,7 +454,7 @@ window.executePendingOrder = async function() {
         const waText = `Bonjour ${r.name}, voici ma commande officielle n°*${securedOrder.order_id}* sur THIES Resto.\n\n👤 *Client* : ${firstname} ${lastname} (${phone})\n🍽️ *Plats* : ${itemsText}\n🛵 *Mode* : ${mode}\n${order.address ? `📍 *Adresse* : ${order.address}\n` : ''}💰 *Total Sécurisé* : ${securedOrder.total_price} FCFA\n\nMerci de confirmer la réception !`;
         const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
 
-        container.innerHTML = `
+        container.innerHTML = DOMPurify.sanitize(`
             <div class="confirmation-screen">
                 <div class="confirmation-icon">🛡️✅</div>
                 <h2>Commande Sécurisée !</h2>
@@ -484,7 +479,7 @@ window.executePendingOrder = async function() {
                     </button>
                 </div>
             </div>
-        `;
+        `);
     } catch (err) {
         console.error("Order error", err);
         container.innerHTML = `
@@ -497,16 +492,12 @@ window.executePendingOrder = async function() {
         `;
     }
 };
-                        <option value="1" style="color: black;">⭐ À améliorer</option>
-                    </select>
-                </div>
-                <div class="form-group" style="text-align: left;">
-                    <textarea id="review-comment" class="form-control" rows="2" placeholder="Qu'avez-vous pensé du repas ?" style="background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid rgba(255,255,255,0.2);"></textarea>
-                </div>
-                <button class="btn btn-primary btn-block" onclick="submitCustomerReview('${r.id}', '${(firstname + ' ' + lastname).replace(/'/g, "\\'")}')">Envoyer mon avis</button>
-            </div>
-        </div>
-    `;
-    
-    showToast("Commande enregistrée avec succès !", "success");
-}
+
+
+// Export to window for Vite
+window.renderCheckoutTab = renderCheckoutTab;
+window.toggleAddressField = toggleAddressField;
+window.checkOrderRateLimit = checkOrderRateLimit;
+window.submitSimpleOrder = submitSimpleOrder;
+window.deliveryMap = deliveryMap;
+window.deliveryMarker = deliveryMarker;

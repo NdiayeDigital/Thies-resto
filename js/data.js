@@ -141,7 +141,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_restaurantmadiba",
-        "password":  "restaurantmadiba221",
         "cover_image":  "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -285,7 +284,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_lesdelices",
-        "password":  "lesdelices221",
         "cover_image":  "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -429,7 +427,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "pending",
         "username":  "le-jardin-des-saveurs",
-        "password":  "le-jardin-des-saveurs_221",
         "cover_image":  "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -573,7 +570,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_croissantmagique",
-        "password":  "croissantmagique221",
         "cover_image":  "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -681,7 +677,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_lalicorne",
-        "password":  "lalicorne221",
         "cover_image":  "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -789,7 +784,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_lecafedurail",
-        "password":  "lecafedurail221",
         "cover_image":  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -933,7 +927,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_iledegoree",
-        "password":  "iledegoree221",
         "cover_image":  "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1077,7 +1070,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "le-festin-africain",
-        "password":  "le-festin-africain_221",
         "cover_image":  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1221,7 +1213,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "snack-du-marche",
-        "password":  "snack-du-marche_221",
         "cover_image":  "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1347,7 +1338,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_obsrestochicha",
-        "password":  "obsrestochicha221",
         "cover_image":  "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1491,7 +1481,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_samsprestige",
-        "password":  "samsprestige221",
         "cover_image":  "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1617,7 +1606,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_caseateranga",
-        "password":  "caseateranga221",
         "cover_image":  "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1761,7 +1749,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_alamindelice",
-        "password":  "alamindelice221",
         "cover_image":  null,
         "menu":  [
                      {
@@ -1882,7 +1869,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_nadia",
-        "password":  "nadia221",
         "cover_image":  "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2008,7 +1994,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_tacosdethies",
-        "password":  "tacosdethies221",
         "cover_image":  "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2152,7 +2137,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_pamanda",
-        "password":  "pamanda221",
         "cover_image":  "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2278,7 +2262,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_restaurantkhaymateslem",
-        "password":  "restaurantkhaymateslem221",
         "cover_image":  "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2386,7 +2369,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_nicetimecomplexe",
-        "password":  "nicetimecomplexe221",
         "cover_image":  "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2512,7 +2494,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_lacasablancaise",
-        "password":  "lacasablancaise221",
         "cover_image":  "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2621,7 +2602,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_latabledesgourmets",
-        "password":  "latabledesgourmets221",
         "cover_image":  "https://images.unsplash.com/photo-1544025162-d76694265947?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2729,7 +2709,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_bibafood",
-        "password":  "bibafood221",
         "cover_image":  "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2843,3 +2822,35 @@ const SEED_RESTAURANTS = [
 ;
 
 
+  
+// Export to window for Vite  
+window.COVER_IMAGES = COVER_IMAGES;  
+window.RESTAURANT_COVERS = RESTAURANT_COVERS;  
+window.DISH_IMAGE_OPTIONS = DISH_IMAGE_OPTIONS;  
+window.MENU_TEMPLATES = MENU_TEMPLATES;  
+window.SAMPLE_REVIEWS = SAMPLE_REVIEWS;  
+window.SEED_RESTAURANTS = SEED_RESTAURANTS; 
+
+
+// Export to window for Vite
+window.RESTAURANT_COVERS = RESTAURANT_COVERS;
+window.DISH_IMAGE_OPTIONS = DISH_IMAGE_OPTIONS;
+window.MENU_TEMPLATES = MENU_TEMPLATES;
+window.SAMPLE_REVIEWS = SAMPLE_REVIEWS;
+window.SEED_RESTAURANTS = SEED_RESTAURANTS;
+
+
+// Export to window for Vite
+window.RESTAURANT_COVERS = RESTAURANT_COVERS;
+window.DISH_IMAGE_OPTIONS = DISH_IMAGE_OPTIONS;
+window.MENU_TEMPLATES = MENU_TEMPLATES;
+window.SAMPLE_REVIEWS = SAMPLE_REVIEWS;
+window.SEED_RESTAURANTS = SEED_RESTAURANTS;
+
+
+// Export to window for Vite
+window.RESTAURANT_COVERS = RESTAURANT_COVERS;
+window.DISH_IMAGE_OPTIONS = DISH_IMAGE_OPTIONS;
+window.MENU_TEMPLATES = MENU_TEMPLATES;
+window.SAMPLE_REVIEWS = SAMPLE_REVIEWS;
+window.SEED_RESTAURANTS = SEED_RESTAURANTS;

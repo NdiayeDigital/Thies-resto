@@ -299,19 +299,8 @@ async function handleRestaurantLogin(e) {
     });
 
     if (rpcError || !rpcData || rpcData.length === 0) {
-        // Fallback: try public_restaurants view for backward compatibility
-        const { data: fallbackData, error: fallbackError } = await supabaseClient
-            .from('public_restaurants')
-            .select('*')
-            .eq('username', username)
-            .eq('password', password);
-            
-        if (!fallbackError && fallbackData && fallbackData.length > 0) {
-            dbResult = fallbackData;
-        } else {
-            showToast("Identifiant ou mot de passe incorrect", "danger");
-            return;
-        }
+        showToast("Identifiant ou mot de passe incorrect", "danger");
+        return;
     } else {
         // RPC returned the basic info, now fetch the full profile from public_restaurants
         const restoId = rpcData[0].id;

@@ -1,0 +1,26 @@
+{
+  "name": "thies-resto",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NdiayeDigital/Thies-resto.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/NdiayeDigital/Thies-resto/issues"
+  },
+  "homepage": "https://github.com/NdiayeDigital/Thies-resto#readme",
+  "devDependencies": {
+    "vite": "^8.2.1"
+  }
+}

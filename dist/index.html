@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="description"
+        content="THIES Resto est l'application n°1 pour commander à manger et se faire livrer à Thiès. Découvrez les meilleurs restaurants, fast-food, dibiteries et bons plans locaux. Livraison rapide, réservation de tables et commande de groupe.">
+    <meta name="keywords"
+        content="restaurant thies, livraison repas thies, manger a thies, fast food thies, dibiterie thies, chawarma thies, burger thies, pizza thies, bon plan thies, commander a manger thies, thies resto, gastronomie senegal thies, fataya thies, menu du jour thies, meilleur restaurant thies, thies food, livraison domicile thies">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="NdiayeDigital">
+    <link rel="canonical" href="https://thies-resto.com/">
+    
+    <script>
+        // Global Error Tracking (Phase 5)
+        window.thiesRestoErrors = [];
+        window.__earlyErrorHandler = function(msg, url, line, col, error) {
+            window.thiesRestoErrors.push({msg, url, line, col, error: error ? error.stack : null, time: new Date()});
+            var loader = document.getElementById('loading-overlay');
+            if(loader) loader.style.display = 'none';
+            // In a real production environment, send this to Sentry/DataDog/Supabase RPC
+            console.error("[SENTRY MOCK] Global Error Caught:", msg, url, line);
+        };
+        window.onerror = window.__earlyErrorHandler;
+        window.addEventListener('unhandledrejection', function(event) {
+            window.thiesRestoErrors.push({msg: event.reason, time: new Date(), type: 'unhandledrejection'});
+            console.error("[SENTRY MOCK] Unhandled Promise Rejection:", event.reason);
+        });
+    </script>
+
+    <meta name="theme-color" content="#ff6b35">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <!-- Google Analytics (Placeholder) -->
+    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX');
+    </script> -->
+
+    <!-- Meta Pixel Code (Placeholder) -->
+    <!-- <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window, document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', 'XXXXXXXXXXXXXXX');
+    fbq('track', 'PageView');
+    </script> -->
+
+    <!-- Open Graph (Facebook, LinkedIn, etc.) -->
+    <meta property="og:title" content="THIES Resto — Tous les restaurants de Thiès en un clic">
+    <meta property="og:description"
+        content="Découvrez les meilleurs restaurants et bons plans de Thiès. Commandez vos repas en ligne facilement avec confirmation via WhatsApp.">
+    <meta property="og:image" content="https://thies-resto.com/icon.png">
+    <meta property="og:url" content="https://thies-resto.com/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_SN">
+    <meta property="og:site_name" content="THIES Resto">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="THIES Resto — La plateforme de restauration à Thiès">
+    <meta name="twitter:description"
+        content="Trouvez votre restaurant à Thiès, passez commande et réservez votre table en quelques secondes.">
+    <meta name="twitter:image" content="https://thies-resto.com/icon.png">
+
+    <title>Livraison de Repas & Meilleurs Restaurants à Thiès | THIES Resto</title>
+
+    <!-- SEO Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "THIES Resto",
+      "url": "https://thies-resto.com/",
+      "description": "Plateforme commune pour commander vos repas et trouver les meilleurs restaurants à Thiès, Sénégal.",
+      "publisher": {
+        "@type": "Organization",
+        "name": "NdiayeDigital",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://thies-resto.com/icon.png"
+        }
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://thies-resto.com/#/?search={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "THIES Resto",
+      "image": "https://thies-resto.com/icon.png",
+      "description": "La première plateforme regroupant tous les restaurants de Thiès avec livraison.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Thiès",
+        "addressCountry": "SN"
+      },
+      "url": "https://thies-resto.com/"
+    }
+    </script>
+
+    <meta name="theme-color" content="#f26b21">
+    
+    <!-- PWA & iOS Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="THIES Resto">
+    <link rel="apple-touch-icon" href="/assets/icon-R7nLk5J4.png">
+    
+    <link rel="manifest" href="/assets/manifest-Cs1TdZKC.json">
+    <link rel="icon" type="image/x-icon" href="/assets/logo-DY-fJnTH.jpg">
+    <link rel="apple-touch-icon" href="/assets/icon-R7nLk5J4.png">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Professional Icons (Remix Icon) -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- QR Code Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Google tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-80CM404GD4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-80CM404GD4');
+    </script>
+    
+    <!-- DOMPurify for secure innerHTML data rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+  <script type="module" crossorigin src="/assets/index-BoWmqmCi.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-ocWzaSzT.css">
+</head>
+
+<body>
+    <!-- ========== LOADING OVERLAY REMOVED ========== -->
+
+    <div class="app-container">
+        <!-- ========== NAVIGATION BAR ========== -->
+        <header class="navbar" id="main-navbar">
+            <!-- Left: Burger & Navigation links (Desktop) -->
+            <div class="nav-left">
+                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+
+            <!-- Center: Logo -->
+            <div class="logo-container" onclick="router.navigate('/')">
+                <img src="/assets/icon-R7nLk5J4.png" class="logo-icon" alt="THIES Resto Logo"
+                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+                <span class="logo-text">THIES Resto</span>
+            </div>
+
+            <!-- Right: Session Actions -->
+            <nav class="nav-links" id="nav-actions">
+                <!-- Dynamic actions populated by JS -->
+            </nav>
+
+            <!-- Mobile Drawer Overlay -->
+            <div class="mobile-drawer" id="mobile-drawer">
+                <div class="drawer-header">
+                    <img src="/assets/icon-R7nLk5J4.png" class="logo-icon" alt="THIES Resto Logo"
+                        style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
+                    <span class="logo-text">THIES Resto</span>
+                    <button class="close-drawer-btn" aria-label="Fermer le menu" onclick="toggleMobileMenu()">✕</button>
+                </div>
+                <div class="drawer-links">
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+                    <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
+                    <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
+                        Partenaire 🤝</a>
+                    <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
+                        Espace Livreurs 🛵 
+                        <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt disponible)</span>
+                    </a>
+                    <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;" style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪 Déconnexion</a>
+                </div>
+            </div>
+            <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>
+        </header>
+
+        <!-- ========== MAIN WORKSPACE ========== -->
+        <main id="main-content">
+            <!-- SKELETON PRELOADER -->
+            <div id="initial-skeleton" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
+                <div class="skeleton" style="height: 400px; width: 100%; border-radius: 24px; margin-bottom: 2rem;"></div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+                </div>
+            </div>
+        </main>
+
+
+        <!-- ========== FLOATING CART BAR ========== -->
+        <div id="floating-cart-bar" class="floating-cart-bar" style="display: none;" onclick="openCartTab()">
+            <div class="floating-cart-info">
+                <span id="floating-cart-qty" class="floating-cart-qty">0 articles</span>
+                <span id="floating-cart-total" class="floating-cart-total">0 FCFA</span>
+            </div>
+            <button class="btn btn-primary btn-sm" id="floating-cart-btn" aria-label="Ouvrir le panier">
+                Voir le Panier 🛒
+            </button>
+        </div>
+
+        <!-- ========== FLOATING WHATSAPP SUPPORT ========== -->
+        <a href="https://wa.me/221784799882?text=Bonjour,%20j'ai%20besoin%20d'aide%20sur%20THIES%20Resto" target="_blank" rel="noopener noreferrer" class="floating-support-btn" style="position: fixed; bottom: 90px; right: 20px; background-color: #25D366; color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s;">
+            💬
+        </a>
+
+        <!-- ========== TOAST NOTIFICATION ========== -->
+        <div id="toast-notification" class="toast-notification" style="display: none;">
+            <!-- Content filled dynamically -->
+        </div>
+
+        <!-- ========== SOCIAL PROOF TOAST ========== -->
+        <div id="social-proof-toast" style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); align-items: center; gap: 12px; transition: opacity 0.5s ease-out;">
+            <!-- Content filled dynamically -->
+        </div>
+
+        <!-- ========== NOTIFICATION SOUND ========== -->
+        <audio id="notification-sound" preload="auto">
+            <source
+                src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f39/f39/f4B/f39/f3+Af39/f3+AgICBgYKDhIWGiImKi4yNjo+QkZKTlJWVlZWUk5KRkI+OjYyLiomIh4aFhIOCgYB/f35+fX19fHx8fHx8fX1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpqbm5ycnJ2dnZ2dnZycm5uampmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAf359fHt6"
+                type="audio/wav">
+        </audio>
+
+        <!-- ========== FOOTER ========== -->
+        <footer id="main-footer">
+            <div class="footer-grid">
+                <!-- About Column -->
+                <div class="footer-col">
+                    <div class="footer-brand"
+                        style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <img src="/assets/icon-R7nLk5J4.png" alt="THIES Resto Logo"
+                            style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+                        <span class="logo-text"
+                            style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">THIES
+                            Resto</span>
+                    </div>
+                    <p class="footer-about-text">
+                        La première plateforme de restauration commune à Thiès, Sénégal. Née d'une étude de terrain sur
+                        les 20 restaurants les mieux notés de la ville, elle centralise les menus, commandes et
+                        réservations en un seul endroit.
+                    </p>
+                </div>
+
+                <!-- Policies Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Légal</h4>
+                    <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions de Vente</a>
+                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client & RGPD</a>
+                    <a href="#" onclick="router.navigate('/politique-admin'); return false;">Politique Restaurant</a>
+                    <a href="#" onclick="router.navigate('/admin-login'); return false;" style="color: var(--accent); font-weight: bold; margin-top: 0.5rem; display: inline-block;">👑 Espace Super-Admin</a>
+                </div>
+
+                <!-- Links Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Navigation</h4>
+                    <a href="#" onclick="router.navigate('/'); return false;">Accueil</a>
+                    <a href="#" onclick="scrollToHowItWorks(); return false;">Comment ça marche ?</a>
+                    <a href="#" onclick="router.navigate('/auth'); return false;">Espace Restaurant</a>
+                    <a href="#" onclick="router.navigate('/partnership'); return false;">Demander un Partenariat 🤝</a>
+                </div>
+
+                <!-- Contact Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Contact & Réseaux</h4>
+                    <a href="https://wa.me/221784799882" target="_blank" rel="noopener noreferrer">💬 WhatsApp (+221 78 479 98 82)</a>
+                    <a href="https://www.facebook.com/profile.php?id=61591577033848" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
+                    <a href="https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&amp;utm_source=qr" target="_blank" rel="noopener noreferrer">📸 Instagram</a>
+                    <a href="https://www.tiktok.com/@thiesresto?_r=1&amp;_t=ZS-97XIj47j1gS" target="_blank" rel="noopener noreferrer">🎵 TikTok</a>
+                    <a href="mailto:contact@thies-resto.com">✉️ contact@thies-resto.com</a>
+                </div>
+
+                <!-- Theme Toggle Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Apparence</h4>
+                    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Changer le thème" onclick="toggleTheme()">
+                        <span id="theme-toggle-icon">☀️</span>
+                        <span id="theme-toggle-label">Mode Clair</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2026 THIES Resto. Fait avec ❤️ pour la Teranga Sénégalaise. Paiement en espèces uniquement.
+                </p>
+            </div>
+        </footer>
+
+
+    </div>
+
+    <!-- ========== JSON-LD STRUCTURED DATA ========== -->
+    <script id="json-ld-data" type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": ["WebApplication", "Service"],
+        "name": "THIES Resto",
+        "description": "Plateforme commune de restauration pour les restaurants de Thiès, Sénégal. Commandez en ligne, réservez votre table et découvrez les meilleurs plans gastronomiques (Thiéboudiène, Yassa, Fast Food) à Thiès.",
+        "url": "https://thies-resto.com",
+        "applicationCategory": "FoodService",
+        "operatingSystem": "Web, Mobile",
+        "keywords": "restaurant thies, bon plan thies, commander repas thies, restauration thies, thiès resto",
+        "provider": {
+            "@type": "Organization",
+            "name": "NdiayeDigital",
+            "url": "https://thies-resto.com"
+        },
+        "sameAs": [
+            "https://www.facebook.com/profile.php?id=61591577033848",
+            "https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&utm_source=qr",
+            "https://www.tiktok.com/@thiesresto?_r=1&_t=ZS-97XIj47j1gS",
+            "https://wa.me/221784799882"
+        ],
+        "areaServed": {
+            "@type": "City",
+            "name": "Thiès",
+            "containedInPlace": {
+                "@type": "Country",
+                "name": "Sénégal"
+            }
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "XOF",
+            "description": "Plateforme gratuite de commande et de réservation pour les clients"
+        }
+    }
+    </script>
+
+    <!-- ========== MOBILE BOTTOM NAV ========== -->
+    <nav class="mobile-bottom-nav">
+        <a href="#" class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+            <div class="nav-icon"><i class="ri-home-5-line"></i></div>
+            <span>Accueil</span>
+        </a>
+        <a href="#" class="nav-item" onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+            <div class="nav-icon"><i class="ri-map-pin-2-line"></i></div>
+            <span>Proche</span>
+        </a>
+        <a href="#" class="nav-item cart-nav-item" onclick="openCartTab(); return false;">
+            <div class="nav-icon"><i class="ri-shopping-cart-2-line"></i></div>
+            <span>Panier</span>
+            <span id="mobile-nav-cart-badge" class="cart-badge" style="display: none;">0</span>
+        </a>
+        <a href="#" class="nav-item" onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+            <div class="nav-icon"><i class="ri-user-line"></i></div>
+            <span>Profil</span>
+        </a>
+    </nav>
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Confetti for Order Success -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Leaflet JS for Maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- App Logic (Bundled with Vite) -->
+
+    <script>
+        function togglePasswordVisibility(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconElement.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                iconElement.textContent = '👁️';
+            }
+        }
+    </script>
+    
+    <!-- Metricool Tracking Pixel -->
+    <img src="https://tracker.metricool.com/c3po.jpg?hash=ebe8b52530fde54a82b1ea7dec11f618" style="display:none; width:0px; height:0px;" alt="" />
+<script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+    
+    <!-- ========== CONSENT BANNER ========== -->
+    <div id="consent-banner" class="consent-banner" style="display: none;">
+        <div class="consent-content">
+            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#" onclick="router.navigate('/cgv'); return false;">CGV</a> et notre <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique de Confidentialité</a>.</p>
+            <button class="btn btn-primary btn-sm" onclick="acceptConsent()">J'accepte</button>
+        </div>
+    </div>
+
+    <!-- ========== GEOLOCATION MODAL ========== -->
+    <div id="geo-modal" class="geo-modal" style="display: none;">
+        <div class="geo-modal-content">
+            <div class="geo-icon">📍</div>
+            <h3>Où êtes-vous ?</h3>
+            <p>Pour vous afficher les meilleurs restaurants ouverts autour de vous (à moins de 5 km), nous avons besoin d'accéder à votre position GPS.</p>
+            <div class="geo-actions">
+                <button class="btn btn-secondary" onclick="closeGeoModal()">Plus tard</button>
+                <button class="btn btn-primary" onclick="requestNativeGeolocation()">Autoriser l'accès</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
