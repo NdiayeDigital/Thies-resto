@@ -2574,7 +2574,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     font-size: 1.75rem;
     font-weight: 800;
     font-family: var(--font-serif);
-    color: #fff;
+    color: var(--text-primary);
 }
 .accounting-table-container {
     background: var(--bg-card);
@@ -2596,7 +2596,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     border: 1px solid var(--border);
     padding: 0.6rem 1rem;
     border-radius: 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-family: var(--font-sans);
     min-width: 250px;
     font-size: 0.9rem;
@@ -2634,7 +2634,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 }
 .hw-tab-btn:hover {
     border-color: var(--primary);
-    color: #fff;
+    color: var(--primary);
 }
 .hw-tab-btn.active {
     background: #ffffff;
@@ -2854,7 +2854,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
     font-family: var(--font-serif);
-    color: #fff;
+    color: var(--text-primary);
 }
 .solution-text p {
     font-size: 0.85rem;
