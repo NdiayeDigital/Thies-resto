@@ -335,14 +335,21 @@ async function handleRestaurantLogin(e) {
         try {
             sessionStorage.setItem('thies_admin_logged', 'true');
             sessionStorage.setItem('admin_session', 'true');
+            sessionStorage.setItem('admin_password', pass);
         } catch (e) {}
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         if (typeof updateNavbar === 'function') updateNavbar();
+        
+        // BUG FIX: Sync admin data immediately so the dashboard isn't empty
+        if (typeof store !== 'undefined' && store.syncFromSupabase) {
+            await store.syncFromSupabase();
+        }
+
         setTimeout(() => {
             const modal = document.getElementById('auth-modal');
             if (modal) modal.style.display = 'none';
             router.navigate('/admin');
-        }, 1000);
+        }, 500);
         return;
     }
     
