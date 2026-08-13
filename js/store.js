@@ -313,6 +313,53 @@ class Store {
     async pushRestaurantToSupabase(resto) {
         if (!supabaseClient) return;
         try {
+            if (isSuperAdminSession) {
+                const adminPass = sessionStorage.getItem('admin_password') || '';
+                const { error } = await supabaseClient.rpc('admin_create_restaurant', {
+                    p_admin_password: adminPass,
+                    p_restaurant: {
+                        id: resto.id,
+                        name: resto.name,
+                        slug: resto.slug,
+                        rating: resto.rating,
+                        reviews_count: resto.reviewsCount,
+                        category: resto.category,
+                        address: resto.address,
+                        whatsapp: resto.whatsapp,
+                        open_hours: resto.openHours,
+                        closed_days: resto.closedDays,
+                        is_open_manual: resto.isOpenManual,
+                        status: resto.status,
+                        username: resto.username,
+                        password: resto.password,
+                        cover_image: resto.coverImage,
+                        menu: resto.menu || [],
+                        reviews: resto.reviews || [],
+                        subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
+                    }
+                });
+
+                if (error) {
+                    console.log("Admin insert failed or restaurant exists, updating via admin RPC...", error);
+                    await supabaseClient.rpc('admin_update_restaurant', {
+                        p_admin_password: adminPass,
+                        p_restaurant_id: resto.id,
+                        p_updates: {
+                            name: resto.name,
+                            status: resto.status,
+                            username: resto.username,
+                            password: resto.password,
+                            subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)',
+                            address: resto.address,
+                            whatsapp: resto.whatsapp,
+                            is_open_manual: resto.isOpenManual
+                        }
+                    });
+                }
+                return;
+            }
+
+            // Client/Public registration (limited by RLS check: status must be pending)
             const { error } = await supabaseClient.from('restaurants').insert({
                 id: resto.id,
                 name: resto.name,
@@ -335,20 +382,7 @@ class Store {
             });
 
             if (error && error.code === '23505') {
-                if (isSuperAdminSession) {
-                    const adminPass = sessionStorage.getItem('admin_password') || '';
-                    await supabaseClient.rpc('admin_update_restaurant', {
-                        p_admin_password: adminPass,
-                        p_restaurant_id: resto.id,
-                        p_updates: {
-                            name: resto.name,
-                            status: resto.status,
-                            username: resto.username,
-                            password: resto.password,
-                            subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
-                        }
-                    });
-                } else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === resto.id) {
+                if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === resto.id) {
                     await supabaseClient.rpc('update_restaurant_data', {
                         p_restaurant_id: resto.id,
                         p_password: currentRestaurantSession.password,
