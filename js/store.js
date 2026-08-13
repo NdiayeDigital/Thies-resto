@@ -848,6 +848,39 @@ class Store {
             return false;
         }
     }
+
+    // ============================================
+    // OTP VERIFICATION METHODS (SMS integration)
+    // ============================================
+
+    async generateOtp(phone) {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.rpc('generate_otp', {
+                p_phone: phone
+            });
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error("Erreur lors de la génération de l'OTP:", err);
+            return false;
+        }
+    }
+
+    async verifyOtp(phone, code) {
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.rpc('verify_otp', {
+                p_phone: phone,
+                p_code: code
+            });
+            if (error) throw error;
+            return data; // Returns boolean (true if verified, false otherwise)
+        } catch (err) {
+            console.error("Erreur lors de la vérification de l'OTP:", err);
+            return false;
+        }
+    }
 }
 
 const store = new Store();

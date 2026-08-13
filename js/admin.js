@@ -1228,14 +1228,10 @@ function changeOrderStatus(orderId, nextStatus) {
         pushText = `Bonjour ${o.customerName} 👋\n\nNous sommes désolés, votre commande n°${o.id} chez *${restoName}* a été *annulée* par le restaurant. ❌\n\nVeuillez nous excuser pour ce désagrément. N'hésitez pas à passer une nouvelle commande.`;
     }
     
-    showToast(`Commande mise à jour vers : ${nextStatus}`, nextStatus === 'Annulée' ? 'warning' : 'success');
+    showToast(`Commande mise à jour vers : ${nextStatus}. Client notifié automatiquement 📲`, nextStatus === 'Annulée' ? 'warning' : 'success');
     
-    // Open WhatsApp to notify the client directly
-    if (pushText && o.customerPhone) {
-        const waLink = 'https://wa.me/' + o.customerPhone.replace(/\+/g, '') + '?text=' + encodeURIComponent(pushText);
-        window.open(waLink, '_blank');
-        showToast(`📲 WhatsApp ouvert pour notifier le client !`, 'success');
-    }
+    // Les notifications sont désormais envoyées automatiquement en arrière-plan via Database Webhooks.
+    // Plus besoin d'ouvrir intrusivement la fenêtre WhatsApp.
     
     // Reload dashboard list
     switchDashboardTab('orders');
