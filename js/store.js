@@ -705,6 +705,81 @@ class Store {
             return null;
         }
     }
+    // ============================================
+    // VENDOR DASHBOARD METHODS (Requires PIN)
+    // ============================================
+
+    async vendorLogin(slug, pin) {
+        if (!supabaseClient) throw new Error("Supabase non initialisé");
+        
+        try {
+            const { data, error } = await supabaseClient.rpc('verify_vendor_pin', {
+                p_slug: slug,
+                p_pin: pin
+            });
+            if (error) throw error;
+            return data; // Returns {id, name, slug, is_open_manual}
+        } catch (err) {
+            console.error("Erreur de connexion restaurateur:", err);
+            return null;
+        }
+    }
+
+    async vendorUpdateMenuItem(restaurantId, pin, itemId, newPrice, isAvailable) {
+        if (!supabaseClient) throw new Error("Supabase non initialisé");
+        
+        try {
+            const { error } = await supabaseClient.rpc('update_vendor_menu_item', {
+                p_restaurant_id: restaurantId,
+                p_pin: pin,
+                p_item_id: itemId,
+                p_price: newPrice,
+                p_is_available: isAvailable
+            });
+            
+            if (error) throw error;
+            
+            // Update local cache
+            const resto = this.data.restaurants.find(r => r.id === restaurantId);
+            if (resto && resto.menu) {
+                const item = resto.menu.find(m => m.id === itemId);
+                if (item) {
+                    item.price = newPrice;
+                    item.available = isAvailable;
+                    this.save();
+                }
+            }
+            return true;
+        } catch (err) {
+            console.error("Erreur de mise à jour du plat:", err);
+            return false;
+        }
+    }
+
+    async vendorUpdateStatus(restaurantId, pin, isOpen) {
+        if (!supabaseClient) throw new Error("Supabase non initialisé");
+        
+        try {
+            const { error } = await supabaseClient.rpc('update_vendor_status', {
+                p_restaurant_id: restaurantId,
+                p_pin: pin,
+                p_is_open: isOpen
+            });
+            
+            if (error) throw error;
+            
+            // Update local cache
+            const resto = this.data.restaurants.find(r => r.id === restaurantId);
+            if (resto) {
+                resto.isOpenManual = isOpen;
+                this.save();
+            }
+            return true;
+        } catch (err) {
+            console.error("Erreur de mise à jour du statut:", err);
+            return false;
+        }
+    }
 }
 
 const store = new Store();

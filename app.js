@@ -2889,6 +2889,17 @@ function submitReview(e, restaurantId) {
 // ----------------------------------------------------
 // Page: RESTAURANT AUTH (Login uniquement)
 // ----------------------------------------------------
+// ----------------------------------------------------
+// Page: VENDOR DASHBOARD
+// ----------------------------------------------------
+router.add('#/vendor/:slug', (slug) => {
+    if (window.currentVendorSession && window.currentVendorSession.slug === slug) {
+        window.renderVendorDashboard();
+    } else {
+        window.renderVendorLogin(slug);
+    }
+});
+
 router.add('#/politique-client', () => {
     document.getElementById('floating-cart-bar').style.display = 'none';
     stopOrderPolling();
