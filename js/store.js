@@ -618,7 +618,15 @@ class Store {
         if (order) {
             order.status = status;
             this.save();
-            if (supabaseClient && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+            if (supabaseClient && isSuperAdminSession) {
+                // Super Admin utilise la RPC admin sécurisée
+                const adminPass = sessionStorage.getItem('admin_password') || '';
+                await supabaseClient.rpc('admin_update_order_status', {
+                    p_admin_password: adminPass,
+                    p_order_id: orderId,
+                    p_status: status
+                });
+            } else if (supabaseClient && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
                 await supabaseClient.rpc('update_order_status', {
                     p_order_id: orderId,
                     p_restaurant_id: currentRestaurantSession.id,
@@ -646,7 +654,14 @@ class Store {
         if (res) {
             res.status = status;
             this.save();
-            if (supabaseClient && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+            if (supabaseClient && isSuperAdminSession) {
+                const adminPass = sessionStorage.getItem('admin_password') || '';
+                await supabaseClient.rpc('admin_update_reservation_status', {
+                    p_admin_password: adminPass,
+                    p_reservation_id: resId,
+                    p_status: status
+                });
+            } else if (supabaseClient && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
                 await supabaseClient.rpc('update_reservation_status', {
                     p_res_id: resId,
                     p_restaurant_id: currentRestaurantSession.id,
@@ -656,6 +671,23 @@ class Store {
             } else {
                 this.pushReservationToSupabase(res);
             }
+        }
+    }
+
+    async adminDeleteOrder(orderId) {
+        if (!supabaseClient || !isSuperAdminSession) return false;
+        try {
+            const adminPass = sessionStorage.getItem('admin_password') || '';
+            const { error } = await supabaseClient.rpc('admin_delete_order', {
+                p_admin_password: adminPass,
+                p_order_id: orderId
+            });
+            if (error) throw error;
+            this.data.orders = this.data.orders.filter(o => o.id !== orderId);
+            return true;
+        } catch (err) {
+            console.error('Erreur suppression commande admin:', err);
+            return false;
         }
     }
 
@@ -712,9 +744,16 @@ class Store {
                 p_slug: slug,
                 p_pin: pin
             });
-            if (error) throw error;
-            return data; // Returns {id, name, slug, is_open_manual}
+            if (error) {
+                // Propager l'erreur de rate limiting pour l'afficher dans l'UI
+                if (error.message && error.message.includes('Trop de tentatives')) {
+                    throw { rateLimited: true, message: error.message };
+                }
+                throw error;
+            }
+            return data;
         } catch (err) {
+            if (err.rateLimited) throw err; // Re-throw rate limit pour le UI
             console.error("Erreur de connexion restaurateur:", err);
             return null;
         }

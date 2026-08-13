@@ -1956,11 +1956,11 @@ function renderDishesTab(r) {
         const cardOpacity = !isAvailable ? `opacity: 0.8;` : '';
 
         html += `
-            <div class="dish-card" onclick="${isAvailable && isCurrentlyOpen ? `openProductModal('${r.id}', '${d.id}')` : ''}" style="${isAvailable && isCurrentlyOpen ? 'cursor: pointer;' : 'cursor: not-allowed;'} ${cardOpacity}">
+            <div class="dish-card" data-menu-item-id="${d.id}" onclick="${isAvailable && isCurrentlyOpen ? `openProductModal('${r.id}', '${d.id}')` : ''}" style="${isAvailable && isCurrentlyOpen ? 'cursor: pointer;' : 'cursor: not-allowed;'} ${cardOpacity}">
                 <div class="dish-img-container" style="position:relative;">
                     ${outOfStockBadge}
                     <img src="${d.image}" class="dish-image" alt="${d.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'" style="${imgStyle}">
-                    <span class="dish-price-tag">${d.price} FCFA</span>
+                    <span class="dish-price-tag item-price">${d.price} FCFA</span>
                 </div>
                 <div class="dish-body">
                     <h3 class="dish-title" style="${!isAvailable ? 'text-decoration: line-through; color: var(--text-secondary);' : ''}">${d.name}</h3>
@@ -3700,6 +3700,77 @@ setInterval(() => {
         }
     }
 }, 20000);
+
+// ============================================
+// REALTIME WEBSOCKET — Mise à jour live des plats
+// ============================================
+// Quand un restaurateur change un prix ou désactive un plat,
+// les clients qui ont la page ouverte voient le changement en direct.
+if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+    const menuRealtimeChannel = supabaseClient
+        .channel('realtime-menu-items')
+        .on('postgres_changes', 
+            { event: 'UPDATE', schema: 'public', table: 'menu_items' },
+            (payload) => {
+                const updated = payload.new;
+                if (!updated) return;
+                
+                console.log('🔄 Realtime: menu_item mis à jour:', updated.name, '→', updated.is_available ? 'Disponible' : 'Rupture');
+                
+                // 1. Mettre à jour le cache local
+                const resto = store.data.restaurants.find(r => r.id === updated.restaurant_id);
+                if (resto && resto.menu) {
+                    const menuItem = resto.menu.find(m => m.id === updated.id);
+                    if (menuItem) {
+                        menuItem.price = updated.price;
+                        menuItem.available = updated.is_available;
+                        menuItem.name = updated.name || menuItem.name;
+                    }
+                }
+                
+                // 2. Griser/dégriser le plat en direct dans le DOM (sans recharger la page)
+                const itemCard = document.querySelector(`[data-menu-item-id="${updated.id}"]`);
+                if (itemCard) {
+                    if (!updated.is_available) {
+                        itemCard.style.opacity = '0.4';
+                        itemCard.style.filter = 'grayscale(100%)';
+                        itemCard.style.pointerEvents = 'none';
+                        // Ajouter un badge "Épuisé"
+                        if (!itemCard.querySelector('.realtime-badge')) {
+                            const badge = document.createElement('div');
+                            badge.className = 'realtime-badge';
+                            badge.style.cssText = 'position:absolute;top:10px;left:10px;background:var(--danger);color:white;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;z-index:5;';
+                            badge.textContent = 'ÉPUISÉ';
+                            itemCard.style.position = 'relative';
+                            itemCard.appendChild(badge);
+                        }
+                    } else {
+                        itemCard.style.opacity = '1';
+                        itemCard.style.filter = 'none';
+                        itemCard.style.pointerEvents = 'auto';
+                        const oldBadge = itemCard.querySelector('.realtime-badge');
+                        if (oldBadge) oldBadge.remove();
+                    }
+                    
+                    // Mettre à jour le prix affiché
+                    const priceEl = itemCard.querySelector('.item-price, [data-price]');
+                    if (priceEl) {
+                        priceEl.textContent = Number(updated.price).toLocaleString() + ' FCFA';
+                    }
+                }
+                
+                // 3. Notification discrète pour le client
+                if (typeof showToast === 'function') {
+                    if (!updated.is_available) {
+                        showToast(`"${updated.name}" est maintenant en rupture de stock`, "warning");
+                    }
+                }
+            }
+        )
+        .subscribe();
+    
+    console.log('📡 Realtime menu_items : Abonnement activé');
+}
 
 function updateNav() {
     const navActions = document.getElementById('nav-actions');

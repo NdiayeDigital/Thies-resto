@@ -36,17 +36,36 @@ window.submitVendorLogin = async function(slug) {
     const pin = document.getElementById('vendor-pin').value;
     if (!pin) return;
     
+    const errorEl = document.getElementById('vendor-login-error');
+    errorEl.style.display = 'none';
+    
     showLoadingOverlay("Vérification...");
     
-    const session = await store.vendorLogin(slug, pin);
-    hideLoadingOverlay();
-    
-    if (session) {
-        window.currentVendorSession = { ...session, pin: pin };
-        showToast("Connexion réussie !", "success");
-        window.renderVendorDashboard();
-    } else {
-        document.getElementById('vendor-login-error').style.display = 'block';
+    try {
+        const session = await store.vendorLogin(slug, pin);
+        hideLoadingOverlay();
+        
+        if (session) {
+            window.currentVendorSession = { ...session, pin: pin };
+            showToast("Connexion réussie !", "success");
+            window.renderVendorDashboard();
+        } else {
+            errorEl.textContent = "PIN incorrect.";
+            errorEl.style.display = 'block';
+        }
+    } catch (err) {
+        hideLoadingOverlay();
+        if (err.rateLimited) {
+            errorEl.innerHTML = `🔒 <strong>Compte temporairement bloqué</strong><br><span style="font-size: 0.85rem;">Trop de tentatives. Réessayez dans 15 minutes.</span>`;
+            errorEl.style.display = 'block';
+            errorEl.style.background = 'rgba(255,0,0,0.08)';
+            errorEl.style.padding = '1rem';
+            errorEl.style.borderRadius = '12px';
+            showToast("Compte bloqué — trop de tentatives", "danger");
+        } else {
+            errorEl.textContent = "Erreur de connexion.";
+            errorEl.style.display = 'block';
+        }
     }
 };
 
