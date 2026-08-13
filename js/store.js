@@ -53,12 +53,12 @@ class Store {
             // 1. Sync Restaurants (Publiques) via PostGIS
             const searchLat = window.userLat || 14.7928;
             const searchLng = window.userLng || -16.9260;
-            const { data: dbRestos, error: restosError } = await supabaseClient.rpc('get_nearby_restaurants', {
-                user_lat: searchLat,
-                user_lng: searchLng,
-                max_limit: 50 // Load up to 50 for catalog
-            });
-            const { data: dbMenuItems, error: itemsError } = await supabaseClient.from('menu_items').select('*');
+        const { data: dbRestos, error: restosError } = await supabaseClient.rpc('get_nearby_restaurants', {
+            user_lat: searchLat,
+            user_lng: searchLng,
+            max_limit: 50 // Load up to 50 for catalog
+        });
+        // We NO LONGER fetch all menu_items globally for performance reasons (Lazy Loading)
             if (!restosError && dbRestos) {
                 if (dbRestos.length === 0) {
                     console.log("Database is empty. Returning early...");
@@ -88,38 +88,7 @@ class Store {
                         lat: r.lat ? Number(r.lat) : 14.7928, // Default Thiès center if not set
                         lng: r.lng ? Number(r.lng) : -16.9260,
                         coverImage: (r.cover_image && r.cover_image !== 'null' && r.cover_image !== 'undefined') ? r.cover_image : null,
-                        menu: (() => {
-                            let combinedMenu = Array.isArray(parsedMenu) ? parsedMenu : [];
-                            if (!itemsError && dbMenuItems) {
-                                const newItems = dbMenuItems.filter(item => item.restaurant_id === r.id).map(item => {
-                                    let fallbackImg = item.image_url;
-                                    if (!fallbackImg || (typeof fallbackImg === 'string' && fallbackImg.trim() === '')) {
-                                        if (typeof DISH_IMAGE_OPTIONS !== 'undefined' && DISH_IMAGE_OPTIONS.length > 0) {
-                                            let str = String(item.id || item.name || '');
-                                            let hash = 0;
-                                            for (let i = 0; i < str.length; i++) {
-                                                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-                                            }
-                                            fallbackImg = DISH_IMAGE_OPTIONS[Math.abs(hash) % DISH_IMAGE_OPTIONS.length].url;
-                                        }
-                                    }
-                                    return {
-                                        id: item.id,
-                                        name: item.name,
-                                        description: item.description,
-                                        price: item.price,
-                                        category: item.category,
-                                        image: fallbackImg,
-                                        available: item.is_available
-                                    };
-                                });
-                                if (newItems.length > 0) {
-                                    const newNames = new Set(newItems.map(i => i.name));
-                                    combinedMenu = [...newItems, ...combinedMenu.filter(old => !newNames.has(old.name))];
-                                }
-                            }
-                            return combinedMenu.length > 0 ? combinedMenu : null;
-                        })(),
+                        menu: [], // Menu is lazy-loaded when the user opens the restaurant page
                         reviews: Array.isArray(parsedReviews) ? parsedReviews : []
                     };
                 });
@@ -527,8 +496,78 @@ class Store {
         return this.data.restaurants;
     }
 
-    getRestaurantBySlug(slug) {
-        return this.data.restaurants.find(r => r.slug === slug);
+    async fetchMenuForRestaurant(restaurantId) {
+        if (!supabaseClient) return [];
+        
+        // Find the restaurant in our local cache
+        const resto = this.data.restaurants.find(r => r.id === restaurantId);
+        
+        // If the menu is already loaded (and has items), return it from cache
+        if (resto && resto.menu && resto.menu.length > 0) {
+            return resto.menu;
+        }
+
+        try {
+            console.log(`Lazy loading menu for restaurant ${restaurantId}...`);
+            const { data: menuItems, error } = await supabaseClient
+                .from('menu_items')
+                .select('*')
+                .eq('restaurant_id', restaurantId);
+
+            if (error) throw error;
+            
+            let parsedMenu = [];
+            if (menuItems && menuItems.length > 0) {
+                parsedMenu = menuItems.map(item => {
+                    let fallbackImg = item.image_url;
+                    if (!fallbackImg || (typeof fallbackImg === 'string' && fallbackImg.trim() === '')) {
+                        if (typeof DISH_IMAGE_OPTIONS !== 'undefined' && DISH_IMAGE_OPTIONS.length > 0) {
+                            let str = String(item.id || item.name || '');
+                            let hash = 0;
+                            for (let i = 0; i < str.length; i++) {
+                                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+                            }
+                            fallbackImg = DISH_IMAGE_OPTIONS[Math.abs(hash) % DISH_IMAGE_OPTIONS.length].url;
+                        }
+                    }
+                    return {
+                        id: item.id,
+                        name: item.name,
+                        description: item.description,
+                        price: item.price,
+                        category: item.category,
+                        image: fallbackImg,
+                        available: item.is_available
+                    };
+                });
+            }
+
+            // Update local cache
+            if (resto) {
+                resto.menu = parsedMenu;
+                // We don't necessarily need to this.save() because menu is re-fetchable, 
+                // but we can to persist the cache
+                this.save();
+            }
+
+            return parsedMenu;
+        } catch (error) {
+            console.error("Error fetching menu items:", error);
+            return [];
+        }
+    }
+
+    async getRestaurantBySlug(slug) {
+        if (!this.syncPromise) {
+            this.syncPromise = this.syncFromSupabase();
+        }
+        await this.syncPromise;
+        const resto = this.data.restaurants.find(r => r.slug === slug);
+        if (resto) {
+            // Wait for menu to load before returning the restaurant
+            await this.fetchMenuForRestaurant(resto.id);
+        }
+        return resto;
     }
 
     getRestaurantById(id) {

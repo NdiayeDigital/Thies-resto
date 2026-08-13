@@ -1710,8 +1710,12 @@ function getDayName(dayNum) {
 // ----------------------------------------------------
 // Page: RESTAURANT PAGE (client view with tabs)
 // ----------------------------------------------------
-router.add('#/r/:slug', (slug, startTab = 'menu', groupId = null) => {
-    const r = store.getRestaurantBySlug(slug);
+router.add('#/r/:slug', async (slug, startTab = 'menu', groupId = null) => {
+    // Show a small spinner if we need to fetch from network
+    if (document.getElementById('main-content').innerHTML === '') {
+        showLoadingOverlay("Chargement du menu...");
+    }
+    const r = await store.getRestaurantBySlug(slug);
     if (!r) {
         document.getElementById('main-content').innerHTML = `
             <div style="text-align: center; padding: 5rem 1.5rem;">
@@ -2195,7 +2199,7 @@ function renderGroupTab(r, groupId = null) {
                     <label class="form-label">Votre Prénom/Nom (Organisateur) <span class="required">*</span></label>
                     <input type="text" id="group-creator-name" class="form-control" placeholder="Mariama Diop" required>
                 </div>
-                <button class="btn btn-primary" onclick="createGroupOrder('${r.slug}')">
+                <button class="btn btn-primary" onclick="window.startGroupOrder('${r.slug}')">
                     Lancer une commande de groupe 🚀
                 </button>
             </div>
@@ -2233,7 +2237,7 @@ function renderGroupTab(r, groupId = null) {
                 </div>
                 <div style="text-align: right;">
                     <div style="font-weight: 700; color: var(--primary);">${pSubtotal} FCFA</div>
-                    <button class="btn btn-danger btn-sm btn-icon" style="padding: 0.15rem 0.35rem; font-size: 0.7rem; margin-top: 0.25rem;" onclick="removeParticipant(${pIdx}, '${r.slug}', '${groupId}')">❌</button>
+                    <button class="btn btn-danger btn-sm btn-icon" style="padding: 0.15rem 0.35rem; font-size: 0.7rem; margin-top: 0.25rem;" onclick="window.removeParticipant(${pIdx}, '${r.slug}', '${groupId}')">❌</button>
                 </div>
             </div>
         `;
@@ -2266,6 +2270,11 @@ function renderGroupTab(r, groupId = null) {
 
             <div class="group-participants">
                 <h4 style="font-size: 0.95rem;">Membres du Groupe</h4>
+                <div class="form-row" style="margin-bottom: 1rem;">
+                    <input type="text" id="part-name" class="form-control" placeholder="Votre prénom">
+                    <select id="part-dish-select" class="form-control">${dishesOptions}</select>
+                    <button class="btn btn-primary btn-sm" onclick="window.addParticipantAction('${r.slug}', '${groupId}')">Ajouter</button>
+                </div>
                 ${participantsHtml}
             </div>
 
@@ -2340,14 +2349,15 @@ function toggleGroupAddressField(show) {
     }
 }
 
-function createGroupOrder(slug) {
+window.startGroupOrder = async function(slug) {
     const creator = document.getElementById('group-creator-name').value.trim();
+    
     if (!creator) {
         showToast("Veuillez saisir le nom de l'organisateur", "danger");
         return;
     }
     
-    const r = store.getRestaurantBySlug(slug);
+    const r = await store.getRestaurantBySlug(slug);
     const groupId = "GRP-" + Math.floor(100000 + Math.random() * 900000);
     
     activeGroupOrder = {
@@ -2363,7 +2373,7 @@ function createGroupOrder(slug) {
     router.navigate(`/r/${slug}/group/${groupId}`);
 }
 
-function addParticipantAction(slug, groupId) {
+window.addParticipantAction = async function(slug, groupId) {
     const name = document.getElementById('part-name').value.trim();
     const dishId = document.getElementById('part-dish-select').value;
     
@@ -2372,7 +2382,7 @@ function addParticipantAction(slug, groupId) {
         return;
     }
     
-    const r = store.getRestaurantBySlug(slug);
+    const r = await store.getRestaurantBySlug(slug);
     const dish = r.menu.find(d => d.id === dishId);
     
     // Check if participant already exists in the group order
@@ -2402,11 +2412,17 @@ function addParticipantAction(slug, groupId) {
     renderGroupTab(r, groupId);
 }
 
-function removeParticipant(idx, slug, groupId) {
+window.removeParticipant = async function(idx, slug, groupId) {
     activeGroupOrder.participants.splice(idx, 1);
-    const r = store.getRestaurantBySlug(slug);
+    const r = await store.getRestaurantBySlug(slug);
     renderGroupTab(r, groupId);
     showToast("Choix supprimé", "info");
+}
+
+window.joinGroupOrder = async function(slug, groupId) {
+    const r = await store.getRestaurantBySlug(slug);
+    renderGroupTab(r, groupId);
+    showToast("Commande jointe", "info");
 }
 
 function copyGroupLink() {
