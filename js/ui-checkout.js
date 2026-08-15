@@ -345,36 +345,78 @@ function submitSimpleOrder(e, restaurantId) {
         }
     };
 
-    // Lancer la génération d'OTP en tâche de fond
+        // Lancer la génération d'OTP en tâche de fond
+    window.startOtpTimer = function() {
+        let timeLeft = 60;
+        const resendBtn = document.getElementById('btn-resend-otp');
+        if(!resendBtn) return;
+        resendBtn.disabled = true;
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = '🔄 Renvoyer le code';
+            } else {
+                resendBtn.innerHTML = `⏳ Renvoyer le code dans ${timeLeft}s`;
+            }
+        }, 1000);
+    };
+
+    window.resendOtp = async function() {
+        const { phone } = window.pendingOrderContext;
+        const resendBtn = document.getElementById('btn-resend-otp');
+        resendBtn.disabled = true;
+        resendBtn.innerHTML = 'Envoi...';
+        
+        const otpSent = await store.generateOtp(phone);
+        if (otpSent) {
+            if (typeof showToast === 'function') showToast("Un nouveau code a été envoyé !", "info");
+            window.startOtpTimer();
+        } else {
+            if (typeof showToast === 'function') showToast("Erreur lors de l'envoi du code.", "danger");
+            resendBtn.disabled = false;
+            resendBtn.innerHTML = '🔄 Renvoyer le code';
+        }
+    };
+
     (async () => {
         const otpSent = await store.generateOtp(phone);
         
         if (otpSent) {
-            if (typeof showToast === 'function') showToast("Code de sécurité SMS envoyé !", "info");
+            if (typeof showToast === 'function') showToast("Code de sécurité généré (Voir Console pour test) !", "info");
             
             container.innerHTML = `
-                <div class="confirmation-screen" class="checkout-card">
-                    <div class="checkout-icon">📱</div>
+                <div class="confirmation-screen checkout-card">
+                    <div class="checkout-icon" style="font-size: 3rem; margin-bottom: 1rem;">💬</div>
                     <h2>Vérification SMS</h2>
-                    <p class="checkout-subtitle">Veuillez entrer le code de sécurité reçu par SMS au <strong>${phone}</strong>.</p>
+                    <p class="checkout-subtitle" style="margin-bottom: 1.5rem;">Veuillez entrer le code de sécurité reçu par SMS au <strong>${phone}</strong>.</p>
                     
                     <div class="form-group">
-                        <input type="text" id="otp-input-code" class="form-control" placeholder="Ex: 839102" style="font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-weight: bold; margin-bottom: 1rem;" maxlength="6">
+                        <input type="text" id="otp-input-code" class="form-control" placeholder="000000" style="font-size: 2rem; letter-spacing: 10px; text-align: center; font-weight: bold; margin-bottom: 1.5rem; height: 60px;" maxlength="6">
                     </div>
                     
-                    <button class="btn btn-primary" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 1rem;" id="btn-verify-otp">
+                    <button class="btn btn-primary" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 1rem; padding: 1rem; font-size: 1.1rem;" id="btn-verify-otp">
                         ✅ Vérifier et Commander
                     </button>
                     
-                    <button class="btn btn-secondary" onclick="router.navigate('/')" style="width: 100%;">
-                        Annuler
+                    <button class="btn btn-outline" id="btn-resend-otp" onclick="resendOtp()" style="width: 100%; margin-bottom: 1rem; background: transparent; border: 1px solid var(--border); color: var(--text-secondary);" disabled>
+                        ⏳ Renvoyer le code dans 60s
+                    </button>
+
+                    <button class="btn btn-link" onclick="router.navigate('/')" style="width: 100%; color: var(--text-secondary); text-decoration: underline;">
+                        Annuler la commande
                     </button>
                 </div>
             `;
+            
+            // Démarrer le timer
+            setTimeout(window.startOtpTimer, 100);
         } else {
             if (typeof showToast === 'function') showToast("Impossible d'envoyer le SMS. Format de numéro incorrect ?", "danger");
             container.innerHTML = `
-                <div class="confirmation-screen" class="checkout-card">
+                <div class="confirmation-screen checkout-card">
                     <div style="font-size: 3rem; color: var(--danger); margin-bottom: 1rem;">⚠️</div>
                     <h2>Échec de l'envoi</h2>
                     <p class="checkout-subtitle">Nous n'avons pas pu valider votre numéro <strong>${phone}</strong>.</p>
