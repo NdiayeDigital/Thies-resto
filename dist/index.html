@@ -153,8 +153,8 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
 
     <!-- NATIVE CSS INJECTION (PRE-VITE SURGICAL ROLLBACK) -->
-  <script type="module" crossorigin src="/assets/index-BIuADWEr.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BTvbCsff.css">
+  <script type="module" crossorigin src="/assets/index-CiwyMlhC.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CqvljXNu.css">
 <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body x-data>
@@ -162,30 +162,52 @@
 
     <div class="app-container">
         <!-- ========== NAVIGATION BAR ========== -->
-        <header class="navbar" id="main-navbar">
-            <!-- Left: Burger & Navigation links (Desktop) -->
-            <div class="nav-left">
-                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()">
-                    <span class="bar"></span>
-                    <span class="bar"></span>
-                    <span class="bar"></span>
+        <header class="navbar glass-panel" id="main-navbar" style="padding: 1rem; border-bottom: none; border-radius: 0 0 20px 20px; position: sticky; top: 0; z-index: 100;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()" style="background: var(--bg-input); padding: 10px; border-radius: 50%;">
+                    <span class="bar" style="background: var(--text-primary);"></span>
+                    <span class="bar" style="background: var(--text-primary);"></span>
+                    <span class="bar" style="background: var(--text-primary);"></span>
+                </button>
+                <div class="user-profile" style="background: url('/assets/icon-R7nLk5J4.png') center/cover; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); position: relative;">
+                    <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #FF3B30; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; text-align: left;">
+                <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.2rem;">Hi, Foodie 👋</p>
+                <h1 style="font-size: 2.2rem; line-height: 1.1;">Good Food<br>Good <span style="color: var(--primary);">Mood!</span></h1>
+            </div>
+            
+            <div style="margin-top: 1.5rem; position: relative;">
+                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem;">🔍</span>
+                <input type="text" placeholder="Search your favorite food" style="width: 100%; background: var(--bg-input); border: none; padding: 15px 15px 15px 45px; border-radius: 30px; color: var(--text-primary); font-size: 1rem;">
+                <button style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: var(--bg-glass); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <span style="color: var(--text-primary);">🎛️</span>
                 </button>
             </div>
-
-            <!-- Center: Logo -->
-            <div class="logo-container" onclick="router.navigate('/')">
-                <img src="/assets/icon-R7nLk5J4.png" class="logo-icon" alt="THIES Resto Logo"
-                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
-                <span class="logo-text">THIES Resto</span>
+            
+            <!-- Category Pills -->
+            <div style="display: flex; gap: 1rem; overflow-x: auto; margin-top: 1.5rem; padding-bottom: 0.5rem;" class="hide-scrollbar">
+                <div style="background: var(--primary); color: #fff; padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; box-shadow: var(--shadow-sm);">
+                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍔</span>
+                    <span style="font-size: 0.9rem; font-weight: 500;">Burger</span>
+                </div>
+                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
+                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍕</span>
+                    <span style="font-size: 0.9rem; font-weight: 500;">Pizza</span>
+                </div>
+                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
+                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍗</span>
+                    <span style="font-size: 0.9rem; font-weight: 500;">Chicken</span>
+                </div>
+                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
+                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍟</span>
+                    <span style="font-size: 0.9rem; font-weight: 500;">Fries</span>
+                </div>
             </div>
 
-            <!-- Right: Session Actions -->
-            <nav class="nav-links" id="nav-actions">
-                <!-- Dynamic actions populated by JS -->
-            </nav>
-
             <!-- Mobile Drawer Overlay -->
-            <div class="mobile-drawer" id="mobile-drawer">
+            <div class="mobile-drawer glass-panel" id="mobile-drawer" style="background: rgba(18, 18, 18, 0.95);">
                 <div class="drawer-header">
                     <img src="/assets/icon-R7nLk5J4.png" class="logo-icon" alt="THIES Resto Logo"
                         style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
@@ -453,6 +475,27 @@
             </div>
         </div>
     </div>
+
+    <!-- ========== BOTTOM NAVIGATION BAR ========== -->
+    <nav class="glass-panel" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; display: flex; justify-content: space-around; align-items: center; border-radius: 20px 20px 0 0; z-index: 1000; padding: 0 10px;">
+        <div style="display: flex; flex-direction: column; align-items: center; color: var(--primary); cursor: pointer;" onclick="router.navigate('/')">
+            <span style="font-size: 1.5rem;">🏠</span>
+            <span style="font-size: 0.75rem; font-weight: 500;">Home</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" onclick="router.navigate('/tracking')">
+            <span style="font-size: 1.5rem;">🏷️</span>
+            <span style="font-size: 0.75rem;">Offers</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" onclick="router.navigate('/auth')">
+            <span style="font-size: 1.5rem;">🛍️</span>
+            <span style="font-size: 0.75rem;">Orders</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;">
+            <span style="font-size: 1.5rem;">❤️</span>
+            <span style="font-size: 0.75rem;">Favorite</span>
+        </div>
+    </nav>
+
 </body>
 
 </html>

@@ -6,21 +6,22 @@
     /* ---------------------------------------------------------------------- */
     
     /* COLORS: Primary */
-    --primary: #FF5722;
-    --primary-light: #FF8A65;
-    --primary-dark: #E64A19;
-    --primary-rgb: 255, 87, 34;
+    --primary: #FF7A00;
+    --primary-light: #FFA04D;
+    --primary-dark: #CC6200;
+    --primary-rgb: 255, 122, 0;
 
     /* COLORS: Backgrounds & Surfaces */
-    --bg-primary: #F8F9FA;
-    --bg-secondary: #F1F3F5;
-    --bg-card: #FFFFFF;
-    --bg-input: #F1F3F5;
+    --bg-primary: #121212;
+    --bg-secondary: #1A1A1A;
+    --bg-card: rgba(255, 255, 255, 0.05);
+    --bg-input: rgba(255, 255, 255, 0.1);
+    --bg-glass: rgba(255, 255, 255, 0.03);
 
     /* COLORS: Text */
-    --text-primary: #121212;
-    --text-secondary: #6B7280;
-    --text-inverse: #FFFFFF;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A0A0A0;
+    --text-inverse: #121212;
 
     /* COLORS: States */
     --success: #10B981;
@@ -29,11 +30,11 @@
     --info: #3B82F6;
 
     /* BORDERS & SHADOWS */
-    --border: rgba(0, 0, 0, 0.05);
-    --border-focus: rgba(255, 87, 34, 0.4);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-    --shadow-md: 0 8px 24px rgba(255, 87, 34, 0.08);
-    --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.08);
+    --border: rgba(255, 255, 255, 0.1);
+    --border-focus: rgba(255, 122, 0, 0.5);
+    --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 40px rgba(255, 122, 0, 0.15);
 
     /* BORDER RADIUS */
     --radius-sm: 8px;
@@ -3961,4 +3962,28 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     .app-container, body {
         padding-bottom: 90px !important;
     }
+}
+
+
+/* GLASSMORPHISM UTILITIES */
+.glass-panel {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-smooth);
+}
+.glass-card:hover {
+    border-color: var(--border-focus);
+    box-shadow: var(--shadow-lg);
 }
