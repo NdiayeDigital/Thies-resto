@@ -1998,7 +1998,7 @@ Bienvenue dans le réseau !`,r=`https://wa.me/${t.whatsapp.replace(/\+/g,``)}?te
 
             <!-- Image Hero -->
             <div style="flex: 1; min-height: 40vh; position: relative; display: flex; align-items: center; justify-content: center; padding: 5rem 2rem 2rem 2rem; background: radial-gradient(circle at center, rgba(207,168,83,0.15) 0%, transparent 60%);">
-                <img src="${n.image}" style="width: 280px; height: 280px; object-fit: cover; border-radius: 50%; box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.05);" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'" loading="lazy">
+                <img src="${n.image||`https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500`}" style="width: 280px; height: 280px; object-fit: cover; border-radius: 50%; box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.05);" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'" loading="lazy">
             </div>
 
             <!-- Curved Separator -->

@@ -481,24 +481,24 @@
     </div>
 
     <!-- ========== BOTTOM NAVIGATION BAR ========== -->
-    <nav id="bottom-nav-bar" class="glass-panel" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; display: flex; justify-content: space-around; align-items: center; border-radius: 20px 20px 0 0; z-index: 1000; padding: 0 10px;">
-        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--primary); cursor: pointer;" data-route="#/" onclick="router.navigate('/')">
-            <span style="font-size: 1.5rem;">🏠</span>
-            <span style="font-size: 0.75rem; font-weight: 500;">Home</span>
-        </div>
-        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" data-route="#/catalog" onclick="router.navigate('/catalog')">
-            <span style="font-size: 1.5rem;">🏷️</span>
-            <span style="font-size: 0.75rem;">Offers</span>
-        </div>
-        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" data-route="#/profile" onclick="router.navigate('/profile')">
-            <span style="font-size: 1.5rem;">🛍️</span>
-            <span style="font-size: 0.75rem;">Orders</span>
-        </div>
-        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;">
-            <span style="font-size: 1.5rem;">❤️</span>
-            <span style="font-size: 0.75rem;">Favorite</span>
-        </div>
-    </nav>
+    <nav id="bottom-nav-bar" class="glass-panel" style="position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; justify-content: space-around; padding: 1rem; border-top: 1px solid var(--border); z-index: 999; backdrop-filter: blur(20px);">
+    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--primary);" data-route="#/" onclick="router.navigate('/')">
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">🏠</span>
+        <span style="font-size: 0.75rem; font-weight: 600;">Accueil</span>
+    </div>
+    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/tracking" onclick="router.navigate('/tracking')">
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">🛵</span>
+        <span style="font-size: 0.75rem; font-weight: 600;">Suivi</span>
+    </div>
+    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/profile" onclick="router.navigate('/profile')">
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">📜</span>
+        <span style="font-size: 0.75rem; font-weight: 600;">Historique</span>
+    </div>
+    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/auth" onclick="router.navigate('/auth')">
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">👤</span>
+        <span style="font-size: 0.75rem; font-weight: 600;">Profil</span>
+    </div>
+</nav>
 
 </body>
 
