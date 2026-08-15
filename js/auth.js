@@ -16,33 +16,35 @@ router.add('#/auth', () => {
     const container = document.getElementById('main-content');
     
     container.innerHTML = `
-        <div class="auth-container" style="max-width: 450px; margin: 3rem auto; padding: 2rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
-            <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
-                <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🏪</span>
-                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: #fff;">Espace Partenaire</h2>
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Connectez-vous à votre tableau de bord restaurant.</p>
-            </div>
+        <div class="auth-wrapper" style="min-height: 100vh; display: flex; align-items: center; justify-content: center; background-color: var(--bg-primary); padding: 20px;">
+            <div class="auth-container" style="width: 100%; max-width: 400px; background: var(--bg-card); border-radius: var(--radius-lg); padding: 40px 30px; box-shadow: var(--shadow-lg);">
+                <div class="auth-header" style="text-align: center; margin-bottom: 32px;">
+                    <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" alt="Logo" style="width: 64px; height: 64px; margin-bottom: 16px; border-radius: var(--radius-md);">
+                    <h2 style="font-family: var(--font-serif); font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Login</h2>
+                    <p style="color: var(--text-secondary); font-size: 14px;">Connectez-vous à votre tableau de bord.</p>
+                </div>
 
-            <!-- LOGIN FORM -->
-            <form id="login-form" onsubmit="handleRestaurantLogin(event)">
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label class="form-label">Identifiant unique (slug)</label>
-                    <input type="text" id="login-username" class="form-control" placeholder="la-licorne" required>
-                </div>
-                <div class="form-group" style="margin-bottom: 0.5rem;">
-                    <label class="form-label">Mot de passe</label>
-                    <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
-                </div>
-                <div style="text-align: right; margin-bottom: 1.5rem;">
-                    <button type="button" onclick="handleForgotPassword()" style="background: none; border: none; color: var(--accent); font-size: 0.8rem; cursor: pointer; padding: 0; text-decoration: underline;">🔑 Mot de passe oublié ?</button>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Se connecter 🔓</button>
-            </form>
+                <!-- LOGIN FORM -->
+                <form id="login-form" onsubmit="handleRestaurantLogin(event)">
+                    <div class="form-group" style="margin-bottom: 20px;">
+                        <label class="form-label" style="display: block; font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">Identifiant / Email</label>
+                        <input type="text" id="login-username" class="form-control" style="width: 100%; height: var(--input-height); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 16px; background: var(--bg-input); font-family: var(--font-sans); outline: none; transition: var(--transition-smooth);" placeholder="Votre identifiant" required onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 12px;">
+                        <label class="form-label" style="display: block; font-size: 13px; font-weight: 500; color: var(--text-primary); margin-bottom: 8px;">Mot de passe</label>
+                        <input type="password" id="login-password" class="form-control" style="width: 100%; height: var(--input-height); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 16px; background: var(--bg-input); font-family: var(--font-sans); outline: none; transition: var(--transition-smooth);" placeholder="••••••••" required onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='var(--border)'">
+                    </div>
+                    <div style="text-align: right; margin-bottom: 32px;">
+                        <button type="button" onclick="handleForgotPassword()" style="background: none; border: none; color: var(--primary); font-size: 13px; font-weight: 500; cursor: pointer; padding: 0;">Mot de passe oublié ?</button>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; height: var(--btn-height); background: var(--primary); color: #fff; font-weight: 600; font-size: 16px; border: none; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition-smooth); box-shadow: var(--shadow-md);">Se connecter</button>
+                </form>
 
-            <!-- PARTNERSHIP CTA -->
-            <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">Vous souhaitez rejoindre le réseau THIES Resto ?</p>
-                <button class="btn btn-secondary btn-block" onclick="router.navigate('/partnership')" style="width: 100%; font-weight: 700;">Demander un Partenariat 🤝</button>
+                <div style="text-align: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);">
+                    <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;">Vous souhaitez rejoindre le réseau ?</p>
+                    <button class="btn" onclick="router.navigate('/partnership')" style="width: 100%; height: var(--btn-height); background: transparent; border: 1px solid var(--border); color: var(--text-primary); font-weight: 600; font-size: 15px; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition-smooth);">Demander un Partenariat</button>
+                </div>
             </div>
         </div>
     `;

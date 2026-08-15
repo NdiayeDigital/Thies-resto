@@ -34,6 +34,16 @@ class Store {
         if (supabaseClient) {
             this.syncPromise = this.syncFromSupabase();
         } else {
+            console.warn("Supabase introuvable. Chargement du fallback local MOCK_RESTAURANTS.");
+            if (typeof MOCK_RESTAURANTS !== 'undefined') {
+                this.data.restaurants = JSON.parse(JSON.stringify(MOCK_RESTAURANTS));
+            }
+            if (typeof MOCK_ORDERS !== 'undefined') {
+                this.data.orders = JSON.parse(JSON.stringify(MOCK_ORDERS));
+            }
+            if (typeof Alpine !== 'undefined' && Alpine.store('global')) {
+                Alpine.store('global', this.data);
+            }
             this.syncPromise = Promise.resolve();
         }
     }

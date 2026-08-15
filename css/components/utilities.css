@@ -1,0 +1,89 @@
+/* --- UTILITIES & COMMON --- */
+
+/* Spinner for loading states */
+.spinner {
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 3px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+.spinner.dark {
+    border: 3px solid rgba(0,0,0,0.1);
+    border-top-color: var(--primary-color, #ff6b35);
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Visibility */
+@media (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
+}
+
+/* Specific Cart / Item styles */
+.item-price {
+    font-weight: 700;
+    color: var(--primary-color, #ff6b35);
+}
+
+/* Policy Pages */
+.policy-page-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.policy-content {
+    line-height: 1.8;
+    color: #4a4a4a;
+}
+
+.policy-content h1, 
+.policy-content h2, 
+.policy-content h3 {
+    color: var(--dark-color, #1a1a1a);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.policy-content ul {
+    margin-left: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Link Button */
+.btn-link {
+    background: transparent;
+    color: var(--primary-color, #ff6b35);
+    border: none;
+    text-decoration: underline;
+    padding: 0;
+}
+
+.btn-link:hover {
+    color: #e85a22;
+}
+
+/* Active filters in restaurant listing */
+.activeFilter {
+    background-color: var(--primary-color, #ff6b35) !important;
+    color: white !important;
+    border-color: var(--primary-color, #ff6b35) !important;
+}
+
+/* RESPONSIVE GLOBAL */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 80px; /* Space for .mobile-bottom-nav */
+    }
+}

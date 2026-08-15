@@ -11,20 +11,20 @@
     <meta name="robots" content="index, follow">
     <meta name="author" content="NdiayeDigital">
     <link rel="canonical" href="https://thies-resto.com/">
-    
+
     <script>
         // Global Error Tracking (Phase 5)
         window.thiesRestoErrors = [];
-        window.__earlyErrorHandler = function(msg, url, line, col, error) {
-            window.thiesRestoErrors.push({msg, url, line, col, error: error ? error.stack : null, time: new Date()});
+        window.__earlyErrorHandler = function (msg, url, line, col, error) {
+            window.thiesRestoErrors.push({ msg, url, line, col, error: error ? error.stack : null, time: new Date() });
             var loader = document.getElementById('loading-overlay');
-            if(loader) loader.style.display = 'none';
+            if (loader) loader.style.display = 'none';
             // In a real production environment, send this to Sentry/DataDog/Supabase RPC
             console.error("[SENTRY MOCK] Global Error Caught:", msg, url, line);
         };
         window.onerror = window.__earlyErrorHandler;
-        window.addEventListener('unhandledrejection', function(event) {
-            window.thiesRestoErrors.push({msg: event.reason, time: new Date(), type: 'unhandledrejection'});
+        window.addEventListener('unhandledrejection', function (event) {
+            window.thiesRestoErrors.push({ msg: event.reason, time: new Date(), type: 'unhandledrejection' });
             console.error("[SENTRY MOCK] Unhandled Promise Rejection:", event.reason);
         });
     </script>
@@ -115,13 +115,13 @@
     </script>
 
     <meta name="theme-color" content="#f26b21">
-    
+
     <!-- PWA & iOS Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="THIES Resto">
     <link rel="apple-touch-icon" href="icon.png">
-    
+
     <link rel="manifest" href="manifest.json">
     <link rel="icon" type="image/x-icon" href="logo.jpg">
     <link rel="apple-touch-icon" href="icon.png">
@@ -129,7 +129,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
+
     <!-- Professional Icons (Remix Icon) -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
@@ -142,15 +142,22 @@
     <!-- Google tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-80CM404GD4"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-      gtag('config', 'G-80CM404GD4');
+        gtag('config', 'G-80CM404GD4');
     </script>
-    
+
     <!-- DOMPurify for secure innerHTML data rendering -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+
+    <!-- NATIVE CSS INJECTION (PRE-VITE SURGICAL ROLLBACK) -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/components/loyalty.css">
+    <link rel="stylesheet" href="css/components/tracking.css">
+    <link rel="stylesheet" href="css/components/admin.css">
+    <link rel="stylesheet" href="css/components/utilities.css">
 </head>
 
 <body x-data>
@@ -190,16 +197,22 @@
                 </div>
                 <div class="drawer-links">
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;"
+                        style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
                     <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
                     <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
                         Partenaire 🤝</a>
-                    <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
-                        Espace Livreurs 🛵 
-                        <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt disponible)</span>
+                    <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;"
+                        title="Bientôt disponible">
+                        Espace Livreurs 🛵
+                        <span
+                            style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt
+                            disponible)</span>
                     </a>
-                    <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;" style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪 Déconnexion</a>
+                    <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;"
+                        style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪
+                        Déconnexion</a>
                 </div>
             </div>
             <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>
@@ -209,7 +222,8 @@
         <main id="main-content">
             <!-- SKELETON PRELOADER -->
             <div id="initial-skeleton" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
-                <div class="skeleton" style="height: 400px; width: 100%; border-radius: 24px; margin-bottom: 2rem;"></div>
+                <div class="skeleton" style="height: 400px; width: 100%; border-radius: 24px; margin-bottom: 2rem;">
+                </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
                     <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
                     <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
@@ -221,13 +235,14 @@
 
 
         <!-- ========== FLOATING CART BAR ========== -->
-        <div id="floating-cart-bar" class="floating-cart-bar" 
-             x-show="$store.cart.itemCount > 0" 
-             style="display: none;" 
-             onclick="openCartTab()">
+        <div id="floating-cart-bar" class="floating-cart-bar" x-show="$store.cart.itemCount > 0" style="display: none;"
+            onclick="openCartTab()">
             <div class="floating-cart-info">
-                <span id="floating-cart-qty" class="floating-cart-qty" x-text="$store.cart.itemCount + ($store.cart.itemCount > 1 ? ' articles' : ' article')">0 articles</span>
-                <span id="floating-cart-total" class="floating-cart-total" x-text="$store.cart.total + ' FCFA'">0 FCFA</span>
+                <span id="floating-cart-qty" class="floating-cart-qty"
+                    x-text="$store.cart.itemCount + ($store.cart.itemCount > 1 ? ' articles' : ' article')">0
+                    articles</span>
+                <span id="floating-cart-total" class="floating-cart-total" x-text="$store.cart.total + ' FCFA'">0
+                    FCFA</span>
             </div>
             <button class="btn btn-primary btn-sm" id="floating-cart-btn" aria-label="Ouvrir le panier">
                 Voir le Panier 🛒
@@ -235,7 +250,9 @@
         </div>
 
         <!-- ========== FLOATING WHATSAPP SUPPORT ========== -->
-        <a href="https://wa.me/221784799882?text=Bonjour,%20j'ai%20besoin%20d'aide%20sur%20THIES%20Resto" target="_blank" rel="noopener noreferrer" class="floating-support-btn" style="position: fixed; bottom: 90px; right: 20px; background-color: #25D366; color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s;">
+        <a href="https://wa.me/221784799882?text=Bonjour,%20j'ai%20besoin%20d'aide%20sur%20THIES%20Resto"
+            target="_blank" rel="noopener noreferrer" class="floating-support-btn"
+            style="position: fixed; bottom: 90px; right: 20px; background-color: #25D366; color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s;">
             💬
         </a>
 
@@ -245,7 +262,8 @@
         </div>
 
         <!-- ========== SOCIAL PROOF TOAST ========== -->
-        <div id="social-proof-toast" style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); align-items: center; gap: 12px; transition: opacity 0.5s ease-out;">
+        <div id="social-proof-toast"
+            style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); align-items: center; gap: 12px; transition: opacity 0.5s ease-out;">
             <!-- Content filled dynamically -->
         </div>
 
@@ -280,9 +298,12 @@
                 <div class="footer-col">
                     <h4 class="footer-col-title">Légal</h4>
                     <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions de Vente</a>
-                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client & RGPD</a>
+                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client &
+                        RGPD</a>
                     <a href="#" onclick="router.navigate('/politique-admin'); return false;">Politique Restaurant</a>
-                    <a href="#" onclick="router.navigate('/admin-login'); return false;" style="color: var(--accent); font-weight: bold; margin-top: 0.5rem; display: inline-block;">👑 Espace Super-Admin</a>
+                    <a href="#" onclick="router.navigate('/admin-login'); return false;"
+                        style="color: var(--accent); font-weight: bold; margin-top: 0.5rem; display: inline-block;">👑
+                        Espace Super-Admin</a>
                 </div>
 
                 <!-- Links Column -->
@@ -297,17 +318,22 @@
                 <!-- Contact Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Contact & Réseaux</h4>
-                    <a href="https://wa.me/221784799882" target="_blank" rel="noopener noreferrer">💬 WhatsApp (+221 78 479 98 82)</a>
-                    <a href="https://www.facebook.com/profile.php?id=61591577033848" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
-                    <a href="https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&amp;utm_source=qr" target="_blank" rel="noopener noreferrer">📸 Instagram</a>
-                    <a href="https://www.tiktok.com/@thiesresto?_r=1&amp;_t=ZS-97XIj47j1gS" target="_blank" rel="noopener noreferrer">🎵 TikTok</a>
+                    <a href="https://wa.me/221784799882" target="_blank" rel="noopener noreferrer">💬 WhatsApp (+221 78
+                        479 98 82)</a>
+                    <a href="https://www.facebook.com/profile.php?id=61591577033848" target="_blank"
+                        rel="noopener noreferrer">📘 Facebook</a>
+                    <a href="https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&amp;utm_source=qr"
+                        target="_blank" rel="noopener noreferrer">📸 Instagram</a>
+                    <a href="https://www.tiktok.com/@thiesresto?_r=1&amp;_t=ZS-97XIj47j1gS" target="_blank"
+                        rel="noopener noreferrer">🎵 TikTok</a>
                     <a href="mailto:contact@thies-resto.com">✉️ contact@thies-resto.com</a>
                 </div>
 
                 <!-- Theme Toggle Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Apparence</h4>
-                    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Changer le thème" onclick="toggleTheme()">
+                    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Changer le thème"
+                        onclick="toggleTheme()">
                         <span id="theme-toggle-icon">☀️</span>
                         <span id="theme-toggle-label">Mode Clair</span>
                     </button>
@@ -364,11 +390,13 @@
 
     <!-- ========== MOBILE BOTTOM NAV ========== -->
     <nav class="mobile-bottom-nav">
-        <a href="#" class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+        <a href="#" class="nav-item active"
+            onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
             <div class="nav-icon"><i class="ri-home-5-line"></i></div>
             <span>Accueil</span>
         </a>
-        <a href="#" class="nav-item" onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+        <a href="#" class="nav-item"
+            onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
             <div class="nav-icon"><i class="ri-map-pin-2-line"></i></div>
             <span>Proche</span>
         </a>
@@ -377,7 +405,8 @@
             <span>Panier</span>
             <span id="mobile-nav-cart-badge" class="cart-badge" style="display: none;">0</span>
         </a>
-        <a href="#" class="nav-item" onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+        <a href="#" class="nav-item"
+            onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
             <div class="nav-icon"><i class="ri-user-line"></i></div>
             <span>Profil</span>
         </a>
@@ -394,6 +423,7 @@
     <!-- App Logic (Bundled with Vite) -->
     <script type="module" src="/main.js"></script>
 
+
     <script>
         function togglePasswordVisibility(inputId, iconElement) {
             const input = document.getElementById(inputId);
@@ -406,19 +436,22 @@
             }
         }
     </script>
-    
+
     <!-- Metricool Tracking Pixel -->
-    <img src="https://tracker.metricool.com/c3po.jpg?hash=ebe8b52530fde54a82b1ea7dec11f618" style="display:none; width:0px; height:0px;" alt="" />
-<script>
+    <img src="https://tracker.metricool.com/c3po.jpg?hash=ebe8b52530fde54a82b1ea7dec11f618"
+        style="display:none; width:0px; height:0px;" alt="" />
+    <script>
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js');
         }
     </script>
-    
+
     <!-- ========== CONSENT BANNER ========== -->
     <div id="consent-banner" class="consent-banner" style="display: none;">
         <div class="consent-content">
-            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#" onclick="router.navigate('/cgv'); return false;">CGV</a> et notre <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique de Confidentialité</a>.</p>
+            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#"
+                    onclick="router.navigate('/cgv'); return false;">CGV</a> et notre <a href="#"
+                    onclick="router.navigate('/politique-client'); return false;">Politique de Confidentialité</a>.</p>
             <button class="btn btn-primary btn-sm" onclick="acceptConsent()">J'accepte</button>
         </div>
     </div>
@@ -428,7 +461,8 @@
         <div class="geo-modal-content">
             <div class="geo-icon">📍</div>
             <h3>Où êtes-vous ?</h3>
-            <p>Pour vous afficher les meilleurs restaurants ouverts autour de vous (à moins de 5 km), nous avons besoin d'accéder à votre position GPS.</p>
+            <p>Pour vous afficher les meilleurs restaurants ouverts autour de vous (à moins de 5 km), nous avons besoin
+                d'accéder à votre position GPS.</p>
             <div class="geo-actions">
                 <button class="btn btn-secondary" onclick="closeGeoModal()">Plus tard</button>
                 <button class="btn btn-primary" onclick="requestNativeGeolocation()">Autoriser l'accès</button>

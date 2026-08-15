@@ -1,5 +1,3 @@
-import './style.css';
-
 import Alpine from 'alpinejs';
 import * as Sentry from "@sentry/browser";
 
