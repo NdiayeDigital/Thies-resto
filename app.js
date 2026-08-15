@@ -913,6 +913,36 @@ function logoutAdmin() {
 // ----------------------------------------------------
 // Page: LANDING PAGE (catalog)
 // ----------------------------------------------------
+
+function getPopularDishes(restaurants) {
+    let allDishes = [];
+    restaurants.filter(r => r.status === 'active').forEach(r => {
+        if (r.menu) {
+            r.menu.forEach(cat => {
+                if (cat.items) {
+                    cat.items.forEach(item => {
+                        if (item.available !== false) {
+                            allDishes.push({
+                                ...item,
+                                restaurantId: r.id,
+                                restaurantName: r.name,
+                                restaurantRating: r.rating,
+                                restaurantSlug: r.slug
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    });
+    // Shuffle and pick 5
+    for (let i = allDishes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allDishes[i], allDishes[j]] = [allDishes[j], allDishes[i]];
+    }
+    return allDishes.slice(0, 5);
+}
+
 router.add('#/', () => {
     updateSEO('home');
     try {
@@ -957,7 +987,7 @@ router.add('#/', () => {
         });
         historyHtml = `
             <section class="history-mini">
-                <div class="section-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; margin-bottom: 1rem;">
                     <h2 class="section-title">Vos Dernières Commandes (Persistant)</h2>
                 </div>
                 ${itemsHtml}
@@ -1024,7 +1054,7 @@ router.add('#/', () => {
 
         <section id="catalog-section" x-data="catalogComponent()">
             <div class="section-header">
-                <h2 class="section-title">Les Restaurants Partenaires</h2>
+                <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0;">Restaurants</h2><span style="color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">View All</span>
             </div>
 
             <!-- FILTERS BAR -->
@@ -1053,11 +1083,27 @@ router.add('#/', () => {
                     <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem 0;">Aucun restaurant ne correspond à vos critères.</div>
                 </template>
                 
+                
                 <template x-for="r in filteredRestaurants" :key="r.id">
-                    <div class="restaurant-card hover-3d glass-panel" style="position: relative; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; border: 1px solid var(--border);" @click="openRestaurant(r.slug)">
-                        <template x-if="r._tempDistance">
-                            <div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;" x-text="'📍 ' + r._tempDistance + ' km'"></div>
-                        </template>
+                    <div class="glass-card" style="display: flex; padding: 1rem; margin: 0 1rem 1rem 1rem; cursor: pointer; border-radius: 20px; align-items: center; gap: 1rem;" @click="openRestaurant(r.slug)">
+                        <img :src="r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=200&auto=format&fit=crop&q=60'" style="width: 80px; height: 80px; object-fit: cover; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);" :alt="r.name" loading="lazy">
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);" x-text="r.name"></h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 0.5rem 0;" x-text="r.category"></p>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.2rem;">
+                                    <span style="color: var(--primary); font-size: 0.9rem;">★</span>
+                                    <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" x-text="r.rating || '4.5'"></span>
+                                </div>
+                                <template x-if="isCurrentlyOpen(r)">
+                                    <span style="color: var(--success); font-size: 0.8rem; font-weight: 600;">Ouvert</span>
+                                </template>
+                            </div>
+                        </div>
+                        <div style="color: var(--primary); font-size: 1.5rem;">➔</div>
+                    </div>
+                </template>
+
                         <div class="restaurant-card-header" style="height: 200px; position: relative;">
                             <img :src="r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'" style="width: 100%; height: 100%; object-fit: cover;" :alt="r.name" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
                             <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
@@ -4340,3 +4386,18 @@ window.activeSortBy = activeSortBy;
 window.currentSelectedRating = currentSelectedRating;
 window.socialProofInterval = socialProofInterval;
 window.ClientTracker = ClientTracker;
+
+window.addEventListener('hashchange', () => {
+    const hash = window.location.hash || '#/';
+    const bottomNav = document.getElementById('bottom-nav-bar');
+    if (bottomNav) {
+        const items = bottomNav.querySelectorAll('.nav-item');
+        items.forEach(item => {
+            if (item.getAttribute('data-route') === hash) {
+                item.style.color = 'var(--primary)';
+            } else {
+                item.style.color = 'var(--text-secondary)';
+            }
+        });
+    }
+});
