@@ -884,21 +884,51 @@ class Store {
     // ============================================
 
     async generateOtp(phone) {
-        // [SIMULATION MODE]
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        console.log(`%c[SIMULATION OTP] Code généré pour ${phone} : ${code}`, 'color: #fff; background: #28a745; padding: 5px; font-weight: bold; border-radius: 4px;');
-        localStorage.setItem('simulated_otp_' + phone, code);
-        return true;
+        const isSimulation = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SMS_MODE === 'simulation');
+        
+        if (isSimulation) {
+            // [SIMULATION MODE]
+            const code = Math.floor(100000 + Math.random() * 900000).toString();
+            console.log(`%c[SIMULATION OTP] Code généré pour ${phone} : ${code}`, 'color: #fff; background: #28a745; padding: 5px; font-weight: bold; border-radius: 4px;');
+            localStorage.setItem('simulated_otp_' + phone, code);
+            return true;
+        }
+
+        // [PRODUCTION MODE]
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.rpc('generate_otp', { p_phone: phone });
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error("Erreur API SMS:", err);
+            return false;
+        }
     }
 
     async verifyOtp(phone, code) {
-        // [SIMULATION MODE]
-        const stored = localStorage.getItem('simulated_otp_' + phone);
-        if (stored && stored === code) {
-            localStorage.removeItem('simulated_otp_' + phone);
-            return true;
+        const isSimulation = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_SMS_MODE === 'simulation');
+
+        if (isSimulation) {
+            // [SIMULATION MODE]
+            const stored = localStorage.getItem('simulated_otp_' + phone);
+            if (stored && stored === code) {
+                localStorage.removeItem('simulated_otp_' + phone);
+                return true;
+            }
+            return false;
         }
-        return false;
+
+        // [PRODUCTION MODE]
+        if (!supabaseClient) return false;
+        try {
+            const { data, error } = await supabaseClient.rpc('verify_otp', { p_phone: phone, p_code: code });
+            if (error) throw error;
+            return data;
+        } catch (err) {
+            console.error("Erreur vérification API SMS:", err);
+            return false;
+        }
     }
 }
 
