@@ -915,6 +915,8 @@ function logoutAdmin() {
 // ----------------------------------------------------
 
 function getPopularDishes(restaurants) {
+    restaurants = restaurants.filter(r => r.status === 'active' || r.isOpenManual);
+
     let allDishes = [];
     restaurants.filter(r => r.status === 'active').forEach(r => {
         if (r.menu) {
