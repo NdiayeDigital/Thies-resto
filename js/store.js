@@ -34,15 +34,17 @@ class Store {
         if (supabaseClient) {
             this.syncPromise = this.syncFromSupabase();
         } else {
-            console.warn("Supabase introuvable. Chargement du fallback local MOCK_RESTAURANTS.");
-            if (typeof MOCK_RESTAURANTS !== 'undefined') {
-                this.data.restaurants = JSON.parse(JSON.stringify(MOCK_RESTAURANTS));
+            console.warn("Supabase introuvable. Chargement du fallback local SEED_RESTAURANTS.");
+            if (typeof window.SEED_RESTAURANTS !== 'undefined') {
+                this.data.restaurants = JSON.parse(JSON.stringify(window.SEED_RESTAURANTS));
             }
-            if (typeof MOCK_ORDERS !== 'undefined') {
-                this.data.orders = JSON.parse(JSON.stringify(MOCK_ORDERS));
+            if (typeof window.SEED_ORDERS !== 'undefined') {
+                this.data.orders = JSON.parse(JSON.stringify(window.SEED_ORDERS));
             }
-            if (typeof Alpine !== 'undefined' && Alpine.store('global')) {
-                Alpine.store('global', this.data);
+            if (typeof Alpine !== 'undefined' && typeof Alpine.store === 'function') {
+                try {
+                    Alpine.store('global', this.data);
+                } catch(e) { console.warn("Alpine not ready yet"); }
             }
             this.syncPromise = Promise.resolve();
         }

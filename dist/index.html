@@ -153,8 +153,8 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
 
     <!-- NATIVE CSS INJECTION (PRE-VITE SURGICAL ROLLBACK) -->
-  <script type="module" crossorigin src="/assets/index-Dt7GlQAU.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-z7shy6DO.css">
+  <script type="module" crossorigin src="/assets/index-BEG7ZxVm.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-BTvbCsff.css">
 <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>
 
 <body x-data>
@@ -193,20 +193,14 @@
                     <button class="close-drawer-btn" aria-label="Fermer le menu" onclick="toggleMobileMenu()">✕</button>
                 </div>
                 <div class="drawer-links">
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;"
+                    <a href="#/" onclick="toggleMobileMenu();">Accueil</a>
+                    <a href="#/tracking" onclick="toggleMobileMenu();"
                         style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
                     <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
                     <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
+                    <a href="#/partnership" onclick="toggleMobileMenu();">Devenir
                         Partenaire 🤝</a>
-                    <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;"
-                        title="Bientôt disponible">
-                        Espace Livreurs 🛵
-                        <span
-                            style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt
-                            disponible)</span>
-                    </a>
+                    
                     <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;"
                         style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪
                         Déconnexion</a>
@@ -265,11 +259,7 @@
         </div>
 
         <!-- ========== NOTIFICATION SOUND ========== -->
-        <audio id="notification-sound" preload="auto">
-            <source
-                src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f39/f39/f4B/f39/f3+Af39/f3+AgICBgYKDhIWGiImKi4yNjo+QkZKTlJWVlZWUk5KRkI+OjYyLiomIh4aFhIOCgYB/f35+fX19fHx8fHx8fX1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpqbm5ycnJ2dnZ2dnZycm5uampmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAf359fHt6"
-                type="audio/wav">
-        </audio>
+        
 
         <!-- ========== FOOTER ========== -->
         <footer id="main-footer">
@@ -294,11 +284,11 @@
                 <!-- Policies Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Légal</h4>
-                    <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions de Vente</a>
-                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client &
+                    <a href="#/cgv" onclick="">Conditions de Vente</a>
+                    <a href="#/politique-client" onclick="">Politique Client &
                         RGPD</a>
-                    <a href="#" onclick="router.navigate('/politique-admin'); return false;">Politique Restaurant</a>
-                    <a href="#" onclick="router.navigate('/admin-login'); return false;"
+                    <a href="#/politique-admin" onclick="">Politique Restaurant</a>
+                    <a href="#/admin-login" onclick=""
                         style="color: var(--accent); font-weight: bold; margin-top: 0.5rem; display: inline-block;">👑
                         Espace Super-Admin</a>
                 </div>
@@ -306,10 +296,10 @@
                 <!-- Links Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Navigation</h4>
-                    <a href="#" onclick="router.navigate('/'); return false;">Accueil</a>
+                    <a href="#/" onclick="">Accueil</a>
                     <a href="#" onclick="scrollToHowItWorks(); return false;">Comment ça marche ?</a>
-                    <a href="#" onclick="router.navigate('/auth'); return false;">Espace Restaurant</a>
-                    <a href="#" onclick="router.navigate('/partnership'); return false;">Demander un Partenariat 🤝</a>
+                    <a href="#/auth" onclick="">Espace Restaurant</a>
+                    <a href="#/partnership" onclick="">Demander un Partenariat 🤝</a>
                 </div>
 
                 <!-- Contact Column -->
@@ -445,9 +435,7 @@
     <!-- ========== CONSENT BANNER ========== -->
     <div id="consent-banner" class="consent-banner" style="display: none;">
         <div class="consent-content">
-            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#"
-                    onclick="router.navigate('/cgv'); return false;">CGV</a> et notre <a href="#"
-                    onclick="router.navigate('/politique-client'); return false;">Politique de Confidentialité</a>.</p>
+            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#/cgv" onclick="">CGV</a> et notre <a href="#/politique-client" onclick="">Politique de Confidentialité</a>.</p>
             <button class="btn btn-primary btn-sm" onclick="acceptConsent()">J'accepte</button>
         </div>
     </div>

@@ -824,12 +824,12 @@ function updateNavbar() {
     
     // User links template
     const userDrawerLinks = `
-        <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
-        <a href="#" onclick="toggleMobileMenu(); router.navigate('/profile'); return false;" style="color: var(--primary); font-weight: bold;">👤 Mon Profil / Historique</a>
-        <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+        <a href="#/" onclick="toggleMobileMenu();">Accueil</a>
+        <a href="#/profile" onclick="toggleMobileMenu();" style="color: var(--primary); font-weight: bold;">👤 Mon Profil / Historique</a>
+        <a href="#/tracking" onclick="toggleMobileMenu();" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
         <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
         <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
-        <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir Partenaire 🤝</a>
+        <a href="#/partnership" onclick="toggleMobileMenu();">Devenir Partenaire 🤝</a>
         <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
             Espace Livreurs 🛵 
             <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt disponible)</span>
@@ -848,7 +848,7 @@ function updateNavbar() {
                     <span style="color: var(--danger); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Mode Super-Admin</span>
                     <span style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">Gère : ${currentRestaurantSession.name}</span>
                 </div>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">📊 Tableau de Bord</a>
+                <a href="#/dashboard" onclick="toggleMobileMenu();">📊 Tableau de Bord</a>
                 <a href="#" onclick="toggleMobileMenu(); exitImpersonation(); return false;" style="color: var(--danger);">🚪 Retour Console Admin</a>
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
                 ${userDrawerLinks}
@@ -862,7 +862,7 @@ function updateNavbar() {
                 <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
                     <span style="color: var(--danger); font-weight: bold; font-size: 0.9rem;">👑 SUPER-ADMINISTRATEUR</span>
                 </div>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;">📊 Console Admin</a>
+                <a href="#/admin" onclick="toggleMobileMenu();">📊 Console Admin</a>
                 <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: bold;">🚪 Déconnexion Admin</a>
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
                 ${userDrawerLinks}
@@ -878,7 +878,7 @@ function updateNavbar() {
                 <span style="color: var(--success); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Espace Partenaire</span>
                 <span style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">${currentRestaurantSession.name}</span>
             </div>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">📊 Mon Tableau de Bord</a>
+            <a href="#/dashboard" onclick="toggleMobileMenu();">📊 Mon Tableau de Bord</a>
             <a href="#" onclick="toggleMobileMenu(); logoutRestaurant(); return false;" style="color: var(--danger); font-weight: bold;">🚪 Déconnexion</a>
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
             ${userDrawerLinks}
