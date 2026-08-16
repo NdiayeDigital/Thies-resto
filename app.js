@@ -1059,15 +1059,6 @@ router.add('#/', () => {
                 <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0;">Restaurants</h2><span style="color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">View All</span>
             </div>
 
-            <!-- FILTERS BAR -->
-            <div class="filter-bar" id="filter-bar">
-                <button class="filter-btn" :class="activeFilter === 'Tous' ? 'active' : ''" @click="activeFilter = 'Tous'">Tous</button>
-                <button class="filter-btn" :class="activeFilter === 'Traditionnel' ? 'active' : ''" @click="activeFilter = 'Traditionnel'">🍲 Traditionnel</button>
-                <button class="filter-btn" :class="activeFilter === 'Fast Food' ? 'active' : ''" @click="activeFilter = 'Fast Food'">🍔 Fast Food</button>
-                <button class="filter-btn" :class="activeFilter === 'Grillades / Dibi' ? 'active' : ''" @click="activeFilter = 'Grillades / Dibi'">🔥 Grillades</button>
-                <button class="filter-btn" :class="activeFilter === 'Gastronomique' ? 'active' : ''" @click="activeFilter = 'Gastronomique'">✨ Gastronomique</button>
-                <button class="filter-btn" :class="activeFilter === 'Pâtisserie' ? 'active' : ''" @click="activeFilter = 'Pâtisserie'">🥐 Pâtisserie</button>
-            </div>
 
             <!-- SORTING BAR -->
             <div class="sort-bar">
@@ -1515,7 +1506,7 @@ function setFilter(category) {
         }
             
         cardsHtml += `
-            <div class="restaurant-card hover-3d glass-panel" style="position: relative; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; border: 1px solid var(--border);" onclick="router.navigate('/r/${r.slug}')">
+            <div class="restaurant-card hover-3d glass-panel" style="position: relative; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; border: 1px solid var(--border);" onclick="window.router.navigate('/r/${r.slug || r.id}')">
                 ${distanceBadge}
                 <div class="restaurant-card-header" style="height: 200px; position: relative;">
                     <img src="${coverUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
@@ -4403,3 +4394,98 @@ window.addEventListener('hashchange', () => {
         });
     }
 });
+
+
+
+window.showCustomerLogin = function() {
+    const container = document.getElementById('main-content');
+    container.innerHTML = "" +
+        "<div style='padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; background: var(--bg-base); z-index: 10;'>" +
+            "<button onclick='window.router.navigate(\"/profile\")' style='background: none; border: none; font-size: 1.5rem; color: var(--text-primary); cursor: pointer;'>←</button>" +
+            "<h2 style='margin: 0; font-size: 1.2rem;'>Connexion</h2>" +
+        "</div>" +
+        "<div style='padding: 2rem 1.5rem; max-width: 500px; margin: 0 auto; animation: fadeIn 0.4s ease;'>" +
+            "<div style='background: var(--bg-card); padding: 2rem; border-radius: 16px; border: 1px solid var(--border);'>" +
+                "<div style='margin-bottom: 1rem;'>" +
+                    "<label style='display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;'>Numéro de téléphone</label>" +
+                    "<input type='tel' id='login-phone' class='form-control' placeholder='+221 77 123 45 67'>" +
+                "</div>" +
+                "<div style='margin-bottom: 2rem;'>" +
+                    "<label style='display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;'>Mot de passe</label>" +
+                    "<input type='password' id='login-pwd' class='form-control' placeholder='••••••••'>" +
+                "</div>" +
+                "<button class='btn btn-primary' style='width: 100%; padding: 1rem; border-radius: 12px;' onclick='window.customerLoginSubmit()'>Se connecter</button>" +
+            "</div>" +
+            "<p style='text-align: center; margin-top: 1.5rem; color: var(--text-secondary);'>Pas encore de compte ? <a href='javascript:void(0)' onclick='window.showCustomerRegister()' style='color: var(--primary); font-weight: bold; text-decoration: none;'>S'inscrire</a></p>" +
+        "</div>";
+};
+
+window.showCustomerRegister = function() {
+    const container = document.getElementById('main-content');
+    container.innerHTML = "" +
+        "<div style='padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; background: var(--bg-base); z-index: 10;'>" +
+            "<button onclick='window.router.navigate(\"/profile\")' style='background: none; border: none; font-size: 1.5rem; color: var(--text-primary); cursor: pointer;'>←</button>" +
+            "<h2 style='margin: 0; font-size: 1.2rem;'>Créer un compte</h2>" +
+        "</div>" +
+        "<div style='padding: 2rem 1.5rem; max-width: 500px; margin: 0 auto; animation: fadeIn 0.4s ease;'>" +
+            "<div style='background: var(--bg-card); padding: 2rem; border-radius: 16px; border: 1px solid var(--border);'>" +
+                "<div style='margin-bottom: 1rem;'>" +
+                    "<label style='display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;'>Nom complet</label>" +
+                    "<input type='text' id='reg-name' class='form-control' placeholder='Mamadou Diop'>" +
+                "</div>" +
+                "<div style='margin-bottom: 1rem;'>" +
+                    "<label style='display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;'>Numéro de téléphone</label>" +
+                    "<input type='tel' id='reg-phone' class='form-control' placeholder='+221 77 123 45 67'>" +
+                "</div>" +
+                "<div style='margin-bottom: 1rem;'>" +
+                    "<label style='display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;'>Email</label>" +
+                    "<input type='email' id='reg-email' class='form-control' placeholder='exemple@email.com'>" +
+                "</div>" +
+                "<div style='margin-bottom: 1rem;'>" +
+                    "<label style='display: block; font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.5rem;'>Mot de passe</label>" +
+                    "<input type='password' id='reg-pwd' class='form-control' placeholder='••••••••'>" +
+                "</div>" +
+                "<div style='margin-bottom: 2rem; padding: 1rem; background: var(--bg-base); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; gap: 1rem;'>" +
+                    "<input type='checkbox' id='reg-captcha' style='width: 24px; height: 24px; cursor: pointer;'>" +
+                    "<label for='reg-captcha' style='font-size: 0.95rem; color: var(--text-primary); cursor: pointer; user-select: none;'>Je ne suis pas un robot (Vérification)</label>" +
+                "</div>" +
+                "<button class='btn btn-primary' style='width: 100%; padding: 1rem; border-radius: 12px;' onclick='window.customerRegisterSubmit()'>Créer mon compte</button>" +
+            "</div>" +
+            "<p style='text-align: center; margin-top: 1.5rem; color: var(--text-secondary);'>Déjà un compte ? <a href='javascript:void(0)' onclick='window.showCustomerLogin()' style='color: var(--primary); font-weight: bold; text-decoration: none;'>Se connecter</a></p>" +
+        "</div>";
+};
+
+window.customerLoginSubmit = function() {
+    const phone = document.getElementById('login-phone').value;
+    if (!phone) return showToast("Veuillez saisir votre numéro", "warning");
+    
+    localStorage.setItem('customerLogged', 'true');
+    localStorage.setItem('customerPhone', phone);
+    
+    showToast("Connexion réussie", "success");
+    router.resolve();
+};
+
+window.customerRegisterSubmit = function() {
+    const name = document.getElementById('reg-name').value;
+    const phone = document.getElementById('reg-phone').value;
+    const email = document.getElementById('reg-email').value;
+    const pwd = document.getElementById('reg-pwd').value;
+    const captcha = document.getElementById('reg-captcha').checked;
+    
+    if (!name || !phone || !email || !pwd) return showToast("Veuillez remplir tous les champs", "warning");
+    if (!captcha) return showToast("Veuillez cocher la case anti-robot", "warning");
+    
+    localStorage.setItem('customerLogged', 'true');
+    localStorage.setItem('customerName', name);
+    localStorage.setItem('customerPhone', phone);
+    
+    showToast("Compte créé avec succès !", "success");
+    router.resolve();
+};
+
+window.customerLogout = function() {
+    localStorage.removeItem('customerLogged');
+    showToast("Déconnexion réussie", "success");
+    router.resolve();
+};

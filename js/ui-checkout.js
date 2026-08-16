@@ -537,3 +537,229 @@ window.checkOrderRateLimit = checkOrderRateLimit;
 window.submitSimpleOrder = submitSimpleOrder;
 window.deliveryMap = deliveryMap;
 window.deliveryMarker = deliveryMarker;
+
+
+window.renderPhase3Checkout = function(container, r) {
+    const cart = typeof Alpine !== 'undefined' ? Alpine.store('cart') : window.cart;
+    
+    // Setup local vars for bindings if needed
+    const customerPhone = localStorage.getItem('customerPhone') || '';
+    const customerName = localStorage.getItem('customerName') || '';
+
+    // Calculate initial total
+    const deliveryFee = cart.deliveryFee || 0;
+    const total = cart.subtotal + deliveryFee;
+
+    container.innerHTML = `
+        <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; background: var(--bg-base); z-index: 10;">
+            <button onclick="window.router.navigate('/cart')" style="background: none; border: none; font-size: 1.5rem; color: var(--text-primary); cursor: pointer;">←</button>
+            <h2 style="margin: 0; font-size: 1.2rem;">Validation Commande</h2>
+        </div>
+        
+        <div style="padding: 1.5rem; animation: fadeIn 0.3s ease;">
+            
+            <!-- Section 1: Coordonnées -->
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: var(--primary); color: white; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.8rem;">1</span> 
+                    Mes Coordonnées
+                </h3>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Prénom et Nom *</label>
+                    <input type="text" id="checkout-name" class="form-control" placeholder="Ex: Awa Ndiaye" value="${customerName}" required>
+                </div>
+                
+                <div style="margin-bottom: 0.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Numéro WhatsApp *</label>
+                    <input type="tel" id="checkout-phone" class="form-control" placeholder="+221 77 123 45 67" value="${customerPhone}" required>
+                </div>
+            </div>
+
+            <!-- Section 2: Mode de Réception -->
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: var(--primary); color: white; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.8rem;">2</span> 
+                    Mode de Réception
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+                    <label style="cursor: pointer; position: relative;">
+                        <input type="radio" name="orderType" value="delivery" onchange="window.toggleCheckoutDelivery(this.value)" checked style="position: absolute; opacity: 0;">
+                        <div class="order-type-btn delivery-active" id="btn-type-delivery" style="padding: 1rem; text-align: center; border-radius: 12px; border: 2px solid var(--primary); background: rgba(242, 107, 33, 0.1); transition: all 0.2s;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🛵</div>
+                            <div style="font-weight: 600; color: var(--text-primary);">Livraison</div>
+                        </div>
+                    </label>
+                    
+                    <label style="cursor: pointer; position: relative;">
+                        <input type="radio" name="orderType" value="pickup" onchange="window.toggleCheckoutDelivery(this.value)" style="position: absolute; opacity: 0;">
+                        <div class="order-type-btn" id="btn-type-pickup" style="padding: 1rem; text-align: center; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-card); transition: all 0.2s;">
+                            <div style="font-size: 1.5rem; margin-bottom: 0.25rem;">🛍️</div>
+                            <div style="font-weight: 600; color: var(--text-primary);">À Emporter</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div id="checkout-delivery-section" style="animation: fadeIn 0.3s ease;">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: var(--text-secondary); font-size: 0.9rem;">Quartier / Adresse *</label>
+                        <input type="text" id="checkout-address" class="form-control" placeholder="Ex: Grand Thiès, près de...">
+                    </div>
+                    
+                    <!-- Geo Option -->
+                    <button type="button" class="btn btn-secondary btn-block" onclick="window.openGeoModal()" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-size: 0.9rem; padding: 0.75rem; background: var(--bg-secondary); color: var(--text-primary);">
+                        <span>📍</span> Utiliser ma position GPS
+                    </button>
+                    <input type="hidden" id="checkout-lat">
+                    <input type="hidden" id="checkout-lng">
+                </div>
+            </div>
+
+            <!-- Section 3: Note / Instructions -->
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span style="background: var(--primary); color: white; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.8rem;">3</span> 
+                    Instructions (Optionnel)
+                </h3>
+                <textarea id="checkout-note" class="form-control" rows="2" placeholder="Précisions pour le livreur ou le restaurant..."></textarea>
+            </div>
+
+            <!-- Section 4: Récapitulatif et Validation -->
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1.5rem;">
+                <h3 style="margin: 0 0 1rem 0; font-size: 1.1rem;">Récapitulatif</h3>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.75rem; color: var(--text-secondary);">
+                    <span>Sous-total (${cart.items.reduce((a,b)=>a+b.qty, 0)} articles)</span>
+                    <span>${cart.subtotal.toLocaleString()} FCFA</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1rem; color: var(--text-secondary);" id="checkout-delivery-row">
+                    <span>Frais de livraison</span>
+                    <span id="checkout-delivery-fee">${deliveryFee > 0 ? deliveryFee.toLocaleString() + ' FCFA' : 'À calculer'}</span>
+                </div>
+                
+                <hr style="border: 0; border-top: 1px dashed var(--border); margin: 1rem 0;">
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 1.5rem; font-size: 1.3rem; font-weight: 700; color: var(--text-primary);">
+                    <span>Total à payer</span>
+                    <span id="checkout-total-price" style="color: var(--primary);">${total.toLocaleString()} FCFA</span>
+                </div>
+                
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; display: flex; gap: 0.75rem; align-items: flex-start;">
+                    <span style="font-size: 1.2rem;">💵</span>
+                    <div>
+                        <div style="font-weight: 600; color: #10b981; font-size: 0.95rem; margin-bottom: 0.25rem;">Paiement en espèces</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Vous paierez directement à la livraison.</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 0.5rem; align-items: flex-start; margin-bottom: 1.5rem;">
+                    <input type="checkbox" id="checkout-rgpd" style="margin-top: 0.25rem; accent-color: var(--primary);">
+                    <label for="checkout-rgpd" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.4;">
+                        J'accepte les <a href="#/cgv" style="color: var(--primary); text-decoration: underline;">conditions générales de vente</a> et consens à l'utilisation de mon numéro pour le suivi.
+                    </label>
+                </div>
+
+                <button id="btn-submit-order" class="btn btn-primary btn-block" style="font-size: 1.1rem; padding: 1rem; border-radius: 30px; box-shadow: 0 4px 15px rgba(242,107,33,0.4);" onclick="window.submitPhase3Order('${r ? r.id : ''}')">
+                    CONFIRMER LA COMMANDE 🚀
+                </button>
+            </div>
+            
+        </div>
+    `;
+};
+
+window.toggleCheckoutDelivery = function(type) {
+    const section = document.getElementById('checkout-delivery-section');
+    const btnDelivery = document.getElementById('btn-type-delivery');
+    const btnPickup = document.getElementById('btn-type-pickup');
+    
+    if (type === 'delivery') {
+        section.style.display = 'block';
+        btnDelivery.style.border = '2px solid var(--primary)';
+        btnDelivery.style.background = 'rgba(242, 107, 33, 0.1)';
+        btnPickup.style.border = '1px solid var(--border)';
+        btnPickup.style.background = 'var(--bg-card)';
+        
+        // Restore delivery fee if we have one
+        const cart = typeof Alpine !== 'undefined' ? Alpine.store('cart') : window.cart;
+        document.getElementById('checkout-delivery-row').style.display = 'flex';
+        document.getElementById('checkout-total-price').textContent = (cart.subtotal + (cart.deliveryFee || 0)).toLocaleString() + ' FCFA';
+    } else {
+        section.style.display = 'none';
+        btnPickup.style.border = '2px solid var(--primary)';
+        btnPickup.style.background = 'rgba(242, 107, 33, 0.1)';
+        btnDelivery.style.border = '1px solid var(--border)';
+        btnDelivery.style.background = 'var(--bg-card)';
+        
+        // Remove delivery fee from total
+        const cart = typeof Alpine !== 'undefined' ? Alpine.store('cart') : window.cart;
+        document.getElementById('checkout-delivery-row').style.display = 'none';
+        document.getElementById('checkout-total-price').textContent = cart.subtotal.toLocaleString() + ' FCFA';
+    }
+};
+
+window.submitPhase3Order = async function(restaurantId) {
+    const btn = document.getElementById('btn-submit-order');
+    const cart = typeof Alpine !== 'undefined' ? Alpine.store('cart') : window.cart;
+    
+    const name = document.getElementById('checkout-name').value.trim();
+    const phone = document.getElementById('checkout-phone').value.trim();
+    const rgpd = document.getElementById('checkout-rgpd').checked;
+    const type = document.querySelector('input[name="orderType"]:checked').value;
+    const address = type === 'delivery' ? document.getElementById('checkout-address').value.trim() : '';
+    const note = document.getElementById('checkout-note').value.trim();
+    
+    if (!name || !phone) {
+        if(typeof showToast==='function') showToast("Veuillez remplir vos coordonnées", "warning");
+        return;
+    }
+    
+    if (type === 'delivery' && !address) {
+        if(typeof showToast==='function') showToast("Veuillez indiquer une adresse de livraison", "warning");
+        return;
+    }
+    
+    if (!rgpd) {
+        if(typeof showToast==='function') showToast("Veuillez accepter les conditions (RGPD)", "warning");
+        return;
+    }
+    
+    // UI Loading state
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-ring" style="width:20px;height:20px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:10px;"></span> Traitement...';
+    
+    // Save to local storage for convenience next time
+    localStorage.setItem('customerName', name);
+    localStorage.setItem('customerPhone', phone);
+    if (address) localStorage.setItem('customerAddress', address);
+    
+    // Construct order payload
+    const orderPayload = {
+        restaurantId: restaurantId,
+        customerName: name,
+        customerPhone: phone,
+        orderType: type,
+        address: address,
+        note: note,
+        lat: document.getElementById('checkout-lat').value || null,
+        lng: document.getElementById('checkout-lng').value || null
+    };
+
+    // Note: We use existing window.executeOrder from ui-checkout.js
+    try {
+        if (typeof window.executeOrder === 'function') {
+            // For now, we skip SMS verification logic and directly execute
+            // In Phase 3.5 we will intercept here to show OTP modal.
+            await window.executeOrder(orderPayload);
+        } else {
+            throw new Error("window.executeOrder is missing");
+        }
+    } catch (err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.innerHTML = 'CONFIRMER LA COMMANDE 🚀';
+        if(typeof showToast==='function') showToast("Erreur lors de l'envoi de la commande", "danger");
+    }
+};

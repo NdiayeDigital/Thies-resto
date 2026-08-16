@@ -619,7 +619,7 @@ class Store {
             this.syncPromise = this.syncFromSupabase();
         }
         await this.syncPromise;
-        const resto = this.data.restaurants.find(r => r.slug === slug);
+        const resto = this.data.restaurants.find(r => r.slug === slug || r.id == slug);
         if (resto) {
             // Wait for menu to load before returning the restaurant
             await this.fetchMenuForRestaurant(resto.id);

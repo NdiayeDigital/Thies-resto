@@ -416,7 +416,7 @@ main {
 /* Restaurant Cards Grid */
 .restaurant-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1.5rem;
     padding: 0 1.5rem 3rem 1.5rem;
 }
@@ -431,7 +431,7 @@ main {
     display: flex;
     flex-direction: column;
     height: 100%;
-}
+ transform: translateZ(0); will-change: transform, opacity; }
 
 .restaurant-card:hover {
     transform: translateY(-5px);
@@ -618,7 +618,7 @@ main {
 /* Dishes Grid */
 .dishes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1.5rem;
 }
 
@@ -1193,7 +1193,7 @@ textarea.form-control {
     border: 1px solid var(--border);
     padding: 2rem;
     border-radius: 24px;
-    max-width: 320px;
+    max-width: 100%; max-width: 320px;
     margin: 2rem auto;
 }
 
@@ -1618,7 +1618,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 
 .animated-hero-illustration {
     position: relative;
-    width: 300px;
+    width: 100%; max-width: 300px;
     height: 300px;
     display: flex;
     align-items: center;
@@ -1655,13 +1655,13 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 }
 
 .ring-1 {
-    width: 240px;
+    width: 100%; max-width: 240px;
     height: 240px;
     animation: spinClockwise 25s linear infinite;
 }
 
 .ring-2 {
-    width: 280px;
+    width: 100%; max-width: 280px;
     height: 280px;
     border-color: rgba(255, 255, 255, 0.08);
     animation: spinCounterClockwise 35s linear infinite;
@@ -2091,7 +2091,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     background: rgba(4, 16, 10, 0.75);
     backdrop-filter: blur(5px);
@@ -2129,7 +2129,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 }
 
 .hero-food-plate-container {
-    width: 320px;
+    width: 100%; max-width: 320px;
     height: 320px;
     border-radius: 50%;
     position: relative;
@@ -3498,7 +3498,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 [data-theme="light"] .modal-content {
     background: #ffffff !important;
     color: #121212 !important;
-}
+ max-height: 90vh; overflow-y: auto; }
 [data-theme="dark"] .restaurant-card,
 [data-theme="dark"] .menu-item-card,
 [data-theme="dark"] .history-card,
@@ -3749,7 +3749,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     box-shadow: var(--shadow);
     transform: scale(0.95);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
+ max-height: 90vh; overflow-y: auto; }
 
 .geo-icon {
     font-size: 3rem;
@@ -3986,4 +3986,22 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 .glass-card:hover {
     border-color: var(--border-focus);
     box-shadow: var(--shadow-lg);
+}
+
+
+/* MOBILE PERFORMANCE FIX: Reduce heavy backdrop filters on small screens */
+@media (max-width: 768px) {
+    .glass-panel,
+    .navbar,
+    .mobile-bottom-nav,
+    .drawer-backdrop {
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        background-color: rgba(18, 18, 18, 0.95) !important;
+    }
+    
+    .hover-3d:hover {
+        transform: translateY(-2px) scale(1) !important;
+        box-shadow: 0 5px 15px rgba(255, 122, 0, 0.1) !important;
+    }
 }

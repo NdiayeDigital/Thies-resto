@@ -57,11 +57,23 @@ class Router {
         }
 
         if (!matched) {
-            const handler = this.routes[hash] || this.routes['#/404'];
+            const handler = this.routes[hash];
             if (handler) {
                 handler();
+            } else if (this.routes['#/404']) {
+                this.routes['#/404']();
             } else {
-                this.navigate('/');
+                console.warn('Route non trouvée:', hash);
+                const container = document.getElementById('main-content');
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 5rem 1.5rem;">
+                            <h2 style="font-size: 2rem; color: var(--text-primary); margin-bottom: 1rem;">Page introuvable</h2>
+                            <p style="color: var(--text-secondary); margin-bottom: 2rem;">La page <strong>${hash}</strong> n'existe pas ou n'est pas encore disponible.</p>
+                            <button class="btn btn-primary" onclick="window.router.navigate('/')">Retour à l'accueil</button>
+                        </div>
+                    `;
+                }
             }
         }
         
