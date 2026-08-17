@@ -165,60 +165,6 @@
 
     <div class="app-container">
         <!-- ========== NAVIGATION BAR ========== -->
-        <header class="navbar glass-panel" id="main-navbar" style="padding: 1rem; border-bottom: none; border-radius: 0 0 20px 20px; z-index: 100; flex-direction: column; align-items: stretch; background: var(--bg-base);">
-            <!-- Mobile top row -->
-            <div class="mobile-only" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                <div class="user-profile" style="background: url('icon.png') center/cover; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); position: relative;">
-                    <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #FF3B30; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
-                </div>
-            </div>
-
-            <!-- Desktop top row -->
-            <div class="desktop-only" style="display: none; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1rem;">
-                <!-- 3-dot menu on the left -->
-                <div class="desktop-menu" style="position: relative;">
-                    <button id="desktop-menu-btn" style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 50%; width: 45px; height: 45px; font-size: 1.5rem; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow);" onclick="const d = document.getElementById('desktop-dropdown'); d.style.display = d.style.display === 'none' ? 'flex' : 'none';">⋮</button>
-                    <div id="desktop-dropdown" class="glass-panel" style="display: none; position: absolute; left: 0; top: 55px; min-width: 180px; border-radius: 12px; padding: 0.5rem 0; box-shadow: var(--shadow); z-index: 1000; flex-direction: column; text-align: left;">
-                        <a href="#/" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">🏠 Accueil</a>
-                        <a href="#/tracking" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">🛵 Suivi</a>
-                        <a href="#/cart" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; justify-content: space-between;" onclick="document.getElementById('desktop-dropdown').style.display='none';">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">🛒 Panier</div>
-                            <span id="desktop-nav-cart-qty" style="background: var(--primary); color: white; border-radius: 50%; font-size: 0.75rem; padding: 2px 6px; display: none; font-weight: bold;">0</span>
-                        </a>
-                        <a href="#/profile" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">👤 Profil</a>
-                    </div>
-                </div>
-                
-                <!-- Logo in the middle (big circle) -->
-                <div style="background: url('icon.png') center/cover; width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.1);"></div>
-                
-                <!-- Hi, nom du client on the right -->
-                <div style="text-align: right;">
-                    <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.2rem; font-weight: 500;">Hi, <span class="customer-name-display">Foodie</span> 👋</p>
-                </div>
-            </div>
-
-            <!-- Mobile text section -->
-            <div class="mobile-only" style="margin-top: 0.5rem; text-align: left;">
-                <p style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 0.1rem;">Hi, <span class="customer-name-display">Foodie</span> 👋</p>
-                <h1 style="font-size: 1.6rem; line-height: 1.1; margin: 0;">Good Food<br>Good <span style="color: var(--primary);">Mood!</span></h1>
-            </div>
-
-            <!-- Desktop Slogan -->
-            <div class="desktop-slogan" style="display: none; margin-top: 1rem; text-align: center;">
-                <h1 style="font-size: 2rem; color: var(--text-primary); font-weight: bold;">Les restaurants et Nourritures les plus chics de Thiès</h1>
-            </div>
-            
-            <div style="margin-top: 1.5rem; position: relative;">
-                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem;">🔍</span>
-                <input type="text" placeholder="Search your favorite food" style="width: 100%; background: var(--bg-input); border: none; padding: 15px 15px 15px 45px; border-radius: 30px; color: var(--text-primary); font-size: 1rem;">
-                <button style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: var(--bg-glass); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                    <span style="color: var(--text-primary);">🎛️</span>
-                </button>
-            </div>
-            
-
-            <!-- Mobile Drawer Overlay -->
             
             
         </header>
