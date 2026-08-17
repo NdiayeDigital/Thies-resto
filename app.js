@@ -891,7 +891,7 @@ function updateNavbar() {
         drawerHtml = userDrawerLinks;
     }
     
-    navActions.innerHTML = html;
+    if (navActions) navActions.innerHTML = html;
     if (drawerLinks) {
         drawerLinks.innerHTML = drawerHtml;
     }
