@@ -1,0 +1,2 @@
+container.innerHTML = `
+        <div class="auth-container" style="max-width: 450px;

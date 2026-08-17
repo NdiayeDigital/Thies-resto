@@ -1,0 +1,272 @@
+
+    <!-- ========== LOADING OVERLAY REMOVED ========== -->
+
+    <div class="app-container">
+        <!-- ========== NAVIGATION BAR ========== -->
+        <header class="navbar glass-panel" id="main-navbar" style="padding: 1rem; border-bottom: none; border-radius: 0 0 20px 20px; position: sticky; top: 0; z-index: 100;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                
+                <div class="user-profile" style="background: url('/assets/icon-R7nLk5J4.png') center/cover; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); position: relative;">
+                    <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #FF3B30; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem; text-align: left;">
+                <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.2rem;">Hi, Foodie 👋</p>
+                <h1 style="font-size: 2.2rem; line-height: 1.1;">Good Food<br>Good <span style="color: var(--primary);">Mood!</span></h1>
+            </div>
+            
+            <div style="margin-top: 1.5rem; position: relative;">
+                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem;">🔍</span>
+                <input type="text" placeholder="Search your favorite food" style="width: 100%; background: var(--bg-input); border: none; padding: 15px 15px 15px 45px; border-radius: 30px; color: var(--text-primary); font-size: 1rem;">
+                <button style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: var(--bg-glass); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <span style="color: var(--text-primary);">🎛️</span>
+                </button>
+            </div>
+            
+            <!-- Category Pills -->
+            <div style="display: flex; gap: 1rem; overflow-x: auto; margin-top: 1.5rem; padding-bottom: 0.5rem;" class="hide-scrollbar">
+                <div style="background: var(--primary); color: #fff; padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; box-shadow: var(--shadow-sm);">
+                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍔</span>
+                    <span style="font-size: 0.9rem; font-weight: 500;">Burger</span>
+                </div>
+                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
+                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍕</span>
+                    <span style="font-size: 0.9rem; font-weight: 500;">Pizza</span>
+                </div>
+                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
+                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍗</span>
+                    <span style="font-size: 0.9rem; font-weight: 500;">Chicken</span>
+                </div>
+                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
+                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍟</span>
+                    <span style="font-size: 0.9rem; font-weight: 500;">Fries</span>
+                </div>
+            </div>
+
+            <!-- Mobile Drawer Overlay -->
+            
+            
+        </header>
+
+        <!-- ========== MAIN WORKSPACE ========== -->
+        <main id="main-content" style="padding-bottom: 90px;">
+            <!-- SKELETON PRELOADER -->
+            <div id="initial-skeleton" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
+                <div class="skeleton" style="height: 400px; width: 100%; border-radius: 24px; margin-bottom: 2rem;">
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+                </div>
+            </div>
+        </main>
+
+
+        <!-- ========== FLOATING CART BAR ========== -->
+        
+
+        <!-- ========== FLOATING WHATSAPP SUPPORT ========== -->
+        <a href="https://wa.me/221784799882?text=Bonjour,%20j'ai%20besoin%20d'aide%20sur%20THIES%20Resto" target="_blank" rel="noopener noreferrer" class="floating-support-btn" style="position: fixed; bottom: 90px; right: 20px; background-color: #25D366; color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s;">
+            💬
+        </a>
+
+        <!-- ========== TOAST NOTIFICATION ========== -->
+        <div id="toast-notification" class="toast-notification" style="display: none;">
+            <!-- Content filled dynamically -->
+        </div>
+
+        <!-- ========== SOCIAL PROOF TOAST ========== -->
+        <div id="social-proof-toast" style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); align-items: center; gap: 12px; transition: opacity 0.5s ease-out;">
+            <!-- Content filled dynamically -->
+        </div>
+
+        <!-- ========== NOTIFICATION SOUND ========== -->
+        
+
+        <!-- ========== FOOTER ========== -->
+        <footer id="main-footer" style="margin-bottom: 80px;">
+            <div class="footer-grid">
+                <!-- About Column -->
+                <div class="footer-col">
+                    <div class="footer-brand" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <img src="/assets/icon-R7nLk5J4.png" alt="THIES Resto Logo" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+                        <span class="logo-text" style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">THIES
+                            Resto</span>
+                    </div>
+                    <p class="footer-about-text">
+                        La première plateforme de restauration commune à Thiès, Sénégal. Née d'une étude de terrain sur
+                        les 20 restaurants les mieux notés de la ville, elle centralise les menus, commandes et
+                        réservations en un seul endroit.
+                    </p>
+                </div>
+
+                <!-- Policies Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Légal</h4>
+                    <a href="#/cgv" onclick="">Conditions de Vente</a>
+                    <a href="#/politique-client" onclick="">Politique Client &amp;
+                        RGPD</a>
+                    <a href="#/politique-admin" onclick="">Politique Restaurant</a>
+                    <a href="#/admin-login" onclick="" style="color: var(--accent); font-weight: bold; margin-top: 0.5rem; display: inline-block;">👑
+                        Espace Super-Admin</a>
+                </div>
+
+                <!-- Links Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Navigation</h4>
+                    <a href="#/" onclick="">Accueil</a>
+                    <a href="#/" onclick="scrollToHowItWorks(); return false;">Comment ça marche ?</a>
+                    <a href="#/auth" onclick="">Espace Restaurant</a>
+                    <a href="#/partnership" onclick="">Demander un Partenariat 🤝</a>
+                </div>
+
+                <!-- Contact Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Contact &amp; Réseaux</h4>
+                    <a href="https://wa.me/221784799882" target="_blank" rel="noopener noreferrer">💬 WhatsApp (+221 78
+                        479 98 82)</a>
+                    <a href="https://www.facebook.com/profile.php?id=61591577033848" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
+                    <a href="https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&amp;utm_source=qr" target="_blank" rel="noopener noreferrer">📸 Instagram</a>
+                    <a href="https://www.tiktok.com/@thiesresto?_r=1&amp;_t=ZS-97XIj47j1gS" target="_blank" rel="noopener noreferrer">🎵 TikTok</a>
+                    <a href="mailto:contact@thies-resto.com">✉️ contact@thies-resto.com</a>
+                </div>
+
+                <!-- Theme Toggle Column -->
+                <div class="footer-col">
+                    <h4 class="footer-col-title">Apparence</h4>
+                    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Changer le thème" onclick="toggleTheme()">
+                        <span id="theme-toggle-icon">☀️</span>
+                        <span id="theme-toggle-label">Mode Clair</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>© 2026 THIES Resto. Fait avec ❤️ pour la Teranga Sénégalaise. Paiement en espèces uniquement.
+                </p>
+            </div>
+        </footer>
+
+
+    </div>
+
+    <!-- ========== JSON-LD STRUCTURED DATA ========== -->
+    <script id="json-ld-data" type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": ["WebApplication", "Service"],
+        "name": "THIES Resto",
+        "description": "Plateforme commune de restauration pour les restaurants de Thiès, Sénégal. Commandez en ligne, réservez votre table et découvrez les meilleurs plans gastronomiques (Thiéboudiène, Yassa, Fast Food) à Thiès.",
+        "url": "https://thies-resto.com",
+        "applicationCategory": "FoodService",
+        "operatingSystem": "Web, Mobile",
+        "keywords": "restaurant thies, bon plan thies, commander repas thies, restauration thies, thiès resto",
+        "provider": {
+            "@type": "Organization",
+            "name": "NdiayeDigital",
+            "url": "https://thies-resto.com"
+        },
+        "sameAs": [
+            "https://www.facebook.com/profile.php?id=61591577033848",
+            "https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&utm_source=qr",
+            "https://www.tiktok.com/@thiesresto?_r=1&_t=ZS-97XIj47j1gS",
+            "https://wa.me/221784799882"
+        ],
+        "areaServed": {
+            "@type": "City",
+            "name": "Thiès",
+            "containedInPlace": {
+                "@type": "Country",
+                "name": "Sénégal"
+            }
+        },
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "XOF",
+            "description": "Plateforme gratuite de commande et de réservation pour les clients"
+        }
+    }
+    </script>
+
+    <!-- ========== MOBILE BOTTOM NAV ========== -->
+    
+    <!-- Supabase Client Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Confetti for Order Success -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Leaflet JS for Maps -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- App Logic (Bundled with Vite) -->
+
+
+    <script>
+        function togglePasswordVisibility(inputId, iconElement) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                iconElement.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                iconElement.textContent = '👁️';
+            }
+        }
+    </script>
+
+    <!-- Metricool Tracking Pixel -->
+    <img src="https://tracker.metricool.com/c3po.jpg?hash=ebe8b52530fde54a82b1ea7dec11f618" style="display:none; width:0px; height:0px;" alt="">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+
+    <!-- ========== CONSENT BANNER ========== -->
+    <div id="consent-banner" class="consent-banner" style="display: none;">
+        <div class="consent-content">
+            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#/cgv" onclick="">CGV</a> et notre <a href="#/politique-client" onclick="">Politique de Confidentialité</a>.</p>
+            <button class="btn btn-primary btn-sm" onclick="acceptConsent()">J'accepte</button>
+        </div>
+    </div>
+
+    <!-- ========== GEOLOCATION MODAL ========== -->
+    <div id="geo-modal" class="geo-modal" style="display: none;">
+        <div class="geo-modal-content">
+            <div class="geo-icon">📍</div>
+            <h3>Où êtes-vous ?</h3>
+            <p>Pour vous afficher les meilleurs restaurants ouverts autour de vous (à moins de 5 km), nous avons besoin
+                d'accéder à votre position GPS.</p>
+            <div class="geo-actions">
+                <button class="btn btn-secondary" onclick="closeGeoModal()">Plus tard</button>
+                <button class="btn btn-primary" onclick="requestNativeGeolocation()">Autoriser l'accès</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== BOTTOM NAVIGATION BAR ========== -->
+    <nav id="bottom-nav-bar" class="glass-panel" style="position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; justify-content: space-around; padding: 1rem; border-top: 1px solid var(--border); z-index: 999; backdrop-filter: blur(20px);">
+    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/" onclick="router.navigate('/')">
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">🏠</span>
+        <span style="font-size: 0.75rem; font-weight: 600;">Accueil</span>
+    </div>
+    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/tracking" onclick="router.navigate('/tracking')">
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">🛵</span>
+        <span style="font-size: 0.75rem; font-weight: 600;">Suivi</span>
+    </div>
+    <div class="nav-item cart-nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary); position: relative;" onclick="openCartTab();">
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">🛒</span>
+        <span style="font-size: 0.75rem; font-weight: 600;">Panier</span>
+        <span id="bottom-nav-cart-qty" class="cart-badge" style="display: none; position: absolute; top: -5px; right: 10px; background: var(--primary); color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: bold;">0</span>
+    </div>
+    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/profile" onclick="router.navigate('/profile')">
+        <span style="font-size: 1.5rem; margin-bottom: 4px;">👤</span>
+        <span style="font-size: 0.75rem; font-weight: 600;">Profil</span>
+    </div>
+</nav>
+
+
+

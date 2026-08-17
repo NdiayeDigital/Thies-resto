@@ -1,0 +1,1070 @@
+container.innerHTML = `
+        <div class="auth-container" style="max-width: 450px; margin: 3rem auto; padding: 2rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
+            <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🏪</span>
+                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: var(--text-primary);">Espace Partenaire</h2>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Connectez-vous à votre tableau de bord restaurant.</p>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="login-form" onsubmit="handleRestaurantLogin(event)">
+                <div class="form-group" class="cgu-text">
+                    <label class="form-label">Identifiant unique (slug)</label>
+                    <input type="text" id="login-username" class="form-control" placeholder="la-licorne" required>
+                </div>
+                <div class="form-group" style="margin-bottom: 0.5rem;">
+                    <label class="form-label">Mot de passe</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                </div>
+                <div style="text-align: right; margin-bottom: 1.5rem;">
+                    <button type="button" onclick="handleForgotPassword()" style="background: none; border: none; color: var(--accent); font-size: 0.8rem; cursor: pointer; padding: 0; text-decoration: underline;">🔑 Mot de passe oublié ?</button>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Se connecter 🔓</button>
+            </form>
+
+            <!-- PARTNERSHIP CTA -->
+            <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">Vous souhaitez rejoindre le réseau THIES Resto ?</p>
+                <button class="btn btn-secondary btn-block" onclick="router.navigate('/partnership')" style="width: 100%; font-weight: 700;">Demander un Partenariat 🤝</button>
+            </div>
+        </div>
+    `;
+});
+
+function handleForgotPassword() {
+    const username = document.getElementById('login-username') ? document.getElementById('login-username').value.trim() : '';
+    const msg = username
+        ? `Bonjour, j'ai oublié mon mot de passe pour mon espace restaurant THIES Resto. Mon identifiant est : *${username}*. Pouvez-vous m'aider à le récupérer ?`
+        : `Bonjour, j'ai oublié mon mot de passe pour mon espace restaurant sur THIES Resto. Pouvez-vous m'aider ?`;
+    const waUrl = `https://wa.me/221784799882?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank');
+}
+
+// ----------------------------------------------------
+// Page: DEMANDE DE PARTENARIAT
+// ----------------------------------------------------
+router.add('#/partnership', () => {
+    // Hide cart
+    document.getElementById('floating-cart-bar').style.display = 'none';
+    stopOrderPolling();
+    hideLoadingOverlay();
+    
+    const container = document.getElementById('main-content');
+    
+    container.innerHTML = `
+        <div class="auth-container" style="max-width: 600px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
+            <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
+                <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🤝</span>
+                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: var(--text-primary);">Demande de Partenariat</h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
+                    Rejoignez la première plateforme commune de restauration à Thiès. Remplissez les informations de votre établissement ci-dessous.
+                </p>
+            </div>
+
+            <!-- REGISTRATION FORM -->
+            <form id="register-form" onsubmit="handleRestaurantRegister(event)">
+                <div class="form-group" class="cgu-text">
+                    <label class="form-label">Nom de votre restaurant <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="text" id="reg-name" class="form-control" placeholder="ex: Le Teranga du Rail" required oninput="handleRestaurantNameInput(this.value, 'reg-username', 'reg-password', 'slug-availability-badge')">
+                </div>
+
+                <div class="form-group" class="cgu-text">
+                    <label class="form-label">Adresse physique à Thiès <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="text" id="reg-address" class="form-control" placeholder="ex: Quartier Escale, Thiès" required>
+                </div>
+
+                <div class="form-group" class="cgu-text">
+                    <label class="form-label">Catégorie de cuisine <span class="required" style="color: var(--accent);">*</span></label>
+                    <select id="reg-category" class="form-control" required style="width: 100%;">
+                        <option value="Traditionnel">Traditionnel (Thiéb, Yassa, Mafé)</option>
+                        <option value="Grillades / Dibi">Grillades / Dibi (Dibiterie)</option>
+                        <option value="Fast Food">Fast Food (Burgers, Chawarmas)</option>
+                        <option value="Pâtisserie">Pâtisserie / Petit Déjeuner</option>
+                        <option value="Gastronomique">Chic / Gastronomique</option>
+                    </select>
+                </div>
+
+                <div class="form-group" class="cgu-text">
+                    <label class="form-label">Numéro WhatsApp de réception <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="tel" id="reg-whatsapp" class="form-control" placeholder="ex: +221 77 123 45 67" required>
+                    <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">C'est sur ce numéro que vous recevrez les commandes clients.</small>
+                </div>
+
+                <div class="form-group" class="cgu-text">
+                    <label class="form-label">Photo du Restaurant / Logo (Optionnel)</label>
+                    <input type="file" id="reg-image-file" class="form-control" accept="image/*" onchange="handleRegImageUpload(event)" style="padding: 0.35rem; height: auto;">
+                    <input type="hidden" id="reg-image-url" value="">
+                    <div id="reg-image-preview-container" style="display: none; margin-top: 0.75rem; align-items: center; gap: 0.75rem; background: var(--bg-secondary); padding: 0.5rem; border-radius: 10px; border: 1px solid var(--border);">
+                        <img id="reg-image-preview" src="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                        <span id="reg-image-upload-status" style="font-size: 0.75rem; color: var(--success); font-weight: 600;">Photo sélectionnée avec succès ! ✅</span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                    <div class="form-group">
+                        <label class="form-label">Heure d'ouverture <span class="required" style="color: var(--accent);">*</span></label>
+                        <input type="time" id="reg-open" class="form-control" value="08:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Heure de fermeture <span class="required" style="color: var(--accent);">*</span></label>
+                        <input type="time" id="reg-close" class="form-control" value="23:00" required>
+                    </div>
+                </div>
+
+                <div class="form-group" class="cgu-text">
+                    <label class="form-label">Identifiant de connexion souhaité (slug) <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="text" id="reg-username" class="form-control" placeholder="ex: le-teranga-rail" required oninput="checkSlugAvailability()">
+                    <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement (modifiable).</small>
+                    <div id="slug-availability-badge" style="margin-top: 0.35rem; font-size: 0.8rem; font-weight: 600;"></div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.75rem;">
+                    <label class="form-label">Mot de passe de connexion <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="password" id="reg-password" class="form-control" placeholder="••••••••" required>
+                    <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement par défaut (nom_221, modifiable).</small>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Envoyer la demande de partenariat 🚀</button>
+            </form>
+
+            <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Vous êtes déjà partenaire ?</p>
+                <button class="btn btn-secondary btn-block" onclick="router.navigate('/auth')" style="width: 100%;">Se connecter à l'espace membre 🔓</button>
+            </div>
+        </div>
+    `;
+});
+
+window.handleRegImageUpload = async function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!supabaseClient) {
+        showToast("Service Storage non disponible", "danger");
+        return;
+    }
+
+    const previewImg = document.getElementById('reg-image-preview');
+    const container = document.getElementById('reg-image-preview-container');
+    const statusText = document.getElementById('reg-image-upload-status');
+    const urlInput = document.getElementById('reg-image-url');
+    const submitBtn = document.querySelector('#register-form button[type="submit"]');
+
+    if (container) container.style.display = 'flex';
+    if (previewImg) previewImg.src = URL.createObjectURL(file);
+    if (statusText) {
+        statusText.innerHTML = `⏳ Compression et envoi...`;
+        statusText.style.color = "var(--warning)";
+    }
+    if (submitBtn) submitBtn.disabled = true;
+
+    // --- IMAGE COMPRESSION LOGIC ---
+    const compressImage = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = event => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    // Convert to blob (webp for better compression)
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/webp', 0.8);
+                };
+            };
+        });
+    };
+
+    try {
+        const compressedBlob = await compressImage(file);
+        const fileName = `${Date.now()}_logo.webp`;
+        const filePath = `restaurants/${fileName}`;
+
+        const { error } = await supabaseClient.storage
+            .from('restaurant_images')
+            .upload(filePath, compressedBlob, { contentType: 'image/webp' });
+
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabaseClient.storage
+            .from('restaurant_images')
+            .getPublicUrl(filePath);
+
+        urlInput.value = publicUrlData.publicUrl;
+        
+        if (statusText) {
+            statusText.innerHTML = `✅ Photo compressée et hébergée !`;
+            statusText.style.color = "var(--success)";
+        }
+    } catch (e) {
+        console.error("Upload error:", e);
+        if (statusText) {
+            statusText.innerHTML = `❌ Échec de l'envoi (${e.message})`;
+            statusText.style.color = "var(--danger)";
+        }
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+
+
+async function handleRestaurantLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value.trim().toLowerCase();
+    const pass = document.getElementById('login-password').value.trim();
+    
+    const isAdmin = username === 'thiesresto';
+
+    if (isAdmin) {
+        if (!supabaseClient) {
+            showToast("Erreur de connexion serveur", "danger");
+            return;
+        }
+        const { data: isValid, error } = await supabaseClient.rpc('verify_admin_login', {
+            p_password: pass
+        });
+        if (error || !isValid) {
+            if (typeof showToast === 'function') showToast("Mot de passe Super-Admin incorrect", "danger");
+            return;
+        }
+        isSuperAdminSession = true;
+        try {
+            sessionStorage.setItem('thies_admin_logged', 'true');
+            sessionStorage.setItem('admin_session', 'true');
+            sessionStorage.setItem('admin_password', pass);
+        } catch (e) {}
+        if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
+        if (typeof updateNavbar === 'function') updateNavbar();
+        
+        // BUG FIX: Sync admin data immediately so the dashboard isn't empty
+        if (typeof store !== 'undefined' && store.syncFromSupabase) {
+            await store.syncFromSupabase();
+        }
+
+        setTimeout(() => {
+            const modal = document.getElementById('auth-modal');
+            if (modal) modal.style.display = 'none';
+            router.navigate('/admin');
+        }, 500);
+        return;
+    }
+    
+    let r = null;
+    
+    // Vérification via Supabase RPC
+    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+        try {
+            const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
+                p_username: username,
+                p_password: pass
+            });
+            if (!error && data && data.length > 0) {
+                r = {
+                    id: data[0].id,
+                    name: data[0].name,
+                    slug: data[0].slug,
+                    status: data[0].status,
+                    password: pass
+                };
+            }
+        } catch(err) {
+            console.error("Supabase login error", err);
+        }
+    }
+    
+    if (!r) {
+        if (typeof showToast === 'function') showToast("Identifiant ou mot de passe introuvable", "danger");
+        return;
+    }
+
+    if (r.status === 'pending') {
+        if (typeof showToast === 'function') showToast("Votre compte est en cours de validation.", "warning");
+        return;
+    }
+    
+    if (r.status === 'suspended') {
+        if (typeof showToast === 'function') showToast("Votre compte a été suspendu temporairement.", "danger");
+        return;
+    }
+    
+    currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: pass };
+    try {
+        sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
+    } catch (e) {}
+    
+    if (typeof updateNavbar === 'function') updateNavbar();
+    if (typeof showToast === 'function') showToast(`Bienvenue, ${r.name} !`, "success");
+    
+    setTimeout(() => {
+        const modal = document.getElementById('auth-modal');
+        if (modal) modal.style.display = 'none';
+        router.navigate('/dashboard');
+    }, 1000);
+}
+
+function handleRestaurantRegister(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('reg-name').value.trim();
+    const address = document.getElementById('reg-address').value.trim();
+    const category = document.getElementById('reg-category').value;
+    const whatsapp = cleanPhoneNumber(document.getElementById('reg-whatsapp').value.trim());
+    const openH = document.getElementById('reg-open').value;
+    const closeH = document.getElementById('reg-close').value;
+    const username = document.getElementById('reg-username').value.trim().toLowerCase();
+    const password = document.getElementById('reg-password').value;
+    const imageUrl = document.getElementById('reg-image-url').value;
+    
+    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(whatsapp.replace(/\s+/g, ''))) {
+        showToast("Numéro WhatsApp invalide (ex: +221 77 XXX XX XX)", "danger");
+        return;
+    }
+
+    // Check availability
+    const exists = store.getRestaurants().find(r => r.username === username || r.slug === username);
+    if (exists) {
+        showToast("Cet identifiant est déjà utilisé", "danger");
+        return;
+    }
+
+    const newId = "r" + (store.getRestaurants().length + 1);
+    const slug = username.replace(/[^a-z0-9]/g, '-');
+    
+    const newResto = {
+        id: newId,
+        name,
+        slug,
+        rating: 5.0,
+        reviewsCount: 0,
+        category,
+        address,
+        whatsapp,
+        image: imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500',
+        openHours: `${openH} - ${closeH}`,
+        closedDays: [],
+        isOpenManual: true,
+        status: "pending",
+        username,
+        password,
+        menu: [],
+        reviews: []
+    };
+
+    store.addRestaurant(newResto);
+    
+    const container = document.querySelector('.auth-container');
+    container.innerHTML = `
+        <div style="text-align: center; padding: 2rem 1rem;">
+            <div style="font-size: 3.5rem; margin-bottom: 1rem;">⏳</div>
+            <h2 style="font-size: 1.25rem;">Demande d'inscription envoyée !</h2>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 1.5rem 0;">
+                Votre dossier pour "<strong>${name}</strong>" a été transmis avec succès.
+            </p>
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.85rem; text-align: left; margin-bottom: 1.5rem;">
+                Notre super-administrateur valide les inscriptions sous 10 minutes. Vous recevrez une confirmation et un message d'activation directement sur WhatsApp au <strong>${whatsapp}</strong>.
+            </div>
+            <button class="btn btn-primary btn-block" onclick="router.navigate('/')">Retourner à l'accueil</button>
+        </div>
+    `;
+    
+    showToast("Inscription enregistrée. En attente d'approbation.", "success");
+}
+
+// ----------------------------------------------------
+
+function toggleMobileMenu() {
+    const drawer = document.getElementById('mobile-drawer');
+    const backdrop = document.getElementById('drawer-backdrop');
+    const btn = document.getElementById('hamburger-btn');
+    if (drawer && backdrop) {
+        drawer.classList.toggle('active');
+        backdrop.classList.toggle('active');
+        btn.classList.toggle('active');
+    }
+}
+
+    // ----------------------------------------------------
+function escapeHTML(str) {
+    if (!str) return '';
+    return str.toString().replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[m];
+    });
+}
+
+// Session is managed in store.js
+// cart is now managed by Alpine store. Legacy proxy for compatibility:
+Object.defineProperty(window, 'cart', {
+    get() {
+        return typeof Alpine !== 'undefined' && Alpine.store('cart') ? Alpine.store('cart') : { items: [], total: 0 };
+    },
+    set(val) {
+        if (typeof Alpine !== 'undefined' && Alpine.store('cart')) {
+            const store = Alpine.store('cart');
+            store.clear();
+            store.restaurantId = val.restaurantId || null;
+            store.items = val.items || [];
+            store.total = val.total || 0;
+        }
+    }
+});
+
+// Safe HTML escaping helper using DOMPurify
+function sanitizeHTML(html) {
+    if (typeof DOMPurify !== 'undefined') {
+        return DOMPurify.sanitize(html);
+    }
+    // Fallback simple escape
+    return html.replace(/[&<>"']/g, function(m) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        }[m];
+    });
+}
+
+// Current Session is managed in store.js
+
+// Temporary Group Order object in memory
+let activeGroupOrder = null;
+
+// Active category filter
+let activeFilter = 'Tous';
+let activeSortBy = 'default';
+
+// ---------- LOADING STATE ----------
+// Loading overlay has been completely removed. Keeping an empty function for compatibility.
+function hideLoadingOverlay() {
+    // No-op
+}
+
+// ---------- THEME TOGGLE ----------
+function toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'light';
+    const next = current === 'light' ? 'dark' : 'light';
+    html.setAttribute('data-theme', next);
+    try { localStorage.setItem('THIES_THEME', next); } catch(e) {}
+    updateThemeToggleUI(next);
+}
+function updateThemeToggleUI(theme) {
+    const icon = document.getElementById('theme-toggle-icon');
+    const label = document.getElementById('theme-toggle-label');
+    if (icon) icon.textContent = theme === 'light' ? '🌙' : '☀️';
+    if (label) label.textContent = theme === 'light' ? 'Mode Sombre' : 'Mode Clair';
+}
+function loadSavedTheme() {
+    try {
+        const saved = localStorage.getItem('THIES_THEME') || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        updateThemeToggleUI(saved);
+    } catch(e) {}
+}
+
+// ---------- CART PERSISTENCE ----------
+function saveCart() {
+    try { localStorage.setItem('THIES_CART', JSON.stringify(cart)); } catch(e) {}
+}
+function loadCart() {
+    try {
+        const saved = localStorage.getItem('THIES_CART');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && parsed.items && parsed.items.length > 0) {
+                cart = parsed;
+            }
+        }
+    } catch(e) {}
+}
+loadCart();
+
+function pulseCartBar() {
+    // Haptic feedback (vibration) for mobile users
+    if (navigator.vibrate) {
+        navigator.vibrate(50);
+    }
+    
+    const bar = document.getElementById('floating-cart-bar');
+    const qty = document.getElementById('floating-cart-qty');
+    const btn = document.getElementById('floating-cart-btn');
+    const bottomNavQty = document.getElementById('bottom-nav-cart-qty');
+    
+    [bar, qty, btn, bottomNavQty].forEach(el => {
+        if (el) {
+            el.classList.remove('cart-pulse', 'bounce');
+            void el.offsetWidth; // Trigger reflow
+            el.classList.add('cart-pulse', 'bounce');
+        }
+    });
+}
+
+// ---------- REALTIME SLUG VALIDATION ----------
+function checkSlugAvailabilityRealtime(val) {
+    const badge = document.getElementById('adm-slug-availability-badge') || document.getElementById('slug-availability-badge');
+    if (!badge) return;
+    const cleanVal = val.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+    if (!cleanVal) {
+        badge.innerHTML = '';
+        return;
+    }
+    const exists = store.getRestaurants().some(r => r.username === cleanVal || r.slug === cleanVal);
+    if (exists) {
+        badge.className = 'slug-status taken';
+        badge.innerHTML = '❌ Cet identifiant est déjà pris';
+    } else {
+        badge.className = 'slug-status available';
+        badge.innerHTML = '✅ Cet identifiant est disponible';
+    }
+}
+
+// ---------- CLIENT ORDER HISTORY ----------
+function saveOrderToHistory(order, restaurantName) {
+    try {
+        let history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+        history.unshift({ ...order, restaurantName, savedAt: new Date().toISOString() });
+        if (history.length > 20) history = history.slice(0, 20);
+        localStorage.setItem('THIES_ORDER_HISTORY', JSON.stringify(history));
+    } catch(e) {}
+}
+function getOrderHistory() {
+    try {
+        return JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+    } catch(e) { return []; }
+}
+
+// ---------- NOTIFICATION SOUND ----------
+function playNotificationSound() {
+    try {
+        let audio = document.getElementById('notification-sound');
+        if (!audio) {
+            audio = document.createElement('audio');
+            audio.id = 'notification-sound';
+            audio.src = 'https://assets.mixkit.co/active_storage/sfx/2869/2869-120.wav';
+            document.body.appendChild(audio);
+        }
+        audio.currentTime = 0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(error => {
+                console.warn("Notification audio blocked by browser autoplay settings:", error);
+            });
+        }
+    } catch(e) {
+        console.warn("Failed to play notification sound:", e);
+    }
+}
+
+// ---------- ORDER POLLING removed: consolidated into setupRealtime() ----------
+
+// ---------- SCROLL HELPERS ----------
+function scrollToHowItWorks() {
+    if (window.location.hash && window.location.hash !== '#/') {
+        router.navigate('/');
+        setTimeout(() => {
+            const el = document.getElementById('how-it-works-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+    } else {
+        const el = document.getElementById('how-it-works-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function scrollToCatalog() {
+    if (window.location.hash && window.location.hash !== '#/') {
+        router.navigate('/');
+        setTimeout(() => {
+            const el = document.getElementById('catalog-section');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+    } else {
+        const el = document.getElementById('catalog-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+// Helper to automatically generate username and default password when typing restaurant name
+function handleRestaurantNameInput(nameVal, usernameId, passwordId, badgeId) {
+    const usernameInput = document.getElementById(usernameId);
+    const passwordInput = document.getElementById(passwordId);
+    if (!usernameInput || !passwordInput) return;
+    
+    // Normalize and slugify
+    const slug = nameVal.trim().toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // remove accents
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+        
+    usernameInput.value = slug;
+    passwordInput.value = slug ? `${slug}_221` : '';
+    
+    // Trigger validation badge update
+    if (usernameId === 'reg-username') {
+        checkSlugAvailability();
+    } else {
+        checkSlugAvailabilityRealtime(slug);
+    }
+}
+
+// ---------- SLUG AVAILABILITY CHECK ----------
+function checkSlugAvailability() {
+    const input = document.getElementById('reg-username');
+    const badge = document.getElementById('slug-availability-badge');
+    if (!input || !badge) return;
+    const slug = input.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    if (slug.length < 3) { badge.innerHTML = ''; return; }
+    const exists = store.getRestaurants().find(r => r.username === slug || r.slug === slug);
+    if (exists) {
+        badge.innerHTML = '<span class="slug-status taken">❌ Identifiant déjà pris</span>';
+    } else {
+        badge.innerHTML = '<span class="slug-status available">✅ Disponible</span>';
+    }
+}
+
+// Helper to show modern notification toast
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast-notification');
+    if (!toast) return;
+    toast.innerHTML = sanitizeHTML(message);
+    toast.style.display = 'block';
+    
+    // Color schemes
+    if (type === 'success') {
+        toast.style.backgroundColor = '#10b981';
+        toast.style.color = 'white';
+    } else if (type === 'danger') {
+        toast.style.backgroundColor = '#ef4444';
+        toast.style.color = 'white';
+    } else if (type === 'warning') {
+        toast.style.backgroundColor = '#f7b731';
+        toast.style.color = 'black';
+    } else {
+        toast.style.backgroundColor = '#ff6b35';
+        toast.style.color = 'white';
+    }
+    
+    setTimeout(() => {
+        toast.style.display = 'none';
+    }, 4000);
+}
+
+// Modern Custom Confirmation Modal to replace native confirm()
+window.showConfirmModal = function(title, message, onConfirm, onCancel = null) {
+    let modal = document.getElementById('custom-confirm-modal');
+    if (modal) modal.remove();
+    
+    modal = document.createElement('div');
+    modal.id = 'custom-confirm-modal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.6); display: flex; align-items: center;
+        justify-content: center; z-index: 100000; backdrop-filter: blur(4px);
+        animation: fadeIn 0.2s ease-out; padding: 1.5rem;
+    `;
+    
+    modal.innerHTML = `
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; max-width: 400px; width: 100%; padding: 2rem; box-shadow: var(--shadow); text-align: center; animation: scaleUp 0.2s ease-out;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>
+            <h3 style="font-family: var(--font-serif); margin-bottom: 0.75rem; color: var(--text-primary); font-size: 1.3rem;">${sanitizeHTML(title)}</h3>
+            <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 2rem;">${sanitizeHTML(message)}</p>
+            <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                <button id="confirm-modal-cancel" class="btn btn-secondary btn-sm" style="flex: 1; font-weight: bold; border-radius: 10px;">Annuler</button>
+                <button id="confirm-modal-ok" class="btn btn-primary btn-sm" style="flex: 1; font-weight: bold; border-radius: 10px; background: var(--danger); color: white;">Confirmer</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    modal.querySelector('#confirm-modal-cancel').onclick = function() {
+        modal.remove();
+        if (onCancel) onCancel();
+    };
+    
+    modal.querySelector('#confirm-modal-ok').onclick = function() {
+        modal.remove();
+        if (onConfirm) onConfirm();
+    };
+};
+
+// Format Phone Numbers +221 7X XXX XX XX
+function cleanPhoneNumber(phone) {
+    let cleaned = phone.replace(/\s+/g, '');
+    if (!cleaned.startsWith('+221') && !cleaned.startsWith('221')) {
+        if (cleaned.length === 9) {
+            cleaned = '+221' + cleaned;
+        }
+    }
+    if (cleaned.startsWith('221') && !cleaned.startsWith('+')) {
+        cleaned = '+' + cleaned;
+    }
+    return cleaned;
+}
+
+// ----------------------------------------------------
+// Navbar population
+// ----------------------------------------------------
+function updateNavbar() {
+    const navActions = document.getElementById('nav-actions');
+    const drawerLinks = document.querySelector('.drawer-links');
+    let html = '';
+    let drawerHtml = '';
+    
+    // User links template
+    const userDrawerLinks = `
+        <a href="#/" onclick="toggleMobileMenu();">Accueil</a>
+        <a href="#/profile" onclick="toggleMobileMenu();" style="color: var(--primary); font-weight: bold;">👤 Mon Profil / Historique</a>
+        <a href="#/tracking" onclick="toggleMobileMenu();" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+        <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
+        <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
+        <a href="#/partnership" onclick="toggleMobileMenu();">Devenir Partenaire 🤝</a>
+        <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
+            Espace Livreurs 🛵 
+            <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt disponible)</span>
+        </a>
+    `;
+    
+    if (isSuperAdminSession) {
+        if (currentRestaurantSession) {
+            html = `
+                <span class="badge badge-danger">👑 Admin (${currentRestaurantSession.name})</span>
+                <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
+                <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()">Console Admin 🔐</button>
+            `;
+            drawerHtml = `
+                <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2);">
+                    <span style="color: var(--danger); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Mode Super-Admin</span>
+                    <span style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">Gère : ${currentRestaurantSession.name}</span>
+                </div>
+                <a href="#/dashboard" onclick="toggleMobileMenu();">📊 Tableau de Bord</a>
+                <a href="#" onclick="toggleMobileMenu(); exitImpersonation(); return false;" style="color: var(--danger);">🚪 Retour Console Admin</a>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
+                ${userDrawerLinks}
+            `;
+        } else {
+            html = `
+                <span class="badge badge-danger">Super-Admin</span>
+                <button class="btn btn-primary btn-sm" onclick="router.navigate('/admin')">Console Admin 📊</button>
+            `;
+            drawerHtml = `
+                <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
+                    <span style="color: var(--danger); font-weight: bold; font-size: 0.9rem;">👑 SUPER-ADMINISTRATEUR</span>
+                </div>
+                <a href="#/admin" onclick="toggleMobileMenu();">📊 Console Admin</a>
+                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: bold;">🚪 Déconnexion Admin</a>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
+                ${userDrawerLinks}
+            `;
+        }
+    } else if (currentRestaurantSession) {
+        html = `
+            <span class="badge badge-success">${currentRestaurantSession.name}</span>
+            <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
+        `;
+        drawerHtml = `
+            <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(16, 185, 129, 0.2);">
+                <span style="color: var(--success); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Espace Partenaire</span>
+                <span style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">${currentRestaurantSession.name}</span>
+            </div>
+            <a href="#/dashboard" onclick="toggleMobileMenu();">📊 Mon Tableau de Bord</a>
+            <a href="#" onclick="toggleMobileMenu(); logoutRestaurant(); return false;" style="color: var(--danger); font-weight: bold;">🚪 Déconnexion</a>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
+            ${userDrawerLinks}
+        `;
+    } else {
+        html = `
+            <button class="btn btn-primary btn-sm" onclick="router.navigate('/profile')">👤 Mon Profil</button>
+            <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')">Espace Resto</button>
+        `;
+        drawerHtml = userDrawerLinks;
+    }
+    
+    if (navActions) navActions.innerHTML = html;
+    if (drawerLinks) {
+        drawerLinks.innerHTML = drawerHtml;
+    }
+}
+
+// logoutRestaurant moved to js/auth.js
+
+function logoutAdmin() {
+    try {
+        sessionStorage.removeItem('admin_session');
+    } catch (e) {
+        console.warn("Failed to clear admin_session from sessionStorage", e);
+    }
+    isSuperAdminSession = false;
+    showToast("Session administrateur déconnectée", "success");
+    router.navigate('/');
+}
+
+// ----------------------------------------------------
+// Page: LANDING PAGE (catalog)
+// ----------------------------------------------------
+
+function getPopularDishes(restaurants) {
+    restaurants = restaurants.filter(r => r.status === 'active' || r.isOpenManual);
+
+    let allDishes = [];
+    restaurants.filter(r => r.status === 'active').forEach(r => {
+        if (r.menu) {
+            r.menu.forEach(cat => {
+                if (cat.items) {
+                    cat.items.forEach(item => {
+                        if (item.available !== false) {
+                            allDishes.push({
+                                ...item,
+                                restaurantId: r.id,
+                                restaurantName: r.name,
+                                restaurantRating: r.rating,
+                                restaurantSlug: r.slug
+                            });
+                        }
+                    });
+                }
+            });
+        }
+    });
+    // Shuffle and pick 5
+    for (let i = allDishes.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allDishes[i], allDishes[j]] = [allDishes[j], allDishes[i]];
+    }
+    return allDishes.slice(0, 5);
+}
+
+router.add('#/', () => {
+    updateSEO('home');
+    try {
+        const cartBar = document.getElementById('floating-cart-bar');
+        if (cartBar) cartBar.style.display = 'none';
+        
+        if (typeof stopOrderPolling === 'function') stopOrderPolling();
+        if (typeof loadCart === 'function') loadCart();
+        
+        const allRestos = store.getRestaurants().filter(r => r.status === 'active');
+        const shuffledIds = allRestos.map(r => r.id);
+        for (let i = shuffledIds.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledIds[i], shuffledIds[j]] = [shuffledIds[j], shuffledIds[i]];
+    }
+    window.shuffledRestaurantIds = shuffledIds;
+    
+    const container = document.getElementById('main-content');
+    
+    const activeRestos = allRestos;
+    const totalOrders = store.data.orders ? store.data.orders.length : 0;
+    const totalReservations = store.data.reservations ? store.data.reservations.length : 0;
+
+    // Load order history
+    const history = getOrderHistory();
+    let historyHtml = '';
+    if (history.length > 0) {
+        let itemsHtml = '';
+        history.slice(0, 5).forEach(h => {
+            itemsHtml += `
+                <div class="history-item">
+                    <div>
+                        <strong>${h.id}</strong> — ${h.restaurantName || 'Restaurant'}
+                        <div class="history-item-meta">${(Array.isArray(h.items) ? h.items : []).map(i => i.name || 'Produit').join(', ')}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <strong style="color:var(--primary)">${h.total} FCFA</strong>
+                        <div class="history-item-meta">${h.date}</div>
+                    </div>
+                </div>
+            `;
+        });
+        historyHtml = `
+            <section class="history-mini">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0 1rem; margin-bottom: 1rem;">
+                    <h2 class="section-title">Vos Dernières Commandes (Persistant)</h2>
+                </div>
+                ${itemsHtml}
+            </section>
+        `;
+    }
+
+    const hour = new Date().getHours();
+    let greeting = "Bonjour";
+    if (hour < 11) greeting = "Bonjour ! Prêt pour le déjeuner ?";
+    else if (hour < 17) greeting = "Une petite faim ?";
+    else greeting = "Bonsoir ! Ne cuisinez pas ce soir.";
+
+
+    container.innerHTML = `
+        <!-- ========== HERO SECTION ========== -->
+        <section class="hero-section page-transition" style="background: linear-gradient(var(--glass-bg), var(--bg-primary)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
+                <div class="hero-left-col hover-3d" style="padding: 2rem; border-radius: 24px; background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--border); box-shadow: var(--shadow);">
+                    <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
+                    <h1 class="hero-title" style="color: var(--text-primary); text-shadow: 0 4px 20px rgba(0,0,0,0.8); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.5rem;">Découvrez les Meilleures Tables de <span style="color: var(--primary);">Thiès</span></h1>
+                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.2rem; line-height: 1.6; margin-bottom: 2.5rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+                    
+                    <div class="search-container hover-3d" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px; position: relative;">
+                        <input type="text" x-model="searchQuery" class="search-input" placeholder="Rechercher un plat, un restaurant..." style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem 3rem 1.2rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth);">
+                        <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem;">🔍</button>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start;">
+                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); padding: 1rem 2rem; border-radius: 12px; font-weight: 600;">Explorer nos Menus 🍽️</button>
+                        <button class="btn btn-secondary ripple hover-3d" onclick="geolocateRestaurants()" style="background: var(--glass-bg); color: var(--text-primary); border: 1px solid var(--border); padding: 1rem 2rem; border-radius: 12px; font-weight: 500;">📍 Trouver autour de moi</button>
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+        <!-- VOS DERNIERES COMMANDES PERSISTANT -->
+        ${historyHtml}
+
+        <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
+        <section class="presentation-section" style="padding: 1rem 0 0 0;">
+            <div class="reference-row-cards">
+                <!-- Left Card: Zero Account -->
+                <div class="ref-card-text">
+                    <div class="ref-card-icon-circle">🚫</div>
+                    <h3>Zéro Inscription</h3>
+                    <p>Commandez et réservez sans jamais avoir besoin de créer un compte. Aucun mot de passe à retenir.</p>
+                </div>
+                
+                <!-- Middle Card: Premium Dish Image -->
+                <div class="ref-card-image-box">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80" alt="Gourmet Bowl" loading="lazy">
+                </div>
+                
+                <!-- Right Card: Direct WhatsApp -->
+                <div class="ref-card-text">
+                    <div class="ref-card-icon-circle">💬</div>
+                    <h3>Direct WhatsApp</h3>
+                    <p>Votre panier est transformé en un message structuré envoyé en un clic au restaurateur pour confirmation.</p>
+                </div>
+            </div>
+        </section>
+
+        
+
+        <section id="catalog-section" x-data="catalogComponent()">
+            <div class="section-header">
+                <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0;">Restaurants</h2><span style="color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">View All</span>
+            </div>
+
+
+
+            <!-- CATEGORY FILTERS -->
+            <div id="filter-bar" class="filter-bar" style="display: flex; gap: 0.5rem; overflow-x: auto; padding: 0.5rem 1rem; margin-bottom: 1rem; scrollbar-width: none;">
+                <button class="filter-btn" :class="activeFilter === 'all' ? 'active' : ''" @click="activeFilter = 'all'">Tous</button>
+                <button class="filter-btn" :class="activeFilter === 'Burger' ? 'active' : ''" @click="activeFilter = 'Burger'">🍔 Burger</button>
+                <button class="filter-btn" :class="activeFilter === 'Pizza' ? 'active' : ''" @click="activeFilter = 'Pizza'">🍕 Pizza</button>
+                <button class="filter-btn" :class="activeFilter === 'Local' ? 'active' : ''" @click="activeFilter = 'Local'">🥘 Local</button>
+                <button class="filter-btn" :class="activeFilter === 'Fast-Food' ? 'active' : ''" @click="activeFilter = 'Fast-Food'">🍟 Fast-Food</button>
+                <button class="filter-btn" :class="activeFilter === 'Pâtisserie' ? 'active' : ''" @click="activeFilter = 'Pâtisserie'">🥐 Pâtisserie</button>
+            </div>
+
+            <!-- SORTING BAR -->
+            <div class="sort-bar">
+                <label for="sort-select">Trier par :</label>
+                <select class="sort-select" id="sort-select" x-model="sortBy">
+                    <option value="default">Recommandé</option>
+                    <option value="rating">Meilleure note ★</option>
+                    <option value="reviews">Nombre d'avis</option>
+                    <option value="name">Nom de A à Z</option>
+                </select>
+            </div>
+            
+            <div class="restaurant-grid" id="restaurants-list-grid">
+                <template x-if="filteredRestaurants.length === 0">
+                    <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem 0;">Aucun restaurant ne correspond à vos critères.</div>
+                </template>
+                
+                
+                <template x-for="r in filteredRestaurants" :key="r.id">
+                    <div class="glass-card" style="display: flex; padding: 1rem; margin: 0 1rem 1rem 1rem; cursor: pointer; border-radius: 20px; align-items: center; gap: 1rem;" @click="openRestaurant(r.slug)">
+                        <img :src="r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=200&auto=format&fit=crop&q=60'" style="width: 80px; height: 80px; object-fit: cover; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);" :alt="r.name" loading="lazy">
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 0.25rem 0; font-size: 1.1rem; font-weight: 700; color: var(--text-primary);" x-text="r.name"></h3>
+                            <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 0.5rem 0;" x-text="r.category"></p>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.2rem;">
+                                    <span style="color: var(--primary); font-size: 0.9rem;">★</span>
+                                    <span style="font-weight: 600; font-size: 0.85rem; color: var(--text-primary);" x-text="r.rating || '4.5'"></span>
+                                </div>
+                                <template x-if="isCurrentlyOpen(r)">
+                                    <span style="color: var(--success); font-size: 0.8rem; font-weight: 600;">Ouvert</span>
+                                </template>
+                            </div>
+                        </div>
+                        <div style="color: var(--primary); font-size: 1.5rem;">➔</div>
+                    </div>
+                </template>
+
+                        <div class="restaurant-card-header" style="height: 200px; position: relative;">
+                            <img :src="r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'" style="width: 100%; height: 100%; object-fit: cover;" :alt="r.name" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
+                            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
+                            <div style="position: absolute; top: 1rem; left: 1rem; z-index: 2;">
+                                <template x-if="isCurrentlyOpen(r)">
+                                    <span class="badge badge-success restaurant-card-badge">Ouvert</span>
+                                </template>
+                                <template x-if="!isCurrentlyOpen(r)">
+                                    <span class="badge badge-danger restaurant-card-badge">Fermé</span>
+                                </template>
+                            </div>
+                        </div>
+                        <div class="restaurant-card-body" style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; background: var(--bg-card);">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                                <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);" x-text="r.name"></h3>
+                                <div style="display: flex; align-items: center; background: rgba(255, 184, 0, 0.1); padding: 0.25rem 0.5rem; border-radius: 8px;">
+                                    <span style="color: #ffb800; margin-right: 4px;">★</span>
+                                    <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);" x-text="r.rating + ' (' + r.reviewsCount + ')'"></span>
+                                </div>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem; flex: 1;" x-text="r.category + ' • ' + r.address"></p>
+                            <button class="btn btn-primary btn-block" style="border-radius: 12px; padding: 0.75rem; font-weight: 600;">Voir le Menu ➔</button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- RESTAURANT SUGGESTION CTA -->
+            <div style="background: rgba(207, 168, 83, 0.1); border: 1px dashed var(--primary); border-radius: 16px; padding: 2rem; text-align: center; max-width: 600px; margin: 3rem auto 1rem auto;">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤔</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.2rem;">Votre restaurant préféré n'est pas là ?</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Nous ajoutons continuellement de nouvelles tables à Thiès. Aidez-nous à découvrir les meilleures !</p>
+                <a href="https://wa.me/221784799882?text=Bonjour,%20j'aimerais%20suggérer%20ce%20restaurant%20sur%20Thiès%20à%20Table%20:%20[Insérez le nom]" target="_blank" class="btn btn-primary" style="background: var(--bg-card); color: var(--primary); border: 1px solid var(--primary); text-decoration: none;">
+                    Suggérer un restaurant 💡
+                </a>
+            </div>
+        </section>
+
+        

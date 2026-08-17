@@ -1,0 +1,2401 @@
+commit 67ad4b9524835d0b2d60e2e79059b7f09f58dc7f
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Mon Aug 17 05:12:00 2026 +0200
+
+    feat: implement specific desktop navbar layout
+
+diff --git a/index.html b/index.html
+index 7bb71f3..2581c1c 100644
+--- a/index.html
++++ b/index.html
+@@ -166,15 +166,19 @@
+     <div class="app-container">
+         <!-- ========== NAVIGATION BAR ========== -->
+         <header class="navbar glass-panel" id="main-navbar" style="padding: 1.5rem 1rem; border-bottom: none; border-radius: 0 0 20px 20px; position: sticky; top: 0; z-index: 100; flex-direction: column; align-items: stretch;">
+-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+-                
++            <!-- Mobile top row -->
++            <div class="mobile-only" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                 <div class="user-profile" style="background: url('icon.png') center/cover; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); position: relative;">
+                     <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #FF3B30; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
+                 </div>
+-                <!-- 3-dot menu for Desktop -->
+-                <div class="desktop-menu" style="display: none; position: relative;">
+-                    <button id="desktop-menu-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-primary); cursor: pointer; padding: 0.5rem;" onclick="const d = document.getElementById('desktop-dropdown'); d.style.display = d.style.display === 'none' ? 'flex' : 'none';">⋮</button>
+-                    <div id="desktop-dropdown" class="glass-panel" style="display: none; position: absolute; right: 0; top: 50px; min-width: 180px; border-radius: 12px; padding: 0.5rem 0; box-shadow: var(--shadow); z-index: 1000; flex-direction: column;">
++            </div>
++
++            <!-- Desktop top row -->
++            <div class="desktop-only" style="display: none; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 1rem;">
++                <!-- 3-dot menu on the left -->
++                <div class="desktop-menu" style="position: relative;">
++                    <button id="desktop-menu-btn" style="background: var(--bg-glass); border: 1px solid var(--border); border-radius: 50%; width: 45px; height: 45px; font-size: 1.5rem; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow);" onclick="const d = document.getElementById('desktop-dropdown'); d.style.display = d.style.display === 'none' ? 'flex' : 'none';">⋮</button>
++                    <div id="desktop-dropdown" class="glass-panel" style="display: none; position: absolute; left: 0; top: 55px; min-width: 180px; border-radius: 12px; padding: 0.5rem 0; box-shadow: var(--shadow); z-index: 1000; flex-direction: column; text-align: left;">
+                         <a href="#/" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">🏠 Accueil</a>
+                         <a href="#/tracking" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">🛵 Suivi</a>
+                         <a href="#/cart" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; justify-content: space-between;" onclick="document.getElementById('desktop-dropdown').style.display='none';">
+@@ -184,11 +188,26 @@
+                         <a href="#/profile" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">👤 Profil</a>
+                     </div>
+                 </div>
++                
++                <!-- Logo in the middle (big circle) -->
++                <div style="background: url('icon.png') center/cover; width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.1);"></div>
++                
++                <!-- Hi, nom du client on the right -->
++                <div style="text-align: right;">
++                    <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.2rem; font-weight: 500;">Hi, <span class="customer-name-display">Foodie</span> 👋</p>
++                </div>
+             </div>
+-            <div style="margin-top: 1.5rem; text-align: left;">
+-                <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.2rem;">Hi, Foodie 👋</p>
++
++            <!-- Mobile text section -->
++            <div class="mobile-only" style="margin-top: 1.5rem; text-align: left;">
++                <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.2rem;">Hi, <span class="customer-name-display">Foodie</span> 👋</p>
+                 <h1 style="font-size: 2.2rem; line-height: 1.1;">Good Food<br>Good <span style="color: var(--primary);">Mood!</span></h1>
+             </div>
++
++            <!-- Desktop Slogan -->
++            <div class="desktop-slogan" style="display: none; margin-top: 1rem; text-align: center;">
++                <h1 style="font-size: 2rem; color: var(--text-primary); font-weight: bold;">Les restaurants et Nourritures les plus chics de Thiès</h1>
++            </div>
+             
+             <div style="margin-top: 1.5rem; position: relative;">
+                 <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem;">🔍</span>
+
+commit ad51122ed0c856b6fbc411f5c3201b3fec5f1c0e
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Mon Aug 17 04:58:01 2026 +0200
+
+    feat: move bottom menu to 3-dot top-right menu on desktop
+
+diff --git a/index.html b/index.html
+index a732666..7bb71f3 100644
+--- a/index.html
++++ b/index.html
+@@ -171,6 +171,19 @@
+                 <div class="user-profile" style="background: url('icon.png') center/cover; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); position: relative;">
+                     <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #FF3B30; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
+                 </div>
++                <!-- 3-dot menu for Desktop -->
++                <div class="desktop-menu" style="display: none; position: relative;">
++                    <button id="desktop-menu-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-primary); cursor: pointer; padding: 0.5rem;" onclick="const d = document.getElementById('desktop-dropdown'); d.style.display = d.style.display === 'none' ? 'flex' : 'none';">⋮</button>
++                    <div id="desktop-dropdown" class="glass-panel" style="display: none; position: absolute; right: 0; top: 50px; min-width: 180px; border-radius: 12px; padding: 0.5rem 0; box-shadow: var(--shadow); z-index: 1000; flex-direction: column;">
++                        <a href="#/" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">🏠 Accueil</a>
++                        <a href="#/tracking" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">🛵 Suivi</a>
++                        <a href="#/cart" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; justify-content: space-between;" onclick="document.getElementById('desktop-dropdown').style.display='none';">
++                            <div style="display: flex; align-items: center; gap: 0.75rem;">🛒 Panier</div>
++                            <span id="desktop-nav-cart-qty" style="background: var(--primary); color: white; border-radius: 50%; font-size: 0.75rem; padding: 2px 6px; display: none; font-weight: bold;">0</span>
++                        </a>
++                        <a href="#/profile" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">👤 Profil</a>
++                    </div>
++                </div>
+             </div>
+             <div style="margin-top: 1.5rem; text-align: left;">
+                 <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.2rem;">Hi, Foodie 👋</p>
+
+commit 0176b17dc71cbdaa5dee715530bbfe3ddb6e3cd1
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sun Aug 16 13:08:17 2026 +0200
+
+    Fix Bug 1 (card navigation), Bug 2 (router fallback 404), remove home filters, implement phase 4 Profile Auth UI
+
+diff --git a/index.html b/index.html
+index 6e3ceb4..a732666 100644
+--- a/index.html
++++ b/index.html
+@@ -165,7 +165,7 @@
+ 
+     <div class="app-container">
+         <!-- ========== NAVIGATION BAR ========== -->
+-        <header class="navbar glass-panel" id="main-navbar" style="padding: 1rem; border-bottom: none; border-radius: 0 0 20px 20px; position: sticky; top: 0; z-index: 100;">
++        <header class="navbar glass-panel" id="main-navbar" style="padding: 1.5rem 1rem; border-bottom: none; border-radius: 0 0 20px 20px; position: sticky; top: 0; z-index: 100; flex-direction: column; align-items: stretch;">
+             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                 
+                 <div class="user-profile" style="background: url('icon.png') center/cover; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); position: relative;">
+@@ -185,25 +185,6 @@
+                 </button>
+             </div>
+             
+-            <!-- Category Pills -->
+-            <div style="display: flex; gap: 1rem; overflow-x: auto; margin-top: 1.5rem; padding-bottom: 0.5rem;" class="hide-scrollbar">
+-                <div style="background: var(--primary); color: #fff; padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; box-shadow: var(--shadow-sm);">
+-                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍔</span>
+-                    <span style="font-size: 0.9rem; font-weight: 500;">Burger</span>
+-                </div>
+-                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
+-                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍕</span>
+-                    <span style="font-size: 0.9rem; font-weight: 500;">Pizza</span>
+-                </div>
+-                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
+-                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍗</span>
+-                    <span style="font-size: 0.9rem; font-weight: 500;">Chicken</span>
+-                </div>
+-                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
+-                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍟</span>
+-                    <span style="font-size: 0.9rem; font-weight: 500;">Fries</span>
+-                </div>
+-            </div>
+ 
+             <!-- Mobile Drawer Overlay -->
+             
+@@ -425,20 +406,20 @@
+ 
+     <!-- ========== BOTTOM NAVIGATION BAR ========== -->
+     <nav id="bottom-nav-bar" class="glass-panel" style="position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; justify-content: space-around; padding: 1rem; border-top: 1px solid var(--border); z-index: 999; backdrop-filter: blur(20px);">
+-    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/" onclick="router.navigate('/')">
++    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/" onclick="window.router.navigate('/')">
+         <span style="font-size: 1.5rem; margin-bottom: 4px;">🏠</span>
+         <span style="font-size: 0.75rem; font-weight: 600;">Accueil</span>
+     </div>
+-    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/tracking" onclick="router.navigate('/tracking')">
++    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/tracking" onclick="window.router.navigate('/tracking')">
+         <span style="font-size: 1.5rem; margin-bottom: 4px;">🛵</span>
+         <span style="font-size: 0.75rem; font-weight: 600;">Suivi</span>
+     </div>
+-    <div class="nav-item cart-nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary); position: relative;" onclick="openCartTab();">
++    <div class="nav-item cart-nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary); position: relative;" data-route="#/cart" onclick="window.router.navigate('/cart')">
+         <span style="font-size: 1.5rem; margin-bottom: 4px;">🛒</span>
+         <span style="font-size: 0.75rem; font-weight: 600;">Panier</span>
+         <span id="bottom-nav-cart-qty" class="cart-badge" style="display: none; position: absolute; top: -5px; right: 10px; background: var(--primary); color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: bold;">0</span>
+     </div>
+-    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/profile" onclick="router.navigate('/profile')">
++    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/profile" onclick="window.router.navigate('/profile')">
+         <span style="font-size: 1.5rem; margin-bottom: 4px;">👤</span>
+         <span style="font-size: 0.75rem; font-weight: 600;">Profil</span>
+     </div>
+
+commit b67b5c2e6f6298418f423d18220c9a5ca74077c3
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sat Aug 15 19:50:07 2026 +0200
+
+    fix: phase 2.1 specific bugs fixed
+
+diff --git a/index.html b/index.html
+index 4077f9c..6e3ceb4 100644
+--- a/index.html
++++ b/index.html
+@@ -167,11 +167,7 @@
+         <!-- ========== NAVIGATION BAR ========== -->
+         <header class="navbar glass-panel" id="main-navbar" style="padding: 1rem; border-bottom: none; border-radius: 0 0 20px 20px; position: sticky; top: 0; z-index: 100;">
+             <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+-                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()" style="background: var(--bg-input); padding: 10px; border-radius: 50%;">
+-                    <span class="bar" style="background: var(--text-primary);"></span>
+-                    <span class="bar" style="background: var(--text-primary);"></span>
+-                    <span class="bar" style="background: var(--text-primary);"></span>
+-                </button>
++                
+                 <div class="user-profile" style="background: url('icon.png') center/cover; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); position: relative;">
+                     <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #FF3B30; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
+                 </div>
+@@ -210,32 +206,12 @@
+             </div>
+ 
+             <!-- Mobile Drawer Overlay -->
+-            <div class="mobile-drawer glass-panel" id="mobile-drawer" style="background: rgba(18, 18, 18, 0.95);">
+-                <div class="drawer-header">
+-                    <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
+-                        style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
+-                    <span class="logo-text">THIES Resto</span>
+-                    <button class="close-drawer-btn" aria-label="Fermer le menu" onclick="toggleMobileMenu()">✕</button>
+-                </div>
+-                <div class="drawer-links">
+-                    <a href="#/" onclick="toggleMobileMenu();">Accueil</a>
+-                    <a href="#/tracking" onclick="toggleMobileMenu();"
+-                        style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+-                    <a href="#/" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
+-                    <a href="#/" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
+-                    <a href="#/partnership" onclick="toggleMobileMenu();">Devenir
+-                        Partenaire 🤝</a>
+-                    
+-                    <a href="#/" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;"
+-                        style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪
+-                        Déconnexion</a>
+-                </div>
+-            </div>
+-            <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>
++            
++            
+         </header>
+ 
+         <!-- ========== MAIN WORKSPACE ========== -->
+-        <main id="main-content">
++        <main id="main-content" style="padding-bottom: 90px;">
+             <!-- SKELETON PRELOADER -->
+             <div id="initial-skeleton" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
+                 <div class="skeleton" style="height: 400px; width: 100%; border-radius: 24px; margin-bottom: 2rem;">
+@@ -251,19 +227,7 @@
+ 
+ 
+         <!-- ========== FLOATING CART BAR ========== -->
+-        <div id="floating-cart-bar" class="floating-cart-bar" x-show="$store.cart.itemCount > 0" style="display: none;"
+-            onclick="openCartTab()">
+-            <div class="floating-cart-info">
+-                <span id="floating-cart-qty" class="floating-cart-qty"
+-                    x-text="$store.cart.itemCount + ($store.cart.itemCount > 1 ? ' articles' : ' article')">0
+-                    articles</span>
+-                <span id="floating-cart-total" class="floating-cart-total" x-text="$store.cart.total + ' FCFA'">0
+-                    FCFA</span>
+-            </div>
+-            <button class="btn btn-primary btn-sm" id="floating-cart-btn" aria-label="Ouvrir le panier">
+-                Voir le Panier 🛒
+-            </button>
+-        </div>
++        
+ 
+         <!-- ========== FLOATING WHATSAPP SUPPORT ========== -->
+         <a href="https://wa.me/221784799882?text=Bonjour,%20j'ai%20besoin%20d'aide%20sur%20THIES%20Resto"
+@@ -287,7 +251,7 @@
+         
+ 
+         <!-- ========== FOOTER ========== -->
+-        <footer id="main-footer">
++        <footer id="main-footer" style="margin-bottom: 80px;">
+             <div class="footer-grid">
+                 <!-- About Column -->
+                 <div class="footer-col">
+@@ -401,28 +365,7 @@
+     </script>
+ 
+     <!-- ========== MOBILE BOTTOM NAV ========== -->
+-    <nav class="mobile-bottom-nav">
+-        <a href="#/" class="nav-item active"
+-            onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+-            <div class="nav-icon"><i class="ri-home-5-line"></i></div>
+-            <span>Accueil</span>
+-        </a>
+-        <a href="#/" class="nav-item"
+-            onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+-            <div class="nav-icon"><i class="ri-map-pin-2-line"></i></div>
+-            <span>Proche</span>
+-        </a>
+-        <a href="#/" class="nav-item cart-nav-item" onclick="openCartTab(); return false;">
+-            <div class="nav-icon"><i class="ri-shopping-cart-2-line"></i></div>
+-            <span>Panier</span>
+-            <span id="mobile-nav-cart-badge" class="cart-badge" style="display: none;">0</span>
+-        </a>
+-        <a href="#/" class="nav-item"
+-            onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+-            <div class="nav-icon"><i class="ri-user-line"></i></div>
+-            <span>Profil</span>
+-        </a>
+-    </nav>
++    
+     <!-- Supabase Client Library -->
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     <!-- Confetti for Order Success -->
+@@ -482,7 +425,7 @@
+ 
+     <!-- ========== BOTTOM NAVIGATION BAR ========== -->
+     <nav id="bottom-nav-bar" class="glass-panel" style="position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; justify-content: space-around; padding: 1rem; border-top: 1px solid var(--border); z-index: 999; backdrop-filter: blur(20px);">
+-    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--primary);" data-route="#/" onclick="router.navigate('/')">
++    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/" onclick="router.navigate('/')">
+         <span style="font-size: 1.5rem; margin-bottom: 4px;">🏠</span>
+         <span style="font-size: 0.75rem; font-weight: 600;">Accueil</span>
+     </div>
+@@ -490,11 +433,12 @@
+         <span style="font-size: 1.5rem; margin-bottom: 4px;">🛵</span>
+         <span style="font-size: 0.75rem; font-weight: 600;">Suivi</span>
+     </div>
+-    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/profile" onclick="router.navigate('/profile')">
+-        <span style="font-size: 1.5rem; margin-bottom: 4px;">📜</span>
+-        <span style="font-size: 0.75rem; font-weight: 600;">Historique</span>
++    <div class="nav-item cart-nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary); position: relative;" onclick="openCartTab();">
++        <span style="font-size: 1.5rem; margin-bottom: 4px;">🛒</span>
++        <span style="font-size: 0.75rem; font-weight: 600;">Panier</span>
++        <span id="bottom-nav-cart-qty" class="cart-badge" style="display: none; position: absolute; top: -5px; right: 10px; background: var(--primary); color: white; font-size: 0.65rem; padding: 2px 6px; border-radius: 10px; font-weight: bold;">0</span>
+     </div>
+-    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/auth" onclick="router.navigate('/auth')">
++    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/profile" onclick="router.navigate('/profile')">
+         <span style="font-size: 1.5rem; margin-bottom: 4px;">👤</span>
+         <span style="font-size: 0.75rem; font-weight: 600;">Profil</span>
+     </div>
+
+commit 9d7fc9d6e6a155ea37efce683fa2f875695fd6ff
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sat Aug 15 19:20:48 2026 +0200
+
+    fix: phase 2 QA audit and non-regression fixes
+
+diff --git a/index.html b/index.html
+index 4484d6a..4077f9c 100644
+--- a/index.html
++++ b/index.html
+@@ -481,24 +481,24 @@
+     </div>
+ 
+     <!-- ========== BOTTOM NAVIGATION BAR ========== -->
+-    <nav id="bottom-nav-bar" class="glass-panel" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; display: flex; justify-content: space-around; align-items: center; border-radius: 20px 20px 0 0; z-index: 1000; padding: 0 10px;">
+-        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--primary); cursor: pointer;" data-route="#/" onclick="router.navigate('/')">
+-            <span style="font-size: 1.5rem;">🏠</span>
+-            <span style="font-size: 0.75rem; font-weight: 500;">Home</span>
+-        </div>
+-        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" data-route="#/catalog" onclick="router.navigate('/catalog')">
+-            <span style="font-size: 1.5rem;">🏷️</span>
+-            <span style="font-size: 0.75rem;">Offers</span>
+-        </div>
+-        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" data-route="#/profile" onclick="router.navigate('/profile')">
+-            <span style="font-size: 1.5rem;">🛍️</span>
+-            <span style="font-size: 0.75rem;">Orders</span>
+-        </div>
+-        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;">
+-            <span style="font-size: 1.5rem;">❤️</span>
+-            <span style="font-size: 0.75rem;">Favorite</span>
+-        </div>
+-    </nav>
++    <nav id="bottom-nav-bar" class="glass-panel" style="position: fixed; bottom: 0; width: 100%; max-width: 480px; display: flex; justify-content: space-around; padding: 1rem; border-top: 1px solid var(--border); z-index: 999; backdrop-filter: blur(20px);">
++    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--primary);" data-route="#/" onclick="router.navigate('/')">
++        <span style="font-size: 1.5rem; margin-bottom: 4px;">🏠</span>
++        <span style="font-size: 0.75rem; font-weight: 600;">Accueil</span>
++    </div>
++    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/tracking" onclick="router.navigate('/tracking')">
++        <span style="font-size: 1.5rem; margin-bottom: 4px;">🛵</span>
++        <span style="font-size: 0.75rem; font-weight: 600;">Suivi</span>
++    </div>
++    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/profile" onclick="router.navigate('/profile')">
++        <span style="font-size: 1.5rem; margin-bottom: 4px;">📜</span>
++        <span style="font-size: 0.75rem; font-weight: 600;">Historique</span>
++    </div>
++    <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; cursor: pointer; color: var(--text-secondary);" data-route="#/auth" onclick="router.navigate('/auth')">
++        <span style="font-size: 1.5rem; margin-bottom: 4px;">👤</span>
++        <span style="font-size: 0.75rem; font-weight: 600;">Profil</span>
++    </div>
++</nav>
+ 
+ </body>
+ 
+
+commit eaea5ca9f7ad2d5b089b1c1caa05e3985981b55b
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sat Aug 15 19:08:57 2026 +0200
+
+    feat: complete phase 2 ui redesign home and product modal
+
+diff --git a/index.html b/index.html
+index 71faad7..4484d6a 100644
+--- a/index.html
++++ b/index.html
+@@ -481,20 +481,20 @@
+     </div>
+ 
+     <!-- ========== BOTTOM NAVIGATION BAR ========== -->
+-    <nav class="glass-panel" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; display: flex; justify-content: space-around; align-items: center; border-radius: 20px 20px 0 0; z-index: 1000; padding: 0 10px;">
+-        <div style="display: flex; flex-direction: column; align-items: center; color: var(--primary); cursor: pointer;" onclick="router.navigate('/')">
++    <nav id="bottom-nav-bar" class="glass-panel" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; display: flex; justify-content: space-around; align-items: center; border-radius: 20px 20px 0 0; z-index: 1000; padding: 0 10px;">
++        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--primary); cursor: pointer;" data-route="#/" onclick="router.navigate('/')">
+             <span style="font-size: 1.5rem;">🏠</span>
+             <span style="font-size: 0.75rem; font-weight: 500;">Home</span>
+         </div>
+-        <div style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" onclick="router.navigate('/tracking')">
++        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" data-route="#/catalog" onclick="router.navigate('/catalog')">
+             <span style="font-size: 1.5rem;">🏷️</span>
+             <span style="font-size: 0.75rem;">Offers</span>
+         </div>
+-        <div style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" onclick="router.navigate('/auth')">
++        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" data-route="#/profile" onclick="router.navigate('/profile')">
+             <span style="font-size: 1.5rem;">🛍️</span>
+             <span style="font-size: 0.75rem;">Orders</span>
+         </div>
+-        <div style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;">
++        <div class="nav-item" style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;">
+             <span style="font-size: 1.5rem;">❤️</span>
+             <span style="font-size: 0.75rem;">Favorite</span>
+         </div>
+
+commit 6fb1ee2ef91697f80245cdbbff1e68b7ac6d5beb
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sat Aug 15 18:59:19 2026 +0200
+
+    feat: dark glassmorphism ui redesign
+
+diff --git a/index.html b/index.html
+index 1b45420..71faad7 100644
+--- a/index.html
++++ b/index.html
+@@ -165,30 +165,52 @@
+ 
+     <div class="app-container">
+         <!-- ========== NAVIGATION BAR ========== -->
+-        <header class="navbar" id="main-navbar">
+-            <!-- Left: Burger & Navigation links (Desktop) -->
+-            <div class="nav-left">
+-                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()">
+-                    <span class="bar"></span>
+-                    <span class="bar"></span>
+-                    <span class="bar"></span>
++        <header class="navbar glass-panel" id="main-navbar" style="padding: 1rem; border-bottom: none; border-radius: 0 0 20px 20px; position: sticky; top: 0; z-index: 100;">
++            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
++                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()" style="background: var(--bg-input); padding: 10px; border-radius: 50%;">
++                    <span class="bar" style="background: var(--text-primary);"></span>
++                    <span class="bar" style="background: var(--text-primary);"></span>
++                    <span class="bar" style="background: var(--text-primary);"></span>
+                 </button>
++                <div class="user-profile" style="background: url('icon.png') center/cover; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); position: relative;">
++                    <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #FF3B30; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
++                </div>
+             </div>
+-
+-            <!-- Center: Logo -->
+-            <div class="logo-container" onclick="router.navigate('/')">
+-                <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
+-                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+-                <span class="logo-text">THIES Resto</span>
++            <div style="margin-top: 1.5rem; text-align: left;">
++                <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.2rem;">Hi, Foodie 👋</p>
++                <h1 style="font-size: 2.2rem; line-height: 1.1;">Good Food<br>Good <span style="color: var(--primary);">Mood!</span></h1>
++            </div>
++            
++            <div style="margin-top: 1.5rem; position: relative;">
++                <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 1.2rem;">🔍</span>
++                <input type="text" placeholder="Search your favorite food" style="width: 100%; background: var(--bg-input); border: none; padding: 15px 15px 15px 45px; border-radius: 30px; color: var(--text-primary); font-size: 1rem;">
++                <button style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: var(--bg-glass); border: 1px solid var(--border); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
++                    <span style="color: var(--text-primary);">🎛️</span>
++                </button>
++            </div>
++            
++            <!-- Category Pills -->
++            <div style="display: flex; gap: 1rem; overflow-x: auto; margin-top: 1.5rem; padding-bottom: 0.5rem;" class="hide-scrollbar">
++                <div style="background: var(--primary); color: #fff; padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; box-shadow: var(--shadow-sm);">
++                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍔</span>
++                    <span style="font-size: 0.9rem; font-weight: 500;">Burger</span>
++                </div>
++                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
++                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍕</span>
++                    <span style="font-size: 0.9rem; font-weight: 500;">Pizza</span>
++                </div>
++                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
++                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍗</span>
++                    <span style="font-size: 0.9rem; font-weight: 500;">Chicken</span>
++                </div>
++                <div style="background: var(--bg-card); color: var(--text-primary); padding: 10px 20px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; min-width: 80px; border: 1px solid var(--border);">
++                    <span style="font-size: 1.5rem; margin-bottom: 0.2rem;">🍟</span>
++                    <span style="font-size: 0.9rem; font-weight: 500;">Fries</span>
++                </div>
+             </div>
+-
+-            <!-- Right: Session Actions -->
+-            <nav class="nav-links" id="nav-actions">
+-                <!-- Dynamic actions populated by JS -->
+-            </nav>
+ 
+             <!-- Mobile Drawer Overlay -->
+-            <div class="mobile-drawer" id="mobile-drawer">
++            <div class="mobile-drawer glass-panel" id="mobile-drawer" style="background: rgba(18, 18, 18, 0.95);">
+                 <div class="drawer-header">
+                     <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
+                         style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
+@@ -457,6 +479,27 @@
+             </div>
+         </div>
+     </div>
++
++    <!-- ========== BOTTOM NAVIGATION BAR ========== -->
++    <nav class="glass-panel" style="position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; display: flex; justify-content: space-around; align-items: center; border-radius: 20px 20px 0 0; z-index: 1000; padding: 0 10px;">
++        <div style="display: flex; flex-direction: column; align-items: center; color: var(--primary); cursor: pointer;" onclick="router.navigate('/')">
++            <span style="font-size: 1.5rem;">🏠</span>
++            <span style="font-size: 0.75rem; font-weight: 500;">Home</span>
++        </div>
++        <div style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" onclick="router.navigate('/tracking')">
++            <span style="font-size: 1.5rem;">🏷️</span>
++            <span style="font-size: 0.75rem;">Offers</span>
++        </div>
++        <div style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;" onclick="router.navigate('/auth')">
++            <span style="font-size: 1.5rem;">🛍️</span>
++            <span style="font-size: 0.75rem;">Orders</span>
++        </div>
++        <div style="display: flex; flex-direction: column; align-items: center; color: var(--text-secondary); cursor: pointer;">
++            <span style="font-size: 1.5rem;">❤️</span>
++            <span style="font-size: 0.75rem;">Favorite</span>
++        </div>
++    </nav>
++
+ </body>
+ 
+ </html>
+\ No newline at end of file
+
+commit 3800c0ed7765ecd05c25d3a8162563fccfd26695
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sat Aug 15 18:27:43 2026 +0200
+
+    fix: remaining empty href links
+
+diff --git a/index.html b/index.html
+index 8a682c7..1b45420 100644
+--- a/index.html
++++ b/index.html
+@@ -199,12 +199,12 @@
+                     <a href="#/" onclick="toggleMobileMenu();">Accueil</a>
+                     <a href="#/tracking" onclick="toggleMobileMenu();"
+                         style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+-                    <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
+-                    <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
++                    <a href="#/" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
++                    <a href="#/" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
+                     <a href="#/partnership" onclick="toggleMobileMenu();">Devenir
+                         Partenaire 🤝</a>
+                     
+-                    <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;"
++                    <a href="#/" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;"
+                         style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪
+                         Déconnexion</a>
+                 </div>
+@@ -300,7 +300,7 @@
+                 <div class="footer-col">
+                     <h4 class="footer-col-title">Navigation</h4>
+                     <a href="#/" onclick="">Accueil</a>
+-                    <a href="#" onclick="scrollToHowItWorks(); return false;">Comment ça marche ?</a>
++                    <a href="#/" onclick="scrollToHowItWorks(); return false;">Comment ça marche ?</a>
+                     <a href="#/auth" onclick="">Espace Restaurant</a>
+                     <a href="#/partnership" onclick="">Demander un Partenariat 🤝</a>
+                 </div>
+@@ -380,22 +380,22 @@
+ 
+     <!-- ========== MOBILE BOTTOM NAV ========== -->
+     <nav class="mobile-bottom-nav">
+-        <a href="#" class="nav-item active"
++        <a href="#/" class="nav-item active"
+             onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+             <div class="nav-icon"><i class="ri-home-5-line"></i></div>
+             <span>Accueil</span>
+         </a>
+-        <a href="#" class="nav-item"
++        <a href="#/" class="nav-item"
+             onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+             <div class="nav-icon"><i class="ri-map-pin-2-line"></i></div>
+             <span>Proche</span>
+         </a>
+-        <a href="#" class="nav-item cart-nav-item" onclick="openCartTab(); return false;">
++        <a href="#/" class="nav-item cart-nav-item" onclick="openCartTab(); return false;">
+             <div class="nav-icon"><i class="ri-shopping-cart-2-line"></i></div>
+             <span>Panier</span>
+             <span id="mobile-nav-cart-badge" class="cart-badge" style="display: none;">0</span>
+         </a>
+-        <a href="#" class="nav-item"
++        <a href="#/" class="nav-item"
+             onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+             <div class="nav-icon"><i class="ri-user-line"></i></div>
+             <span>Profil</span>
+
+commit 33f72d26624071613e8a9ec42b98ca23b3aff814
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sat Aug 15 18:17:21 2026 +0200
+
+    fix: seo navigation links, base64 audio, and blank screen race condition
+
+diff --git a/index.html b/index.html
+index 1b044b0..8a682c7 100644
+--- a/index.html
++++ b/index.html
+@@ -196,20 +196,14 @@
+                     <button class="close-drawer-btn" aria-label="Fermer le menu" onclick="toggleMobileMenu()">✕</button>
+                 </div>
+                 <div class="drawer-links">
+-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
+-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;"
++                    <a href="#/" onclick="toggleMobileMenu();">Accueil</a>
++                    <a href="#/tracking" onclick="toggleMobileMenu();"
+                         style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+                     <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
+                     <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
+-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
++                    <a href="#/partnership" onclick="toggleMobileMenu();">Devenir
+                         Partenaire 🤝</a>
+-                    <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;"
+-                        title="Bientôt disponible">
+-                        Espace Livreurs 🛵
+-                        <span
+-                            style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt
+-                            disponible)</span>
+-                    </a>
++                    
+                     <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;"
+                         style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪
+                         Déconnexion</a>
+@@ -268,11 +262,7 @@
+         </div>
+ 
+         <!-- ========== NOTIFICATION SOUND ========== -->
+-        <audio id="notification-sound" preload="auto">
+-            <source
+-                src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f39/f39/f4B/f39/f3+Af39/f3+AgICBgYKDhIWGiImKi4yNjo+QkZKTlJWVlZWUk5KRkI+OjYyLiomIh4aFhIOCgYB/f35+fX19fHx8fHx8fX1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpqbm5ycnJ2dnZ2dnZycm5uampmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAf359fHt6"
+-                type="audio/wav">
+-        </audio>
++        
+ 
+         <!-- ========== FOOTER ========== -->
+         <footer id="main-footer">
+@@ -297,11 +287,11 @@
+                 <!-- Policies Column -->
+                 <div class="footer-col">
+                     <h4 class="footer-col-title">Légal</h4>
+-                    <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions de Vente</a>
+-                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client &
++                    <a href="#/cgv" onclick="">Conditions de Vente</a>
++                    <a href="#/politique-client" onclick="">Politique Client &
+                         RGPD</a>
+-                    <a href="#" onclick="router.navigate('/politique-admin'); return false;">Politique Restaurant</a>
+-                    <a href="#" onclick="router.navigate('/admin-login'); return false;"
++                    <a href="#/politique-admin" onclick="">Politique Restaurant</a>
++                    <a href="#/admin-login" onclick=""
+                         style="color: var(--accent); font-weight: bold; margin-top: 0.5rem; display: inline-block;">👑
+                         Espace Super-Admin</a>
+                 </div>
+@@ -309,10 +299,10 @@
+                 <!-- Links Column -->
+                 <div class="footer-col">
+                     <h4 class="footer-col-title">Navigation</h4>
+-                    <a href="#" onclick="router.navigate('/'); return false;">Accueil</a>
++                    <a href="#/" onclick="">Accueil</a>
+                     <a href="#" onclick="scrollToHowItWorks(); return false;">Comment ça marche ?</a>
+-                    <a href="#" onclick="router.navigate('/auth'); return false;">Espace Restaurant</a>
+-                    <a href="#" onclick="router.navigate('/partnership'); return false;">Demander un Partenariat 🤝</a>
++                    <a href="#/auth" onclick="">Espace Restaurant</a>
++                    <a href="#/partnership" onclick="">Demander un Partenariat 🤝</a>
+                 </div>
+ 
+                 <!-- Contact Column -->
+@@ -449,9 +439,7 @@
+     <!-- ========== CONSENT BANNER ========== -->
+     <div id="consent-banner" class="consent-banner" style="display: none;">
+         <div class="consent-content">
+-            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#"
+-                    onclick="router.navigate('/cgv'); return false;">CGV</a> et notre <a href="#"
+-                    onclick="router.navigate('/politique-client'); return false;">Politique de Confidentialité</a>.</p>
++            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#/cgv" onclick="">CGV</a> et notre <a href="#/politique-client" onclick="">Politique de Confidentialité</a>.</p>
+             <button class="btn btn-primary btn-sm" onclick="acceptConsent()">J'accepte</button>
+         </div>
+     </div>
+
+commit a3f22a6cb423971a2fda7264cbd5aa35a2e4f37c
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sat Aug 15 16:53:38 2026 +0200
+
+    Refonte UI: Design System initial et écran de login
+
+diff --git a/index.html b/index.html
+index d11b7a4..1b044b0 100644
+--- a/index.html
++++ b/index.html
+@@ -11,20 +11,20 @@
+     <meta name="robots" content="index, follow">
+     <meta name="author" content="NdiayeDigital">
+     <link rel="canonical" href="https://thies-resto.com/">
+-    
++
+     <script>
+         // Global Error Tracking (Phase 5)
+         window.thiesRestoErrors = [];
+-        window.__earlyErrorHandler = function(msg, url, line, col, error) {
+-            window.thiesRestoErrors.push({msg, url, line, col, error: error ? error.stack : null, time: new Date()});
++        window.__earlyErrorHandler = function (msg, url, line, col, error) {
++            window.thiesRestoErrors.push({ msg, url, line, col, error: error ? error.stack : null, time: new Date() });
+             var loader = document.getElementById('loading-overlay');
+-            if(loader) loader.style.display = 'none';
++            if (loader) loader.style.display = 'none';
+             // In a real production environment, send this to Sentry/DataDog/Supabase RPC
+             console.error("[SENTRY MOCK] Global Error Caught:", msg, url, line);
+         };
+         window.onerror = window.__earlyErrorHandler;
+-        window.addEventListener('unhandledrejection', function(event) {
+-            window.thiesRestoErrors.push({msg: event.reason, time: new Date(), type: 'unhandledrejection'});
++        window.addEventListener('unhandledrejection', function (event) {
++            window.thiesRestoErrors.push({ msg: event.reason, time: new Date(), type: 'unhandledrejection' });
+             console.error("[SENTRY MOCK] Unhandled Promise Rejection:", event.reason);
+         });
+     </script>
+@@ -115,13 +115,13 @@
+     </script>
+ 
+     <meta name="theme-color" content="#f26b21">
+-    
++
+     <!-- PWA & iOS Meta Tags -->
+     <meta name="apple-mobile-web-app-capable" content="yes">
+     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+     <meta name="apple-mobile-web-app-title" content="THIES Resto">
+     <link rel="apple-touch-icon" href="icon.png">
+-    
++
+     <link rel="manifest" href="manifest.json">
+     <link rel="icon" type="image/x-icon" href="logo.jpg">
+     <link rel="apple-touch-icon" href="icon.png">
+@@ -129,7 +129,7 @@
+     <!-- Fonts -->
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+-    
++
+     <!-- Professional Icons (Remix Icon) -->
+     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+ 
+@@ -142,15 +142,22 @@
+     <!-- Google tag (gtag.js) - Google Analytics -->
+     <script async src="https://www.googletagmanager.com/gtag/js?id=G-80CM404GD4"></script>
+     <script>
+-      window.dataLayer = window.dataLayer || [];
+-      function gtag(){dataLayer.push(arguments);}
+-      gtag('js', new Date());
++        window.dataLayer = window.dataLayer || [];
++        function gtag() { dataLayer.push(arguments); }
++        gtag('js', new Date());
+ 
+-      gtag('config', 'G-80CM404GD4');
++        gtag('config', 'G-80CM404GD4');
+     </script>
+-    
++
+     <!-- DOMPurify for secure innerHTML data rendering -->
+     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
++
++    <!-- NATIVE CSS INJECTION (PRE-VITE SURGICAL ROLLBACK) -->
++    <link rel="stylesheet" href="style.css">
++    <link rel="stylesheet" href="css/components/loyalty.css">
++    <link rel="stylesheet" href="css/components/tracking.css">
++    <link rel="stylesheet" href="css/components/admin.css">
++    <link rel="stylesheet" href="css/components/utilities.css">
+ </head>
+ 
+ <body x-data>
+@@ -190,16 +197,22 @@
+                 </div>
+                 <div class="drawer-links">
+                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
+-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
++                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;"
++                        style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+                     <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
+                     <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
+                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
+                         Partenaire 🤝</a>
+-                    <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
+-                        Espace Livreurs 🛵 
+-                        <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt disponible)</span>
++                    <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;"
++                        title="Bientôt disponible">
++                        Espace Livreurs 🛵
++                        <span
++                            style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt
++                            disponible)</span>
+                     </a>
+-                    <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;" style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪 Déconnexion</a>
++                    <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;"
++                        style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪
++                        Déconnexion</a>
+                 </div>
+             </div>
+             <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>
+@@ -209,7 +222,8 @@
+         <main id="main-content">
+             <!-- SKELETON PRELOADER -->
+             <div id="initial-skeleton" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
+-                <div class="skeleton" style="height: 400px; width: 100%; border-radius: 24px; margin-bottom: 2rem;"></div>
++                <div class="skeleton" style="height: 400px; width: 100%; border-radius: 24px; margin-bottom: 2rem;">
++                </div>
+                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
+                     <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+                     <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+@@ -221,13 +235,14 @@
+ 
+ 
+         <!-- ========== FLOATING CART BAR ========== -->
+-        <div id="floating-cart-bar" class="floating-cart-bar" 
+-             x-show="$store.cart.itemCount > 0" 
+-             style="display: none;" 
+-             onclick="openCartTab()">
++        <div id="floating-cart-bar" class="floating-cart-bar" x-show="$store.cart.itemCount > 0" style="display: none;"
++            onclick="openCartTab()">
+             <div class="floating-cart-info">
+-                <span id="floating-cart-qty" class="floating-cart-qty" x-text="$store.cart.itemCount + ($store.cart.itemCount > 1 ? ' articles' : ' article')">0 articles</span>
+-                <span id="floating-cart-total" class="floating-cart-total" x-text="$store.cart.total + ' FCFA'">0 FCFA</span>
++                <span id="floating-cart-qty" class="floating-cart-qty"
++                    x-text="$store.cart.itemCount + ($store.cart.itemCount > 1 ? ' articles' : ' article')">0
++                    articles</span>
++                <span id="floating-cart-total" class="floating-cart-total" x-text="$store.cart.total + ' FCFA'">0
++                    FCFA</span>
+             </div>
+             <button class="btn btn-primary btn-sm" id="floating-cart-btn" aria-label="Ouvrir le panier">
+                 Voir le Panier 🛒
+@@ -235,7 +250,9 @@
+         </div>
+ 
+         <!-- ========== FLOATING WHATSAPP SUPPORT ========== -->
+-        <a href="https://wa.me/221784799882?text=Bonjour,%20j'ai%20besoin%20d'aide%20sur%20THIES%20Resto" target="_blank" rel="noopener noreferrer" class="floating-support-btn" style="position: fixed; bottom: 90px; right: 20px; background-color: #25D366; color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s;">
++        <a href="https://wa.me/221784799882?text=Bonjour,%20j'ai%20besoin%20d'aide%20sur%20THIES%20Resto"
++            target="_blank" rel="noopener noreferrer" class="floating-support-btn"
++            style="position: fixed; bottom: 90px; right: 20px; background-color: #25D366; color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s;">
+             💬
+         </a>
+ 
+@@ -245,7 +262,8 @@
+         </div>
+ 
+         <!-- ========== SOCIAL PROOF TOAST ========== -->
+-        <div id="social-proof-toast" style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); align-items: center; gap: 12px; transition: opacity 0.5s ease-out;">
++        <div id="social-proof-toast"
++            style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); align-items: center; gap: 12px; transition: opacity 0.5s ease-out;">
+             <!-- Content filled dynamically -->
+         </div>
+ 
+@@ -280,9 +298,12 @@
+                 <div class="footer-col">
+                     <h4 class="footer-col-title">Légal</h4>
+                     <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions de Vente</a>
+-                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client & RGPD</a>
++                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client &
++                        RGPD</a>
+                     <a href="#" onclick="router.navigate('/politique-admin'); return false;">Politique Restaurant</a>
+-                    <a href="#" onclick="router.navigate('/admin-login'); return false;" style="color: var(--accent); font-weight: bold; margin-top: 0.5rem; display: inline-block;">👑 Espace Super-Admin</a>
++                    <a href="#" onclick="router.navigate('/admin-login'); return false;"
++                        style="color: var(--accent); font-weight: bold; margin-top: 0.5rem; display: inline-block;">👑
++                        Espace Super-Admin</a>
+                 </div>
+ 
+                 <!-- Links Column -->
+@@ -297,17 +318,22 @@
+                 <!-- Contact Column -->
+                 <div class="footer-col">
+                     <h4 class="footer-col-title">Contact & Réseaux</h4>
+-                    <a href="https://wa.me/221784799882" target="_blank" rel="noopener noreferrer">💬 WhatsApp (+221 78 479 98 82)</a>
+-                    <a href="https://www.facebook.com/profile.php?id=61591577033848" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
+-                    <a href="https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&amp;utm_source=qr" target="_blank" rel="noopener noreferrer">📸 Instagram</a>
+-                    <a href="https://www.tiktok.com/@thiesresto?_r=1&amp;_t=ZS-97XIj47j1gS" target="_blank" rel="noopener noreferrer">🎵 TikTok</a>
++                    <a href="https://wa.me/221784799882" target="_blank" rel="noopener noreferrer">💬 WhatsApp (+221 78
++                        479 98 82)</a>
++                    <a href="https://www.facebook.com/profile.php?id=61591577033848" target="_blank"
++                        rel="noopener noreferrer">📘 Facebook</a>
++                    <a href="https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&amp;utm_source=qr"
++                        target="_blank" rel="noopener noreferrer">📸 Instagram</a>
++                    <a href="https://www.tiktok.com/@thiesresto?_r=1&amp;_t=ZS-97XIj47j1gS" target="_blank"
++                        rel="noopener noreferrer">🎵 TikTok</a>
+                     <a href="mailto:contact@thies-resto.com">✉️ contact@thies-resto.com</a>
+                 </div>
+ 
+                 <!-- Theme Toggle Column -->
+                 <div class="footer-col">
+                     <h4 class="footer-col-title">Apparence</h4>
+-                    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Changer le thème" onclick="toggleTheme()">
++                    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Changer le thème"
++                        onclick="toggleTheme()">
+                         <span id="theme-toggle-icon">☀️</span>
+                         <span id="theme-toggle-label">Mode Clair</span>
+                     </button>
+@@ -364,11 +390,13 @@
+ 
+     <!-- ========== MOBILE BOTTOM NAV ========== -->
+     <nav class="mobile-bottom-nav">
+-        <a href="#" class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
++        <a href="#" class="nav-item active"
++            onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+             <div class="nav-icon"><i class="ri-home-5-line"></i></div>
+             <span>Accueil</span>
+         </a>
+-        <a href="#" class="nav-item" onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
++        <a href="#" class="nav-item"
++            onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+             <div class="nav-icon"><i class="ri-map-pin-2-line"></i></div>
+             <span>Proche</span>
+         </a>
+@@ -377,7 +405,8 @@
+             <span>Panier</span>
+             <span id="mobile-nav-cart-badge" class="cart-badge" style="display: none;">0</span>
+         </a>
+-        <a href="#" class="nav-item" onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
++        <a href="#" class="nav-item"
++            onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+             <div class="nav-icon"><i class="ri-user-line"></i></div>
+             <span>Profil</span>
+         </a>
+@@ -394,6 +423,7 @@
+     <!-- App Logic (Bundled with Vite) -->
+     <script type="module" src="/main.js"></script>
+ 
++
+     <script>
+         function togglePasswordVisibility(inputId, iconElement) {
+             const input = document.getElementById(inputId);
+@@ -406,19 +436,22 @@
+             }
+         }
+     </script>
+-    
++
+     <!-- Metricool Tracking Pixel -->
+-    <img src="https://tracker.metricool.com/c3po.jpg?hash=ebe8b52530fde54a82b1ea7dec11f618" style="display:none; width:0px; height:0px;" alt="" />
+-<script>
++    <img src="https://tracker.metricool.com/c3po.jpg?hash=ebe8b52530fde54a82b1ea7dec11f618"
++        style="display:none; width:0px; height:0px;" alt="" />
++    <script>
+         if ('serviceWorker' in navigator) {
+             navigator.serviceWorker.register('sw.js');
+         }
+     </script>
+-    
++
+     <!-- ========== CONSENT BANNER ========== -->
+     <div id="consent-banner" class="consent-banner" style="display: none;">
+         <div class="consent-content">
+-            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#" onclick="router.navigate('/cgv'); return false;">CGV</a> et notre <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique de Confidentialité</a>.</p>
++            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#"
++                    onclick="router.navigate('/cgv'); return false;">CGV</a> et notre <a href="#"
++                    onclick="router.navigate('/politique-client'); return false;">Politique de Confidentialité</a>.</p>
+             <button class="btn btn-primary btn-sm" onclick="acceptConsent()">J'accepte</button>
+         </div>
+     </div>
+@@ -428,7 +461,8 @@
+         <div class="geo-modal-content">
+             <div class="geo-icon">📍</div>
+             <h3>Où êtes-vous ?</h3>
+-            <p>Pour vous afficher les meilleurs restaurants ouverts autour de vous (à moins de 5 km), nous avons besoin d'accéder à votre position GPS.</p>
++            <p>Pour vous afficher les meilleurs restaurants ouverts autour de vous (à moins de 5 km), nous avons besoin
++                d'accéder à votre position GPS.</p>
+             <div class="geo-actions">
+                 <button class="btn btn-secondary" onclick="closeGeoModal()">Plus tard</button>
+                 <button class="btn btn-primary" onclick="requestNativeGeolocation()">Autoriser l'accès</button>
+@@ -437,4 +471,4 @@
+     </div>
+ </body>
+ 
+-</html>
++</html>
+\ No newline at end of file
+
+commit ca4523bf409c65b2ad2fcecaf869caddb0e7053b
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Thu Aug 13 18:13:02 2026 +0200
+
+    feat(P2): Scale 50/500 fixes (Cart Alpine, Pagination, PWA/Sentry)
+
+diff --git a/index.html b/index.html
+index 4ece67a..d11b7a4 100644
+--- a/index.html
++++ b/index.html
+@@ -221,10 +221,13 @@
+ 
+ 
+         <!-- ========== FLOATING CART BAR ========== -->
+-        <div id="floating-cart-bar" class="floating-cart-bar" style="display: none;" onclick="openCartTab()">
++        <div id="floating-cart-bar" class="floating-cart-bar" 
++             x-show="$store.cart.itemCount > 0" 
++             style="display: none;" 
++             onclick="openCartTab()">
+             <div class="floating-cart-info">
+-                <span id="floating-cart-qty" class="floating-cart-qty">0 articles</span>
+-                <span id="floating-cart-total" class="floating-cart-total">0 FCFA</span>
++                <span id="floating-cart-qty" class="floating-cart-qty" x-text="$store.cart.itemCount + ($store.cart.itemCount > 1 ? ' articles' : ' article')">0 articles</span>
++                <span id="floating-cart-total" class="floating-cart-total" x-text="$store.cart.total + ' FCFA'">0 FCFA</span>
+             </div>
+             <button class="btn btn-primary btn-sm" id="floating-cart-btn" aria-label="Ouvrir le panier">
+                 Voir le Panier 🛒
+
+commit aa4501be605d7c74b43972981bbe2697a0d3632c
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Thu Aug 13 14:59:37 2026 +0200
+
+    Refactor(P2): Migrate Catalog and Global State to AlpineJS
+
+diff --git a/index.html b/index.html
+index cb39789..4ece67a 100644
+--- a/index.html
++++ b/index.html
+@@ -153,7 +153,7 @@
+     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+ </head>
+ 
+-<body>
++<body x-data>
+     <!-- ========== LOADING OVERLAY REMOVED ========== -->
+ 
+     <div class="app-container">
+
+commit 985bc5669f74541d7b9eae59ee49b9736985a98e
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Thu Aug 13 13:50:36 2026 +0200
+
+    Fix critical security vulnerabilities (P0) and complete Vite migration
+
+diff --git a/index.html b/index.html
+index 16b35f3..cb39789 100644
+--- a/index.html
++++ b/index.html
+@@ -136,7 +136,6 @@
+     <!-- QR Code Library -->
+     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+ 
+-    <link rel="stylesheet" href="style.css?v=7">
+     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+@@ -389,15 +388,8 @@
+     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+ 
+-    <!-- App Logic -->
+-    <script src="js/logger.js?v=7"></script>
+-    <script src="js/data.js?v=7"></script>
+-    <script src="js/store.js?v=7"></script>
+-    <script src="js/router.js?v=7"></script>
+-    <script src="js/admin.js?v=7"></script>
+-    <script src="js/ui-checkout.js"></script>
+-    <script src="js/ui-vendor.js"></script>
+-    <script src="app.js"></script>
++    <!-- App Logic (Bundled with Vite) -->
++    <script type="module" src="/main.js"></script>
+ 
+     <script>
+         function togglePasswordVisibility(inputId, iconElement) {
+
+commit b8056182a2afb26826de31ac6911660c2edfcf2a
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Thu Aug 13 02:40:24 2026 +0200
+
+    feat(vendor): add dedicated vendor dashboard for menu and status management
+
+diff --git a/index.html b/index.html
+index bef9ca1..16b35f3 100644
+--- a/index.html
++++ b/index.html
+@@ -395,8 +395,9 @@
+     <script src="js/store.js?v=7"></script>
+     <script src="js/router.js?v=7"></script>
+     <script src="js/admin.js?v=7"></script>
+-    <script src="js/ui-checkout.js?v=7"></script>
+-    <script src="app.js?v=7"></script>
++    <script src="js/ui-checkout.js"></script>
++    <script src="js/ui-vendor.js"></script>
++    <script src="app.js"></script>
+ 
+     <script>
+         function togglePasswordVisibility(inputId, iconElement) {
+
+commit 2f22e645a1ed33a9432f3236c1888d81e9efc4d5
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Thu Aug 13 01:47:12 2026 +0200
+
+    feat(ui): add consent banner, geo modal, and clean bottom nav
+
+diff --git a/index.html b/index.html
+index 21c5a8f..bef9ca1 100644
+--- a/index.html
++++ b/index.html
+@@ -129,6 +129,9 @@
+     <!-- Fonts -->
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++    
++    <!-- Professional Icons (Remix Icon) -->
++    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+ 
+     <!-- QR Code Library -->
+     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+@@ -315,32 +318,7 @@
+             </div>
+         </footer>
+ 
+-        <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
+-        <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+-            <a href="#" class="nav-item active" onclick="router.navigate('/'); return false;">
+-                <span class="icon">🏠</span>
+-                <span class="label">Accueil</span>
+-            </a>
+-            <a href="#" class="nav-item" onclick="scrollToCatalog(); return false;">
+-                <span class="icon">🍽️</span>
+-                <span class="label">Menus</span>
+-            </a>
+-            <a href="#" class="nav-item" onclick="openCartTab(); return false;" id="bottom-nav-cart">
+-                <div class="icon-wrapper">
+-                    <span class="icon">🛒</span>
+-                    <span class="badge-qty" id="bottom-nav-cart-qty" style="display: none;">0</span>
+-                </div>
+-                <span class="label">Panier</span>
+-            </a>
+-            <a href="#" class="nav-item" onclick="router.navigate('/tracking'); return false;">
+-                <span class="icon">📍</span>
+-                <span class="label">Suivi</span>
+-            </a>
+-            <a href="#" class="nav-item" onclick="router.navigate('/partnership'); return false;">
+-                <span class="icon">🤝</span>
+-                <span class="label">Partenaire</span>
+-            </a>
+-        </nav>
++
+     </div>
+ 
+     <!-- ========== JSON-LD STRUCTURED DATA ========== -->
+@@ -385,20 +363,20 @@
+     <!-- ========== MOBILE BOTTOM NAV ========== -->
+     <nav class="mobile-bottom-nav">
+         <a href="#" class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+-            <div class="nav-icon">🏠</div>
++            <div class="nav-icon"><i class="ri-home-5-line"></i></div>
+             <span>Accueil</span>
+         </a>
+         <a href="#" class="nav-item" onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+-            <div class="nav-icon">📍</div>
++            <div class="nav-icon"><i class="ri-map-pin-2-line"></i></div>
+             <span>Proche</span>
+         </a>
+         <a href="#" class="nav-item cart-nav-item" onclick="openCartTab(); return false;">
+-            <div class="nav-icon">🛒</div>
++            <div class="nav-icon"><i class="ri-shopping-cart-2-line"></i></div>
+             <span>Panier</span>
+             <span id="mobile-nav-cart-badge" class="cart-badge" style="display: none;">0</span>
+         </a>
+         <a href="#" class="nav-item" onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
+-            <div class="nav-icon">👤</div>
++            <div class="nav-icon"><i class="ri-user-line"></i></div>
+             <span>Profil</span>
+         </a>
+     </nav>
+@@ -440,6 +418,27 @@
+             navigator.serviceWorker.register('sw.js');
+         }
+     </script>
++    
++    <!-- ========== CONSENT BANNER ========== -->
++    <div id="consent-banner" class="consent-banner" style="display: none;">
++        <div class="consent-content">
++            <p>🍪 En poursuivant votre navigation, vous acceptez nos <a href="#" onclick="router.navigate('/cgv'); return false;">CGV</a> et notre <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique de Confidentialité</a>.</p>
++            <button class="btn btn-primary btn-sm" onclick="acceptConsent()">J'accepte</button>
++        </div>
++    </div>
++
++    <!-- ========== GEOLOCATION MODAL ========== -->
++    <div id="geo-modal" class="geo-modal" style="display: none;">
++        <div class="geo-modal-content">
++            <div class="geo-icon">📍</div>
++            <h3>Où êtes-vous ?</h3>
++            <p>Pour vous afficher les meilleurs restaurants ouverts autour de vous (à moins de 5 km), nous avons besoin d'accéder à votre position GPS.</p>
++            <div class="geo-actions">
++                <button class="btn btn-secondary" onclick="closeGeoModal()">Plus tard</button>
++                <button class="btn btn-primary" onclick="requestNativeGeolocation()">Autoriser l'accès</button>
++            </div>
++        </div>
++    </div>
+ </body>
+ 
+ </html>
+
+commit 10d3956f8986520ce93242dd4d33781d50b03795
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Thu Aug 13 01:15:36 2026 +0200
+
+    feat(ui): ultimate ux redesign with oled dark mode, bottom nav and micro-interactions
+
+diff --git a/index.html b/index.html
+index 9623bd1..21c5a8f 100644
+--- a/index.html
++++ b/index.html
+@@ -205,7 +205,16 @@
+ 
+         <!-- ========== MAIN WORKSPACE ========== -->
+         <main id="main-content">
+-            <!-- Dynamic views will be injected here by app.js -->
++            <!-- SKELETON PRELOADER -->
++            <div id="initial-skeleton" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
++                <div class="skeleton" style="height: 400px; width: 100%; border-radius: 24px; margin-bottom: 2rem;"></div>
++                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
++                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
++                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
++                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
++                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
++                </div>
++            </div>
+         </main>
+ 
+ 
+@@ -373,6 +382,26 @@
+     }
+     </script>
+ 
++    <!-- ========== MOBILE BOTTOM NAV ========== -->
++    <nav class="mobile-bottom-nav">
++        <a href="#" class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
++            <div class="nav-icon">🏠</div>
++            <span>Accueil</span>
++        </a>
++        <a href="#" class="nav-item" onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
++            <div class="nav-icon">📍</div>
++            <span>Proche</span>
++        </a>
++        <a href="#" class="nav-item cart-nav-item" onclick="openCartTab(); return false;">
++            <div class="nav-icon">🛒</div>
++            <span>Panier</span>
++            <span id="mobile-nav-cart-badge" class="cart-badge" style="display: none;">0</span>
++        </a>
++        <a href="#" class="nav-item" onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
++            <div class="nav-icon">👤</div>
++            <span>Profil</span>
++        </a>
++    </nav>
+     <!-- Supabase Client Library -->
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     <!-- Confetti for Order Success -->
+
+commit 79cd016b8b359bbdde911ec2cde4c78a561dbf52
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Wed Aug 12 17:55:41 2026 +0200
+
+    feat(phase5): pwa banner, audio notifications, webp compression, error tracking
+
+diff --git a/index.html b/index.html
+index daae0e8..9623bd1 100644
+--- a/index.html
++++ b/index.html
+@@ -13,13 +13,20 @@
+     <link rel="canonical" href="https://thies-resto.com/">
+     
+     <script>
+-        // Minimal safety handler: if a critical error happens before logger.js loads,
+-        // ensure the loading overlay is removed so the user isn't stuck.
+-        window.__earlyErrorHandler = function(msg, url, line) {
++        // Global Error Tracking (Phase 5)
++        window.thiesRestoErrors = [];
++        window.__earlyErrorHandler = function(msg, url, line, col, error) {
++            window.thiesRestoErrors.push({msg, url, line, col, error: error ? error.stack : null, time: new Date()});
+             var loader = document.getElementById('loading-overlay');
+             if(loader) loader.style.display = 'none';
++            // In a real production environment, send this to Sentry/DataDog/Supabase RPC
++            console.error("[SENTRY MOCK] Global Error Caught:", msg, url, line);
+         };
+         window.onerror = window.__earlyErrorHandler;
++        window.addEventListener('unhandledrejection', function(event) {
++            window.thiesRestoErrors.push({msg: event.reason, time: new Date(), type: 'unhandledrejection'});
++            console.error("[SENTRY MOCK] Unhandled Promise Rejection:", event.reason);
++        });
+     </script>
+ 
+     <meta name="theme-color" content="#ff6b35">
+
+commit d85e204a9736b556a0492be7b944ab8a1d9a55ae
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Wed Aug 12 13:12:14 2026 +0200
+
+    feat(phase4): seo dynamic json-ld and a11y labels
+
+diff --git a/index.html b/index.html
+index 3472d09..daae0e8 100644
+--- a/index.html
++++ b/index.html
+@@ -177,7 +177,7 @@
+                     <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
+                         style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
+                     <span class="logo-text">THIES Resto</span>
+-                    <button class="close-drawer-btn" onclick="toggleMobileMenu()">✕</button>
++                    <button class="close-drawer-btn" aria-label="Fermer le menu" onclick="toggleMobileMenu()">✕</button>
+                 </div>
+                 <div class="drawer-links">
+                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
+@@ -208,7 +208,7 @@
+                 <span id="floating-cart-qty" class="floating-cart-qty">0 articles</span>
+                 <span id="floating-cart-total" class="floating-cart-total">0 FCFA</span>
+             </div>
+-            <button class="btn btn-primary btn-sm" id="floating-cart-btn">
++            <button class="btn btn-primary btn-sm" id="floating-cart-btn" aria-label="Ouvrir le panier">
+                 Voir le Panier 🛒
+             </button>
+         </div>
+@@ -286,7 +286,7 @@
+                 <!-- Theme Toggle Column -->
+                 <div class="footer-col">
+                     <h4 class="footer-col-title">Apparence</h4>
+-                    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()">
++                    <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Changer le thème" onclick="toggleTheme()">
+                         <span id="theme-toggle-icon">☀️</span>
+                         <span id="theme-toggle-label">Mode Clair</span>
+                     </button>
+
+commit 33e93e17a487660fbb93827241b68c33ddcdc063
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Wed Aug 12 12:27:23 2026 +0200
+
+    feat(phase1): secure order RPC, lazy loading, extract ui-checkout
+
+diff --git a/index.html b/index.html
+index 513d9ac..3472d09 100644
+--- a/index.html
++++ b/index.html
+@@ -381,6 +381,7 @@
+     <script src="js/store.js?v=7"></script>
+     <script src="js/router.js?v=7"></script>
+     <script src="js/admin.js?v=7"></script>
++    <script src="js/ui-checkout.js?v=7"></script>
+     <script src="app.js?v=7"></script>
+ 
+     <script>
+
+commit 8186bd9d6580c5284a65a485db3c1c2e219f40f2
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Wed Aug 12 03:47:28 2026 +0200
+
+    refactor: extract admin and dashboard logic to js/admin.js
+
+diff --git a/index.html b/index.html
+index e8b8092..513d9ac 100644
+--- a/index.html
++++ b/index.html
+@@ -380,6 +380,7 @@
+     <script src="js/data.js?v=7"></script>
+     <script src="js/store.js?v=7"></script>
+     <script src="js/router.js?v=7"></script>
++    <script src="js/admin.js?v=7"></script>
+     <script src="app.js?v=7"></script>
+ 
+     <script>
+
+commit 26d7fd26b97b55f0389728383cc022d8e0ed2ecd
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Tue Aug 11 21:50:21 2026 +0200
+
+    fix: add superadmin link and restore client policy link
+
+diff --git a/index.html b/index.html
+index a5d82ba..e8b8092 100644
+--- a/index.html
++++ b/index.html
+@@ -258,10 +258,10 @@
+                 <!-- Policies Column -->
+                 <div class="footer-col">
+                     <h4 class="footer-col-title">Légal</h4>
+-                    <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions Générales (CGV)</a>
+-                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client &
+-                        RGPD</a>
++                    <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions de Vente</a>
++                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client & RGPD</a>
+                     <a href="#" onclick="router.navigate('/politique-admin'); return false;">Politique Restaurant</a>
++                    <a href="#" onclick="router.navigate('/admin-login'); return false;" style="color: var(--accent); font-weight: bold; margin-top: 0.5rem; display: inline-block;">👑 Espace Super-Admin</a>
+                 </div>
+ 
+                 <!-- Links Column -->
+
+commit 94f93fa620816fc3f1716a628ed1cab47203db74
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Tue Aug 11 13:05:06 2026 +0200
+
+    feat: mock OTP, Realtime orders, PWA manifest
+
+diff --git a/index.html b/index.html
+index ac56dc1..a5d82ba 100644
+--- a/index.html
++++ b/index.html
+@@ -107,9 +107,16 @@
+     }
+     </script>
+ 
+-    <!-- PWA & Favicon -->
++    <meta name="theme-color" content="#f26b21">
++    
++    <!-- PWA & iOS Meta Tags -->
++    <meta name="apple-mobile-web-app-capable" content="yes">
++    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
++    <meta name="apple-mobile-web-app-title" content="THIES Resto">
++    <link rel="apple-touch-icon" href="icon.png">
++    
+     <link rel="manifest" href="manifest.json">
+-    <link rel="icon" href="icon.png" type="image/jpeg">
++    <link rel="icon" type="image/x-icon" href="logo.jpg">
+     <link rel="apple-touch-icon" href="icon.png">
+ 
+     <!-- Fonts -->
+
+commit 0e4ffdb947e0d9af4a9d00666056a99496293325
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Tue Aug 11 12:33:59 2026 +0200
+
+    fix: remove package.json that was breaking Vercel build, manually bump cache to v=7
+
+diff --git a/index.html b/index.html
+index 0c6b490..ac56dc1 100644
+--- a/index.html
++++ b/index.html
+@@ -119,7 +119,7 @@
+     <!-- QR Code Library -->
+     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+ 
+-    <link rel="stylesheet" href="style.css?v=6">
++    <link rel="stylesheet" href="style.css?v=7">
+     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+@@ -369,11 +369,11 @@
+         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+ 
+     <!-- App Logic -->
+-    <script src="js/logger.js?v=6"></script>
+-    <script src="js/data.js?v=6"></script>
+-    <script src="js/store.js?v=6"></script>
+-    <script src="js/router.js?v=6"></script>
+-    <script src="app.js?v=6"></script>
++    <script src="js/logger.js?v=7"></script>
++    <script src="js/data.js?v=7"></script>
++    <script src="js/store.js?v=7"></script>
++    <script src="js/router.js?v=7"></script>
++    <script src="app.js?v=7"></script>
+ 
+     <script>
+         function togglePasswordVisibility(inputId, iconElement) {
+
+commit c05401eace7f3aa04be2f82eb53a21cf325eb1cb
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Tue Aug 11 12:07:32 2026 +0200
+
+    chore: bump asset versions to bust cache
+
+diff --git a/index.html b/index.html
+index 3ca7a60..0c6b490 100644
+--- a/index.html
++++ b/index.html
+@@ -119,7 +119,7 @@
+     <!-- QR Code Library -->
+     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+ 
+-    <link rel="stylesheet" href="style.css?v=5">
++    <link rel="stylesheet" href="style.css?v=6">
+     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+@@ -369,11 +369,11 @@
+         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+ 
+     <!-- App Logic -->
+-    <script src="js/logger.js?v=5"></script>
+-    <script src="js/data.js?v=5"></script>
+-    <script src="js/store.js?v=5"></script>
+-    <script src="js/router.js?v=5"></script>
+-    <script src="app.js?v=5"></script>
++    <script src="js/logger.js?v=6"></script>
++    <script src="js/data.js?v=6"></script>
++    <script src="js/store.js?v=6"></script>
++    <script src="js/router.js?v=6"></script>
++    <script src="app.js?v=6"></script>
+ 
+     <script>
+         function togglePasswordVisibility(inputId, iconElement) {
+
+commit 5977188038bda82794a478c34844bf11c34ff1e6
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Tue Aug 11 03:15:20 2026 +0200
+
+    Rollback: Revert mobile design refactoring completely
+
+diff --git a/index.html b/index.html
+index 5a80318..3ca7a60 100644
+--- a/index.html
++++ b/index.html
+@@ -141,26 +141,29 @@
+     <!-- ========== LOADING OVERLAY REMOVED ========== -->
+ 
+     <div class="app-container">
+-        <!-- ========== REDESIGNED MOBILE HEADER ========== -->
+-        <header class="mobile-header" id="main-navbar">
+-            <div class="mobile-header-left">
+-                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()" style="background:none; border:none; font-size:1.5rem; color:var(--text-primary); cursor:pointer;">
+-                    ☰
++        <!-- ========== NAVIGATION BAR ========== -->
++        <header class="navbar" id="main-navbar">
++            <!-- Left: Burger & Navigation links (Desktop) -->
++            <div class="nav-left">
++                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()">
++                    <span class="bar"></span>
++                    <span class="bar"></span>
++                    <span class="bar"></span>
+                 </button>
+             </div>
+-            <div class="mobile-header-center" onclick="router.navigate('/')" style="cursor:pointer;">
+-                <div style="font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
+-                    <img src="icon.png" alt="Logo" style="width: 24px; height: 24px; border-radius: 50%;">
+-                    <span>THIES Resto</span>
+-                </div>
+-                <div class="location-badge" style="justify-content: center; margin-top: 2px;">
+-                    📍 Thiès <span style="font-size: 0.7rem;">▼</span>
+-                </div>
+-            </div>
+-            <div class="mobile-header-right" id="nav-actions">
+-                <!-- Notifications & Profile will be injected here by app.js -->
++
++            <!-- Center: Logo -->
++            <div class="logo-container" onclick="router.navigate('/')">
++                <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
++                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
++                <span class="logo-text">THIES Resto</span>
+             </div>
+ 
++            <!-- Right: Session Actions -->
++            <nav class="nav-links" id="nav-actions">
++                <!-- Dynamic actions populated by JS -->
++            </nav>
++
+             <!-- Mobile Drawer Overlay -->
+             <div class="mobile-drawer" id="mobile-drawer">
+                 <div class="drawer-header">
+@@ -173,7 +176,7 @@
+                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
+                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+                     <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
+-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/catalog'); return false;">Nos Restaurants</a>
++                    <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
+                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
+                         Partenaire 🤝</a>
+                     <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
+@@ -191,30 +194,7 @@
+             <!-- Dynamic views will be injected here by app.js -->
+         </main>
+ 
+-        <!-- ========== REDESIGNED BOTTOM NAVIGATION ========== -->
+-        <nav class="mobile-bottom-nav">
+-            <button class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); this.classList.add('active');">
+-                <i>🏠</i>
+-                <span>Accueil</span>
+-            </button>
+-            <button class="nav-item" onclick="router.navigate('/catalog'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); this.classList.add('active');">
+-                <i>🍽️</i>
+-                <span>Explorer</span>
+-            </button>
+-            <button class="nav-item nav-item-cart" onclick="openCartTab();">
+-                <i>🛒</i>
+-                <span>Panier</span>
+-                <div class="cart-badge-nav" id="bottom-nav-cart-badge" style="display:none;">0</div>
+-            </button>
+-            <button class="nav-item" onclick="router.navigate('/tracking'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); this.classList.add('active');">
+-                <i>🏷️</i>
+-                <span>Bons Plans</span>
+-            </button>
+-            <button class="nav-item" onclick="if(typeof isSuperAdminSession!=='undefined' && isSuperAdminSession){router.navigate('/admin')}else if(typeof currentRestaurantSession!=='undefined' && currentRestaurantSession){router.navigate('/restaurant-admin')}else{document.getElementById('auth-modal').style.display='flex'};">
+-                <i>👤</i>
+-                <span>Profil</span>
+-            </button>
+-        </nav>
++
+         <!-- ========== FLOATING CART BAR ========== -->
+         <div id="floating-cart-bar" class="floating-cart-bar" style="display: none;" onclick="openCartTab()">
+             <div class="floating-cart-info">
+@@ -315,27 +295,27 @@
+         <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
+         <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+             <a href="#" class="nav-item active" onclick="router.navigate('/'); return false;">
+-                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
++                <span class="icon">🏠</span>
+                 <span class="label">Accueil</span>
+             </a>
+             <a href="#" class="nav-item" onclick="scrollToCatalog(); return false;">
+-                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></span>
++                <span class="icon">🍽️</span>
+                 <span class="label">Menus</span>
+             </a>
+             <a href="#" class="nav-item" onclick="openCartTab(); return false;" id="bottom-nav-cart">
+                 <div class="icon-wrapper">
+-                    <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></span>
++                    <span class="icon">🛒</span>
+                     <span class="badge-qty" id="bottom-nav-cart-qty" style="display: none;">0</span>
+                 </div>
+                 <span class="label">Panier</span>
+             </a>
+             <a href="#" class="nav-item" onclick="router.navigate('/tracking'); return false;">
+-                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
++                <span class="icon">📍</span>
+                 <span class="label">Suivi</span>
+             </a>
+-            <a href="#" class="nav-item" onclick="if(typeof isSuperAdminSession!=='undefined' && isSuperAdminSession){router.navigate('/admin')}else if(typeof currentRestaurantSession!=='undefined' && currentRestaurantSession){router.navigate('/restaurant-admin')}else{document.getElementById('auth-modal').style.display='flex'}; return false;">
+-                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+-                <span class="label">Profil</span>
++            <a href="#" class="nav-item" onclick="router.navigate('/partnership'); return false;">
++                <span class="icon">🤝</span>
++                <span class="label">Partenaire</span>
+             </a>
+         </nav>
+     </div>
+
+commit 1e6cdf920ac78640bfc2e438014e7feada6cb104
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Mon Aug 10 22:18:43 2026 +0200
+
+    UX/UI Fix: Restore Profil button in bottom navigation to access Admin panels
+
+diff --git a/index.html b/index.html
+index 80fa266..5a80318 100644
+--- a/index.html
++++ b/index.html
+@@ -333,9 +333,9 @@
+                 <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                 <span class="label">Suivi</span>
+             </a>
+-            <a href="#" class="nav-item" onclick="router.navigate('/partnership'); return false;">
+-                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+-                <span class="label">Partenaire</span>
++            <a href="#" class="nav-item" onclick="if(typeof isSuperAdminSession!=='undefined' && isSuperAdminSession){router.navigate('/admin')}else if(typeof currentRestaurantSession!=='undefined' && currentRestaurantSession){router.navigate('/restaurant-admin')}else{document.getElementById('auth-modal').style.display='flex'}; return false;">
++                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
++                <span class="label">Profil</span>
+             </a>
+         </nav>
+     </div>
+
+commit d8872f4d12bfba46c133bd16158fafbc8a9c47a6
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Mon Aug 10 18:04:40 2026 +0200
+
+    UX/UI Redesign: Implement SVGs, Fix syntax errors, Optimize for Mobile
+
+diff --git a/index.html b/index.html
+index 4142674..80fa266 100644
+--- a/index.html
++++ b/index.html
+@@ -141,28 +141,25 @@
+     <!-- ========== LOADING OVERLAY REMOVED ========== -->
+ 
+     <div class="app-container">
+-        <!-- ========== NAVIGATION BAR ========== -->
+-        <header class="navbar" id="main-navbar">
+-            <!-- Left: Burger & Navigation links (Desktop) -->
+-            <div class="nav-left">
+-                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()">
+-                    <span class="bar"></span>
+-                    <span class="bar"></span>
+-                    <span class="bar"></span>
++        <!-- ========== REDESIGNED MOBILE HEADER ========== -->
++        <header class="mobile-header" id="main-navbar">
++            <div class="mobile-header-left">
++                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()" style="background:none; border:none; font-size:1.5rem; color:var(--text-primary); cursor:pointer;">
++                    ☰
+                 </button>
+             </div>
+-
+-            <!-- Center: Logo -->
+-            <div class="logo-container" onclick="router.navigate('/')">
+-                <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
+-                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
+-                <span class="logo-text">THIES Resto</span>
++            <div class="mobile-header-center" onclick="router.navigate('/')" style="cursor:pointer;">
++                <div style="font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
++                    <img src="icon.png" alt="Logo" style="width: 24px; height: 24px; border-radius: 50%;">
++                    <span>THIES Resto</span>
++                </div>
++                <div class="location-badge" style="justify-content: center; margin-top: 2px;">
++                    📍 Thiès <span style="font-size: 0.7rem;">▼</span>
++                </div>
++            </div>
++            <div class="mobile-header-right" id="nav-actions">
++                <!-- Notifications & Profile will be injected here by app.js -->
+             </div>
+-
+-            <!-- Right: Session Actions -->
+-            <nav class="nav-links" id="nav-actions">
+-                <!-- Dynamic actions populated by JS -->
+-            </nav>
+ 
+             <!-- Mobile Drawer Overlay -->
+             <div class="mobile-drawer" id="mobile-drawer">
+@@ -194,7 +191,30 @@
+             <!-- Dynamic views will be injected here by app.js -->
+         </main>
+ 
+-
++        <!-- ========== REDESIGNED BOTTOM NAVIGATION ========== -->
++        <nav class="mobile-bottom-nav">
++            <button class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); this.classList.add('active');">
++                <i>🏠</i>
++                <span>Accueil</span>
++            </button>
++            <button class="nav-item" onclick="router.navigate('/catalog'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); this.classList.add('active');">
++                <i>🍽️</i>
++                <span>Explorer</span>
++            </button>
++            <button class="nav-item nav-item-cart" onclick="openCartTab();">
++                <i>🛒</i>
++                <span>Panier</span>
++                <div class="cart-badge-nav" id="bottom-nav-cart-badge" style="display:none;">0</div>
++            </button>
++            <button class="nav-item" onclick="router.navigate('/tracking'); document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active')); this.classList.add('active');">
++                <i>🏷️</i>
++                <span>Bons Plans</span>
++            </button>
++            <button class="nav-item" onclick="if(typeof isSuperAdminSession!=='undefined' && isSuperAdminSession){router.navigate('/admin')}else if(typeof currentRestaurantSession!=='undefined' && currentRestaurantSession){router.navigate('/restaurant-admin')}else{document.getElementById('auth-modal').style.display='flex'};">
++                <i>👤</i>
++                <span>Profil</span>
++            </button>
++        </nav>
+         <!-- ========== FLOATING CART BAR ========== -->
+         <div id="floating-cart-bar" class="floating-cart-bar" style="display: none;" onclick="openCartTab()">
+             <div class="floating-cart-info">
+@@ -295,26 +315,26 @@
+         <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
+         <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
+             <a href="#" class="nav-item active" onclick="router.navigate('/'); return false;">
+-                <span class="icon">🏠</span>
++                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+                 <span class="label">Accueil</span>
+             </a>
+             <a href="#" class="nav-item" onclick="scrollToCatalog(); return false;">
+-                <span class="icon">🍽️</span>
++                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg></span>
+                 <span class="label">Menus</span>
+             </a>
+             <a href="#" class="nav-item" onclick="openCartTab(); return false;" id="bottom-nav-cart">
+                 <div class="icon-wrapper">
+-                    <span class="icon">🛒</span>
++                    <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></span>
+                     <span class="badge-qty" id="bottom-nav-cart-qty" style="display: none;">0</span>
+                 </div>
+                 <span class="label">Panier</span>
+             </a>
+             <a href="#" class="nav-item" onclick="router.navigate('/tracking'); return false;">
+-                <span class="icon">📍</span>
++                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>
+                 <span class="label">Suivi</span>
+             </a>
+             <a href="#" class="nav-item" onclick="router.navigate('/partnership'); return false;">
+-                <span class="icon">🤝</span>
++                <span class="icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+                 <span class="label">Partenaire</span>
+             </a>
+         </nav>
+
+commit a120b0d1f12061bb048d574a31f247d61b8701d8
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Mon Aug 10 03:49:39 2026 +0200
+
+    fix: retours audio (icones vectorielles, bouton localisation, page menu mobile)
+
+diff --git a/index.html b/index.html
+index 3ca7a60..4142674 100644
+--- a/index.html
++++ b/index.html
+@@ -176,7 +176,7 @@
+                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
+                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
+                     <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
+-                    <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
++                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/catalog'); return false;">Nos Restaurants</a>
+                     <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
+                         Partenaire 🤝</a>
+                     <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
+
+commit 059627e8d5b43727fc93ae8648042991032603fb
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Mon Aug 10 00:06:54 2026 +0200
+
+    feat: suppression de l'écran de chargement
+
+diff --git a/index.html b/index.html
+index a36f08e..3ca7a60 100644
+--- a/index.html
++++ b/index.html
+@@ -138,21 +138,7 @@
+ </head>
+ 
+ <body>
+-    <!-- ========== LOADING OVERLAY ========== -->
+-    <div id="loading-overlay" class="loading-overlay">
+-        <div class="loading-spinner">
+-            <div class="spinner-ring"></div>
+-            <img src="icon.png" class="spinner-logo" alt="THIES Resto Logo"
+-                style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin: auto;">
+-        </div>
+-        <p class="loading-text" id="loading-text">Chargement de THIES Resto…</p>
+-        <div class="loading-progress-container"
+-            style="width: 240px; height: 6px; background: rgba(207, 168, 83, 0.15); border-radius: 10px; margin-top: 1.5rem; overflow: hidden; border: 1px solid rgba(207, 168, 83, 0.2);">
+-            <div id="loading-progress-bar"
+-                style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.1s linear; border-radius: 10px;">
+-            </div>
+-        </div>
+-    </div>
++    <!-- ========== LOADING OVERLAY REMOVED ========== -->
+ 
+     <div class="app-container">
+         <!-- ========== NAVIGATION BAR ========== -->
+
+commit 19ba9415ca9646b7a50295c6b1473194e13be551
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Mon Aug 10 00:01:53 2026 +0200
+
+    fix: corrections erreurs code, loading max 10s, revert Supabase Auth vers RPC simple
+
+diff --git a/index.html b/index.html
+index 5e900b6..a36f08e 100644
+--- a/index.html
++++ b/index.html
+@@ -13,15 +13,13 @@
+     <link rel="canonical" href="https://thies-resto.com/">
+     
+     <script>
+-        window.onerror = function(msg, url, line, col, error) {
+-            var errDiv = document.createElement('div');
+-            errDiv.style.cssText = "position:fixed;top:0;left:0;right:0;background:red;color:white;padding:20px;z-index:99999999;";
+-            errDiv.innerHTML = "<b>Erreur Javascript:</b> " + msg + " à la ligne " + line;
+-            document.body.appendChild(errDiv);
+-            
++        // Minimal safety handler: if a critical error happens before logger.js loads,
++        // ensure the loading overlay is removed so the user isn't stuck.
++        window.__earlyErrorHandler = function(msg, url, line) {
+             var loader = document.getElementById('loading-overlay');
+             if(loader) loader.style.display = 'none';
+         };
++        window.onerror = window.__earlyErrorHandler;
+     </script>
+ 
+     <meta name="theme-color" content="#ff6b35">
+@@ -233,7 +231,7 @@
+         </div>
+ 
+         <!-- ========== SOCIAL PROOF TOAST ========== -->
+-        <div id="social-proof-toast" style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; gap: 12px; opacity: 0; transition: opacity 0.5s ease-out;">
++        <div id="social-proof-toast" style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); align-items: center; gap: 12px; transition: opacity 0.5s ease-out;">
+             <!-- Content filled dynamically -->
+         </div>
+ 
+
+commit 2992ff32cde6be24877f3b3eb44d42e3623ba8cd
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sat Aug 8 09:11:34 2026 +0200
+
+    fix: add DOMContentLoaded to router and global error catcher
+
+diff --git a/index.html b/index.html
+index f010e48..5e900b6 100644
+--- a/index.html
++++ b/index.html
+@@ -11,6 +11,18 @@
+     <meta name="robots" content="index, follow">
+     <meta name="author" content="NdiayeDigital">
+     <link rel="canonical" href="https://thies-resto.com/">
++    
++    <script>
++        window.onerror = function(msg, url, line, col, error) {
++            var errDiv = document.createElement('div');
++            errDiv.style.cssText = "position:fixed;top:0;left:0;right:0;background:red;color:white;padding:20px;z-index:99999999;";
++            errDiv.innerHTML = "<b>Erreur Javascript:</b> " + msg + " à la ligne " + line;
++            document.body.appendChild(errDiv);
++            
++            var loader = document.getElementById('loading-overlay');
++            if(loader) loader.style.display = 'none';
++        };
++    </script>
+ 
+     <meta name="theme-color" content="#ff6b35">
+     <meta name="mobile-web-app-capable" content="yes">
+
+commit bc60b5a6487550380c1233dec814dd3cdde236e7
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Sat Aug 8 06:14:35 2026 +0200
+
+    fix: force cache bust by adding v5 parameter
+
+diff --git a/index.html b/index.html
+index 012b994..f010e48 100644
+--- a/index.html
++++ b/index.html
+@@ -109,7 +109,7 @@
+     <!-- QR Code Library -->
+     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+ 
+-    <link rel="stylesheet" href="style.css">
++    <link rel="stylesheet" href="style.css?v=5">
+     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+@@ -373,11 +373,11 @@
+         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+ 
+     <!-- App Logic -->
+-    <script src="js/logger.js"></script>
+-    <script src="js/data.js"></script>
+-    <script src="js/store.js"></script>
+-    <script src="js/router.js"></script>
+-    <script src="app.js"></script>
++    <script src="js/logger.js?v=5"></script>
++    <script src="js/data.js?v=5"></script>
++    <script src="js/store.js?v=5"></script>
++    <script src="js/router.js?v=5"></script>
++    <script src="app.js?v=5"></script>
+ 
+     <script>
+         function togglePasswordVisibility(inputId, iconElement) {
+
+commit 551c6a8dec3291843223c6d39106f1151669de45
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Fri Aug 7 03:46:55 2026 +0200
+
+    feat: PWA, Supabase Auth (frontend fallback), scripts SQL
+
+diff --git a/index.html b/index.html
+index a9c3c51..012b994 100644
+--- a/index.html
++++ b/index.html
+@@ -394,6 +394,11 @@
+     
+     <!-- Metricool Tracking Pixel -->
+     <img src="https://tracker.metricool.com/c3po.jpg?hash=ebe8b52530fde54a82b1ea7dec11f618" style="display:none; width:0px; height:0px;" alt="" />
++<script>
++        if ('serviceWorker' in navigator) {
++            navigator.serviceWorker.register('sw.js');
++        }
++    </script>
+ </body>
+ 
+ </html>
+
+commit 8b59c6bd15c7b758f3199ee358b0aff220daf6b5
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Fri Aug 7 03:36:49 2026 +0200
+
+    fix: logic errors due to refactoring (session order, SEED_RESTAURANTS)
+
+diff --git a/index.html b/index.html
+index 63609bb..a9c3c51 100644
+--- a/index.html
++++ b/index.html
+@@ -374,6 +374,7 @@
+ 
+     <!-- App Logic -->
+     <script src="js/logger.js"></script>
++    <script src="js/data.js"></script>
+     <script src="js/store.js"></script>
+     <script src="js/router.js"></script>
+     <script src="app.js"></script>
+
+commit 611483c146af18111a86c3fabcf9c0ac20ebbbe3
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Fri Aug 7 03:28:17 2026 +0200
+
+    fix: include router.js in index.html to fix infinite loading
+
+diff --git a/index.html b/index.html
+index 705e089..63609bb 100644
+--- a/index.html
++++ b/index.html
+@@ -375,6 +375,7 @@
+     <!-- App Logic -->
+     <script src="js/logger.js"></script>
+     <script src="js/store.js"></script>
++    <script src="js/router.js"></script>
+     <script src="app.js"></script>
+ 
+     <script>
+
+commit 7535ca85ec8fba881188ea0a70831dfe160c4ac9
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Fri Aug 7 03:26:03 2026 +0200
+
+    feat: refonte architecturale app.js, patch sécurité et docs
+
+diff --git a/index.html b/index.html
+index f7ecf8b..705e089 100644
+--- a/index.html
++++ b/index.html
+@@ -373,6 +373,8 @@
+         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+ 
+     <!-- App Logic -->
++    <script src="js/logger.js"></script>
++    <script src="js/store.js"></script>
+     <script src="app.js"></script>
+ 
+     <script>
+
+commit eb717ec91c7a1ccee081f9700c5bb49b46b8d2d4
+Author: NdiayeDigital <ndiayedigital@gmail.com>
+Date:   Wed Aug 5 18:29:03 2026 +0200
+
+    Mise à jour sécurité, mode clair par défaut, modales de confirmation et corrections UX
+
+diff --git a/index.html b/index.html
+new file mode 100644
+index 0000000..f7ecf8b
+--- /dev/null
++++ b/index.html
+@@ -0,0 +1,395 @@
++<!DOCTYPE html>
++<html lang="fr" data-theme="light">
++
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
++    <meta name="description"
++        content="THIES Resto est l'application n°1 pour commander à manger et se faire livrer à Thiès. Découvrez les meilleurs restaurants, fast-food, dibiteries et bons plans locaux. Livraison rapide, réservation de tables et commande de groupe.">
++    <meta name="keywords"
++        content="restaurant thies, livraison repas thies, manger a thies, fast food thies, dibiterie thies, chawarma thies, burger thies, pizza thies, bon plan thies, commander a manger thies, thies resto, gastronomie senegal thies, fataya thies, menu du jour thies, meilleur restaurant thies, thies food, livraison domicile thies">
++    <meta name="robots" content="index, follow">
++    <meta name="author" content="NdiayeDigital">
++    <link rel="canonical" href="https://thies-resto.com/">
++
++    <meta name="theme-color" content="#ff6b35">
++    <meta name="mobile-web-app-capable" content="yes">
++    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
++
++    <!-- Google Analytics (Placeholder) -->
++    <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
++    <script>
++      window.dataLayer = window.dataLayer || [];
++      function gtag(){dataLayer.push(arguments);}
++      gtag('js', new Date());
++      gtag('config', 'G-XXXXXXXXXX');
++    </script> -->
++
++    <!-- Meta Pixel Code (Placeholder) -->
++    <!-- <script>
++    !function(f,b,e,v,n,t,s)
++    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
++    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
++    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
++    n.queue=[];t=b.createElement(e);t.async=!0;
++    t.src=v;s=b.getElementsByTagName(e)[0];
++    s.parentNode.insertBefore(t,s)}(window, document,'script',
++    'https://connect.facebook.net/en_US/fbevents.js');
++    fbq('init', 'XXXXXXXXXXXXXXX');
++    fbq('track', 'PageView');
++    </script> -->
++
++    <!-- Open Graph (Facebook, LinkedIn, etc.) -->
++    <meta property="og:title" content="THIES Resto — Tous les restaurants de Thiès en un clic">
++    <meta property="og:description"
++        content="Découvrez les meilleurs restaurants et bons plans de Thiès. Commandez vos repas en ligne facilement avec confirmation via WhatsApp.">
++    <meta property="og:image" content="https://thies-resto.com/icon.png">
++    <meta property="og:url" content="https://thies-resto.com/">
++    <meta property="og:type" content="website">
++    <meta property="og:locale" content="fr_SN">
++    <meta property="og:site_name" content="THIES Resto">
++
++    <!-- Twitter Card -->
++    <meta name="twitter:card" content="summary_large_image">
++    <meta name="twitter:title" content="THIES Resto — La plateforme de restauration à Thiès">
++    <meta name="twitter:description"
++        content="Trouvez votre restaurant à Thiès, passez commande et réservez votre table en quelques secondes.">
++    <meta name="twitter:image" content="https://thies-resto.com/icon.png">
++
++    <title>Livraison de Repas & Meilleurs Restaurants à Thiès | THIES Resto</title>
++
++    <!-- SEO Structured Data (JSON-LD) -->
++    <script type="application/ld+json">
++    {
++      "@context": "https://schema.org",
++      "@type": "WebSite",
++      "name": "THIES Resto",
++      "url": "https://thies-resto.com/",
++      "description": "Plateforme commune pour commander vos repas et trouver les meilleurs restaurants à Thiès, Sénégal.",
++      "publisher": {
++        "@type": "Organization",
++        "name": "NdiayeDigital",
++        "logo": {
++          "@type": "ImageObject",
++          "url": "https://thies-resto.com/icon.png"
++        }
++      },
++      "potentialAction": {
++        "@type": "SearchAction",
++        "target": "https://thies-resto.com/#/?search={search_term_string}",
++        "query-input": "required name=search_term_string"
++      }
++    }
++    </script>
++    <script type="application/ld+json">
++    {
++      "@context": "https://schema.org",
++      "@type": "LocalBusiness",
++      "name": "THIES Resto",
++      "image": "https://thies-resto.com/icon.png",
++      "description": "La première plateforme regroupant tous les restaurants de Thiès avec livraison.",
++      "address": {
++        "@type": "PostalAddress",
++        "addressLocality": "Thiès",
++        "addressCountry": "SN"
++      },
++      "url": "https://thies-resto.com/"
++    }
++    </script>
++
++    <!-- PWA & Favicon -->
++    <link rel="manifest" href="manifest.json">
++    <link rel="icon" href="icon.png" type="image/jpeg">
++    <link rel="apple-touch-icon" href="icon.png">
++
++    <!-- Fonts -->
++    <link rel="preconnect" href="https://fonts.googleapis.com">
++    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
++
++    <!-- QR Code Library -->
++    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
++
++    <link rel="stylesheet" href="style.css">
++    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
++    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
++        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
++    <!-- Google tag (gtag.js) - Google Analytics -->
++    <script async src="https://www.googletagmanager.com/gtag/js?id=G-80CM404GD4"></script>
++    <script>
++      window.dataLayer = window.dataLayer || [];
++      function gtag(){dataLayer.push(arguments);}
++      gtag('js', new Date());
++
++      gtag('config', 'G-80CM404GD4');
++    </script>
++    
++    <!-- DOMPurify for secure innerHTML data rendering -->
++    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
++</head>
++
++<body>
++    <!-- ========== LOADING OVERLAY ========== -->
++    <div id="loading-overlay" class="loading-overlay">
++        <div class="loading-spinner">
++            <div class="spinner-ring"></div>
++            <img src="icon.png" class="spinner-logo" alt="THIES Resto Logo"
++                style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin: auto;">
++        </div>
++        <p class="loading-text" id="loading-text">Chargement de THIES Resto…</p>
++        <div class="loading-progress-container"
++            style="width: 240px; height: 6px; background: rgba(207, 168, 83, 0.15); border-radius: 10px; margin-top: 1.5rem; overflow: hidden; border: 1px solid rgba(207, 168, 83, 0.2);">
++            <div id="loading-progress-bar"
++                style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.1s linear; border-radius: 10px;">
++            </div>
++        </div>
++    </div>
++
++    <div class="app-container">
++        <!-- ========== NAVIGATION BAR ========== -->
++        <header class="navbar" id="main-navbar">
++            <!-- Left: Burger & Navigation links (Desktop) -->
++            <div class="nav-left">
++                <button class="hamburger-btn" id="hamburger-btn" aria-label="Menu" onclick="toggleMobileMenu()">
++                    <span class="bar"></span>
++                    <span class="bar"></span>
++                    <span class="bar"></span>
++                </button>
++            </div>
++
++            <!-- Center: Logo -->
++            <div class="logo-container" onclick="router.navigate('/')">
++                <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
++                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
++                <span class="logo-text">THIES Resto</span>
++            </div>
++
++            <!-- Right: Session Actions -->
++            <nav class="nav-links" id="nav-actions">
++                <!-- Dynamic actions populated by JS -->
++            </nav>
++
++            <!-- Mobile Drawer Overlay -->
++            <div class="mobile-drawer" id="mobile-drawer">
++                <div class="drawer-header">
++                    <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
++                        style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
++                    <span class="logo-text">THIES Resto</span>
++                    <button class="close-drawer-btn" onclick="toggleMobileMenu()">✕</button>
++                </div>
++                <div class="drawer-links">
++                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
++                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
++                    <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
++                    <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
++                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
++                        Partenaire 🤝</a>
++                    <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
++                        Espace Livreurs 🛵 
++                        <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt disponible)</span>
++                    </a>
++                    <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;" style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪 Déconnexion</a>
++                </div>
++            </div>
++            <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>
++        </header>
++
++        <!-- ========== MAIN WORKSPACE ========== -->
++        <main id="main-content">
++            <!-- Dynamic views will be injected here by app.js -->
++        </main>
++
++
++        <!-- ========== FLOATING CART BAR ========== -->
++        <div id="floating-cart-bar" class="floating-cart-bar" style="display: none;" onclick="openCartTab()">
++            <div class="floating-cart-info">
++                <span id="floating-cart-qty" class="floating-cart-qty">0 articles</span>
++                <span id="floating-cart-total" class="floating-cart-total">0 FCFA</span>
++            </div>
++            <button class="btn btn-primary btn-sm" id="floating-cart-btn">
++                Voir le Panier 🛒
++            </button>
++        </div>
++
++        <!-- ========== FLOATING WHATSAPP SUPPORT ========== -->
++        <a href="https://wa.me/221784799882?text=Bonjour,%20j'ai%20besoin%20d'aide%20sur%20THIES%20Resto" target="_blank" rel="noopener noreferrer" class="floating-support-btn" style="position: fixed; bottom: 90px; right: 20px; background-color: #25D366; color: white; width: 65px; height: 65px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 999; text-decoration: none; transition: transform 0.2s;">
++            💬
++        </a>
++
++        <!-- ========== TOAST NOTIFICATION ========== -->
++        <div id="toast-notification" class="toast-notification" style="display: none;">
++            <!-- Content filled dynamically -->
++        </div>
++
++        <!-- ========== SOCIAL PROOF TOAST ========== -->
++        <div id="social-proof-toast" style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; align-items: center; gap: 12px; opacity: 0; transition: opacity 0.5s ease-out;">
++            <!-- Content filled dynamically -->
++        </div>
++
++        <!-- ========== NOTIFICATION SOUND ========== -->
++        <audio id="notification-sound" preload="auto">
++            <source
++                src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACAf39/f39/f39/f4B/f39/f3+Af39/f3+AgICBgYKDhIWGiImKi4yNjo+QkZKTlJWVlZWUk5KRkI+OjYyLiomIh4aFhIOCgYB/f35+fX19fHx8fHx8fX1+f4CBgoOEhYaHiImKi4yNjo+QkZKTlJWWl5iZmpqbm5ycnJ2dnZ2dnZycm5uampmYl5aVlJOSkZCPjo2Mi4qJiIeGhYSDgoGAf359fHt6"
++                type="audio/wav">
++        </audio>
++
++        <!-- ========== FOOTER ========== -->
++        <footer id="main-footer">
++            <div class="footer-grid">
++                <!-- About Column -->
++                <div class="footer-col">
++                    <div class="footer-brand"
++                        style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
++                        <img src="icon.png" alt="THIES Resto Logo"
++                            style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
++                        <span class="logo-text"
++                            style="font-size: 1.1rem; font-weight: 800; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">THIES
++                            Resto</span>
++                    </div>
++                    <p class="footer-about-text">
++                        La première plateforme de restauration commune à Thiès, Sénégal. Née d'une étude de terrain sur
++                        les 20 restaurants les mieux notés de la ville, elle centralise les menus, commandes et
++                        réservations en un seul endroit.
++                    </p>
++                </div>
++
++                <!-- Policies Column -->
++                <div class="footer-col">
++                    <h4 class="footer-col-title">Légal</h4>
++                    <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions Générales (CGV)</a>
++                    <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client &
++                        RGPD</a>
++                    <a href="#" onclick="router.navigate('/politique-admin'); return false;">Politique Restaurant</a>
++                </div>
++
++                <!-- Links Column -->
++                <div class="footer-col">
++                    <h4 class="footer-col-title">Navigation</h4>
++                    <a href="#" onclick="router.navigate('/'); return false;">Accueil</a>
++                    <a href="#" onclick="scrollToHowItWorks(); return false;">Comment ça marche ?</a>
++                    <a href="#" onclick="router.navigate('/auth'); return false;">Espace Restaurant</a>
++                    <a href="#" onclick="router.navigate('/partnership'); return false;">Demander un Partenariat 🤝</a>
++                </div>
++
++                <!-- Contact Column -->
++                <div class="footer-col">
++                    <h4 class="footer-col-title">Contact & Réseaux</h4>
++                    <a href="https://wa.me/221784799882" target="_blank" rel="noopener noreferrer">💬 WhatsApp (+221 78 479 98 82)</a>
++                    <a href="https://www.facebook.com/profile.php?id=61591577033848" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
++                    <a href="https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&amp;utm_source=qr" target="_blank" rel="noopener noreferrer">📸 Instagram</a>
++                    <a href="https://www.tiktok.com/@thiesresto?_r=1&amp;_t=ZS-97XIj47j1gS" target="_blank" rel="noopener noreferrer">🎵 TikTok</a>
++                    <a href="mailto:contact@thies-resto.com">✉️ contact@thies-resto.com</a>
++                </div>
++
++                <!-- Theme Toggle Column -->
++                <div class="footer-col">
++                    <h4 class="footer-col-title">Apparence</h4>
++                    <button class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()">
++                        <span id="theme-toggle-icon">☀️</span>
++                        <span id="theme-toggle-label">Mode Clair</span>
++                    </button>
++                </div>
++            </div>
++
++            <div class="footer-bottom">
++                <p>&copy; 2026 THIES Resto. Fait avec ❤️ pour la Teranga Sénégalaise. Paiement en espèces uniquement.
++                </p>
++            </div>
++        </footer>
++
++        <!-- ========== MOBILE BOTTOM NAVIGATION ========== -->
++        <nav class="mobile-bottom-nav" id="mobile-bottom-nav">
++            <a href="#" class="nav-item active" onclick="router.navigate('/'); return false;">
++                <span class="icon">🏠</span>
++                <span class="label">Accueil</span>
++            </a>
++            <a href="#" class="nav-item" onclick="scrollToCatalog(); return false;">
++                <span class="icon">🍽️</span>
++                <span class="label">Menus</span>
++            </a>
++            <a href="#" class="nav-item" onclick="openCartTab(); return false;" id="bottom-nav-cart">
++                <div class="icon-wrapper">
++                    <span class="icon">🛒</span>
++                    <span class="badge-qty" id="bottom-nav-cart-qty" style="display: none;">0</span>
++                </div>
++                <span class="label">Panier</span>
++            </a>
++            <a href="#" class="nav-item" onclick="router.navigate('/tracking'); return false;">
++                <span class="icon">📍</span>
++                <span class="label">Suivi</span>
++            </a>
++            <a href="#" class="nav-item" onclick="router.navigate('/partnership'); return false;">
++                <span class="icon">🤝</span>
++                <span class="label">Partenaire</span>
++            </a>
++        </nav>
++    </div>
++
++    <!-- ========== JSON-LD STRUCTURED DATA ========== -->
++    <script id="json-ld-data" type="application/ld+json">
++    {
++        "@context": "https://schema.org",
++        "@type": ["WebApplication", "Service"],
++        "name": "THIES Resto",
++        "description": "Plateforme commune de restauration pour les restaurants de Thiès, Sénégal. Commandez en ligne, réservez votre table et découvrez les meilleurs plans gastronomiques (Thiéboudiène, Yassa, Fast Food) à Thiès.",
++        "url": "https://thies-resto.com",
++        "applicationCategory": "FoodService",
++        "operatingSystem": "Web, Mobile",
++        "keywords": "restaurant thies, bon plan thies, commander repas thies, restauration thies, thiès resto",
++        "provider": {
++            "@type": "Organization",
++            "name": "NdiayeDigital",
++            "url": "https://thies-resto.com"
++        },
++        "sameAs": [
++            "https://www.facebook.com/profile.php?id=61591577033848",
++            "https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&utm_source=qr",
++            "https://www.tiktok.com/@thiesresto?_r=1&_t=ZS-97XIj47j1gS",
++            "https://wa.me/221784799882"
++        ],
++        "areaServed": {
++            "@type": "City",
++            "name": "Thiès",
++            "containedInPlace": {
++                "@type": "Country",
++                "name": "Sénégal"
++            }
++        },
++        "offers": {
++            "@type": "Offer",
++            "price": "0",
++            "priceCurrency": "XOF",
++            "description": "Plateforme gratuite de commande et de réservation pour les clients"
++        }
++    }
++    </script>
++
++    <!-- Supabase Client Library -->
++    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
++    <!-- Confetti for Order Success -->
++    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
++
++    <!-- Leaflet JS for Maps -->
++    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
++        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
++
++    <!-- App Logic -->
++    <script src="app.js"></script>
++
++    <script>
++        function togglePasswordVisibility(inputId, iconElement) {
++            const input = document.getElementById(inputId);
++            if (input.type === 'password') {
++                input.type = 'text';
++                iconElement.textContent = '🙈';
++            } else {
++                input.type = 'password';
++                iconElement.textContent = '👁️';
++            }
++        }
++    </script>
++    
++    <!-- Metricool Tracking Pixel -->
++    <img src="https://tracker.metricool.com/c3po.jpg?hash=ebe8b52530fde54a82b1ea7dec11f618" style="display:none; width:0px; height:0px;" alt="" />
++</body>
++
++</html>

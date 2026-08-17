@@ -72,7 +72,6 @@ function logoutRestaurant() {
 router.add('#/auth', () => {
     // Hide cart
     document.getElementById('floating-cart-bar').style.display = 'none';
-    stopOrderPolling();
     hideLoadingOverlay();
     
     const container = document.getElementById('main-content');
@@ -125,7 +124,6 @@ function handleForgotPassword() {
 router.add('#/partnership', () => {
     // Hide cart
     document.getElementById('floating-cart-bar').style.display = 'none';
-    stopOrderPolling();
     hideLoadingOverlay();
     
     const container = document.getElementById('main-content');
@@ -1108,31 +1106,7 @@ router.add('#/', () => {
                     </div>
                 </template>
 
-                        <div class="restaurant-card-header" style="height: 200px; position: relative;">
-                            <img :src="r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'" style="width: 100%; height: 100%; object-fit: cover;" :alt="r.name" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
-                            <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
-                            <div style="position: absolute; top: 1rem; left: 1rem; z-index: 2;">
-                                <template x-if="isCurrentlyOpen(r)">
-                                    <span class="badge badge-success restaurant-card-badge">Ouvert</span>
-                                </template>
-                                <template x-if="!isCurrentlyOpen(r)">
-                                    <span class="badge badge-danger restaurant-card-badge">Fermé</span>
-                                </template>
-                            </div>
-                        </div>
-                        <div class="restaurant-card-body" style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; background: var(--bg-card);">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                                <h3 style="margin: 0; font-size: 1.2rem; font-weight: 700; color: var(--text-primary);" x-text="r.name"></h3>
-                                <div style="display: flex; align-items: center; background: rgba(255, 184, 0, 0.1); padding: 0.25rem 0.5rem; border-radius: 8px;">
-                                    <span style="color: #ffb800; margin-right: 4px;">★</span>
-                                    <span style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary);" x-text="r.rating + ' (' + r.reviewsCount + ')'"></span>
-                                </div>
-                            </div>
-                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem; flex: 1;" x-text="r.category + ' • ' + r.address"></p>
-                            <button class="btn btn-primary btn-block" style="border-radius: 12px; padding: 0.75rem; font-weight: 600;">Voir le Menu ➔</button>
-                        </div>
-                    </div>
-                </template>
+
             </div>
 
             <!-- RESTAURANT SUGGESTION CTA -->
@@ -4502,7 +4476,4 @@ window.customerLogout = function() {
     showToast("Déconnexion réussie", "success");
     router.resolve();
 };
-
-
-window.stopOrderPolling = function() {};
-function stopOrderPolling() {}
+
