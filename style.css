@@ -4005,3 +4005,12 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         box-shadow: 0 5px 15px rgba(255, 122, 0, 0.1) !important;
     }
 }
+
+@media (min-width: 768px) {
+    #bottom-nav-bar {
+        display: none !important;
+    }
+    .desktop-menu {
+        display: block !important;
+    }
+}

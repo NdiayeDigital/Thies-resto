@@ -171,6 +171,19 @@
                 <div class="user-profile" style="background: url('icon.png') center/cover; width: 45px; height: 45px; border-radius: 50%; border: 2px solid var(--primary); position: relative;">
                     <div style="position: absolute; top: 0; right: 0; width: 12px; height: 12px; background: #FF3B30; border-radius: 50%; border: 2px solid var(--bg-secondary);"></div>
                 </div>
+                <!-- 3-dot menu for Desktop -->
+                <div class="desktop-menu" style="display: none; position: relative;">
+                    <button id="desktop-menu-btn" style="background: none; border: none; font-size: 1.5rem; color: var(--text-primary); cursor: pointer; padding: 0.5rem;" onclick="const d = document.getElementById('desktop-dropdown'); d.style.display = d.style.display === 'none' ? 'flex' : 'none';">⋮</button>
+                    <div id="desktop-dropdown" class="glass-panel" style="display: none; position: absolute; right: 0; top: 50px; min-width: 180px; border-radius: 12px; padding: 0.5rem 0; box-shadow: var(--shadow); z-index: 1000; flex-direction: column;">
+                        <a href="#/" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">🏠 Accueil</a>
+                        <a href="#/tracking" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">🛵 Suivi</a>
+                        <a href="#/cart" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem; justify-content: space-between;" onclick="document.getElementById('desktop-dropdown').style.display='none';">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">🛒 Panier</div>
+                            <span id="desktop-nav-cart-qty" style="background: var(--primary); color: white; border-radius: 50%; font-size: 0.75rem; padding: 2px 6px; display: none; font-weight: bold;">0</span>
+                        </a>
+                        <a href="#/profile" class="dropdown-item" style="padding: 0.75rem 1rem; color: var(--text-primary); text-decoration: none; display: flex; align-items: center; gap: 0.75rem;" onclick="document.getElementById('desktop-dropdown').style.display='none';">👤 Profil</a>
+                    </div>
+                </div>
             </div>
             <div style="margin-top: 1.5rem; text-align: left;">
                 <p style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.2rem;">Hi, Foodie 👋</p>
