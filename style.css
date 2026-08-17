@@ -4014,3 +4014,10 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
         display: block !important;
     }
 }
+
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
+  .desktop-only { display: flex !important; }
+  #main-navbar { text-align: center; }
+  .desktop-slogan { display: block !important; }
+}
