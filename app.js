@@ -4502,3 +4502,4 @@ window.customerLogout = function() {
     showToast("Déconnexion réussie", "success");
     router.resolve();
 };
+\n\nwindow.stopOrderPolling = function() {};\nfunction stopOrderPolling() {}\n
