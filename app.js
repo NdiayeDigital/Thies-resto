@@ -1054,7 +1054,7 @@ router.add('#/', () => {
 
         
 
-        <section id="catalog-section" x-data="catalogComponent()">
+        <section id="catalog-section">
             <div class="section-header">
                 <h2 style="font-size: 1.2rem; font-weight: 700; margin: 0;">Restaurants</h2><span style="color: var(--text-secondary); font-size: 0.9rem; cursor: pointer;">View All</span>
             </div>
@@ -1145,6 +1145,8 @@ router.add('#/', () => {
                 </a>
             </div>
         </section>
+
+        </div>
 
         <!-- ========== PRESENTATION SECTION (Side by Side: Image Left, Text Right) ========== -->
         <section class="side-by-side-section">
