@@ -4340,9 +4340,31 @@ window.requestNativeGeolocation = function() {
                 if (typeof showMapModal === 'function') showMapModal(window.userLat, window.userLng, store.data.restaurants);
             }
         }, (error) => {
-            if(typeof showToast === 'function') showToast("Accès refusé ou erreur GPS.", "danger");
-        }, { timeout: 10000 });
-    } else {
-        if(typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée par votre navigateur.", "danger");
+            
+
+window.showGpsErrorModal = function() {
+    let errorModal = document.getElementById('gps-error-modal');
+    if (!errorModal) {
+        errorModal = document.createElement('div');
+        errorModal.id = 'gps-error-modal';
+        errorModal.innerHTML = `
+            <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+                <div style="background: var(--bg-primary, #ffffff); border-radius: 24px; padding: 2rem; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s ease;">
+                    <div style="width: 60px; height: 60px; background: rgba(255, 59, 48, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+                        <span style="font-size: 30px; color: #ff3b30;">📍</span>
+                    </div>
+                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary, #000); margin-bottom: 1rem; font-family: var(--font-sans);">Accès GPS Refusé</h2>
+                    <p style="color: var(--text-secondary, #666); font-size: 1rem; line-height: 1.5; margin-bottom: 1.5rem;">
+                        Votre navigateur bloque l'accès à la position. Pour trouver les meilleurs restaurants autour de vous, veuillez autoriser <strong>Thies Resto</strong> dans les paramètres de localisation de votre navigateur, ou activer votre GPS.
+                    </p>
+                    <button onclick="document.getElementById('gps-error-modal').style.opacity='0'; setTimeout(()=>document.getElementById('gps-error-modal').remove(), 300);" style="background: var(--primary, #e23744); color: white; border: none; border-radius: 12px; padding: 1rem 2rem; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.2s;">J'ai compris</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(errorModal);
+        setTimeout(() => {
+            errorModal.firstElementChild.style.opacity = '1';
+            errorModal.firstElementChild.firstElementChild.style.transform = 'translateY(0)';
+        }, 10);
     }
 };
