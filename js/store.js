@@ -50,8 +50,8 @@ class Store {
         try {
             console.log("Syncing with Supabase...");
 
-            // 1. Sync Restaurants (Tous les restaurants)
-            const { data: dbRestos, error: restosError } = await supabaseClient.from('restaurants').select('*');
+            // 1. Sync Restaurants            // On utilise la nouvelle fonction RPC qui n'expose pas les mots de passe
+            const { data: dbRestos, error: restosError } = await supabaseClient.rpc('get_public_restaurants');
 
             // We NO LONGER fetch all menu_items globally for performance reasons (Lazy Loading)
             if (!restosError && dbRestos) {
@@ -541,10 +541,8 @@ class Store {
 
         try {
             console.log(`Lazy loading menu for restaurant ${restaurantId}...`);
-            const { data: menuItems, error } = await supabaseClient
-                .from('menu_items')
-                .select('*')
-                .eq('restaurant_id', restaurantId);
+            // Utilisation du nouveau RPC sécurisé
+            const { data: menuItems, error } = await supabaseClient.rpc('get_public_menu_items', { p_restaurant_id: restaurantId });
 
             if (error) throw error;
             
