@@ -184,28 +184,7 @@
             </nav>
 
             <!-- Mobile Drawer Overlay -->
-            <div class="mobile-drawer" id="mobile-drawer">
-                <div class="drawer-header">
-                <img src="icon.png" class="logo-icon" alt="THIES Resto Logo" fetchpriority="high"
-                    style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary); margin-right: 0.5rem;">
-                <span class="logo-text">THIES Resto</span>
-                    <button class="close-drawer-btn" aria-label="Fermer le menu" onclick="toggleMobileMenu()">✕</button>
-                </div>
-                <div class="drawer-links">
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
-                    <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
-                    <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
-                    <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir
-                        Partenaire 🤝</a>
-                    <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
-                        Espace Livreurs 🛵 
-                        <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt disponible)</span>
-                    </a>
-                    <a href="#" id="mobile-logout-btn" onclick="toggleMobileMenu(); handleLogout(); return false;" style="display: none; color: var(--danger); font-weight: bold; text-align: center; margin-top: 2rem; font-size: 1.2rem;">🚪 Déconnexion</a>
-                </div>
-            </div>
-            <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>
+            
         </header>
 
         <!-- ========== MAIN WORKSPACE ========== -->

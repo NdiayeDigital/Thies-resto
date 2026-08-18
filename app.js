@@ -492,18 +492,6 @@ function handleRestaurantRegister(e) {
 
 // ----------------------------------------------------
 
-function toggleMobileMenu() {
-    const drawer = document.getElementById('mobile-drawer');
-    const backdrop = document.getElementById('drawer-backdrop');
-    const btn = document.getElementById('hamburger-btn');
-    if (drawer && backdrop) {
-        drawer.classList.toggle('active');
-        backdrop.classList.toggle('active');
-        btn.classList.toggle('active');
-    }
-}
-
-    // ----------------------------------------------------
 function escapeHTML(str) {
     if (!str) return '';
     return str.toString().replace(/[&<>"']/g, function(m) {
@@ -2213,15 +2201,19 @@ function recalculateCart() {
 
 
 function updateFloatingCartBar(r) {
-    const bar = document.getElementById('floating-cart-bar');
+    const badge = document.getElementById('mobile-nav-cart-badge');
+    if (!badge) return;
     const totalQty = cart.items.reduce((sum, item) => sum + item.qty, 0);
-    
-    const activePanel = document.querySelector('.tab-panel.active');
-    const isCheckoutActive = activePanel && activePanel.id === 'panel-checkout';
-
-    // Show floating bar only if cart has items AND restaurant is open AND we are not already on the checkout tab
-    if (totalQty > 0 && isRestaurantOpenNow(r) && !isCheckoutActive) {
-        document.getElementById('floating-cart-qty').innerText = `${totalQty} article${totalQty > 1 ? 's' : ''}`;
+    if (totalQty > 0) {
+        badge.innerText = totalQty;
+        badge.style.display = 'flex';
+        badge.classList.add('pulse-animation');
+        setTimeout(() => badge.classList.remove('pulse-animation'), 300);
+    } else {
+        badge.style.display = 'none';
+    }
+}
+ article${totalQty > 1 ? 's' : ''}`;
         document.getElementById('floating-cart-total').innerText = `${cart.total} FCFA`;
         bar.style.display = 'flex';
     } else {
