@@ -6,10 +6,10 @@
     /* ---------------------------------------------------------------------- */
     
     /* COLORS: Primary */
-    --primary: #FF7A00;
-    --primary-light: #FFA04D;
-    --primary-dark: #CC6200;
-    --primary-rgb: 255, 122, 0;
+    --primary: #F68A0F;
+    --primary-light: #F8A13F;
+    --primary-dark: #C56E0C;
+    --primary-rgb: 246, 138, 15;
 
     /* COLORS: Backgrounds & Surfaces */
     --bg-primary: #121212;
