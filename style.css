@@ -1,50 +1,60 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-    --bg-primary: #000000;
-    --bg-secondary: #0a0a0c;
-    --bg-card: #121214;
-    --bg-input: #1a1a1c;
-    --primary: #f26b21;
-    --primary-rgb: 242, 107, 33;
-    --primary-hover: #d95a1a;
-    --accent: #ff8c42;
-    --success: #10b981;
-    --danger: #ef4444;
-    --text-primary: #ffffff;
-    --text-secondary: #a0a0a5;
-    --border: rgba(255, 255, 255, 0.08);
-    --border-focus: rgba(242, 107, 33, 0.5);
-    --shadow: 0 20px 40px -10px rgba(0, 0, 0, 1);
-    --glass-bg: rgba(18, 18, 20, 0.65);
-    --glass-border: rgba(255, 255, 255, 0.08);
-    --font-serif: 'Outfit', sans-serif;
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
+    /* ---------------------------------------------------------------------- */
+    /* NEW DESIGN SYSTEM (Mobile-First, Light, Vibrant Orange)                */
+    /* ---------------------------------------------------------------------- */
+    
+    /* COLORS: Primary */
+    --primary: #FF7A00;
+    --primary-light: #FFA04D;
+    --primary-dark: #CC6200;
+    --primary-rgb: 255, 122, 0;
 
-/* Light Mode - Ivory & Gold refinement */
-[data-theme="light"] {
-    --bg-primary: #fcfcfc;
-    --bg-secondary: #f3f3f5;
-    --bg-card: #ffffff;
-    --bg-input: #f3f3f5;
-    --text-primary: #0f0f11;
-    --text-secondary: #606068;
-    --border: rgba(0, 0, 0, 0.06);
-    --border-focus: rgba(242, 107, 33, 0.6);
-    --shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.05);
-    --glass-bg: rgba(255, 255, 255, 0.75);
-    --glass-border: rgba(255, 255, 255, 0.4);
+    /* COLORS: Backgrounds & Surfaces */
+    --bg-primary: #121212;
+    --bg-secondary: #1A1A1A;
+    --bg-card: rgba(255, 255, 255, 0.05);
+    --bg-input: rgba(255, 255, 255, 0.1);
+    --bg-glass: rgba(255, 255, 255, 0.03);
+
+    /* COLORS: Text */
+    --text-primary: #FFFFFF;
+    --text-secondary: #A0A0A0;
+    --text-inverse: #121212;
+
+    /* COLORS: States */
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --info: #3B82F6;
+
+    /* BORDERS & SHADOWS */
+    --border: rgba(255, 255, 255, 0.1);
+    --border-focus: rgba(255, 122, 0, 0.5);
+    --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 8px 30px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 40px rgba(255, 122, 0, 0.15);
+
+    /* BORDER RADIUS */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-full: 9999px;
+
+    /* TYPOGRAPHY */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-serif: 'Outfit', sans-serif; /* Used for headings */
+
+    /* ANIMATIONS */
+    --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --transition-bounce: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    /* GLOBALS */
+    --btn-height: 52px;
+    --input-height: 52px;
+    --card-radius: var(--radius-lg);
 }
-[data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3,
-[data-theme="light"] h4, [data-theme="light"] h5, [data-theme="light"] h6 {
-    color: #121212;
-}
-[data-theme="light"] .form-control { color: #121212; }
-[data-theme="light"] .stat-card-value { color: #121212; }
-[data-theme="light"] .search-input { color: #121212; }
 
 /* Reset & Base */
 * {
@@ -406,7 +416,7 @@ main {
 /* Restaurant Cards Grid */
 .restaurant-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1.5rem;
     padding: 0 1.5rem 3rem 1.5rem;
 }
@@ -421,7 +431,7 @@ main {
     display: flex;
     flex-direction: column;
     height: 100%;
-}
+ transform: translateZ(0); will-change: transform, opacity; }
 
 .restaurant-card:hover {
     transform: translateY(-5px);
@@ -608,7 +618,7 @@ main {
 /* Dishes Grid */
 .dishes-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 1.5rem;
 }
 
@@ -1183,7 +1193,7 @@ textarea.form-control {
     border: 1px solid var(--border);
     padding: 2rem;
     border-radius: 24px;
-    max-width: 320px;
+    max-width: 100%; max-width: 320px;
     margin: 2rem auto;
 }
 
@@ -1608,7 +1618,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 
 .animated-hero-illustration {
     position: relative;
-    width: 300px;
+    width: 100%; max-width: 300px;
     height: 300px;
     display: flex;
     align-items: center;
@@ -1645,13 +1655,13 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 }
 
 .ring-1 {
-    width: 240px;
+    width: 100%; max-width: 240px;
     height: 240px;
     animation: spinClockwise 25s linear infinite;
 }
 
 .ring-2 {
-    width: 280px;
+    width: 100%; max-width: 280px;
     height: 280px;
     border-color: rgba(255, 255, 255, 0.08);
     animation: spinCounterClockwise 35s linear infinite;
@@ -2081,7 +2091,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 100%;
     height: 100vh;
     background: rgba(4, 16, 10, 0.75);
     backdrop-filter: blur(5px);
@@ -2119,7 +2129,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 }
 
 .hero-food-plate-container {
-    width: 320px;
+    width: 100%; max-width: 320px;
     height: 320px;
     border-radius: 50%;
     position: relative;
@@ -2574,7 +2584,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     font-size: 1.75rem;
     font-weight: 800;
     font-family: var(--font-serif);
-    color: #fff;
+    color: var(--text-primary);
 }
 .accounting-table-container {
     background: var(--bg-card);
@@ -2596,7 +2606,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     border: 1px solid var(--border);
     padding: 0.6rem 1rem;
     border-radius: 12px;
-    color: #fff;
+    color: var(--text-primary);
     font-family: var(--font-sans);
     min-width: 250px;
     font-size: 0.9rem;
@@ -2634,7 +2644,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 }
 .hw-tab-btn:hover {
     border-color: var(--primary);
-    color: #fff;
+    color: var(--primary);
 }
 .hw-tab-btn.active {
     background: #ffffff;
@@ -2854,7 +2864,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     font-size: 1.1rem;
     margin-bottom: 0.5rem;
     font-family: var(--font-serif);
-    color: #fff;
+    color: var(--text-primary);
 }
 .solution-text p {
     font-size: 0.85rem;
@@ -3488,7 +3498,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 [data-theme="light"] .modal-content {
     background: #ffffff !important;
     color: #121212 !important;
-}
+ max-height: 90vh; overflow-y: auto; }
 [data-theme="dark"] .restaurant-card,
 [data-theme="dark"] .menu-item-card,
 [data-theme="dark"] .history-card,
@@ -3739,7 +3749,7 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
     box-shadow: var(--shadow);
     transform: scale(0.95);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
+ max-height: 90vh; overflow-y: auto; }
 
 .geo-icon {
     font-size: 3rem;
@@ -3767,4 +3777,247 @@ footer { padding: 2.5rem 1.5rem 1.5rem; }
 
 .geo-actions .btn {
     flex: 1;
+}
+
+/* ========================================= */
+/* UTILITY CLASSES FOR JS INLINE STYLES REPLACEMENT */
+/* ========================================= */
+
+.checkout-card {
+    max-width: 400px;
+    margin: 2rem auto 0;
+    background: var(--bg-card);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+.text-center-p4 {
+    text-align: center;
+    padding: 4rem 1rem;
+}
+
+.text-center-p3 {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--danger);
+    color: white;
+    text-align: center;
+    padding: 12px;
+    z-index: 999999;
+    font-weight: bold;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    animation: slideDown 0.3s ease-out;
+}
+
+.critical-error-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: red;
+    color: white;
+    padding: 20px;
+    z-index: 999999;
+}
+
+.realtime-badge-danger {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--danger);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    z-index: 5;
+}
+
+.cgu-heading-2 {
+    color: var(--text-primary);
+    font-size: 1.2rem;
+    margin: 1.5rem 0 0.5rem;
+    font-family: var(--font-sans);
+}
+
+.cgu-heading-3 {
+    color: var(--text-primary);
+    margin-top: 1rem;
+    font-size: 1.1rem;
+}
+
+.cgu-list {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+    list-style-type: disc;
+}
+
+.cgu-text {
+    color: var(--text-secondary);
+    margin-bottom: 1.25rem;
+}
+
+.checkout-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+.checkout-subtitle {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+}
+
+/* ========================================= */
+/* FINITION PIXEL-PERFECT (QA) */
+/* ========================================= */
+
+:root {
+    --btn-height: 48px;
+    --btn-padding: 0 1.5rem;
+    --btn-radius: 12px;
+    --input-height: 48px;
+    --input-radius: 12px;
+    --card-radius: 16px;
+}
+
+/* Harmonisation globale des Boutons */
+.btn, .btn-primary, .btn-secondary, .btn-outline {
+    height: var(--btn-height);
+    padding: var(--btn-padding);
+    border-radius: var(--btn-radius);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    transition: var(--transition-smooth);
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.btn:active {
+    transform: scale(0.96);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Harmonisation des Inputs */
+.form-control, input[type="text"], input[type="email"], input[type="password"], input[type="tel"] {
+    height: var(--input-height);
+    border-radius: var(--input-radius);
+    padding: 0 1rem;
+    border: 1px solid var(--border);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    transition: var(--transition-smooth);
+    font-size: 1rem;
+    width: 100%;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(242, 107, 33, 0.15);
+}
+
+/* Harmonisation des Cartes */
+.card, .restaurant-card, .product-card, .checkout-card {
+    border-radius: var(--card-radius);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: var(--transition-smooth);
+}
+
+.card:hover, .restaurant-card:hover, .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+/* Text Overflow pour les titres longs */
+.card-title, .product-title, .restaurant-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Fix mobile nav bottom padding pour éviter superposition */
+@media (max-width: 768px) {
+    .app-container, body {
+        padding-bottom: 90px !important;
+    }
+}
+
+
+/* GLASSMORPHISM UTILITIES */
+.glass-panel {
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+.glass-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-smooth);
+}
+.glass-card:hover {
+    border-color: var(--border-focus);
+    box-shadow: var(--shadow-lg);
+}
+
+
+/* MOBILE PERFORMANCE FIX: Reduce heavy backdrop filters on small screens */
+@media (max-width: 768px) {
+    .glass-panel,
+    .navbar,
+    .mobile-bottom-nav,
+    .drawer-backdrop {
+        backdrop-filter: blur(4px) !important;
+        -webkit-backdrop-filter: blur(4px) !important;
+        background-color: rgba(18, 18, 18, 0.95) !important;
+    }
+    
+    .hover-3d:hover {
+        transform: translateY(-2px) scale(1) !important;
+        box-shadow: 0 5px 15px rgba(255, 122, 0, 0.1) !important;
+    }
+}
+
+@media (min-width: 768px) {
+    #bottom-nav-bar {
+        display: none !important;
+    }
+    .desktop-menu {
+        display: block !important;
+    }
+}
+
+@media (min-width: 768px) {
+  .mobile-only { display: none !important; }
+  .desktop-only { display: flex !important; }
+  #main-navbar { text-align: center; }
+  .desktop-slogan { display: block !important; }
 }
