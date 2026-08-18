@@ -497,16 +497,3 @@ window.executePendingOrder = async function() {
         `;
     }
 };
-                        <option value="1" style="color: black;">⭐ À améliorer</option>
-                    </select>
-                </div>
-                <div class="form-group" style="text-align: left;">
-                    <textarea id="review-comment" class="form-control" rows="2" placeholder="Qu'avez-vous pensé du repas ?" style="background: rgba(255,255,255,0.05); color: var(--primary); border: 1px solid rgba(255,255,255,0.2);"></textarea>
-                </div>
-                <button class="btn btn-primary btn-block" onclick="submitCustomerReview('${r.id}', '${(firstname + ' ' + lastname).replace(/'/g, "\\'")}')">Envoyer mon avis</button>
-            </div>
-        </div>
-    `;
-    
-    showToast("Commande enregistrée avec succès !", "success");
-}
