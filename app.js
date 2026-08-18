@@ -1441,9 +1441,24 @@ function applyFilters() {
         });
     }
 
-    // 3. Sort
-    if (restos[0] && restos[0]._tempDistance) {
-        restos.sort((a, b) => a._tempDistance - b._tempDistance);
+    // 3. Sort & Distance Filter (15km)
+    let fallbackTriggered = false;
+    let distanceSorted = false;
+
+    if (restos[0] && restos[0]._tempDistance !== undefined) {
+        distanceSorted = true;
+        // Sort by distance first
+        restos.sort((a, b) => (a._tempDistance || 9999) - (b._tempDistance || 9999));
+        
+        // Filter by 15km
+        const closeRestos = restos.filter(r => r._tempDistance <= 15.0);
+        
+        if (closeRestos.length > 0) {
+            restos = closeRestos;
+        } else {
+            // Fallback triggered: keep all restos, just sorted, but flag it
+            fallbackTriggered = true;
+        }
     } else if (activeSortBy === 'rating') {
         restos.sort((a, b) => b.rating - a.rating);
     } else if (activeSortBy === 'reviews') {
@@ -1464,6 +1479,18 @@ function applyFilters() {
     }
 
     let cardsHtml = '';
+    
+    if (fallbackTriggered) {
+        cardsHtml += `
+            <div style="grid-column: 1/-1; background: rgba(255, 170, 0, 0.1); border-left: 4px solid var(--warning); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <p style="margin:0; font-size: 0.95rem; color: var(--text-primary); display: flex; align-items: center;">
+                    <i class="ri-information-fill" style="color: var(--warning); margin-right: 8px; font-size: 1.2rem;"></i>
+                    Aucun restaurant à moins de 15 km de votre position. Voici les plus proches :
+                </p>
+            </div>
+        `;
+    }
+
     restos.forEach(r => {
         const isCurrentlyOpen = isRestaurantOpenNow(r);
         const statusBadge = isCurrentlyOpen 
@@ -4299,7 +4326,7 @@ window.requestNativeGeolocation = function() {
     var modal = document.getElementById('geo-modal');
     if (modal) modal.style.display = 'none';
     if ("geolocation" in navigator) {
-        if(typeof showToast === 'function') showToast("Recherche GPS...", "info");
+        if(typeof showToast === 'function') showToast("Recherche GPS en cours...", "info");
         navigator.geolocation.getCurrentPosition(async (position) => {
             window.userLat = position.coords.latitude;
             window.userLng = position.coords.longitude;
