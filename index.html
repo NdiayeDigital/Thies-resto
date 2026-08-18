@@ -154,6 +154,21 @@
     
     <!-- DOMPurify for secure innerHTML data rendering -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js"></script>
+
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "VOTRE_ONESIGNAL_APP_ID",
+          safari_web_id: "web.onesignal.auto.VOTRE_SAFARI_ID",
+          notifyButton: {
+            enable: false,
+          },
+        });
+      });
+    </script>
 </head>
 
 <body>
