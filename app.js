@@ -2213,20 +2213,6 @@ function updateFloatingCartBar(r) {
         badge.style.display = 'none';
     }
 }
- article${totalQty > 1 ? 's' : ''}`;
-        document.getElementById('floating-cart-total').innerText = `${cart.total} FCFA`;
-        bar.style.display = 'flex';
-    } else {
-        bar.style.display = 'none';
-    }
-    
-    // Update mobile bottom nav cart badge
-    var bNavQty = document.getElementById('bottom-nav-cart-qty');
-    if (bNavQty) {
-        bNavQty.innerText = totalQty;
-        bNavQty.style.display = totalQty > 0 ? 'inline-flex' : 'none';
-    }
-}
 
 // Checkout logic moved to js/ui-checkout.js
 
