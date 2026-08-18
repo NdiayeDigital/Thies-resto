@@ -327,7 +327,12 @@ async function handleRestaurantLogin(e) {
         const { data: isValid, error } = await supabaseClient.rpc('verify_admin_login', {
             p_password: pass
         });
-        if (error || !isValid) {
+        if (error) {
+            console.error("Supabase Admin login error:", error);
+            if (typeof showToast === 'function') showToast(`Erreur Serveur: ${error.message}`, "danger");
+            return;
+        }
+        if (!isValid) {
             if (typeof showToast === 'function') showToast("Mot de passe Super-Admin incorrect", "danger");
             return;
         }
@@ -364,7 +369,12 @@ async function handleRestaurantLogin(e) {
                 p_username: username,
                 p_password: pass
             });
-            if (!error && data && data.length > 0) {
+            if (error) {
+                console.error("Supabase login error", error);
+                if (typeof showToast === 'function') showToast(`Erreur Serveur: ${error.message}`, "danger");
+                return;
+            }
+            if (data && data.length > 0) {
                 r = {
                     id: data[0].id,
                     name: data[0].name,
@@ -375,6 +385,8 @@ async function handleRestaurantLogin(e) {
             }
         } catch(err) {
             console.error("Supabase login error", err);
+            if (typeof showToast === 'function') showToast(`Erreur Réseau: ${err.message}`, "danger");
+            return;
         }
     }
     
