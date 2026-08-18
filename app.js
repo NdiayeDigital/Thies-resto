@@ -336,7 +336,9 @@ async function handleRestaurantLogin(e) {
             sessionStorage.setItem('thies_admin_logged', 'true');
             sessionStorage.setItem('admin_session', 'true');
             sessionStorage.setItem('admin_password', pass);
-        } catch (e) {}
+        } catch (e) {
+            console.warn("Impossible de sauvegarder la session administrateur dans sessionStorage", e);
+        }
         if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
         if (typeof updateNavbar === 'function') updateNavbar();
         
@@ -394,7 +396,9 @@ async function handleRestaurantLogin(e) {
     currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: pass };
     try {
         sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
-    } catch (e) {}
+    } catch (e) {
+        console.warn("Impossible de sauvegarder la session restaurant dans sessionStorage", e);
+    }
     
     if (typeof updateNavbar === 'function') updateNavbar();
     if (typeof showToast === 'function') showToast(`Bienvenue, ${r.name} !`, "success");
@@ -1367,9 +1371,16 @@ router.add('#/', () => {
     } catch (err) {
         console.error("Error in home route:", err);
         hideLoadingOverlay();
-        if (typeof showToast === 'function') {
-            showToast("Une erreur non critique est survenue lors du chargement.", "warning");
-        }
+        document.getElementById('main-content').innerHTML = `
+            <div style="text-align: center; padding: 5rem 1rem;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">🔌</div>
+                <h2 style="color: var(--danger); margin-bottom: 1rem;">Erreur de connexion</h2>
+                <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 2rem;">
+                    Impossible de charger le catalogue. Veuillez vérifier votre connexion internet et réessayer.
+                </p>
+                <button class="btn btn-primary" onclick="window.location.reload()">Rafraîchir la page</button>
+            </div>
+        `;
     }
 });
 

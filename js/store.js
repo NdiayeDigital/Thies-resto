@@ -444,6 +444,7 @@ class Store {
             }
         } catch (e) {
             console.error("Failed to push order to Supabase", e);
+            throw e;
         }
     }
 
@@ -463,6 +464,7 @@ class Store {
             });
         } catch (e) {
             console.error("Failed to push reservation to Supabase", e);
+            throw e;
         }
     }
 
@@ -476,6 +478,7 @@ class Store {
             });
         } catch (e) {
             console.error("Failed to push customer to Supabase", e);
+            throw e;
         }
     }
 
@@ -789,7 +792,7 @@ class Store {
         } catch (err) {
             if (err.rateLimited) throw err; // Re-throw rate limit pour le UI
             console.error("Erreur de connexion restaurateur:", err);
-            return null;
+            throw err;
         }
     }
 
@@ -863,7 +866,7 @@ class Store {
             return data;
         } catch (err) {
             console.error("Erreur lors de la génération de l'OTP:", err);
-            return false;
+            throw err;
         }
     }
 
@@ -878,7 +881,7 @@ class Store {
             return data; // Returns boolean (true if verified, false otherwise)
         } catch (err) {
             console.error("Erreur lors de la vérification de l'OTP:", err);
-            return false;
+            throw err;
         }
     }
 }
