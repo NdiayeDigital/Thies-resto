@@ -4318,7 +4318,13 @@ window.requestNativeGeolocation = function() {
                 if (typeof showMapModal === 'function') showMapModal(window.userLat, window.userLng, store.data.restaurants);
             }
         }, (error) => {
-            
+            if(typeof window.showGpsErrorModal === 'function') window.showGpsErrorModal();
+            else console.error("Erreur GPS:", error);
+        });
+    } else {
+        if(typeof showToast === 'function') showToast("GPS non supporté", "error");
+    }
+};
 
 window.showGpsErrorModal = function() {
     let errorModal = document.getElementById('gps-error-modal');
