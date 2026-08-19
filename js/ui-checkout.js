@@ -453,6 +453,11 @@ window.executePendingOrder = async function() {
         if(typeof updateFloatingCartBar === 'function') updateFloatingCartBar(r);
         
         if (typeof triggerCelebration === 'function') triggerCelebration();
+        
+        // Trigger OneSignal permission prompt for order tracking
+        if (typeof OneSignalManager !== 'undefined') {
+            OneSignalManager.requestPermission();
+        }
 
         // 3. Generate WhatsApp Link with SECURE Server Data
         let itemsText = window.pendingOrderContext.order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
