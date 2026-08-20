@@ -4186,19 +4186,67 @@ window.toggleDishAvailability = function(dishId, currentStatus) {
     });
 };
 
+function startAppWithAuthCheck() {
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding') === 'true';
+    const isLoggedIn = typeof store !== 'undefined' && store.isLoggedIn();
+
+    if (!hasSeenOnboarding && !isLoggedIn) {
+        // Show full onboarding carousel
+        const root = document.getElementById('onboarding-root');
+        if (root) {
+            root.style.display = 'block';
+            if (typeof onboarding !== 'undefined') {
+                onboarding.goToSlide(0);
+            }
+        }
+    } else if (hasSeenOnboarding && !isLoggedIn) {
+        // Skip to login slide (slide 4 -> index 3)
+        const root = document.getElementById('onboarding-root');
+        if (root) {
+            root.style.display = 'block';
+            if (typeof onboarding !== 'undefined') {
+                onboarding.goToSlide(3);
+            }
+        }
+    } else {
+        // User is logged in, hide onboarding and start router
+        const root = document.getElementById('onboarding-root');
+        if (root) {
+            root.style.display = 'none';
+        }
+        router.start();
+    }
+}
+
+// Make sure renderApp calls startAppWithAuthCheck when called from onboarding
+window.renderApp = function() {
+    router.start();
+};
+
+// Listen to auth state changes to auto-close onboarding if needed
+window.addEventListener('authStateChange', (e) => {
+    if (e.detail.user) {
+        const root = document.getElementById('onboarding-root');
+        if (root) root.style.display = 'none';
+        if (typeof router !== 'undefined' && !router.isReady) {
+            router.start();
+        }
+    }
+});
+
 // Initialize app when data is ready
 if (typeof store !== 'undefined' && store.syncPromise) {
     store.syncPromise.then(() => {
         if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
-        router.start();
+        startAppWithAuthCheck();
     }).catch(err => {
         console.error("Failed to load initial data:", err);
         if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
-        router.start();
+        startAppWithAuthCheck();
     });
 } else {
     if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
-    router.start();
+    startAppWithAuthCheck();
 }
 
 // ==================== PHASE 5: PWA INSTALLATION ====================

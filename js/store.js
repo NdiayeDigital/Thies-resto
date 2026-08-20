@@ -31,7 +31,13 @@ class Store {
         };
         
         // Background sync with Supabase
+        this.user = null;
         if (supabaseClient) {
+            // Setup listener
+            supabaseClient.auth.onAuthStateChange((_event, session) => {
+                this.user = session?.user || null;
+                window.dispatchEvent(new CustomEvent('authStateChange', { detail: { user: this.user } }));
+            });
             this.syncPromise = this.syncFromSupabase();
         } else {
             this.syncPromise = Promise.resolve();
@@ -50,7 +56,11 @@ class Store {
         try {
             console.log("Syncing with Supabase...");
 
-            // 1. Sync Restaurants            // On utilise la nouvelle fonction RPC qui n'expose pas les mots de passe
+            // 1. Fetch Session FIRST
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            this.user = session?.user || null;
+
+            // 2. Sync Restaurants            // On utilise la nouvelle fonction RPC qui n'expose pas les mots de passe
             const { data: dbRestos, error: restosError } = await supabaseClient.rpc('get_public_restaurants');
 
             // We NO LONGER fetch all menu_items globally for performance reasons (Lazy Loading)
@@ -851,36 +861,60 @@ class Store {
     }
 
     // ============================================
-    // OTP VERIFICATION METHODS (SMS integration)
+    // PHONE + PASSWORD AUTHENTICATION (Supabase Auth)
     // ============================================
 
-    async generateOtp(phone) {
-        if (!supabaseClient) return false;
-        try {
-            const { data, error } = await supabaseClient.rpc('generate_otp', {
-                p_phone: phone
-            });
-            if (error) throw error;
-            return data;
-        } catch (err) {
-            console.error("Erreur lors de la génération de l'OTP:", err);
-            throw err;
-        }
+    // Transform phone to a valid internal email
+    getAuthEmailFromPhone(phone) {
+        // Clean phone (remove spaces, etc.)
+        const cleaned = phone.replace(/\s+/g, '');
+        // Ex: +221771234567@thies-resto.com
+        return `${cleaned}@thies-resto.com`;
     }
 
-    async verifyOtp(phone, code) {
-        if (!supabaseClient) return false;
-        try {
-            const { data, error } = await supabaseClient.rpc('verify_otp', {
-                p_phone: phone,
-                p_code: code
-            });
-            if (error) throw error;
-            return data; // Returns boolean (true if verified, false otherwise)
-        } catch (err) {
-            console.error("Erreur lors de la vérification de l'OTP:", err);
-            throw err;
+    async signUpWithPhone(phone, password) {
+        if (!supabaseClient) throw new Error("Supabase is not initialized");
+        const email = this.getAuthEmailFromPhone(phone);
+        
+        const { data, error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+        });
+        
+        if (error) {
+            // Check for specific errors
+            if (error.message.includes("User already registered")) {
+                throw new Error("Ce numéro est déjà enregistré. Veuillez vous connecter.");
+            }
+            throw error;
         }
+        return data;
+    }
+
+    async signInWithPhone(phone, password) {
+        if (!supabaseClient) throw new Error("Supabase is not initialized");
+        const email = this.getAuthEmailFromPhone(phone);
+        
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email,
+            password,
+        });
+        
+        if (error) {
+            throw new Error("Numéro ou mot de passe incorrect.");
+        }
+        return data;
+    }
+    
+    async logout() {
+        if (!supabaseClient) return;
+        const { error } = await supabaseClient.auth.signOut();
+        if (error) throw error;
+        // Optionally clear specific localStorage flags if needed, but DO NOT clear hasSeenOnboarding
+    }
+
+    isLoggedIn() {
+        return this.user !== null;
     }
 }
 

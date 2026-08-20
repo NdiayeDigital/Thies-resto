@@ -172,8 +172,11 @@
 </head>
 
 <body>
-    <!-- ========== LOADING OVERLAY REMOVED ========== -->
-
+    <!-- Onboarding Root -->
+    <div id="onboarding-root"></div>
+    
+    <!-- Splash Screen (removed, onboarding will handle entry) -->
+    
     <div class="app-container">
         <!-- ========== NAVIGATION BAR ========== -->
         <header class="navbar" id="main-navbar">
@@ -376,6 +379,9 @@
             <span>Profil</span>
         </a>
     </nav>
+    <!-- Onboarding Script -->
+    <script src="js/ui-onboarding.js" defer></script>
+    
     <!-- Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <!-- Confetti for Order Success -->

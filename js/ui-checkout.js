@@ -297,91 +297,9 @@ function submitSimpleOrder(e, restaurantId) {
 
     window.pendingOrderContext = { order, r, firstname, lastname, mode, phone };
     
-    const isVerified = localStorage.getItem('phoneVerified_' + phone) === 'true';
-    if (isVerified) {
-        // Déjà vérifié, on soumet directement
-        executePendingOrder();
-        return;
-    }
-
-    // Sinon, on demande la vérification OTP
-    const container = document.getElementById('checkout-content-container');
-    container.innerHTML = `
-        <div class="confirmation-screen">
-            <div class="spinner-ring" style="width:40px;height:40px;border-width:4px;margin: 0 auto 1rem;"></div>
-            <h2>Génération du code de sécurité...</h2>
-            <p style="color: var(--text-secondary);">Envoi d'un code OTP sécurisé au <strong>${phone}</strong></p>
-        </div>
-    `;
-
-    // Définir la méthode globale de validation
-    window.verifyOtpAndSubmitOrder = async function() {
-        const code = document.getElementById('otp-input-code').value.trim();
-        if (!code || code.length < 6) {
-            if (typeof showToast === 'function') showToast("Veuillez entrer le code à 6 chiffres", "warning");
-            return;
-        }
-
-        const btn = document.getElementById('btn-verify-otp');
-        btn.disabled = true;
-        btn.innerHTML = `<div class="spinner-ring" style="width:20px;height:20px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Vérification...`;
-
-        const { phone } = window.pendingOrderContext;
-
-        // Appel RPC réel pour vérifier le code
-        const isCodeValid = await store.verifyOtp(phone, code);
-
-        if (isCodeValid) {
-            localStorage.setItem('phoneVerified_' + phone, 'true');
-            btn.innerHTML = '✅ Code Valide !';
-            executePendingOrder();
-        } else {
-            if (typeof showToast === 'function') showToast("Code de sécurité incorrect ou expiré.", "danger");
-            btn.innerHTML = '✅ Vérifier et Commander';
-            btn.disabled = false;
-        }
-    };
-
-    // Lancer la génération d'OTP en tâche de fond
-    (async () => {
-        const otpSent = await store.generateOtp(phone);
-        
-        if (otpSent) {
-            if (typeof showToast === 'function') showToast("Code de sécurité SMS envoyé !", "info");
-            
-            container.innerHTML = `
-                <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
-                    <h2>Vérification SMS</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Veuillez entrer le code de sécurité reçu par SMS au <strong>${phone}</strong>.</p>
-                    
-                    <div class="form-group">
-                        <input type="text" id="otp-input-code" class="form-control" placeholder="Ex: 839102" style="font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-weight: bold; margin-bottom: 1rem;" maxlength="6">
-                    </div>
-                    
-                    <button class="btn btn-primary" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 1rem;" id="btn-verify-otp">
-                        ✅ Vérifier et Commander
-                    </button>
-                    
-                    <button class="btn btn-secondary" onclick="router.navigate('/')" style="width: 100%;">
-                        Annuler
-                    </button>
-                </div>
-            `;
-        } else {
-            if (typeof showToast === 'function') showToast("Impossible d'envoyer le SMS. Format de numéro incorrect ?", "danger");
-            container.innerHTML = `
-                <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
-                    <div style="font-size: 3rem; color: var(--danger); margin-bottom: 1rem;">⚠️</div>
-                    <h2>Échec de l'envoi</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Nous n'avons pas pu valider votre numéro <strong>${phone}</strong>.</p>
-                    <button class="btn btn-secondary" onclick="router.navigate('/')" style="width: 100%;">
-                        Retour à l'accueil
-                    </button>
-                </div>
-            `;
-        }
-    })();
+    // Now that users are logged in, we no longer need OTP verification
+    // Execute the order directly
+    window.executePendingOrder();
 }
 
 
