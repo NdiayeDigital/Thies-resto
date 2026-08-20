@@ -135,7 +135,7 @@ class OnboardingUI {
 
         if (!slider) return;
 
-        slider.style.transform = \`translateX(-\${this.currentSlide * 100}%)\`;
+        slider.style.transform = `translateX(-${this.currentSlide * 100}%)`;
         
         dots.forEach((dot, i) => {
             dot.classList.toggle('active', i === this.currentSlide);
@@ -254,7 +254,7 @@ class OnboardingUI {
 
     contactSupport() {
         const text = encodeURIComponent("Bonjour, j'ai oublié mon mot de passe ou changé de numéro sur THIES Resto. Pouvez-vous m'aider à récupérer mon compte ?");
-        window.open(\`https://wa.me/\${this.whatsappSupport}?text=\${text}\`, '_blank');
+        window.open(`https://wa.me/${this.whatsappSupport}?text=${text}`, '_blank');
     }
 
     finishOnboarding() {
@@ -272,3 +272,4 @@ class OnboardingUI {
 }
 
 const onboarding = new OnboardingUI();
+onboarding.render();
