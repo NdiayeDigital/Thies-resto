@@ -1151,12 +1151,22 @@ router.add('#/', () => {
                     <h1 class="hero-title" style="color: var(--text-primary); text-shadow: 0 4px 20px rgba(0,0,0,0.8); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.25rem; line-height: 1.25;">Découvrez les Meilleures Tables de <span style="color: var(--primary);">Thiès</span></h1>
                     <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; max-width: 640px; margin-left: auto; margin-right: auto;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
-                    <div class="search-container hover-3d" style="margin: 0 auto 1.75rem auto; width: 100%; max-width: 500px; position: relative;">
+                    <div class="search-container hover-3d" style="margin: 0 auto 1.25rem auto; width: 100%; max-width: 500px; position: relative;">
                         <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.1rem 3rem 1.1rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth); font-size: 16px;">
                         <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher">🔍</button>
                     </div>
 
-                    <div class="hero-actions-container" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 1.25rem; width: 100%;">
+                    <!-- HERO QUICK FILTER TAGS -->
+                    <div class="hero-quick-tags" style="margin-bottom: 1.5rem;">
+                        <span style="font-weight: 600; opacity: 0.85; font-size: 0.85rem;">Filtres rapides :</span>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Fast-Food')">🍔 Fast-Food</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Dibiterie')">🔥 Dibiterie</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Traditionnel')">🍲 Traditionnel</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Gastronomique')">✨ Gastronomique</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Pâtisserie')">🥐 Pâtisserie</button>
+                    </div>
+
+                    <div class="hero-actions-container" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 0.5rem; width: 100%;">
                         <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); min-height: 48px; padding: 0.95rem 2rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem;">Explorer nos Menus 🍽️</button>
                         <button class="btn btn-secondary ripple hover-3d" id="hero-geo-btn" onclick="geolocateRestaurants()" style="background: var(--bg-card); color: var(--text-primary); border: 1.5px solid var(--border); min-height: 48px; padding: 0.95rem 2rem; border-radius: 14px; font-weight: 600; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">📍 Trouver autour de moi</button>
                     </div>
@@ -1193,29 +1203,67 @@ router.add('#/', () => {
         
 
         <section id="catalog-section">
-            <div class="section-header">
-                <h2 class="section-title">Les Restaurants Partenaires</h2>
+            <div class="section-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; width: 100%; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h2 class="section-title" style="margin-bottom: 0.25rem;">Les Restaurants Partenaires</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0;">Filtrez rapidement par catégorie pour trouver votre table idéale</p>
+                    </div>
+                    <div id="results-count-badge" class="results-count-badge"></div>
+                </div>
             </div>
 
-            <!-- FILTERS BAR -->
-            <div class="filter-bar" id="filter-bar">
-                <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')">Tous</button>
-                <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')">🍲 Traditionnel</button>
-                <button class="filter-btn ${activeFilter === 'Fast Food' ? 'active' : ''}" onclick="setFilter('Fast Food')">🍔 Fast Food</button>
-                <button class="filter-btn ${activeFilter === 'Grillades / Dibi' ? 'active' : ''}" onclick="setFilter('Grillades / Dibi')">🔥 Grillades</button>
-                <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')">✨ Gastronomique</button>
-                <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')">🥐 Pâtisserie</button>
+            <!-- QUICK FILTERS BAR -->
+            <div class="quick-filters-wrapper">
+                <div class="filter-bar" id="filter-bar" role="tablist" aria-label="Filtres rapides de restaurants">
+                    <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')" data-category="Tous" role="tab" aria-selected="${activeFilter === 'Tous'}">
+                        <span class="filter-icon">🍽️</span>
+                        <span class="filter-label">Tous</span>
+                        <span class="filter-badge" id="count-all"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Fast-Food' ? 'active' : ''}" onclick="setFilter('Fast-Food')" data-category="Fast-Food" role="tab" aria-selected="${activeFilter === 'Fast-Food'}">
+                        <span class="filter-icon">🍔</span>
+                        <span class="filter-label">Fast-Food</span>
+                        <span class="filter-badge" id="count-fastfood"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Dibiterie' ? 'active' : ''}" onclick="setFilter('Dibiterie')" data-category="Dibiterie" role="tab" aria-selected="${activeFilter === 'Dibiterie'}">
+                        <span class="filter-icon">🔥</span>
+                        <span class="filter-label">Dibiterie</span>
+                        <span class="filter-badge" id="count-dibiterie"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')" data-category="Traditionnel" role="tab" aria-selected="${activeFilter === 'Traditionnel'}">
+                        <span class="filter-icon">🍲</span>
+                        <span class="filter-label">Traditionnel</span>
+                        <span class="filter-badge" id="count-traditionnel"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')" data-category="Gastronomique" role="tab" aria-selected="${activeFilter === 'Gastronomique'}">
+                        <span class="filter-icon">✨</span>
+                        <span class="filter-label">Gastronomique</span>
+                        <span class="filter-badge" id="count-gastronomique"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')" data-category="Pâtisserie" role="tab" aria-selected="${activeFilter === 'Pâtisserie'}">
+                        <span class="filter-icon">🥐</span>
+                        <span class="filter-label">Pâtisserie</span>
+                        <span class="filter-badge" id="count-patisserie"></span>
+                    </button>
+                </div>
             </div>
 
-            <!-- SORTING BAR -->
-            <div class="sort-bar">
-                <label for="sort-select">Trier par :</label>
-                <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
-                    <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
-                    <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
-                    <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
-                    <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
-                </select>
+            <!-- CONTROLS ROW (ACTIVE FILTER & SORT SELECTOR) -->
+            <div class="filter-controls-row">
+                <div id="active-filter-indicator" class="active-filter-indicator" style="${activeFilter !== 'Tous' ? 'display: inline-flex;' : 'display: none;'}">
+                    <span id="active-filter-text">${activeFilter !== 'Tous' ? 'Filtre actif : ' + activeFilter : ''}</span>
+                    <button type="button" class="btn-clear-filter" onclick="setFilter('Tous')" title="Réinitialiser">✕ Réinitialiser</button>
+                </div>
+                <div class="sort-bar" style="margin: 0; padding: 0;">
+                    <label for="sort-select">Trier par :</label>
+                    <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
+                        <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
+                        <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
+                        <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
+                        <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
+                    </select>
+                </div>
             </div>
             
             <div class="restaurant-grid" id="restaurants-list-grid"></div>
@@ -1508,18 +1556,99 @@ router.add('#/', () => {
     }
 });
 
+window.matchesCategory = function matchesCategory(restaurant, filter) {
+    if (!filter || filter === 'Tous') return true;
+    const cat = (restaurant.category || '').toLowerCase();
+    const name = (restaurant.name || '').toLowerCase();
+    const menuNames = Array.isArray(restaurant.menu) ? restaurant.menu.map(m => (m.name || '').toLowerCase()).join(' ') : '';
+    const f = filter.toLowerCase();
+
+    if (f === 'fast-food' || f === 'fast food') {
+        return cat.includes('fast') || cat.includes('snack') || cat.includes('burger') || cat.includes('pizza') || cat.includes('tacos') || name.includes('tacos') || name.includes('snack') || name.includes('burger') || name.includes('biba') || menuNames.includes('burger') || menuNames.includes('chawarma') || menuNames.includes('frite');
+    }
+    if (f === 'dibiterie' || f === 'grillades' || f === 'grillades / dibi') {
+        return cat.includes('dibi') || cat.includes('grill') || name.includes('dibi') || name.includes('nice time') || menuNames.includes('dibi') || menuNames.includes('merguez') || menuNames.includes('brais');
+    }
+    if (f === 'traditionnel') {
+        return cat.includes('tradition') || cat.includes('senegal') || menuNames.includes('thiéboudiène') || menuNames.includes('yassa') || menuNames.includes('mafé');
+    }
+    if (f === 'gastronomique') {
+        return cat.includes('gastro') || cat.includes('raffin') || name.includes('gourmet') || name.includes('casablancaise') || name.includes('khayma');
+    }
+    if (f === 'pâtisserie' || f === 'patisserie' || f === 'pâtisserie & café') {
+        return cat.includes('pâtisserie') || cat.includes('patisserie') || cat.includes('boulangerie') || cat.includes('café') || name.includes('cigale') || name.includes('relais');
+    }
+    return cat.includes(f) || name.includes(f);
+};
+
+window.updateCategoryBadges = function updateCategoryBadges() {
+    const allRestos = store.getRestaurants().filter(r => r.status === 'active');
+    const counts = {
+        'Tous': allRestos.length,
+        'Fast-Food': 0,
+        'Dibiterie': 0,
+        'Traditionnel': 0,
+        'Gastronomique': 0,
+        'Pâtisserie': 0
+    };
+
+    allRestos.forEach(r => {
+        if (matchesCategory(r, 'Fast-Food')) counts['Fast-Food']++;
+        if (matchesCategory(r, 'Dibiterie')) counts['Dibiterie']++;
+        if (matchesCategory(r, 'Traditionnel')) counts['Traditionnel']++;
+        if (matchesCategory(r, 'Gastronomique')) counts['Gastronomique']++;
+        if (matchesCategory(r, 'Pâtisserie')) counts['Pâtisserie']++;
+    });
+
+    const setBadge = (id, count) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = `(${count})`;
+    };
+
+    setBadge('count-all', counts['Tous']);
+    setBadge('count-fastfood', counts['Fast-Food']);
+    setBadge('count-dibiterie', counts['Dibiterie']);
+    setBadge('count-traditionnel', counts['Traditionnel']);
+    setBadge('count-gastronomique', counts['Gastronomique']);
+    setBadge('count-patisserie', counts['Pâtisserie']);
+};
+
+window.scrollToCatalogAndFilter = function scrollToCatalogAndFilter(category) {
+    window.setFilter(category);
+    const catalog = document.getElementById('catalog-section');
+    if (catalog) {
+        catalog.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
+
 window.setFilter = function setFilter(category) {
     activeFilter = category;
     const filterBar = document.getElementById('filter-bar');
     if (filterBar) {
         filterBar.querySelectorAll('.filter-btn').forEach(btn => {
-            if (btn.textContent.includes(category === 'Tous' ? 'Tous' : category.split(' ')[0])) {
+            const btnCat = btn.getAttribute('data-category');
+            if (btnCat === category || (category === 'Tous' && btnCat === 'Tous')) {
                 btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
             } else {
                 btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
             }
         });
     }
+
+    const indicator = document.getElementById('active-filter-indicator');
+    const indicatorText = document.getElementById('active-filter-text');
+    if (indicator && indicatorText) {
+        if (category !== 'Tous') {
+            indicator.style.display = 'inline-flex';
+            indicatorText.textContent = `Filtre actif : ${category}`;
+        } else {
+            indicator.style.display = 'none';
+            indicatorText.textContent = '';
+        }
+    }
+
     applyFilters();
 };
 
@@ -1533,18 +1662,25 @@ window.applyFilters = function applyFilters() {
 
     // 1. Filter by category
     if (activeFilter !== 'Tous') {
-        restos = restos.filter(r => r.category === activeFilter);
+        restos = restos.filter(r => matchesCategory(r, activeFilter));
     }
 
     // 2. Filter by search query
     if (query) {
         restos = restos.filter(r => {
-            return r.name.toLowerCase().includes(query) || 
-                   r.category.toLowerCase().includes(query) || 
-                   r.address.toLowerCase().includes(query) ||
+            return (r.name || '').toLowerCase().includes(query) || 
+                   (r.category || '').toLowerCase().includes(query) || 
+                   (r.address || '').toLowerCase().includes(query) ||
                    (Array.isArray(r.menu) && r.menu.some(m => (m.name || '').toLowerCase().includes(query) || (m.description || '').toLowerCase().includes(query)));
         });
     }
+
+    // Update count badges
+    const countBadge = document.getElementById('results-count-badge');
+    if (countBadge) {
+        countBadge.textContent = `${restos.length} restaurant${restos.length > 1 ? 's' : ''} disponible${restos.length > 1 ? 's' : ''}`;
+    }
+    updateCategoryBadges();
 
     // 3. Sort & Distance Filter (15km)
     let fallbackTriggered = false;
@@ -1579,7 +1715,15 @@ window.applyFilters = function applyFilters() {
 
     // Render cards
     if (restos.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3rem 0;">Aucun restaurant ne correspond à vos critères.</div>`;
+        grid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3.5rem 1.5rem; background: var(--bg-card); border-radius: 16px; border: 1.5px dashed var(--border);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🍽️</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.2rem; font-weight: 700;">Aucun restaurant trouvé</h3>
+                <p style="margin-bottom: 1.25rem; font-size: 0.95rem; max-width: 450px; margin-left: auto; margin-right: auto;">Aucun établissement ne correspond au filtre <strong>"${activeFilter}"</strong>${query ? ` et à la recherche "${query}"` : ''}.</p>
+                <button type="button" class="btn btn-primary" onclick="setFilter('Tous'); if(document.getElementById('search-input-field')) { document.getElementById('search-input-field').value=''; applyFilters(); }" style="padding: 0.65rem 1.5rem; font-size: 0.9rem; border-radius: 25px; font-weight: 600;">
+                    Afficher tous les restaurants
+                </button>
+            </div>`;
         return;
     }
 
@@ -4328,49 +4472,97 @@ window.addEventListener('beforeinstallprompt', (e) => {
     }
 });
 
-// ==================== PHASE 5: COOKIE CONSENT ====================
-document.addEventListener('DOMContentLoaded', () => {
-    if (!localStorage.getItem('cookie_consent')) {
-        setTimeout(() => {
-            const consentDiv = document.createElement('div');
-            consentDiv.innerHTML = `
-                <div style="font-size: 0.85rem; flex: 1; padding-right: 15px;">Nous utilisons des cookies pour des analyses statistiques. Acceptez-vous ?</div>
-                <div style="display:flex; gap: 10px; align-items: center;">
-                    <button class="btn btn-primary btn-sm" id="accept-cookies">Oui</button>
-                    <button class="btn btn-sm" id="reject-cookies" style="background:transparent; border:none; color:var(--text-secondary)">Non</button>
-                </div>
-            `;
-            consentDiv.style.cssText = "position: fixed; top: 0; left: 0; right: 0; background: var(--bg-card); color: var(--text-primary); padding: 15px; z-index: 9999; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; flex-direction: row; align-items: center; justify-content: space-between;";
-            document.body.appendChild(consentDiv);
-
-            document.getElementById('accept-cookies').addEventListener('click', () => {
-                localStorage.setItem('cookie_consent', 'true');
-                consentDiv.remove();
-            });
-            document.getElementById('reject-cookies').addEventListener('click', () => {
-                localStorage.setItem('cookie_consent', 'false');
-                consentDiv.remove();
-            });
-        }, 3000);
+// ==================== TERMS OF SERVICE (CGU) FLOATING ACCEPTANCE ====================
+window.checkCGUConsent = function() {
+    const isRefused = sessionStorage.getItem('thies_resto_cgu_refused') === 'true';
+    const isAccepted = localStorage.getItem('thies_resto_cgu_accepted') === 'true';
+    
+    const refusedScreen = document.getElementById('cgu-refused-screen');
+    const floatingOverlay = document.getElementById('cgu-floating-overlay');
+    
+    if (isRefused) {
+        if (refusedScreen) refusedScreen.style.display = 'flex';
+        if (floatingOverlay) floatingOverlay.style.display = 'none';
+        return;
     }
-});
 
-// ========== CONSENT & GEO LOGIC ==========
-window.checkConsent = function() {
-    if (!localStorage.getItem('thies_resto_consent')) {
-        var banner = document.getElementById('consent-banner');
-        if (banner) banner.style.display = 'block';
+    if (!isAccepted) {
+        if (floatingOverlay) floatingOverlay.style.display = 'flex';
+        if (refusedScreen) refusedScreen.style.display = 'none';
+    } else {
+        if (floatingOverlay) floatingOverlay.style.display = 'none';
+        if (refusedScreen) refusedScreen.style.display = 'none';
     }
 };
-window.acceptConsent = function() {
+
+window.acceptCGU = function() {
+    localStorage.setItem('thies_resto_cgu_accepted', 'true');
     localStorage.setItem('thies_resto_consent', 'true');
-    var banner = document.getElementById('consent-banner');
-    if (banner) banner.style.display = 'none';
+    sessionStorage.removeItem('thies_resto_cgu_refused');
+    
+    const floatingOverlay = document.getElementById('cgu-floating-overlay');
+    const refusedScreen = document.getElementById('cgu-refused-screen');
+    if (floatingOverlay) floatingOverlay.style.display = 'none';
+    if (refusedScreen) refusedScreen.style.display = 'none';
+
+    if (typeof showToast === 'function') {
+        showToast("Conditions acceptées. Bienvenue sur THIES Resto !", "success");
+    }
 };
 
-// Start check on load
-document.addEventListener('DOMContentLoaded', window.checkConsent);
-setTimeout(window.checkConsent, 1000); // fallback
+window.refuseCGU = function() {
+    localStorage.removeItem('thies_resto_cgu_accepted');
+    sessionStorage.setItem('thies_resto_cgu_refused', 'true');
+    
+    const floatingOverlay = document.getElementById('cgu-floating-overlay');
+    const refusedScreen = document.getElementById('cgu-refused-screen');
+    if (floatingOverlay) floatingOverlay.style.display = 'none';
+    if (refusedScreen) refusedScreen.style.display = 'flex';
+};
+
+window.reopenCGUModal = function() {
+    sessionStorage.removeItem('thies_resto_cgu_refused');
+    const refusedScreen = document.getElementById('cgu-refused-screen');
+    const floatingOverlay = document.getElementById('cgu-floating-overlay');
+    if (refusedScreen) refusedScreen.style.display = 'none';
+    if (floatingOverlay) floatingOverlay.style.display = 'flex';
+};
+
+window.exitPlatform = function() {
+    try {
+        window.close();
+    } catch (e) {}
+    // Fallback: clear display or redirect to blank screen
+    document.body.innerHTML = `
+        <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0B0D11; color: #9CA3AF; font-family: sans-serif; text-align: center; padding: 2rem;">
+            <div style="font-size: 3rem; margin-bottom: 1rem;">👋</div>
+            <h1 style="color: #F9FAFB; font-size: 1.5rem; margin-bottom: 0.5rem;">Application fermée</h1>
+            <p style="max-width: 400px; font-size: 0.95rem; margin-bottom: 2rem;">Vous avez quitté THIES Resto suite au refus des conditions d'utilisation. Vous pouvez fermer cet onglet.</p>
+            <button onclick="location.reload()" style="background: #f26b21; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer;">Rouvrir l'application</button>
+        </div>
+    `;
+};
+
+window.toggleFullCGUDetails = function() {
+    const details = document.getElementById('cgu-full-details');
+    const icon = document.getElementById('cgu-toggle-icon');
+    if (!details) return;
+    if (details.style.display === 'none' || !details.style.display) {
+        details.style.display = 'block';
+        if (icon) icon.textContent = '▲';
+    } else {
+        details.style.display = 'none';
+        if (icon) icon.textContent = '▼';
+    }
+};
+
+// Aliases for compatibility
+window.checkConsent = window.checkCGUConsent;
+window.acceptConsent = window.acceptCGU;
+
+// Run terms check on load
+document.addEventListener('DOMContentLoaded', window.checkCGUConsent);
+setTimeout(window.checkCGUConsent, 500);
 
 window.closeGeoModal = function() {
     var modal = document.getElementById('geo-modal');

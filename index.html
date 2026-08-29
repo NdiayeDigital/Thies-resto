@@ -452,12 +452,86 @@
         }
     </script>
     
-    <!-- ========== CONSENT BANNER (COMPACT) ========== -->
-    <div id="consent-banner" class="consent-banner" style="display: none;">
-        <div class="consent-content">
-            <span class="consent-icon">🍪</span>
-            <p class="consent-text">En naviguant, vous acceptez nos <a href="#" onclick="router.navigate('/cgv'); return false;">CGV</a> &amp; <a href="#" onclick="router.navigate('/politique-client'); return false;">Confidentialité</a>.</p>
-            <button class="btn btn-primary btn-sm" onclick="acceptConsent()">OK</button>
+    <!-- ========== FLOATING TERMS OF SERVICE (CGU) MODAL ========== -->
+    <div id="cgu-floating-overlay" class="cgu-floating-overlay" style="display: none;">
+        <div class="cgu-floating-card" role="dialog" aria-modal="true" aria-labelledby="cgu-modal-title">
+            <div class="cgu-card-header">
+                <div class="cgu-badge">
+                    <span class="cgu-badge-icon">⚖️</span>
+                    <span>Conditions d'Utilisation (CGU)</span>
+                </div>
+                <h2 id="cgu-modal-title" class="cgu-title">Bienvenue sur THIES Resto</h2>
+                <p class="cgu-subtitle">Pour consulter les menus, commander et réserver une table auprès des restaurants partenaires de Thiès, veuillez prendre connaissance et accepter nos conditions d'utilisation.</p>
+            </div>
+
+            <div class="cgu-summary-container">
+                <div class="cgu-summary-header">
+                    <span>📋</span>
+                    <strong>Résumé des conditions d'utilisation :</strong>
+                </div>
+                <ul class="cgu-summary-list">
+                    <li>
+                        <span class="cgu-bullet-icon">🍽️</span>
+                        <div><strong>Mise en relation directe :</strong> Accès direct aux restaurants partenaires de Thiès, sans commission sur vos repas.</div>
+                    </li>
+                    <li>
+                        <span class="cgu-bullet-icon">📲</span>
+                        <div><strong>Commandes &amp; Réservations :</strong> Vos demandes sont transmises en direct au restaurateur via WhatsApp et tableau de bord.</div>
+                    </li>
+                    <li>
+                        <span class="cgu-bullet-icon">🏪</span>
+                        <div><strong>Responsabilité :</strong> La préparation, la qualité des plats, les prix et la livraison relèvent de la responsabilité exclusive du restaurant partenaire sélectionné.</div>
+                    </li>
+                    <li>
+                        <span class="cgu-bullet-icon">🔒</span>
+                        <div><strong>Protection des données :</strong> Vos informations (nom, téléphone, adresse) servent uniquement au traitement de votre commande et à votre fidélité (CDP Sénégal), sans revente à des tiers.</div>
+                    </li>
+                    <li>
+                        <span class="cgu-bullet-icon">💵</span>
+                        <div><strong>Paiement direct :</strong> Règlement en direct à la livraison ou sur place (espèces ou mobile money selon l'établissement).</div>
+                    </li>
+                </ul>
+                
+                <div class="cgu-full-link-wrap">
+                    <button type="button" class="cgu-toggle-full-btn" onclick="toggleFullCGUDetails()">
+                        <span id="cgu-toggle-icon">▼</span> Consulter les détails légaux complets
+                    </button>
+                    <div id="cgu-full-details" class="cgu-full-details" style="display: none;">
+                        <p><strong>Éditeur de la plateforme :</strong> NdiayeDigital / THIES Resto (thies-resto.com) - Contact : contact@thies-resto.com</p>
+                        <p>THIES Resto agit uniquement en tant qu'intermédiaire technique. En cas de réclamation concernant la prestation de restauration, le client s'adresse directement au restaurant partenaire.</p>
+                        <p>Vous disposez d'un droit d'accès et de suppression de vos données personnelles sur simple demande.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cgu-actions">
+                <button type="button" class="btn btn-outline cgu-btn-refuse" onclick="refuseCGU()">
+                    Refuser
+                </button>
+                <button type="button" class="btn btn-primary cgu-btn-accept" onclick="acceptCGU()">
+                    Accepter et continuer ✓
+                </button>
+            </div>
+            
+            <p class="cgu-note-mandatory">L'acceptation des conditions d'utilisation est obligatoire pour utiliser la plateforme.</p>
+        </div>
+    </div>
+
+    <!-- ========== SCREEN DISPLAYED IF CGU REFUSED (QUIT/BLOCKED) ========== -->
+    <div id="cgu-refused-screen" class="cgu-refused-screen" style="display: none;">
+        <div class="cgu-refused-card">
+            <div class="cgu-refused-icon">🚫</div>
+            <h2>Accès Non Autorisé</h2>
+            <p>Vous avez refusé les <strong>Conditions Générales d'Utilisation (CGU)</strong> de THIES Resto.</p>
+            <p class="cgu-refused-explain">Conformément aux règles de fonctionnement du service, l'utilisation de l'application est suspendue sans acceptation préalable.</p>
+            <div class="cgu-refused-actions">
+                <button class="btn btn-primary" onclick="reopenCGUModal()">
+                    ⚖️ Réexaminer et accepter les conditions
+                </button>
+                <button class="btn btn-outline" onclick="exitPlatform()">
+                    Quitter l'application
+                </button>
+            </div>
         </div>
     </div>
 
