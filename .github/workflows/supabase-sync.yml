@@ -1,0 +1,32 @@
+name: Supabase Database Migration & Sync
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'supabase/**'
+      - 'supabase_setup.sql'
+
+jobs:
+  deploy-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link & Deploy to Supabase
+        if: env.SUPABASE_ACCESS_TOKEN != '' && env.SUPABASE_PROJECT_ID != ''
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          supabase link --project-ref $SUPABASE_PROJECT_ID --password "$SUPABASE_DB_PASSWORD"
+          supabase db push --include-all || supabase db execute --file ./supabase/schema.sql

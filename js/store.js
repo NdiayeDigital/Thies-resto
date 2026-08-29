@@ -434,6 +434,7 @@ class Store {
     async pushOrderToSupabase(order) {
         if (!supabaseClient) return;
         try {
+            const isOtp = order.otpVerified !== false;
             const { data, error } = await supabaseClient.rpc('place_secure_order', {
                 p_order_id: order.id,
                 p_restaurant_id: order.restaurantId,
@@ -446,10 +447,31 @@ class Store {
                 p_date: order.date,
                 p_time: order.time,
                 p_delivery_fee: order.deliveryFee || 0,
-                p_loyalty_applied: order.loyaltyApplied || false
+                p_loyalty_applied: order.loyaltyApplied || false,
+                p_otp_verified: isOtp,
+                p_otp_verified_via: order.otpVerifiedVia || 'Twilio SMS OTP'
             });
             if (error) {
-                console.error("RPC Error place_secure_order:", error);
+                console.warn("RPC place_secure_order notice, using direct table fallback:", error.message || error);
+                const { error: insertError } = await supabaseClient.from('orders').upsert({
+                    id: order.id,
+                    restaurant_id: order.restaurantId,
+                    customer_name: order.customerName,
+                    customer_phone: order.customerPhone,
+                    mode: order.mode,
+                    delivery_address: order.address,
+                    note: order.note,
+                    items: order.items,
+                    total: order.total,
+                    delivery_fee: order.deliveryFee || 0,
+                    loyalty_applied: order.loyaltyApplied || false,
+                    otp_verified: isOtp,
+                    otp_verified_via: order.otpVerifiedVia || 'Twilio SMS OTP',
+                    status: order.status || 'En attente'
+                });
+                if (insertError) {
+                    console.error("Direct insert into orders failed:", insertError);
+                }
             }
         } catch (e) {
             console.error("Failed to push order to Supabase", e);

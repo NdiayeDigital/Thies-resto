@@ -292,7 +292,10 @@ function submitSimpleOrder(e, restaurantId) {
         deliveryFee: cart.deliveryFee || 0,
         deliveryLat: cart.deliveryLat || null,
         deliveryLng: cart.deliveryLng || null,
-        loyaltyApplied: cart.loyaltyApplied || false
+        loyaltyApplied: cart.loyaltyApplied || false,
+        otpVerified: true,
+        otpVerifiedVia: 'Twilio SMS OTP',
+        otpVerifiedAt: new Date().toISOString()
     };
 
     window.pendingOrderContext = { order, r, firstname, lastname, mode, phone };

@@ -4,15 +4,29 @@ Ce guide explique étape par étape comment déployer et configurer la plateform
 
 ---
 
-## 1. Préparation de la Base de Données Supabase
+## 1. Synchronisation de la Base de Données Supabase
 
-1. Créez un compte gratuit sur [Supabase](https://supabase.com).
-2. Créez un nouveau projet (ex: `Thies-Resto-Prod`).
-3. Accédez à l'**Éditeur SQL** (SQL Editor) dans le panneau de gauche de Supabase.
-4. Cliquez sur **New Query** (Nouvelle requête).
-5. Copiez et collez le contenu du fichier [supabase_setup.sql](file:///c:/Users/mouha/OneDrive/Desktop/Thi%C3%A9s%20%C3%A0%20Table/supabase_setup.sql).
-6. Cliquez sur **Run** pour exécuter le script.
-   * *Cela créera les quatre tables nécessaires (`restaurants`, `orders`, `reservations`, `customers`) avec les politiques de sécurité (RLS) associées.*
+⚠️ **Important** : `git push` met à jour votre code source sur GitHub/GitLab, mais **n'applique pas automatiquement** les modifications de tables et de fonctions SQL sur votre serveur distant Supabase sans migration.
+
+Pour que votre base Supabase soit 100% à jour avec les fonctionnalités du code (Tables, Menus, Commandes, Réservations, Fidélité, et OTP SMS) :
+
+### Méthode 1 : Exécution SQL Directe (Simple & Immédiat)
+1. Ouvrez votre tableau de bord [Supabase](https://supabase.com/dashboard/project/_/sql).
+2. Rendez-vous dans **SQL Editor** dans le menu latéral gauche.
+3. Cliquez sur **New Query**.
+4. Copiez et collez l'intégralité du fichier [`supabase_setup.sql`](./supabase_setup.sql) (ou [`supabase/schema.sql`](./supabase/schema.sql)) situé à la racine du projet.
+5. Cliquez sur **Run** (Exécuter).
+   * *Cela crée/met à jour toutes les tables (`restaurants`, `menu_items`, `orders`, `reservations`, `customers`, `clients`, `restaurant_reviews`, `admin_users`), les colonnes OTP, et toutes les procédures stockées RPC sécurisées.*
+
+### Méthode 2 : Synchronisation Automatique par GitHub Actions
+Le projet contient un workflow GitHub Action prêt à l'emploi dans [`.github/workflows/supabase-sync.yml`](./.github/workflows/supabase-sync.yml).
+Pour l'activer automatiquement à chaque `git push` :
+1. Dans votre dépôt GitHub : allez dans **Settings > Secrets and variables > Actions**.
+2. Ajoutez vos secrets :
+   - `SUPABASE_ACCESS_TOKEN` : Votre token d'accès Supabase (obtenu dans *Account > Access Tokens*).
+   - `SUPABASE_PROJECT_ID` : L'identifiant de votre projet (ex: `eyrayquciqyswshiwtwb`).
+   - `SUPABASE_DB_PASSWORD` : Le mot de passe de votre base PostgreSQL Supabase.
+3. À chaque `git push`, vos migrations SQL seront automatiquement appliquées sur Supabase.
 
 ---
 

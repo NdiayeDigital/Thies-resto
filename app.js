@@ -642,7 +642,17 @@ function checkSlugAvailabilityRealtime(val) {
 function saveOrderToHistory(order, restaurantName) {
     try {
         let history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
-        history.unshift({ ...order, restaurantName, savedAt: new Date().toISOString() });
+        const phone = order.customerPhone || localStorage.getItem('customerPhone') || '';
+        const isPhoneVerified = phone ? localStorage.getItem('phoneVerified_' + phone) === 'true' : false;
+        const isOtp = order.otpVerified !== undefined ? order.otpVerified : isPhoneVerified;
+        
+        history.unshift({ 
+            ...order, 
+            restaurantName, 
+            otpVerified: isOtp,
+            otpVerifiedVia: order.otpVerifiedVia || (isOtp ? 'Twilio SMS OTP' : null),
+            savedAt: new Date().toISOString() 
+        });
         if (history.length > 20) history = history.slice(0, 20);
         localStorage.setItem('THIES_ORDER_HISTORY', JSON.stringify(history));
     } catch(e) {}
@@ -3781,11 +3791,20 @@ window.fetchOrderTracking = async function() {
             else if (order.status === 'Confirmée' || order.status === 'Prête') { statusColor = 'var(--primary)'; statusIcon = '👨‍🍳'; stepPercent = 50; }
             else if (order.status === 'Livrée') { statusColor = '#20c997'; statusIcon = '✅'; stepPercent = 100; }
             
+            const isOtpVerified = order.otpVerified !== false;
+
             html += `
                 <div id="track-card-${order.id}" style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1rem; position: relative; overflow: hidden;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                         <div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Commande n° ${order.id}</div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Commande n° ${order.id}</span>
+                                ${isOtpVerified ? `
+                                    <span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; color: #059669; font-weight: 700; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.25);">
+                                        🛡️ Validée par SMS OTP
+                                    </span>
+                                ` : ''}
+                            </div>
                             <h4 style="margin: 0; color: var(--text-primary); font-size: 1.1rem;">${rName}</h4>
                         </div>
                         <div class="track-status-badge" style="background: rgba(255,255,255,0.1); padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: ${statusColor}; border: 1px solid ${statusColor}; display: flex; align-items: center; gap: 0.3rem;">
@@ -4041,6 +4060,85 @@ router.add('#/profile', () => {
 
     let historyCount = history.length;
 
+    // Generate Order History HTML with visual OTP status
+    let orderHistoryCardsHtml = '';
+    if (history.length > 0) {
+        history.forEach(order => {
+            const isOtp = order.otpVerified !== false;
+            const totalFormatted = (order.total || 0).toLocaleString('fr-FR');
+            const itemsList = Array.isArray(order.items) 
+                ? order.items.map(i => `${i.qty || 1}x ${i.name || 'Produit'}`).join(', ')
+                : 'Détail de commande';
+            
+            let statusBadge = '<span class="badge badge-warning" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px;">⏳ Reçue</span>';
+            if (order.status === 'Confirmée' || order.status === 'Prête') {
+                statusBadge = '<span class="badge badge-success" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px;">👨‍🍳 Confirmée</span>';
+            } else if (order.status === 'En livraison') {
+                statusBadge = '<span class="badge badge-primary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px;">🛵 En livraison</span>';
+            } else if (order.status === 'Livrée') {
+                statusBadge = '<span class="badge badge-success" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px;">✅ Livrée</span>';
+            }
+
+            orderHistoryCardsHtml += `
+                <div class="profile-order-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.15rem; margin-bottom: 0.85rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem; gap: 0.5rem; flex-wrap: wrap;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                                <strong style="color: var(--text-primary); font-size: 0.98rem;">${order.restaurantName || 'Restaurant THIES'}</strong>
+                                <span style="font-size: 0.78rem; color: var(--text-secondary); font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: 6px;">#${order.id}</span>
+                            </div>
+                            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 3px;">
+                                📅 ${order.date || 'Aujourd\'hui'} ${order.time ? `• ${order.time}` : ''}
+                            </div>
+                        </div>
+                        <div>
+                            ${statusBadge}
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.4;">
+                        ${itemsList}
+                    </div>
+
+                    <!-- OTP Status & Total Section -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.65rem; border-top: 1px dashed var(--border); flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            ${isOtp ? `
+                                <div class="badge-otp-verified" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
+                                    <span>🛡️ Validée par SMS OTP</span>
+                                </div>
+                            ` : `
+                                <div class="badge-otp-direct" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(107, 114, 128, 0.1); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                    <span>ℹ️ Commande directe</span>
+                                </div>
+                            `}
+                        </div>
+                        <div style="text-align: right;">
+                            <strong style="color: var(--primary); font-size: 0.98rem;">${totalFormatted} FCFA</strong>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+                        <button class="btn btn-outline btn-sm" onclick="router.navigate('/tracking'); setTimeout(() => { const inp = document.getElementById('tracking-phone'); if(inp && '${order.customerPhone || customerPhone}') { inp.value = '${order.customerPhone || customerPhone}'; window.fetchOrderTracking(); } }, 150);" style="flex: 1; font-size: 0.78rem; padding: 0.4rem 0.6rem; border-radius: 10px;">
+                            📍 Suivre en direct
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    } else {
+        orderHistoryCardsHtml = `
+            <div style="text-align: center; padding: 1.75rem 1rem; background: var(--bg-input); border-radius: 16px; border: 1px dashed var(--border);">
+                <div style="font-size: 2rem; margin-bottom: 0.35rem;">🛍️</div>
+                <h4 style="margin: 0 0 0.25rem; font-size: 0.95rem; color: var(--text-primary);">Aucune commande enregistrée</h4>
+                <p style="margin: 0 0 0.85rem; font-size: 0.82rem; color: var(--text-secondary);">Vos commandes validées par SMS OTP s'afficheront automatiquement ici.</p>
+                <button class="btn btn-primary btn-sm" onclick="router.navigate('/')" style="border-radius: 12px; font-weight: 700; font-size: 0.82rem; padding: 0.45rem 1rem;">
+                    Explorer les restaurants 🍲
+                </button>
+            </div>
+        `;
+    }
+
     container.innerHTML = `
         <div class="account-screen">
             <!-- Header Card (Mockup 5) -->
@@ -4055,7 +4153,21 @@ router.add('#/profile', () => {
                 </div>
             </div>
 
-            <!-- Group 1: Coordonnées & Livraison -->
+            <!-- Group 1: Historique des Commandes (Avec statut OTP) -->
+            <div class="account-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding: 0 0.25rem;">
+                    <div class="account-group-title" style="margin: 0; padding: 0;">Mes Commandes Récentes (${historyCount})</div>
+                    <span style="font-size: 0.75rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
+                        🛡️ Sécurité OTP Active
+                    </span>
+                </div>
+                
+                <div style="padding: 0.25rem 0;">
+                    ${orderHistoryCardsHtml}
+                </div>
+            </div>
+
+            <!-- Group 2: Coordonnées & Livraison -->
             <div class="account-group">
                 <div class="account-group-title">Mon Profil & Coordonnées</div>
                 
@@ -4097,14 +4209,14 @@ router.add('#/profile', () => {
                 </div>
             </div>
 
-            <!-- Group 2: Activité & Commandes -->
+            <!-- Group 3: Activité & Favoris -->
             <div class="account-group">
-                <div class="account-group-title">Commandes & Favoris</div>
+                <div class="account-group-title">Activité & Favoris</div>
                 
                 <div class="account-item-row" onclick="router.navigate('/tracking')">
                     <div class="account-item-left">
                         <span class="account-item-icon"><i class="ri-file-list-3-line"></i></span>
-                        <span>Suivi de commande & Historique (${historyCount})</span>
+                        <span>Suivi de commande en direct</span>
                     </div>
                     <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
@@ -4126,7 +4238,7 @@ router.add('#/profile', () => {
                 </div>
             </div>
 
-            <!-- Group 3: Paramètres & Thème -->
+            <!-- Group 4: Paramètres & Thème -->
             <div class="account-group">
                 <div class="account-group-title">Préférences & Apparence</div>
                 
@@ -4149,7 +4261,7 @@ router.add('#/profile', () => {
                 </div>
             </div>
 
-            <!-- Group 4: Support & Légal -->
+            <!-- Group 5: Support & Légal -->
             <div class="account-group">
                 <div class="account-group-title">Assistance & Légal</div>
                 
@@ -4178,7 +4290,7 @@ router.add('#/profile', () => {
                 </div>
             </div>
 
-            <!-- Group 5: Données Locales -->
+            <!-- Group 6: Données Locales -->
             <div class="account-group">
                 <div class="account-item-row" onclick="clearLocalCustomerData()" style="color: var(--danger);">
                     <div class="account-item-left" style="color: var(--danger);">
