@@ -4165,16 +4165,23 @@ router.add('#/tracking', () => {
     // Set up realtime listener object if not exists
     if (!window.trackingSubscriptions) window.trackingSubscriptions = {};
     
+    const userPhone = (typeof customerAuth !== 'undefined' && customerAuth.getUser().phone) 
+        || localStorage.getItem('customerPhone') 
+        || localStorage.getItem('trackingPhone') 
+        || '';
+
     document.getElementById('main-content').innerHTML = `
-        <div style="max-width: 600px; margin: 0 auto; padding: 2rem 1.5rem; text-align: center; animation: fadeIn 0.4s ease;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">📍</div>
-            <h2 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 1.8rem;">Suivi de Commande</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 2rem; font-size: 0.95rem;">Entrez votre numéro de téléphone (WhatsApp) pour suivre l'état de votre commande en direct.</p>
+        <div style="max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem; text-align: center; animation: fadeIn 0.4s ease;">
+            <div style="font-size: 3rem; margin-bottom: 0.75rem;">📍</div>
+            <h2 style="color: var(--text-primary); margin-bottom: 0.4rem; font-size: 1.75rem; font-weight: 800;">Suivi de Commande en Direct</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.75rem; font-size: 0.92rem; line-height: 1.5;">
+                Suivez la progression de votre repas : <strong>Réception ➔ Mise en cuisine ➔ Livraison ➔ Confirmation par vous</strong>.
+            </p>
             
             <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow);">
                 <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
-                    <input type="tel" id="tracking-phone" class="form-control" placeholder="+221 77 123 45 67" style="margin-bottom: 0;">
-                    <button class="btn btn-primary" onclick="window.fetchOrderTracking()" style="white-space: nowrap;">Suivre 🔍</button>
+                    <input type="tel" id="tracking-phone" class="form-control" placeholder="+221 77 123 45 67" value="${userPhone}" style="margin-bottom: 0; font-weight: 600;">
+                    <button class="btn btn-primary" onclick="window.fetchOrderTracking()" style="white-space: nowrap; font-weight: 700; padding: 0.65rem 1.25rem;">Suivre 🔍</button>
                 </div>
                 <div id="tracking-result-container" style="text-align: left; margin-top: 1.5rem;">
                     <!-- Tracking results will appear here -->
@@ -4182,6 +4189,14 @@ router.add('#/tracking', () => {
             </div>
         </div>
     `;
+
+    if (userPhone) {
+        setTimeout(() => {
+            if (typeof window.fetchOrderTracking === 'function') {
+                window.fetchOrderTracking();
+            }
+        }, 100);
+    }
 });
 
 window.confirmCustomerDelivery = async function(orderId) {
@@ -4237,7 +4252,7 @@ window.confirmCustomerDelivery = async function(orderId) {
 
         if (typeof showToast === 'function') {
             showToast("🎉 Merci ! Votre confirmation de réception a été transmise en direct au restaurant. Bon appétit !", "success", {
-                title: "Commande Réceptionnée !",
+                title: "Commande Réceptionnée & Livrée !",
                 duration: 8000
             });
         }
@@ -4255,7 +4270,7 @@ window.confirmCustomerDelivery = async function(orderId) {
         console.error("Erreur lors de la confirmation client de livraison:", err);
         btns.forEach(btn => {
             btn.disabled = false;
-            btn.innerHTML = '✅ Confirmer la réception';
+            btn.innerHTML = '✅ J\'ai bien reçu ma commande';
         });
         if (typeof showToast === 'function') {
             showToast("Impossible de confirmer pour l'instant. Veuillez réessayer.", "danger");
@@ -4264,15 +4279,16 @@ window.confirmCustomerDelivery = async function(orderId) {
 };
 
 window.fetchOrderTracking = async function() {
-    const rawPhone = document.getElementById('tracking-phone').value.trim();
+    const rawPhone = document.getElementById('tracking-phone')?.value.trim() || '';
     if (!rawPhone) {
         showToast("Veuillez saisir votre numéro", "warning");
         return;
     }
     const phone = cleanPhoneNumber(rawPhone);
     const container = document.getElementById('tracking-result-container');
+    if (!container) return;
     
-    container.innerHTML = '<div style="text-align:center;"><div class="spinner-ring" style="width:30px;height:30px;border-width:3px;"></div></div>';
+    container.innerHTML = '<div style="text-align:center; padding: 2rem 0;"><div class="spinner-ring" style="width:34px;height:34px;border-width:3px; margin: 0 auto 0.75rem;"></div><div style="font-size: 0.88rem; color: var(--text-secondary);">Recherche des commandes en direct...</div></div>';
     
     let ordersData = [];
     
@@ -4310,7 +4326,7 @@ window.fetchOrderTracking = async function() {
         }
 
         if (!ordersData || ordersData.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 2rem 0; color: var(--text-secondary);">Aucune commande récente trouvée pour ce numéro.</div>';
+            container.innerHTML = '<div style="text-align:center; padding: 2rem 0; color: var(--text-secondary);"><span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">🔍</span>Aucune commande active ou récente trouvée pour ce numéro.</div>';
             return;
         }
         
@@ -4319,114 +4335,152 @@ window.fetchOrderTracking = async function() {
             const r = store.getRestaurantById(order.restaurant_id || order.restaurantId);
             const rName = r ? r.name : (order.restaurantName || 'Restaurant');
             
-            let statusColor = 'var(--accent)';
+            const isEnAttente = order.status === 'En attente';
+            const isRecue = order.status === 'Reçue';
+            const isEnCuisine = order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine';
+            const isPretPourLivraison = order.status === 'Prêt pour livraison' || order.status === 'Prête';
+            const isEnLivraison = order.status === 'En cours de livraison' || order.status === 'En livraison' || order.status === 'Partie en livraison';
+            const isLivree = order.status === 'Livrée' || order.status === 'Livré';
+            const isCancelled = order.status === 'Annulée';
+
+            let statusColor = '#f59e0b';
             let statusIcon = '⏳';
-            let stepPercent = 25;
-            let statusLabel = order.status || 'Reçue';
-            
-            if (order.status === 'Reçue') {
-                statusColor = 'var(--accent)';
+            let stepPercent = 15;
+            let statusLabel = 'En attente de confirmation';
+            let stepDescription = 'Votre commande a été transmise. En attente de confirmation par le restaurant.';
+
+            if (isEnAttente) {
+                statusColor = '#f59e0b';
                 statusIcon = '⏳';
-                stepPercent = 25;
-                statusLabel = 'Reçue au restaurant';
-            } else if (order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine') {
+                stepPercent = 15;
+                statusLabel = 'En attente (Restaurant)';
+                stepDescription = 'Votre commande a été transmise. Le restaurant doit confirmer la réception.';
+            } else if (isRecue) {
+                statusColor = '#0284c7';
+                statusIcon = '📥';
+                stepPercent = 35;
+                statusLabel = 'Reçue & Acceptée';
+                stepDescription = 'Le restaurant a bien réceptionné votre commande ! Elle va être mise en cuisine.';
+            } else if (isEnCuisine) {
                 statusColor = 'var(--primary)';
                 statusIcon = '👨‍🍳';
-                stepPercent = 50;
-                statusLabel = 'En préparation / En cuisine';
-            } else if (order.status === 'Prête' || order.status === 'En cours de livraison' || order.status === 'En livraison' || order.status === 'Partie en livraison') {
+                stepPercent = 55;
+                statusLabel = 'En cuisine (Préparation)';
+                stepDescription = 'Vos plats sont en cours de cuisson et de préparation par le chef.';
+            } else if (isPretPourLivraison) {
+                statusColor = '#0d9488';
+                statusIcon = '📦';
+                stepPercent = 75;
+                statusLabel = 'Prêt pour livraison';
+                stepDescription = 'Vos plats sont prêts et emballés ! En attente de prise en charge par le livreur.';
+            } else if (isEnLivraison) {
                 statusColor = '#0284c7';
                 statusIcon = '🛵';
-                stepPercent = 75;
+                stepPercent = 90;
                 statusLabel = 'En cours de livraison';
-            } else if (order.status === 'Livrée') {
-                statusColor = '#20c997';
+                stepDescription = 'Le livreur est en route ! Dès que vous recevez vos plats, confirmez ci-dessous.';
+            } else if (isLivree) {
+                statusColor = '#059669';
                 statusIcon = '✅';
                 stepPercent = 100;
                 statusLabel = 'Livrée avec succès';
-            } else if (order.status === 'Annulée') {
+                stepDescription = 'Commande réceptionnée et validée avec succès. Bon appétit !';
+            } else if (isCancelled) {
                 statusColor = 'var(--danger)';
                 statusIcon = '❌';
                 stepPercent = 100;
                 statusLabel = 'Commande annulée';
+                stepDescription = 'Cette commande a été annulée ou refusée par le restaurant.';
             }
             
             const isOtpVerified = order.otpVerified !== false;
-            const isDelivered = order.status === 'Livrée';
-            const isCancelled = order.status === 'Annulée';
 
             html += `
-                <div id="track-card-${order.id}" style="background: var(--bg-card); padding: 1.5rem; border-radius: 18px; border: 1.5px solid var(--border); margin-bottom: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow);">
+                <div id="track-card-${order.id}" style="background: var(--bg-card); padding: 1.4rem; border-radius: 18px; border: 1.5px solid var(--border); margin-bottom: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">Commande n° ${order.id}</span>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); font-family: monospace;">#${order.id}</span>
                                 ${isOtpVerified ? `
                                     <span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; color: #059669; font-weight: 700; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.25);">
-                                        🛡️ Validée SMS
+                                        🛡️ Authentifiée
                                     </span>
                                 ` : ''}
                             </div>
-                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-weight: 800;">${rName}</h4>
+                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1.2rem; font-weight: 800;">${rName}</h4>
                         </div>
                         <div class="track-status-badge" style="background: rgba(255,255,255,0.06); padding: 0.4rem 0.85rem; border-radius: 20px; font-size: 0.85rem; font-weight: 800; color: ${statusColor}; border: 1.5px solid ${statusColor}; display: flex; align-items: center; gap: 0.4rem;">
                             <span>${statusIcon}</span> <span class="track-status-text">${statusLabel}</span>
                         </div>
                     </div>
 
-                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.4;">
-                        ${order.items ? order.items.map(i => `<span style="display: inline-block; background: var(--bg-secondary); padding: 2px 8px; border-radius: 6px; margin: 2px; font-size: 0.82rem; border: 1px solid var(--border);">${i.qty}x ${i.name}</span>`).join(' ') : ''}
+                    <div style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;">
+                        ${order.items ? (Array.isArray(order.items) ? order.items.map(i => `<span style="display: inline-block; background: var(--bg-secondary); padding: 2px 8px; border-radius: 6px; margin: 2px; font-size: 0.82rem; border: 1px solid var(--border);">${i.qty}x ${i.name}</span>`).join(' ') : 'Détail commande') : ''}
+                    </div>
+
+                    <!-- Step explanation banner -->
+                    <div style="background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.15rem; font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.6rem;">
+                        <span style="font-size: 1.2rem;">${statusIcon}</span>
+                        <span style="line-height: 1.4;">${stepDescription}</span>
                     </div>
                     
-                    <!-- Progress Bar 4 Steps -->
+                    <!-- Progress Bar 6 Distinct Steps -->
                     <div style="margin-bottom: 1.25rem;">
                         <div style="height: 8px; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; margin-bottom: 0.6rem; border: 1px solid var(--border);">
                             <div class="track-progress-bar" style="height: 100%; width: ${stepPercent}%; background: ${statusColor}; transition: width 0.5s ease-out, background 0.5s ease-out;"></div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">
-                            <span style="${stepPercent >= 25 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Reçue</span>
-                            <span style="${stepPercent >= 50 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
-                            <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 En livraison</span>
-                            <span style="${stepPercent >= 100 ? 'color: #059669; font-weight: 700;' : ''}">✅ Livrée</span>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; gap: 2px;">
+                            <span style="${stepPercent >= 15 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Transmise</span>
+                            <span style="${stepPercent >= 35 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📥 Reçue</span>
+                            <span style="${stepPercent >= 55 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
+                            <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📦 Prêt</span>
+                            <span style="${stepPercent >= 90 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 Livraison</span>
+                            <span style="${stepPercent >= 100 ? (isCancelled ? 'color: var(--danger); font-weight: 700;' : 'color: #059669; font-weight: 700;') : ''}">${isCancelled ? '❌ Annulée' : '✅ Livrée'}</span>
                         </div>
                     </div>
 
-                    <!-- Client Delivery Confirmation Action -->
-                    ${(!isDelivered && !isCancelled) ? `
-                        <div style="margin-top: 1rem; padding: 1rem 1.25rem; background: var(--bg-secondary); border: 1.5px solid rgba(32, 201, 151, 0.35); border-radius: 14px; text-align: center;">
-                            <p style="margin: 0 0 0.75rem; font-size: 0.95rem; color: var(--text-primary); font-weight: 700;">
-                                🛵 Votre commande est arrivée ou vous avez votre repas ?
+                    <!-- Client Delivery Confirmation Action (ACTIVE ONLY IN PHASE DE LIVRAISON) -->
+                    ${isEnLivraison ? `
+                        <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(32, 201, 151, 0.08); border: 2px solid #20c997; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.15);">
+                            <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">🛵 📦</div>
+                            <h4 style="margin: 0 0 0.35rem; font-size: 1.05rem; color: #059669; font-weight: 800;">
+                                Le livreur est arrivé ?
+                            </h4>
+                            <p style="margin: 0 0 1rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.4;">
+                                Confirmez que vous avez bien reçu votre repas en mains propres pour finaliser la commande.
                             </p>
-                            <button type="button" id="btn-confirm-delivery-${order.id}" class="btn btn-success ripple hover-3d" onclick="confirmCustomerDelivery('${order.id}')" style="width: 100%; font-weight: 800; padding: 0.85rem 1.25rem; border-radius: 12px; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #20c997; border-color: #20c997; box-shadow: 0 4px 14px rgba(32, 201, 151, 0.3);">
+                            <button type="button" id="btn-confirm-delivery-${order.id}" data-confirm-order-id="${order.id}" class="btn btn-success ripple hover-3d" onclick="confirmCustomerDelivery('${order.id}')" style="width: 100%; font-weight: 800; padding: 0.9rem 1.25rem; border-radius: 14px; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #20c997; border-color: #20c997; box-shadow: 0 4px 14px rgba(32, 201, 151, 0.35);">
                                 ✅ J'ai bien reçu ma commande
                             </button>
-                            <span style="display: block; margin-top: 0.5rem; font-size: 0.78rem; color: var(--text-secondary);">
-                                Cliquer ici avertit immédiatement le restaurant que votre commande a été réceptionnée.
-                            </span>
                         </div>
-                    ` : isDelivered ? `
-                        <div style="margin-top: 1rem; padding: 1rem 1.25rem; background: rgba(32, 201, 151, 0.12); border: 1.5px solid rgba(32, 201, 151, 0.35); border-radius: 14px; text-align: center;">
-                            <div style="font-size: 1.4rem; margin-bottom: 0.25rem;">🎉 🍽️</div>
-                            <div style="font-size: 1rem; font-weight: 800; color: #059669; margin-bottom: 0.25rem;">
+                    ` : isLivree ? `
+                        <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(16, 185, 129, 0.1); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 16px; text-align: center;">
+                            <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🎉 🍽️</div>
+                            <div style="font-size: 1.05rem; font-weight: 800; color: #059669; margin-bottom: 0.25rem;">
                                 Commande livrée & réception validée !
                             </div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary);">
-                                Le restaurant a bien comptabilisé la livraison. Bon appétit !
+                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                                Le restaurant a bien comptabilisé votre réception. Bon appétit !
                             </div>
+                            ${r ? `
+                                <a href="#/r/${r.slug || r.id}" class="btn btn-outline btn-sm" style="font-weight: 700; border-radius: 10px; font-size: 0.82rem; padding: 0.4rem 0.85rem;">
+                                    ⭐ Donner un avis sur le restaurant
+                                </a>
+                            ` : ''}
                         </div>
                     ` : ''}
                 </div>
             `;
             
             // Setup Realtime Listener for this specific order
-            if (!window.trackingSubscriptions[order.id]) {
+            if (supabaseClient && !window.trackingSubscriptions[order.id]) {
                 window.trackingSubscriptions[order.id] = supabaseClient.channel('track-' + order.id)
                     .on(
                         'postgres_changes',
                         { event: 'UPDATE', schema: 'public', table: 'orders', filter: 'id=eq.' + order.id },
                         (payload) => {
                             console.log('Order update tracked:', payload);
-                            if (payload.new.status !== payload.old.status) {
+                            if (payload.new && payload.old && payload.new.status !== payload.old.status) {
                                 playNotificationSound();
                                 window.fetchOrderTracking();
                                 showToast(`🔔 Mise à jour : Votre commande est maintenant "${payload.new.status}" !`, "success");
@@ -4441,7 +4495,7 @@ window.fetchOrderTracking = async function() {
         
     } catch (err) {
         console.error(err);
-        container.innerHTML = '<p style="color: var(--danger); text-align: center;">Une erreur est survenue.</p>';
+        container.innerHTML = '<p style="color: var(--danger); text-align: center;">Une erreur est survenue lors de la récupération.</p>';
     }
 };
 // ----------------------------------------------------
@@ -4742,28 +4796,42 @@ router.add('#/profile', () => {
                     ? order.items.map(i => `<span style="display: inline-block; background: var(--bg-input); padding: 2px 7px; border-radius: 6px; margin: 2px; font-size: 0.8rem; border: 1px solid var(--border);">${i.qty || 1}x ${i.name || 'Produit'}</span>`).join(' ')
                     : `<span style="font-size: 0.82rem; color: var(--text-secondary);">${order.items ? JSON.stringify(order.items) : 'Détail de commande'}</span>`;
                 
-                const isEnLivraison = order.status === 'En livraison' || order.status === 'En cours de livraison' || order.status === 'Partie en livraison' || order.status === 'Prête';
+                const isEnAttente = order.status === 'En attente';
+                const isRecue = order.status === 'Reçue';
+                const isEnCuisine = order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine';
+                const isPretPourLivraison = order.status === 'Prêt pour livraison' || order.status === 'Prête';
+                const isEnLivraison = order.status === 'En livraison' || order.status === 'En cours de livraison' || order.status === 'Partie en livraison';
                 const isLivree = order.status === 'Livrée' || order.status === 'Livré';
                 const isCancelled = order.status === 'Annulée';
 
-                // Status & Progress step logic
-                let stepPercent = 25;
+                // Status & Progress step logic (6 distinct steps)
+                let stepPercent = 15;
                 let statusColor = '#f59e0b';
                 let statusIcon = '⏳';
-                let statusBadgeText = 'Reçue';
+                let statusBadgeText = 'En attente';
 
-                if (order.status === 'Reçue') {
-                    stepPercent = 25;
+                if (isEnAttente) {
+                    stepPercent = 15;
                     statusColor = '#f59e0b';
                     statusIcon = '⏳';
+                    statusBadgeText = 'En attente';
+                } else if (isRecue) {
+                    stepPercent = 35;
+                    statusColor = '#0284c7';
+                    statusIcon = '📥';
                     statusBadgeText = 'Reçue';
-                } else if (order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine') {
-                    stepPercent = 50;
+                } else if (isEnCuisine) {
+                    stepPercent = 55;
                     statusColor = 'var(--primary)';
                     statusIcon = '👨‍🍳';
                     statusBadgeText = 'En cuisine';
-                } else if (isEnLivraison) {
+                } else if (isPretPourLivraison) {
                     stepPercent = 75;
+                    statusColor = '#0d9488';
+                    statusIcon = '📦';
+                    statusBadgeText = 'Prêt livraison';
+                } else if (isEnLivraison) {
+                    stepPercent = 90;
                     statusColor = '#0284c7';
                     statusIcon = '🛵';
                     statusBadgeText = 'En livraison';
@@ -4780,8 +4848,12 @@ router.add('#/profile', () => {
                 }
 
                 let statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
-                if (order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine') {
+                if (isRecue) {
+                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
+                } else if (isEnCuisine) {
                     statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(255, 107, 0, 0.12); color: var(--primary); border: 1px solid rgba(255, 107, 0, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
+                } else if (isPretPourLivraison) {
+                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(13, 148, 136, 0.12); color: #0d9488; border: 1px solid rgba(13, 148, 136, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
                 } else if (isEnLivraison) {
                     statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
                 } else if (isLivree) {
@@ -4816,7 +4888,7 @@ router.add('#/profile', () => {
                         <!-- Visual Progress Bar for Order Status -->
                         <div style="margin-bottom: 0.85rem; padding: 0.65rem 0.85rem; background: var(--bg-input); border-radius: 12px; border: 1px solid var(--border);">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Statut de la commande</span>
+                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Progression</span>
                                 <span style="font-size: 0.75rem; font-weight: 800; color: ${statusColor};">${statusBadgeText} (${stepPercent}%)</span>
                             </div>
                             
@@ -4826,10 +4898,12 @@ router.add('#/profile', () => {
                             </div>
 
                             <!-- Milestone Labels -->
-                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">
-                                <span style="${stepPercent >= 25 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Reçue</span>
-                                <span style="${stepPercent >= 50 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
-                                <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 Livraison</span>
+                            <div style="display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-secondary); font-weight: 600;">
+                                <span style="${stepPercent >= 15 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Transmise</span>
+                                <span style="${stepPercent >= 35 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📥 Reçue</span>
+                                <span style="${stepPercent >= 55 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
+                                <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📦 Prêt</span>
+                                <span style="${stepPercent >= 90 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 Livraison</span>
                                 <span style="${stepPercent >= 100 ? (isCancelled ? 'color: var(--danger); font-weight: 700;' : 'color: #059669; font-weight: 700;') : ''}">${isCancelled ? '❌ Annulée' : '✅ Livrée'}</span>
                             </div>
                         </div>
@@ -4857,7 +4931,7 @@ router.add('#/profile', () => {
                             <button class="btn btn-outline btn-sm" onclick="router.navigate('/tracking'); setTimeout(() => { const inp = document.getElementById('tracking-phone'); if(inp && '${order.customerPhone || customerPhone}') { inp.value = '${order.customerPhone || customerPhone}'; window.fetchOrderTracking(); } }, 150);" style="flex: 1; font-size: 0.78rem; padding: 0.4rem 0.6rem; border-radius: 10px;">
                                 📍 Suivre en direct
                             </button>
-                            ${isEnLivraison ? `
+                            ${(isEnLivraison || isPretPourLivraison) ? `
                                 <button id="btn-confirm-delivery-${order.id}" data-confirm-order-id="${order.id}" class="btn btn-success btn-sm ripple hover-3d" onclick="confirmCustomerDelivery('${order.id}')" style="flex: 1.3; font-weight: 700; font-size: 0.8rem; padding: 0.45rem 0.75rem; border-radius: 10px; background: #20c997; border-color: #20c997; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; box-shadow: 0 2px 8px rgba(32,201,151,0.25);">
                                     ✅ Confirmer la réception
                                 </button>
@@ -5963,16 +6037,21 @@ window.setupRealtime = function() {
                         let toastType = 'info';
                         let toastIcon = '🔔';
 
-                        if (newStatus === 'Confirmée' || newStatus === 'En préparation' || newStatus === 'En cuisine') {
-                            toastTitle = '👨‍🍳 Commande Confirmée !';
-                            toastMessage = `Excellente nouvelle ! Votre commande n°${orderId} chez ${restaurantName} a été confirmée et est en préparation.`;
-                            toastType = 'success';
-                            toastIcon = '👨‍🍳';
-                        } else if (newStatus === 'Prête') {
-                            toastTitle = '🍲 Repas Prêt !';
-                            toastMessage = `Votre commande n°${orderId} chez ${restaurantName} est prête et soigneusement emballée.`;
+                        if (newStatus === 'Reçue') {
+                            toastTitle = '📥 Commande Reçue & Acceptée !';
+                            toastMessage = `Le restaurant ${restaurantName} a bien validé la réception de votre commande n°${orderId}.`;
                             toastType = 'info';
-                            toastIcon = '🍲';
+                            toastIcon = '📥';
+                        } else if (newStatus === 'Confirmée' || newStatus === 'En préparation' || newStatus === 'En cuisine') {
+                            toastTitle = '👨‍🍳 Commande En Cuisine !';
+                            toastMessage = `Excellente nouvelle ! Votre commande n°${orderId} chez ${restaurantName} est en cours de préparation en cuisine.`;
+                            toastType = 'info';
+                            toastIcon = '👨‍🍳';
+                        } else if (newStatus === 'Prêt pour livraison' || newStatus === 'Prête') {
+                            toastTitle = '📦 Prêt pour Livraison !';
+                            toastMessage = `Vos plats chez ${restaurantName} sont prêts et emballés pour la livraison !`;
+                            toastType = 'success';
+                            toastIcon = '📦';
                         } else if (newStatus === 'En cours de livraison' || newStatus === 'En livraison' || newStatus === 'Partie en livraison') {
                             toastTitle = '🛵 Commande en Route !';
                             toastMessage = `Le livreur est en route avec votre repas chaud de ${restaurantName} !`;
@@ -5988,6 +6067,17 @@ window.setupRealtime = function() {
                             toastMessage = `Votre commande n°${orderId} chez ${restaurantName} a été annulée par le restaurant.`;
                             toastType = 'danger';
                             toastIcon = '✕';
+                        }
+
+                        // Also trigger system/desktop Web Notification if tab is hidden/backgrounded
+                        if (typeof Notification !== 'undefined' && Notification.permission === 'granted' && document.hidden) {
+                            try {
+                                new Notification(toastTitle, {
+                                    body: toastMessage,
+                                    icon: '/favicon.ico',
+                                    badge: '/favicon.ico'
+                                });
+                            } catch (e) {}
                         }
 
                         // Trigger rich in-app toast notification with interactive track button

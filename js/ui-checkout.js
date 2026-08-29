@@ -456,7 +456,7 @@ function submitSimpleOrder(e, restaurantId) {
         items: cart.items.map(item => ({ name: item.name, price: item.price, qty: item.qty })),
         total: cart.total,
         note: finalNotes,
-        status: "Reçue",
+        status: "En attente",
         date,
         time,
         deliveryFee: cart.deliveryFee || 0,
@@ -517,6 +517,11 @@ window.executePendingOrder = async function() {
 
         saveOrderToHistory(order, r.name);
         
+        try {
+            localStorage.setItem('trackingOrderId', String(securedOrderId));
+            localStorage.setItem('trackingPhone', String(phone));
+        } catch (e) {}
+        
         if (cart.loyaltyApplied && cart.loyaltyPhone) {
             store.applyLoyaltyRewardUsed(cart.loyaltyPhone, `${firstname} ${lastname}`);
         }
@@ -558,14 +563,35 @@ window.executePendingOrder = async function() {
             container.innerHTML = `
                 <div class="confirmation-screen" style="max-width: 480px; margin: 1.5rem auto 0; background: var(--bg-card); padding: 2.2rem 1.75rem; border-radius: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center;">
                     <div style="width: 68px; height: 68px; border-radius: 50%; background: rgba(16, 185, 129, 0.12); color: #059669; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 1rem;">
-                        ✅
+                        ⏳
                     </div>
                     <h2 style="font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
-                        Commande Validée !
+                        Commande Transmise !
                     </h2>
                     <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">
-                        Votre commande n° <strong style="color: var(--text-primary); font-family: monospace;">${securedOrderId}</strong> a été enregistrée avec succès.
+                        Votre commande n° <strong style="color: var(--text-primary); font-family: monospace;">${securedOrderId}</strong> est transmise au restaurant.
                     </p>
+
+                    <!-- Steps Timeline Preview -->
+                    <div style="background: var(--bg-page); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; margin-bottom: 1.25rem; text-align: left;">
+                        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.65rem; letter-spacing: 0.5px;">
+                            Étapes de validation en direct :
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: #d97706; font-weight: 700;">
+                                <span>⏳ 1.</span> <span>En attente de confirmation par le restaurant</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+                                <span>👨‍🍳 2.</span> <span>Mise en cuisine par le restaurant</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+                                <span>🛵 3.</span> <span>Départ en livraison (notifié par le restaurant)</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
+                                <span>✅ 4.</span> <span>Confirmation de réception par vous (Client)</span>
+                            </div>
+                        </div>
+                    </div>
 
                     <div style="background: var(--bg-page); padding: 1.1rem; border-radius: 16px; font-size: 0.9rem; text-align: left; margin-bottom: 1.25rem; border: 1px solid var(--border);">
                         <div style="font-weight: 700; margin-bottom: 0.6rem; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; display: flex; justify-content: space-between;">
@@ -585,7 +611,7 @@ window.executePendingOrder = async function() {
                     
                     <div style="background: rgba(37, 211, 102, 0.08); padding: 1.25rem; border-radius: 18px; margin-bottom: 1.25rem; border: 1px solid rgba(37, 211, 102, 0.25); text-align: center;">
                         <p style="color: #047857; font-weight: 600; font-size: 0.92rem; margin-bottom: 0.9rem; line-height: 1.4;">
-                            📲 Envoyez le récapitulatif officiel sur le WhatsApp du restaurant pour lancer la préparation :
+                            📲 Envoyez le récapitulatif officiel sur le WhatsApp du restaurant pour notifier le gérant :
                         </p>
                         <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn btn-success" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem 1rem; border-radius: 14px; font-weight: 700; font-size: 1rem; text-decoration: none; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);">
                             <span style="font-size: 1.25rem;">💬</span> Ouvrir WhatsApp du Restaurant
@@ -594,7 +620,7 @@ window.executePendingOrder = async function() {
 
                     <div style="display: flex; flex-direction: column; gap: 0.6rem;">
                         <button class="btn btn-primary" onclick="router.navigate('/tracking')" style="width: 100%; padding: 0.75rem; border-radius: 12px; font-weight: 600;">
-                            🛵 Suivre ma commande
+                            🛵 Suivre l'avancement en direct
                         </button>
                         <button class="btn btn-secondary" onclick="router.navigate('/')" style="width: 100%; padding: 0.65rem; border-radius: 12px; font-size: 0.88rem;">
                             Retourner à l'accueil
