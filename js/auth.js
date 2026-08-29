@@ -9,44 +9,245 @@ function logoutRestaurant() {
 
 router.add('#/auth', () => {
     // Hide cart
-    document.getElementById('floating-cart-bar').style.display = 'none';
-    stopOrderPolling();
-    hideLoadingOverlay();
+    const cartBar = document.getElementById('floating-cart-bar');
+    if (cartBar) cartBar.style.display = 'none';
+    if (typeof stopOrderPolling === 'function') stopOrderPolling();
+    if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
     
     const container = document.getElementById('main-content');
+    if (!container) return;
+
+    const isCustomerAuth = typeof customerAuth !== 'undefined' && customerAuth.isAuthenticated();
+    const customerUser = typeof customerAuth !== 'undefined' ? customerAuth.getUser() : {};
     
     container.innerHTML = `
-        <div class="auth-container" style="max-width: 450px; margin: 3rem auto; padding: 2rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
-            <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
-                <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🏪</span>
-                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: #fff;">Espace Partenaire</h2>
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Connectez-vous à votre tableau de bord restaurant.</p>
+        <div class="auth-container" style="max-width: 480px; margin: 2.5rem auto; padding: 2rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
+            
+            <!-- SEGMENTED AUTH TABS -->
+            <div style="display: flex; background: var(--bg-page); padding: 4px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1.75rem;">
+                <button type="button" id="tab-btn-customer" onclick="switchAuthTab('customer')" style="flex: 1; padding: 0.6rem 0.5rem; border: none; border-radius: 12px; font-weight: 700; font-size: 0.88rem; cursor: pointer; background: var(--bg-card); color: var(--text-primary); box-shadow: 0 2px 6px rgba(0,0,0,0.08); transition: all 0.2s ease;">
+                    👤 Espace Client
+                </button>
+                <button type="button" id="tab-btn-partner" onclick="switchAuthTab('partner')" style="flex: 1; padding: 0.6rem 0.5rem; border: none; border-radius: 12px; font-weight: 600; font-size: 0.88rem; cursor: pointer; background: transparent; color: var(--text-secondary); transition: all 0.2s ease;">
+                    🏪 Restaurateur
+                </button>
             </div>
 
-            <!-- LOGIN FORM -->
-            <form id="login-form" onsubmit="handleRestaurantLogin(event)">
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label class="form-label">Identifiant unique (slug)</label>
-                    <input type="text" id="login-username" class="form-control" placeholder="la-licorne" required>
+            <!-- 1. CUSTOMER NATIVE AUTH SECTION -->
+            <div id="auth-section-customer">
+                <div class="auth-header" style="text-align: center; margin-bottom: 1.5rem;">
+                    <span class="auth-logo" style="font-size: 2.75rem; display: block; margin-bottom: 0.5rem;">📱</span>
+                    <h2 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.25rem;">
+                        Authentification Native
+                    </h2>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">
+                        Accédez à vos commandes, adresses et avantages fidélité à Thiès.
+                    </p>
                 </div>
-                <div class="form-group" style="margin-bottom: 0.5rem;">
-                    <label class="form-label">Mot de passe</label>
-                    <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
-                </div>
-                <div style="text-align: right; margin-bottom: 1.5rem;">
-                    <button type="button" onclick="handleForgotPassword()" style="background: none; border: none; color: var(--accent); font-size: 0.8rem; cursor: pointer; padding: 0; text-decoration: underline;">🔑 Mot de passe oublié ?</button>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Se connecter 🔓</button>
-            </form>
 
-            <!-- PARTNERSHIP CTA -->
-            <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">Vous souhaitez rejoindre le réseau THIES Resto ?</p>
-                <button class="btn btn-secondary btn-block" onclick="router.navigate('/partnership')" style="width: 100%; font-weight: 700;">Demander un Partenariat 🤝</button>
+                ${isCustomerAuth ? `
+                    <div style="background: var(--bg-page); border: 1px solid var(--border); border-radius: 18px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.75rem;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">
+                                ${(customerUser.name || 'C').charAt(0).toUpperCase()}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 700; font-size: 1.05rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${customerUser.name || 'Gourmet de Thiès'}
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--text-secondary); font-family: monospace;">
+                                    ${customerUser.phone}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; background: rgba(16, 185, 129, 0.12); color: #059669; padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700;">
+                            🛡️ Authentifié Nativement
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                        <button class="btn btn-primary" onclick="router.navigate('/profile')" style="width: 100%; padding: 0.8rem; border-radius: 14px; font-weight: 700;">
+                            Accéder à mon Profil & Commandes 📋
+                        </button>
+                        <button class="btn btn-outline" onclick="customerAuth.logout()" style="width: 100%; padding: 0.65rem; border-radius: 12px; font-size: 0.85rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+                            Se déconnecter de ce compte
+                        </button>
+                    </div>
+                ` : `
+                    <form id="customer-native-login-form" onsubmit="handleNativeCustomerAuthSubmit(event)">
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">
+                                Numéro de Téléphone (WhatsApp) <span style="color: var(--accent);">*</span>
+                            </label>
+                            <div style="position: relative;">
+                                <input type="tel" 
+                                       id="native-auth-phone" 
+                                       class="form-control" 
+                                       placeholder="77 123 45 67" 
+                                       required 
+                                       style="padding-left: 3.2rem; font-size: 1rem; font-weight: 600; height: 48px; border-radius: 14px;"
+                                       oninput="handleNativePhoneTyping(this)">
+                                <span style="position: absolute; left: 0.85rem; top: 50%; transform: translateY(-50%); font-size: 0.9rem; font-weight: 700; color: var(--text-secondary);">+221</span>
+                            </div>
+                            <div id="native-phone-network-badge" style="display: none; margin-top: 0.35rem; font-size: 0.78rem; font-weight: 600;"></div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">
+                                Prénom et Nom <span style="color: var(--accent);">*</span>
+                            </label>
+                            <input type="text" 
+                                   id="native-auth-name" 
+                                   class="form-control" 
+                                   placeholder="Ex: Fatou Sow" 
+                                   required 
+                                   style="font-size: 0.95rem; height: 48px; border-radius: 14px;">
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 1.25rem;">
+                            <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">
+                                Adresse de livraison par défaut (Optionnel)
+                            </label>
+                            <input type="text" 
+                                   id="native-auth-address" 
+                                   class="form-control" 
+                                   placeholder="Ex: Quartier Escale, Villa 12, Thiès" 
+                                   style="font-size: 0.95rem; height: 48px; border-radius: 14px;">
+                        </div>
+
+                        <button type="submit" id="btn-native-auth-submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%; padding: 0.85rem; border-radius: 14px; font-size: 1rem; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);">
+                            Connexion Instantanée ⚡
+                        </button>
+                    </form>
+
+                    <div style="background: rgba(var(--primary-rgb), 0.05); border: 1px solid var(--border); border-radius: 14px; padding: 0.75rem 1rem; margin-top: 1.25rem; font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🔒</span>
+                        <span>Authentification sécurisée avec mémorisation locale chiffrée.</span>
+                    </div>
+                `}
             </div>
+
+            <!-- 2. PARTNER / RESTAURATEUR SECTION -->
+            <div id="auth-section-partner" style="display: none;">
+                <div class="auth-header" style="text-align: center; margin-bottom: 1.5rem;">
+                    <span class="auth-logo" style="font-size: 2.75rem; display: block; margin-bottom: 0.5rem;">🏪</span>
+                    <h2 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary);">Espace Restaurateur</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">Connectez-vous à votre tableau de bord restaurant.</p>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <form id="login-form" onsubmit="handleRestaurantLogin(event)">
+                    <div class="form-group" style="margin-bottom: 1.25rem;">
+                        <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Identifiant unique (slug)</label>
+                        <input type="text" id="login-username" class="form-control" placeholder="ex: la-licorne" required style="height: 48px; border-radius: 14px;">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0.5rem;">
+                        <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Mot de passe</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="••••••••" required style="height: 48px; border-radius: 14px;">
+                    </div>
+                    <div style="text-align: right; margin-bottom: 1.25rem;">
+                        <button type="button" onclick="handleForgotPassword()" style="background: none; border: none; color: var(--accent); font-size: 0.8rem; cursor: pointer; padding: 0; text-decoration: underline;">🔑 Mot de passe oublié ?</button>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%; padding: 0.85rem; border-radius: 14px; font-size: 1rem;">Se connecter 🔓</button>
+                </form>
+
+                <!-- PARTNERSHIP CTA -->
+                <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.25rem;">
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">Vous souhaitez rejoindre le réseau THIES Resto ?</p>
+                    <button class="btn btn-secondary btn-block" onclick="router.navigate('/partnership')" style="width: 100%; font-weight: 700; border-radius: 14px;">Demander un Partenariat 🤝</button>
+                </div>
+            </div>
+
         </div>
     `;
 });
+
+// Helper de bascule d'onglets dans la page /auth
+window.switchAuthTab = function(tab) {
+    const custTabBtn = document.getElementById('tab-btn-customer');
+    const partTabBtn = document.getElementById('tab-btn-partner');
+    const custSec = document.getElementById('auth-section-customer');
+    const partSec = document.getElementById('auth-section-partner');
+
+    if (!custTabBtn || !partTabBtn || !custSec || !partSec) return;
+
+    if (tab === 'customer') {
+        custTabBtn.style.background = 'var(--bg-card)';
+        custTabBtn.style.color = 'var(--text-primary)';
+        custTabBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        partTabBtn.style.background = 'transparent';
+        partTabBtn.style.color = 'var(--text-secondary)';
+        partTabBtn.style.boxShadow = 'none';
+        custSec.style.display = 'block';
+        partSec.style.display = 'none';
+    } else {
+        partTabBtn.style.background = 'var(--bg-card)';
+        partTabBtn.style.color = 'var(--text-primary)';
+        partTabBtn.style.boxShadow = '0 2px 6px rgba(0,0,0,0.08)';
+        custTabBtn.style.background = 'transparent';
+        custTabBtn.style.color = 'var(--text-secondary)';
+        custTabBtn.style.boxShadow = 'none';
+        partSec.style.display = 'block';
+        custSec.style.display = 'none';
+    }
+};
+
+window.handleNativePhoneTyping = function(input) {
+    const badge = document.getElementById('native-phone-network-badge');
+    if (!badge) return;
+    const val = input.value.replace(/[^\d]/g, '');
+    if (val.length >= 2) {
+        const prefix = val.substring(0, 2);
+        badge.style.display = 'block';
+        if (prefix === '77' || prefix === '78') {
+            badge.innerHTML = `<span style="color: #ea580c;">🧡 Réseau Orange / Wave détecté</span>`;
+        } else if (prefix === '76') {
+            badge.innerHTML = `<span style="color: #0284c7;">🔵 Réseau Free Sénégal détecté</span>`;
+        } else if (prefix === '70') {
+            badge.innerHTML = `<span style="color: #dc2626;">🔴 Réseau Expresso détecté</span>`;
+        } else if (prefix === '75') {
+            badge.innerHTML = `<span style="color: #7c3aed;">🟣 Réseau Promobile / Wave détecté</span>`;
+        } else {
+            badge.innerHTML = `<span style="color: var(--text-secondary);">Numéro Sénégal (+221)</span>`;
+        }
+    } else {
+        badge.style.display = 'none';
+    }
+};
+
+window.handleNativeCustomerAuthSubmit = function(e) {
+    e.preventDefault();
+    const phoneInput = document.getElementById('native-auth-phone');
+    const nameInput = document.getElementById('native-auth-name');
+    const addressInput = document.getElementById('native-auth-address');
+
+    if (!phoneInput || !nameInput) return;
+
+    const phone = phoneInput.value.trim();
+    const name = nameInput.value.trim();
+    const address = addressInput ? addressInput.value.trim() : '';
+
+    if (typeof validateSenegalPhone === 'function' && !validateSenegalPhone(phone)) {
+        if (typeof showToast === 'function') {
+            showToast("Numéro invalide. Veuillez entrer un numéro à 9 chiffres (ex: 77 123 45 67)", "warning");
+        }
+        phoneInput.focus();
+        return;
+    }
+
+    if (name.length < 2) {
+        if (typeof showToast === 'function') showToast("Veuillez saisir votre prénom et nom", "warning");
+        nameInput.focus();
+        return;
+    }
+
+    if (typeof customerAuth !== 'undefined') {
+        const result = customerAuth.login({ phone, name, address });
+        if (result.success) {
+            router.navigate('/profile');
+        }
+    }
+};
 
 // ----------------------------------------------------
 // Page: DEMANDE DE PARTENARIAT

@@ -505,12 +505,163 @@ function escapeHTML(str) {
     });
 }
 
-// Session is managed in store.js
-let cart = {
+// Global Cart State (Unified reference across all modules)
+window.cart = window.cart || {
     restaurantId: null,
     items: [],
-    total: 0
+    subtotal: 0,
+    total: 0,
+    deliveryFee: 0,
+    deliveryLat: null,
+    deliveryLng: null,
+    loyaltyApplied: false,
+    loyaltyPhone: null
 };
+var cart = window.cart;
+
+// ---------- CART PERSISTENCE & HELPERS ----------
+function saveCart() {
+    try {
+        localStorage.setItem('THIES_CART', JSON.stringify(cart));
+    } catch(e) {
+        console.warn("Could not save cart:", e);
+    }
+}
+window.saveCart = saveCart;
+
+function recalculateCart() {
+    if (!cart.items || !Array.isArray(cart.items)) {
+        cart.items = [];
+    }
+    let subtotal = cart.items.reduce((sum, item) => sum + (Number(item.price || 0) * Number(item.qty || 1)), 0);
+    cart.subtotal = subtotal;
+    if (cart.loyaltyApplied) {
+        cart.total = Math.max(0, subtotal - 2500);
+    } else {
+        cart.total = subtotal;
+    }
+    if (cart.deliveryFee) {
+        cart.total += Number(cart.deliveryFee || 0);
+    }
+    window.cart = cart;
+    return cart.total;
+}
+window.recalculateCart = recalculateCart;
+
+function loadCart() {
+    try {
+        const saved = localStorage.getItem('THIES_CART');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && typeof parsed === 'object') {
+                cart.restaurantId = parsed.restaurantId || null;
+                cart.items = Array.isArray(parsed.items) ? parsed.items : [];
+                cart.subtotal = Number(parsed.subtotal || 0);
+                cart.total = Number(parsed.total || 0);
+                cart.deliveryFee = Number(parsed.deliveryFee || 0);
+                cart.deliveryLat = parsed.deliveryLat || null;
+                cart.deliveryLng = parsed.deliveryLng || null;
+                cart.loyaltyApplied = !!parsed.loyaltyApplied;
+                cart.loyaltyPhone = parsed.loyaltyPhone || null;
+                recalculateCart();
+            }
+        }
+    } catch(e) {
+        console.warn("Could not load cart:", e);
+    }
+    window.cart = cart;
+    return cart;
+}
+window.loadCart = loadCart;
+loadCart();
+
+function resetCart() {
+    cart.restaurantId = null;
+    cart.items = [];
+    cart.subtotal = 0;
+    cart.total = 0;
+    cart.deliveryFee = 0;
+    cart.deliveryLat = null;
+    cart.deliveryLng = null;
+    cart.loyaltyApplied = false;
+    cart.loyaltyPhone = null;
+    window.cart = cart;
+    saveCart();
+    if (typeof updateFloatingCartBar === 'function') {
+        updateFloatingCartBar();
+    }
+}
+window.resetCart = resetCart;
+
+function clearCart() {
+    if (!cart.items || cart.items.length === 0) return;
+    const confirmed = confirm("Voulez-vous vraiment vider l'ensemble de votre panier ?");
+    if (!confirmed) return;
+    
+    const restoId = cart.restaurantId;
+    resetCart();
+    
+    if (restoId) {
+        const r = store.getRestaurantById(restoId);
+        if (r && typeof renderCheckoutTab === 'function') {
+            renderCheckoutTab(r);
+        }
+    } else {
+        const panel = document.getElementById('checkout-content-container');
+        if (panel) {
+            panel.innerHTML = `
+                <div style="text-align: center; padding: 4rem 1rem;">
+                    <span style="font-size: 3rem;">🛒</span>
+                    <h3 style="margin-top: 1rem;">Votre panier est vide</h3>
+                    <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">Parcourez notre menu du jour et ajoutez des délices !</p>
+                    <button class="btn btn-primary" onclick="switchRestoTab('menu')">Voir le Menu</button>
+                </div>
+            `;
+        }
+    }
+    if (typeof showToast === 'function') {
+        showToast("Votre panier a été vidé", "info");
+    }
+}
+window.clearCart = clearCart;
+
+function removeCartItem(dishId) {
+    if (!cart.items) return;
+    const idx = cart.items.findIndex(item => String(item.id) === String(dishId));
+    if (idx !== -1) {
+        const removedItem = cart.items[idx];
+        cart.items.splice(idx, 1);
+        if (cart.items.length === 0) {
+            cart.restaurantId = null;
+            cart.deliveryFee = 0;
+            cart.loyaltyApplied = false;
+        }
+        recalculateCart();
+        saveCart();
+        const r = cart.restaurantId ? store.getRestaurantById(cart.restaurantId) : null;
+        if (r) {
+            updateFloatingCartBar(r);
+            renderCheckoutTab(r);
+        } else {
+            updateFloatingCartBar();
+            const container = document.getElementById('checkout-content-container');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 4rem 1rem;">
+                        <span style="font-size: 3rem;">🛒</span>
+                        <h3 style="margin-top: 1rem;">Votre panier est vide</h3>
+                        <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">Parcourez notre menu du jour et ajoutez des délices !</p>
+                        <button class="btn btn-primary" onclick="switchRestoTab('menu')">Voir le Menu</button>
+                    </div>
+                `;
+            }
+        }
+        if (typeof showToast === 'function') {
+            showToast(`${removedItem.name} retiré du panier`, "info");
+        }
+    }
+}
+window.removeCartItem = removeCartItem;
 
 // Safe HTML escaping helper using DOMPurify
 function sanitizeHTML(html) {
@@ -582,22 +733,7 @@ function loadSavedTheme() {
 window.loadSavedTheme = loadSavedTheme;
 loadSavedTheme();
 
-// ---------- CART PERSISTENCE ----------
-function saveCart() {
-    try { localStorage.setItem('THIES_CART', JSON.stringify(cart)); } catch(e) {}
-}
-function loadCart() {
-    try {
-        const saved = localStorage.getItem('THIES_CART');
-        if (saved) {
-            const parsed = JSON.parse(saved);
-            if (parsed && parsed.items && parsed.items.length > 0) {
-                cart = parsed;
-            }
-        }
-    } catch(e) {}
-}
-loadCart();
+// ---------- CART PULSE ----------
 
 function pulseCartBar() {
     // Haptic feedback (vibration) for mobile users
@@ -1542,8 +1678,10 @@ function updateNavbar() {
     // 3. PUBLIC CLIENT / GUEST MODE (Clean customer navigation, no super-admin button)
     else {
         html = `
-            <button class="btn btn-primary btn-sm" onclick="router.navigate('/profile')">👤 Mon Profil</button>
-            <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')">Espace Resto</button>
+            <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')" title="Espace Resto / Connexion Restaurateur" aria-label="Espace Resto" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.9rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;">
+                <span style="font-size: 1.05rem; line-height: 1;">🏪</span>
+                <span>Espace Resto</span>
+            </button>
         `;
         drawerHtml = `
             <div style="padding: 0.75rem; background: rgba(var(--primary-rgb), 0.08); border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border);">
@@ -2942,80 +3080,91 @@ window.openProductModal = function(restaurantId, dishId) {
 }
 
 window.addModalItemToCart = function(restaurantId, dishId) {
-    const qty = window.currentProductQty || 1;
+    const qty = Number(window.currentProductQty) || 1;
     
-    // Re-use logic from addToCart but with quantity
     const r = store.getRestaurantById(restaurantId);
-    const dish = r.menu.find(d => d.id === dishId);
+    if (!r || !r.menu) return;
+    const dish = r.menu.find(d => String(d.id) === String(dishId));
     if (!dish) return;
     
-    if (cart.restaurantId && cart.restaurantId !== restaurantId && cart.items.length > 0) {
+    // Check for multi-restaurant cart safety (with safe string conversion)
+    if (cart.restaurantId && String(cart.restaurantId) !== String(restaurantId) && cart.items && cart.items.length > 0) {
         const oldResto = store.getRestaurantById(cart.restaurantId);
         const oldName = oldResto ? oldResto.name : "un autre restaurant";
         const confirmClear = confirm(`Votre panier contient déjà des plats de "${oldName}". Voulez-vous vider votre panier actuel pour commander chez "${r.name}" ?`);
         if (!confirmClear) return;
-        cart = { restaurantId: restaurantId, items: [], total: 0 };
+        cart.items = [];
+        cart.subtotal = 0;
+        cart.total = 0;
+        cart.loyaltyApplied = false;
     }
 
-    if (!cart.restaurantId) cart.restaurantId = restaurantId;
+    cart.restaurantId = restaurantId;
+    if (!Array.isArray(cart.items)) {
+        cart.items = [];
+    }
 
-    const existingItem = cart.items.find(i => i.id === dishId);
+    const existingItem = cart.items.find(i => String(i.id) === String(dishId));
     if (existingItem) {
-        existingItem.qty += qty;
+        existingItem.qty = Number(existingItem.qty || 0) + qty;
     } else {
         cart.items.push({
             id: dish.id,
             name: dish.name,
-            price: dish.price,
-            qty: qty
+            price: Number(dish.price),
+            qty: qty,
+            image: dish.image || ''
         });
     }
 
-    cart.total += dish.price * qty;
+    recalculateCart();
     saveCart();
     
     if (document.getElementById('panel-checkout')) {
-        renderCheckoutTab(store.getRestaurantById(restaurantId));
+        renderCheckoutTab(r);
     }
-    updateFloatingCartBar(store.getRestaurantById(restaurantId));
+    updateFloatingCartBar(r);
+    pulseCartBar();
     
     showCartToast(dish, qty, r);
-}
+};
 
 // Cart updates
 function addToCart(restaurantId, dishId) {
     const r = store.getRestaurantById(restaurantId);
-    const dish = r.menu.find(d => d.id === dishId);
+    if (!r || !r.menu) return;
+    const dish = r.menu.find(d => String(d.id) === String(dishId));
     if (!dish) return;
     
     // Check for multi-restaurant cart safety
-    if (cart.restaurantId && cart.restaurantId !== restaurantId && cart.items.length > 0) {
+    if (cart.restaurantId && String(cart.restaurantId) !== String(restaurantId) && cart.items && cart.items.length > 0) {
         const oldResto = store.getRestaurantById(cart.restaurantId);
         const oldName = oldResto ? oldResto.name : "un autre restaurant";
         const confirmClear = confirm(`Votre panier contient déjà des plats de "${oldName}". Voulez-vous vider votre panier actuel pour commander chez "${r.name}" ?`);
         if (!confirmClear) {
             return;
         }
-        // User confirmed: clear cart and switch restaurant
-        cart = {
-            restaurantId: restaurantId,
-            items: [],
-            total: 0
-        };
+        cart.items = [];
+        cart.subtotal = 0;
+        cart.total = 0;
+        cart.loyaltyApplied = false;
     }
     
-    // Set restaurant ID if cart was empty or reset
     cart.restaurantId = restaurantId;
+    if (!Array.isArray(cart.items)) {
+        cart.items = [];
+    }
     
-    const existing = cart.items.find(item => item.id === dishId);
+    const existing = cart.items.find(item => String(item.id) === String(dishId));
     if (existing) {
-        existing.qty += 1;
+        existing.qty = Number(existing.qty || 0) + 1;
     } else {
         cart.items.push({
             id: dish.id,
             name: dish.name,
-            price: dish.price,
-            qty: 1
+            price: Number(dish.price),
+            qty: 1,
+            image: dish.image || ''
         });
     }
     
@@ -3023,52 +3172,82 @@ function addToCart(restaurantId, dishId) {
     saveCart();
     updateFloatingCartBar(r);
     pulseCartBar();
-    renderCheckoutTab(r); // update checkout page too
+    if (document.getElementById('panel-checkout')) {
+        renderCheckoutTab(r);
+    }
     showCartToast(dish, 1, r);
 }
+window.addToCart = addToCart;
 
 function updateCartQty(dishId, change) {
-    const r = store.getRestaurantById(cart.restaurantId);
-    const idx = cart.items.findIndex(item => item.id === dishId);
+    if (!cart.items) return;
+    const idx = cart.items.findIndex(item => String(item.id) === String(dishId));
     if (idx !== -1) {
-        cart.items[idx].qty += change;
+        cart.items[idx].qty = Number(cart.items[idx].qty || 1) + Number(change);
         if (cart.items[idx].qty <= 0) {
             cart.items.splice(idx, 1);
         }
+        if (cart.items.length === 0) {
+            cart.restaurantId = null;
+            cart.deliveryFee = 0;
+            cart.loyaltyApplied = false;
+        }
         recalculateCart();
         saveCart();
-        updateFloatingCartBar(r);
-        renderCheckoutTab(r);
+        const r = cart.restaurantId ? store.getRestaurantById(cart.restaurantId) : null;
+        if (r) {
+            updateFloatingCartBar(r);
+            renderCheckoutTab(r);
+        } else {
+            updateFloatingCartBar();
+            const container = document.getElementById('checkout-content-container');
+            if (container) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 4rem 1rem;">
+                        <span style="font-size: 3rem;">🛒</span>
+                        <h3 style="margin-top: 1rem;">Votre panier est vide</h3>
+                        <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">Parcourez notre menu du jour et ajoutez des délices !</p>
+                        <button class="btn btn-primary" onclick="switchRestoTab('menu')">Voir le Menu</button>
+                    </div>
+                `;
+            }
+        }
     }
 }
-
-function recalculateCart() {
-    let subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.qty), 0);
-    cart.subtotal = subtotal;
-    if (cart.loyaltyApplied) {
-        cart.total = Math.max(0, subtotal - 2500);
-    } else {
-        cart.total = subtotal;
-    }
-    if (cart.deliveryFee) {
-        cart.total += cart.deliveryFee;
-    }
-}
-
+window.updateCartQty = updateCartQty;
 
 function updateFloatingCartBar(r) {
+    const totalQty = (cart && cart.items) ? cart.items.reduce((sum, item) => sum + (Number(item.qty) || 0), 0) : 0;
+    const totalAmount = cart ? (cart.total || 0) : 0;
+    
+    // Mobile navigation cart badge
     const badge = document.getElementById('mobile-nav-cart-badge');
-    if (!badge) return;
-    const totalQty = cart.items.reduce((sum, item) => sum + item.qty, 0);
-    if (totalQty > 0) {
-        badge.innerText = totalQty;
-        badge.style.display = 'flex';
-        badge.classList.add('pulse-animation');
-        setTimeout(() => badge.classList.remove('pulse-animation'), 300);
-    } else {
-        badge.style.display = 'none';
+    if (badge) {
+        if (totalQty > 0) {
+            badge.innerText = totalQty;
+            badge.style.display = 'flex';
+            badge.classList.add('pulse-animation');
+            setTimeout(() => badge.classList.remove('pulse-animation'), 300);
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // Floating cart bar in body
+    const bar = document.getElementById('floating-cart-bar');
+    const barQty = document.getElementById('floating-cart-qty');
+    const barTotal = document.getElementById('floating-cart-total');
+    if (bar) {
+        if (totalQty > 0) {
+            bar.style.display = 'flex';
+            if (barQty) barQty.innerText = `${totalQty} article${totalQty > 1 ? 's' : ''}`;
+            if (barTotal) barTotal.innerText = `${Number(totalAmount).toLocaleString('fr-FR')} FCFA`;
+        } else {
+            bar.style.display = 'none';
+        }
     }
 }
+window.updateFloatingCartBar = updateFloatingCartBar;
 
 // Checkout logic moved to js/ui-checkout.js
 
@@ -4439,6 +4618,15 @@ function renderFavoritesView() {
 }
 
 // ----------------------------------------------------
+// Cart View (#/cart)
+// ----------------------------------------------------
+router.add('#/cart', () => {
+    if (typeof openCartTab === 'function') {
+        openCartTab();
+    }
+});
+
+// ----------------------------------------------------
 // Profile View (Mon Compte - Ref Mockup 5)
 // ----------------------------------------------------
 router.add('#/profile', () => {
@@ -4698,26 +4886,40 @@ router.add('#/profile', () => {
         `;
     }
 
+    const isCustomerAuth = typeof customerAuth !== 'undefined' && customerAuth.isAuthenticated();
+
     container.innerHTML = `
         <div class="account-screen">
             <!-- Header Card (Mockup 5) -->
-            <div class="account-header-card">
+            <div class="account-header-card" style="position: relative; overflow: hidden;">
                 <div class="account-avatar">
                     ${initials}
                 </div>
                 <div class="account-info" style="flex: 1;">
-                    <h2>${customerName || 'Gourmet de Thiès'}</h2>
-                    <p>${customerPhone || 'Bienvenue sur THIES Resto'}</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <h2 style="margin: 0;">${customerName || 'Gourmet de Thiès'}</h2>
+                        ${isCustomerAuth ? `
+                            <span style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.15); color: #059669; padding: 0.2rem 0.55rem; border-radius: 12px; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.25);">
+                                ✓ Vérifié Nativement
+                            </span>
+                        ` : ''}
+                    </div>
+                    <p style="margin-top: 0.25rem;">${customerPhone || 'Connectez-vous pour mémoriser vos commandes'}</p>
                     ${customerAddress ? `<p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">📍 ${customerAddress}</p>` : ''}
                 </div>
+                ${!isCustomerAuth ? `
+                    <button class="btn btn-primary btn-sm" onclick="if(typeof customerAuth !== 'undefined') customerAuth.openModal(); else router.navigate('/auth');" style="border-radius: 12px; font-weight: 700; font-size: 0.8rem; padding: 0.45rem 0.85rem; align-self: center;">
+                        Connexion ⚡
+                    </button>
+                ` : ''}
             </div>
 
-            <!-- Group 1: Historique des Commandes (Avec statut OTP) -->
+            <!-- Group 1: Historique des Commandes (Avec statut certifié) -->
             <div class="account-group">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding: 0 0.25rem;">
                     <div class="account-group-title" style="margin: 0; padding: 0;">Mes Commandes Récentes (${historyCount})</div>
                     <span style="font-size: 0.75rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
-                        🛡️ Sécurité OTP Active
+                        🛡️ Authentification Native
                     </span>
                 </div>
                 
@@ -4733,7 +4935,7 @@ router.add('#/profile', () => {
                 <div class="account-item-row" onclick="toggleProfileEditForm()">
                     <div class="account-item-left">
                         <span class="account-item-icon"><i class="ri-user-settings-line"></i></span>
-                        <span>Informations personnelles</span>
+                        <span>Informations personnelles & Téléphone</span>
                     </div>
                     <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
@@ -4937,11 +5139,15 @@ window.saveProfile = function(e) {
     const phone = document.getElementById('profile-phone').value.trim();
     const address = document.getElementById('profile-address').value.trim();
     
-    if (name) localStorage.setItem('customerName', name);
-    if (phone) localStorage.setItem('customerPhone', phone);
-    if (address) localStorage.setItem('customerAddress', address);
+    if (typeof customerAuth !== 'undefined') {
+        customerAuth.login({ phone, name, address });
+    } else {
+        if (name) localStorage.setItem('customerName', name);
+        if (phone) localStorage.setItem('customerPhone', phone);
+        if (address) localStorage.setItem('customerAddress', address);
+        showToast("Profil enregistré avec succès !", "success");
+    }
     
-    showToast("Profil enregistré avec succès !", "success");
     router.navigate('/profile');
 };
 
@@ -5471,7 +5677,10 @@ function updateNav() {
         if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'block';
     } else {
         if (navActions) navActions.innerHTML = `
-            <button class="btn btn-primary" onclick="router.navigate('/auth')">Connexion Partenaire</button>
+            <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')" title="Espace Resto / Connexion Restaurateur" aria-label="Espace Resto" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.9rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem;">
+                <span style="font-size: 1.05rem; line-height: 1;">🏪</span>
+                <span>Espace Resto</span>
+            </button>
         `;
         if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'none';
     }

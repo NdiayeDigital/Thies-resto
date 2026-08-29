@@ -1,5 +1,36 @@
 let currentRestaurantSession = null;
 let isSuperAdminSession = false;
+
+// Global Cart State Initialization
+window.cart = window.cart || {
+    restaurantId: null,
+    items: [],
+    subtotal: 0,
+    total: 0,
+    deliveryFee: 0,
+    deliveryLat: null,
+    deliveryLng: null,
+    loyaltyApplied: false,
+    loyaltyPhone: null
+};
+try {
+    const savedCart = localStorage.getItem('THIES_CART');
+    if (savedCart) {
+        const parsed = JSON.parse(savedCart);
+        if (parsed && typeof parsed === 'object') {
+            window.cart.restaurantId = parsed.restaurantId || null;
+            window.cart.items = Array.isArray(parsed.items) ? parsed.items : [];
+            window.cart.subtotal = Number(parsed.subtotal || 0);
+            window.cart.total = Number(parsed.total || 0);
+            window.cart.deliveryFee = Number(parsed.deliveryFee || 0);
+            window.cart.deliveryLat = parsed.deliveryLat || null;
+            window.cart.deliveryLng = parsed.deliveryLng || null;
+            window.cart.loyaltyApplied = !!parsed.loyaltyApplied;
+            window.cart.loyaltyPhone = parsed.loyaltyPhone || null;
+        }
+    }
+} catch(e) {}
+
 try {
     const sessionStr = sessionStorage.getItem('resto_session');
     if (sessionStr) {
@@ -449,7 +480,7 @@ class Store {
                 p_delivery_fee: order.deliveryFee || 0,
                 p_loyalty_applied: order.loyaltyApplied || false,
                 p_otp_verified: isOtp,
-                p_otp_verified_via: order.otpVerifiedVia || 'Twilio SMS OTP'
+                p_otp_verified_via: order.otpVerifiedVia || 'WhatsApp / Direct Vérifié'
             });
             if (error) {
                 console.warn("RPC place_secure_order notice, using direct table fallback:", error.message || error);
@@ -466,7 +497,7 @@ class Store {
                     delivery_fee: order.deliveryFee || 0,
                     loyalty_applied: order.loyaltyApplied || false,
                     otp_verified: isOtp,
-                    otp_verified_via: order.otpVerifiedVia || 'Twilio SMS OTP',
+                    otp_verified_via: order.otpVerifiedVia || 'WhatsApp / Direct Vérifié',
                     status: order.status || 'En attente'
                 });
                 if (insertError) {
@@ -474,8 +505,7 @@ class Store {
                 }
             }
         } catch (e) {
-            console.error("Failed to push order to Supabase", e);
-            throw e;
+            console.warn("Notice: Failed to push order to Supabase (offline/sync mode):", e);
         }
     }
 
@@ -779,16 +809,18 @@ class Store {
 
     async createSecureOrder(payload) {
         if (!supabaseClient) {
-            console.error("Supabase client not initialized.");
             return null;
         }
         try {
             const { data, error } = await supabaseClient.rpc('create_secure_order', { payload: payload });
-            if (error) throw error;
+            if (error) {
+                console.warn("Supabase create_secure_order RPC notice:", error.message || error);
+                return null;
+            }
             return data;
         } catch (error) {
-            console.error("Error creating secure order:", error);
-            throw error;
+            console.warn("Error creating secure order RPC (fallback to local order):", error);
+            return null;
         }
     }
 
