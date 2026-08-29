@@ -182,27 +182,13 @@
 </head>
 
 <body>
-    <!-- ========== SPLASH / WELCOME SCREEN (Chez Resto / Bon Appétit) ========== -->
+    <!-- ========== SPLASH / WELCOME SCREEN (THIES Resto / Bon Appétit) ========== -->
     <div id="splash-screen" class="splash-screen" aria-label="Écran de bienvenue">
         <div class="splash-content">
-            <!-- Animated Cloche Logo -->
+            <!-- THIES Resto Official Logo -->
             <div class="splash-logo-wrap">
-                <div class="splash-cloche-icon">
-                    <svg viewBox="0 0 100 100" class="cloche-svg" width="90" height="90" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Cloche Handle -->
-                        <circle cx="50" cy="22" r="6" fill="#FFFFFF" />
-                        <path d="M50 28V34" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" />
-                        <!-- Cloche Dome -->
-                        <path d="M18 64C18 42 32 34 50 34C68 34 82 42 82 64H18Z" fill="#FFFFFF" fill-opacity="0.95" />
-                        <path d="M28 64C28 48 38 42 50 42C62 42 72 48 72 64H28Z" fill="rgba(220, 38, 38, 0.15)" />
-                        <!-- Cloche Platter Base -->
-                        <rect x="12" y="67" width="76" height="6" rx="3" fill="#FFFFFF" />
-                        <rect x="8" y="74" width="84" height="4" rx="2" fill="rgba(255, 255, 255, 0.8)" />
-                        <!-- Steam lines -->
-                        <path class="steam-line steam-1" d="M40 18Q38 12 42 8" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" />
-                        <path class="steam-line steam-2" d="M50 16Q52 10 48 6" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" />
-                        <path class="steam-line steam-3" d="M60 18Q58 12 62 8" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" />
-                    </svg>
+                <div class="splash-logo-circle">
+                    <img src="icon.png" alt="THIES Resto Logo" class="splash-logo-img" fetchpriority="high">
                 </div>
                 <div class="splash-badge-sub">🍽️ Bon Appétit</div>
             </div>
@@ -454,6 +440,87 @@
 
         <!-- ========== FOOTER ========== -->
         <footer id="main-footer">
+            <!-- Simplified 3-Questions FAQ Section -->
+            <section class="footer-faq-section" id="footer-faq" aria-labelledby="footer-faq-heading">
+                <div class="footer-faq-header">
+                    <div class="footer-faq-title-wrap">
+                        <span class="footer-faq-badge"><i class="ri-question-line"></i> Foire Aux Questions</span>
+                        <h3 id="footer-faq-heading" class="footer-faq-title">Questions fréquentes</h3>
+                        <p class="footer-faq-subtitle">Tout ce que vous devez savoir sur vos commandes, livraisons et restaurants à Thiès.</p>
+                    </div>
+                </div>
+
+                <!-- FAQ Accordion List (3 Essential Questions) -->
+                <div class="footer-faq-list" id="footer-faq-list">
+                    <!-- Q1: Quartiers desservis et délais -->
+                    <div class="footer-faq-item active" id="faq-item-1">
+                        <button type="button" class="footer-faq-question-btn" onclick="toggleFaq('faq-item-1')" aria-expanded="true" aria-controls="faq-ans-1">
+                            <div class="footer-faq-q-left">
+                                <i class="ri-map-pin-range-line footer-faq-q-icon"></i>
+                                <span>Quels sont les quartiers desservis et les délais de livraison à Thiès ?</span>
+                            </div>
+                            <i class="ri-arrow-down-s-line footer-faq-chevron"></i>
+                        </button>
+                        <div class="footer-faq-answer" id="faq-ans-1">
+                            <p>Nous assurons la livraison dans <strong>tous les quartiers de la ville de Thiès</strong> (Thiès-Est : <em>Cité Lamy, Mbour 1 à 4, Hersent</em> ; Thiès-Ouest &amp; Centre : <em>Grand Standing, Som, Randoulène, Diakhao, Fahu</em> ; Thiès-Nord : <em>Médina Fall, Nguinth, Takhikao, Silmang</em> ; ainsi que les campus universitaires <em>EPT &amp; UIDT</em>).</p>
+                            <p style="margin-top: 0.5rem;">⏱️ <strong>Délai moyen :</strong> Entre <strong>25 et 45 minutes</strong> (préparation en cuisine + acheminement sécurisé par nos livreurs partenaires). Tarif unique et clair de <strong>1 000 FCFA</strong>.</p>
+                        </div>
+                    </div>
+
+                    <!-- Q2: Modes de paiement -->
+                    <div class="footer-faq-item" id="faq-item-2">
+                        <button type="button" class="footer-faq-question-btn" onclick="toggleFaq('faq-item-2')" aria-expanded="false" aria-controls="faq-ans-2">
+                            <div class="footer-faq-q-left">
+                                <i class="ri-wallet-3-line footer-faq-q-icon"></i>
+                                <span>Quels sont les modes de paiement acceptés ?</span>
+                            </div>
+                            <i class="ri-arrow-down-s-line footer-faq-chevron"></i>
+                        </button>
+                        <div class="footer-faq-answer" id="faq-ans-2">
+                            <p>Pour votre confort, nous proposons les moyens de règlement les plus pratiques au Sénégal :</p>
+                            <ul style="margin: 0.5rem 0 0.5rem 1.25rem; padding: 0;">
+                                <li><strong>Espèces à la livraison (Cash on Delivery) :</strong> Vous réglez directement le livreur lors de la réception en main propre de votre commande.</li>
+                                <li><strong>Wave / Orange Money :</strong> Transfert mobile sécurisé directement au livreur ou auprès du restaurant.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Q3: Emporter sans frais et réservation -->
+                    <div class="footer-faq-item" id="faq-item-3">
+                        <button type="button" class="footer-faq-question-btn" onclick="toggleFaq('faq-item-3')" aria-expanded="false" aria-controls="faq-ans-3">
+                            <div class="footer-faq-q-left">
+                                <i class="ri-restaurant-line footer-faq-q-icon"></i>
+                                <span>Puis-je commander à emporter sans frais ou réserver une table ?</span>
+                            </div>
+                            <i class="ri-arrow-down-s-line footer-faq-chevron"></i>
+                        </button>
+                        <div class="footer-faq-answer" id="faq-ans-3">
+                            <p>Absolument ! Sur chaque restaurant partenaire :</p>
+                            <ul style="margin: 0.5rem 0 0.5rem 1.25rem; padding: 0;">
+                                <li><strong>À emporter (Takeaway) :</strong> Commandez en ligne et retirez votre repas directement au restaurant sans aucuns frais de livraison ni attente.</li>
+                                <li><strong>Réservation de table :</strong> Réservez gratuitement votre table avec le nombre de convives et l'horaire de votre choix.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Help CTA Card -->
+                <div class="footer-faq-help-card">
+                    <div class="footer-faq-help-info">
+                        <span class="footer-faq-help-icon">💬</span>
+                        <div>
+                            <strong>Une question sur une commande en cours ?</strong>
+                            <p>Notre équipe et nos restaurants partenaires sont disponibles pour vous répondre.</p>
+                        </div>
+                    </div>
+                    <div class="footer-faq-help-actions">
+                        <a href="https://wa.me/221784799882?text=Bonjour%20THIES%20Resto,%20j'ai%20une%20question%20sur%20ma%20commande" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm footer-faq-wa-btn">
+                            <i class="ri-whatsapp-line"></i> Contacter par WhatsApp
+                        </a>
+                    </div>
+                </div>
+            </section>
+
             <div class="footer-grid">
                 <!-- About Column -->
                 <div class="footer-col">
@@ -475,6 +542,7 @@
                 <!-- Client Legal Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Espace Client</h4>
+                    <a href="#footer-faq" onclick="scrollToFaq('faq-item-zones'); return false;">❓ FAQ &amp; Zones de Livraison</a>
                     <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions Générales de Vente (CGV)</a>
                     <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client &amp; Confidentialité</a>
                     <a href="#" onclick="router.navigate('/tracking'); return false;">Suivi de commande</a>
@@ -599,6 +667,7 @@
     <script defer src="js/admin.js?v=7"></script>
     <script defer src="js/ui-checkout.js"></script>
     <script defer src="js/ui-vendor.js"></script>
+    <script defer src="js/ui-faq.js"></script>
     <script defer src="js/onesignal-wrapper.js"></script>
     <script defer src="app.js"></script>
 

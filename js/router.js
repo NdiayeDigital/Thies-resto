@@ -2,14 +2,53 @@ class Router {
     constructor() {
         this.routes = {};
         this.isReady = false;
-        window.addEventListener('hashchange', () => this.resolve());
-        // window.addEventListener('load', () => this.resolve());
-        // window.addEventListener('DOMContentLoaded', () => this.resolve());
+
+        // Prevent browser from restoring previous scroll position automatically
+        if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'manual';
+        }
+
+        const forceScrollTop = () => {
+            window.scrollTo(0, 0);
+            if (document.documentElement) document.documentElement.scrollTop = 0;
+            if (document.body) document.body.scrollTop = 0;
+            const main = document.getElementById('main-content');
+            if (main) main.scrollTop = 0;
+        };
+
+        // Event listener resetting scroll position whenever a route is loaded
+        window.addEventListener('hashchange', () => {
+            window.scrollTo(0, 0);
+            forceScrollTop();
+            this.resolve();
+            setTimeout(forceScrollTop, 50);
+            setTimeout(forceScrollTop, 150);
+        });
+
+        window.addEventListener('load', () => {
+            forceScrollTop();
+            setTimeout(forceScrollTop, 50);
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            forceScrollTop();
+        });
     }
 
     start() {
         this.isReady = true;
+        this.forceScrollTop();
         this.resolve();
+        setTimeout(() => this.forceScrollTop(), 50);
+        setTimeout(() => this.forceScrollTop(), 150);
+    }
+
+    forceScrollTop() {
+        window.scrollTo(0, 0);
+        if (document.documentElement) document.documentElement.scrollTop = 0;
+        if (document.body) document.body.scrollTop = 0;
+        const main = document.getElementById('main-content');
+        if (main) main.scrollTop = 0;
     }
 
     add(path, handler) {
@@ -18,17 +57,22 @@ class Router {
 
     navigate(path) {
         window.location.hash = path;
+        this.forceScrollTop();
+        setTimeout(() => this.forceScrollTop(), 50);
     }
 
     resolve() {
         if (!this.isReady) return;
         const hash = window.location.hash || '#/';
         
+        this.forceScrollTop();
+
         const container = document.getElementById('main-content');
         if (container) {
             container.classList.remove('page-transition');
             void container.offsetWidth; // Force reflow
             container.classList.add('page-transition');
+            container.scrollTop = 0;
         }
         
         // Parse params for restaurant view: #/r/la-licorne
@@ -68,7 +112,12 @@ class Router {
         // Refresh Navbar & Bottom Nav State
         if (typeof updateNavbar === 'function') updateNavbar();
         if (typeof updateBottomNavFromRoute === 'function') updateBottomNavFromRoute(hash);
+
+        // Ensure top position after DOM render
+        requestAnimationFrame(() => this.forceScrollTop());
+        setTimeout(() => this.forceScrollTop(), 50);
     }
 }
 
 const router = new Router();
+

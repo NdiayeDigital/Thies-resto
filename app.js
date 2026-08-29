@@ -567,7 +567,7 @@ function updateThemeToggleUI(theme) {
     // Dynamically update mobile browser address bar color
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', theme === 'dark' ? '#0F1117' : '#DC2626');
+        metaThemeColor.setAttribute('content', theme === 'dark' ? '#0F1117' : '#F26B21');
     }
 }
 window.updateThemeToggleUI = updateThemeToggleUI;
@@ -646,6 +646,13 @@ function saveOrderToHistory(order, restaurantName) {
         const isPhoneVerified = phone ? localStorage.getItem('phoneVerified_' + phone) === 'true' : false;
         const isOtp = order.otpVerified !== undefined ? order.otpVerified : isPhoneVerified;
         
+        if (phone) {
+            localStorage.setItem('customerPhone', phone);
+        }
+        if (order.id) {
+            localStorage.setItem('trackingOrderId', String(order.id));
+        }
+
         history.unshift({ 
             ...order, 
             restaurantName, 
@@ -1172,7 +1179,8 @@ window.alertModal = window.showAlertModal = function(title, contentHtml) {
 
 // Format Phone Numbers +221 7X XXX XX XX
 function cleanPhoneNumber(phone) {
-    let cleaned = phone.replace(/\s+/g, '');
+    if (!phone || typeof phone !== 'string') return '';
+    let cleaned = phone.replace(/\s+/g, '').replace(/[^0-9+]/g, '');
     if (!cleaned.startsWith('+221') && !cleaned.startsWith('221')) {
         if (cleaned.length === 9) {
             cleaned = '+221' + cleaned;
@@ -1183,6 +1191,7 @@ function cleanPhoneNumber(phone) {
     }
     return cleaned;
 }
+window.cleanPhoneNumber = cleanPhoneNumber;
 
 // ----------------------------------------------------
 // Mobile Drawer & Startup Verification Status
@@ -4347,8 +4356,8 @@ window.showPaymentMethodsModal = function() {
 window.showPromoDiscountsModal = function() {
     alertModal("Bons Plans & Réductions", `
         <div style="text-align: left; padding: 0.5rem 0;">
-            <div style="background: linear-gradient(135deg, #DC2626, #B91C1C); color: white; padding: 1.25rem; border-radius: 16px; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(220,38,38,0.3);">
-                <div style="font-size: 0.8rem; font-weight: 800; background: #F59E0B; color: #78350F; display: inline-block; padding: 2px 8px; border-radius: 10px; margin-bottom: 0.5rem;">OFFRE DU JOUR</div>
+            <div style="background: linear-gradient(135deg, #F26B21, #D95A14); color: white; padding: 1.25rem; border-radius: 16px; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(242,107,33,0.3);">
+                <div style="font-size: 0.8rem; font-weight: 800; background: #FEF3C7; color: #92400E; display: inline-block; padding: 2px 8px; border-radius: 10px; margin-bottom: 0.5rem;">OFFRE DU JOUR</div>
                 <h3 style="margin: 0 0 0.25rem; font-size: 1.2rem; color: white;">Jusqu'à -40% sur vos menus</h3>
                 <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Commandez directement auprès de nos restaurants partenaires à Thiès sans intermédiaire.</p>
             </div>
@@ -5094,52 +5103,218 @@ window.requestPushNotifications = function() {
 
 // ==================== SUPABASE REALTIME ====================
 let globalOrderSubscription = null;
+window._notifiedOrderStatuses = window._notifiedOrderStatuses || {};
+
 window.setupRealtime = function() {
-    if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
+    if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+        if (!window._supabaseRetryTimer) {
+            window._supabaseRetryTimer = setTimeout(() => {
+                window._supabaseRetryTimer = null;
+                window.setupRealtime();
+            }, 1000);
+        }
+        return;
+    }
     if (globalOrderSubscription) return; // Already subscribed
 
-    globalOrderSubscription = supabaseClient
-        .channel('public:orders')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
-            console.log('Realtime Order Event:', payload);
-            
-            // 1. Dashboard Restaurateur Live Update
-            if (window.location.hash === '#/dashboard' && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
-                if (payload.new && payload.new.restaurant_id === currentRestaurantSession.id) {
-                    if (payload.eventType === 'INSERT') {
-                        playNotificationSound();
-                        if(typeof showToast === 'function') showToast("🔔 NOUVELLE COMMANDE REÇUE !", "success");
-                    }
-                    // Force refresh data
-                    if (typeof store !== 'undefined' && store.syncFromSupabase) {
-                        store.syncFromSupabase().then(() => {
-                            if (typeof renderDashboardTabContent === 'function') {
-                                renderDashboardTabContent(currentRestaurantSession);
+    console.log('[Supabase Realtime] Initializing global orders listener...');
+
+    try {
+        globalOrderSubscription = supabaseClient
+            .channel('public:orders:realtime')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, payload => {
+                console.log('[Supabase Realtime Order Event]:', payload.eventType, payload);
+                
+                const eventType = payload.eventType;
+                const newOrder = payload.new;
+                if (!newOrder) return;
+
+                const orderId = String(newOrder.id || '');
+                const newStatus = (newOrder.status || '').trim();
+                const orderPhone = cleanPhoneNumber(newOrder.customer_phone || '');
+
+                // Identify user phone credentials from local and session storage
+                const storedCustomerPhone = cleanPhoneNumber(localStorage.getItem('customerPhone') || '');
+                const storedUserPhone = cleanPhoneNumber(localStorage.getItem('user_phone') || sessionStorage.getItem('user_phone') || '');
+                const activeProfilePhone = cleanPhoneNumber(document.getElementById('profile-phone')?.value || '');
+                const activeTrackingPhone = cleanPhoneNumber(document.getElementById('tracking-phone')?.value || '');
+                const trackingOrderId = String(localStorage.getItem('trackingOrderId') || '');
+
+                // Check local order history
+                let myHistory = [];
+                try {
+                    myHistory = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+                } catch (e) { myHistory = []; }
+
+                const isInHistory = myHistory.some(o => String(o.id) === orderId);
+                const isMatchingPhone = Boolean(
+                    (storedCustomerPhone && orderPhone && (orderPhone.endsWith(storedCustomerPhone.slice(-9)) || storedCustomerPhone.endsWith(orderPhone.slice(-9)))) ||
+                    (storedUserPhone && orderPhone && (orderPhone.endsWith(storedUserPhone.slice(-9)) || storedUserPhone.endsWith(orderPhone.slice(-9)))) ||
+                    (activeProfilePhone && orderPhone && (orderPhone.endsWith(activeProfilePhone.slice(-9)) || activeProfilePhone.endsWith(orderPhone.slice(-9)))) ||
+                    (activeTrackingPhone && orderPhone && (orderPhone.endsWith(activeTrackingPhone.slice(-9)) || activeTrackingPhone.endsWith(orderPhone.slice(-9))))
+                );
+                const isTrackingCurrent = Boolean(trackingOrderId && (trackingOrderId === orderId));
+
+                const isUserOrder = isInHistory || isMatchingPhone || isTrackingCurrent;
+
+                // --- 1. IN-APP TOAST NOTIFICATION FOR USERS ON ORDER STATUS UPDATE ---
+                if (isUserOrder && eventType === 'UPDATE' && newStatus) {
+                    const lastStatus = window._notifiedOrderStatuses[orderId];
+                    
+                    if (lastStatus !== newStatus) {
+                        window._notifiedOrderStatuses[orderId] = newStatus;
+
+                        // Synchronize updated status in local order history
+                        try {
+                            let history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+                            let updated = false;
+                            history.forEach(item => {
+                                if (String(item.id) === orderId) {
+                                    item.status = newStatus;
+                                    updated = true;
+                                }
+                            });
+                            if (updated) {
+                                localStorage.setItem('THIES_ORDER_HISTORY', JSON.stringify(history));
                             }
-                        });
+                        } catch (e) {}
+
+                        // Synchronize status in memory store
+                        if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
+                            const localOrder = store.data.orders.find(o => String(o.id) === orderId);
+                            if (localOrder) localOrder.status = newStatus;
+                        }
+
+                        // Determine restaurant brand name
+                        const restaurant = (typeof store !== 'undefined' && store.getRestaurantById) 
+                            ? store.getRestaurantById(newOrder.restaurant_id) 
+                            : null;
+                        const historyItem = myHistory.find(o => String(o.id) === orderId);
+                        const restaurantName = restaurant?.name || historyItem?.restaurantName || 'votre restaurant';
+
+                        // Play audio chime and haptics
+                        playNotificationSound();
+                        if (navigator.vibrate) {
+                            try { navigator.vibrate([120, 60, 120]); } catch (e) {}
+                        }
+
+                        // Build friendly status message & toast configuration
+                        let toastTitle = '🔔 Suivi de Commande';
+                        let toastMessage = `Votre commande n°${orderId} chez ${restaurantName} est : ${newStatus}`;
+                        let toastType = 'info';
+                        let toastIcon = '🔔';
+
+                        if (newStatus === 'Confirmée' || newStatus === 'En préparation' || newStatus === 'En cuisine') {
+                            toastTitle = '👨‍🍳 Commande Confirmée !';
+                            toastMessage = `Excellente nouvelle ! Votre commande n°${orderId} chez ${restaurantName} a été confirmée et est en préparation.`;
+                            toastType = 'success';
+                            toastIcon = '👨‍🍳';
+                        } else if (newStatus === 'Prête') {
+                            toastTitle = '🍲 Repas Prêt !';
+                            toastMessage = `Votre commande n°${orderId} chez ${restaurantName} est prête et soigneusement emballée.`;
+                            toastType = 'info';
+                            toastIcon = '🍲';
+                        } else if (newStatus === 'En cours de livraison' || newStatus === 'En livraison' || newStatus === 'Partie en livraison') {
+                            toastTitle = '🛵 Commande en Route !';
+                            toastMessage = `Le livreur est en route avec votre repas chaud de ${restaurantName} !`;
+                            toastType = 'info';
+                            toastIcon = '🛵';
+                        } else if (newStatus === 'Livrée') {
+                            toastTitle = '🎉 Commande Livrée !';
+                            toastMessage = `Votre commande n°${orderId} chez ${restaurantName} a été livrée. Bon appétit ! 🍽️`;
+                            toastType = 'success';
+                            toastIcon = '✅';
+                        } else if (newStatus === 'Annulée') {
+                            toastTitle = '⚠️ Commande Annulée';
+                            toastMessage = `Votre commande n°${orderId} chez ${restaurantName} a été annulée par le restaurant.`;
+                            toastType = 'danger';
+                            toastIcon = '✕';
+                        }
+
+                        // Trigger rich in-app toast notification with interactive track button
+                        if (typeof showToast === 'function') {
+                            showToast(toastMessage, toastType, {
+                                title: toastTitle,
+                                icon: toastIcon,
+                                duration: 7500,
+                                actionText: 'Suivre',
+                                onAction: () => {
+                                    const targetPhone = orderPhone || storedCustomerPhone || storedUserPhone;
+                                    if (targetPhone) {
+                                        localStorage.setItem('trackingOrderId', orderId);
+                                        localStorage.setItem('customerPhone', targetPhone);
+                                    }
+                                    if (typeof router !== 'undefined' && router.navigate) {
+                                        router.navigate('/tracking');
+                                        setTimeout(() => {
+                                            const phoneInput = document.getElementById('tracking-phone');
+                                            if (phoneInput && targetPhone) {
+                                                phoneInput.value = targetPhone;
+                                                if (typeof window.fetchOrderTracking === 'function') {
+                                                    window.fetchOrderTracking();
+                                                }
+                                            }
+                                        }, 200);
+                                    }
+                                }
+                            });
+                        }
+
+                        // Live UI Updates: if user is currently viewing the tracking screen
+                        if (window.location.hash === '#/tracking' && typeof window.fetchOrderTracking === 'function') {
+                            window.fetchOrderTracking();
+                        }
                     }
                 }
-            }
-            
-            // 2. Client Order Tracking Live Update
-            if (window.location.hash === '#/tracking') {
-                const trackingOrderId = localStorage.getItem('trackingOrderId');
-                if (trackingOrderId && payload.new && payload.new.id === trackingOrderId) {
-                    // Mettre à jour l'interface de suivi
-                    if (typeof store !== 'undefined' && store.syncFromSupabase) {
-                        store.syncFromSupabase().then(() => {
-                            if (typeof fetchOrderTracking === 'function') fetchOrderTracking();
-                        });
-                    }
-                    if (payload.eventType === 'UPDATE') {
-                        if(typeof showToast === 'function') showToast(`Statut mis à jour : ${payload.new.status}`, "info");
+
+                // --- 2. RESTAURATEUR DASHBOARD REALTIME ---
+                if (window.location.hash === '#/dashboard' && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+                    if (newOrder.restaurant_id === currentRestaurantSession.id) {
+                        if (eventType === 'INSERT') {
+                            playNotificationSound();
+                            if (typeof showToast === 'function') {
+                                showToast(`🔔 NOUVELLE COMMANDE REÇUE : #${orderId} (${newOrder.total || 0} FCFA)`, "success", {
+                                    title: "Nouvelle Commande !",
+                                    duration: 8000
+                                });
+                            }
+                        } else if (eventType === 'UPDATE') {
+                            if (typeof showToast === 'function') {
+                                showToast(`Commande #${orderId} mise à jour : ${newStatus}`, "info");
+                            }
+                        }
+
+                        if (typeof store !== 'undefined' && store.syncFromSupabase) {
+                            store.syncFromSupabase().then(() => {
+                                if (typeof renderDashboardTabContent === 'function') {
+                                    renderDashboardTabContent(currentRestaurantSession);
+                                }
+                            });
+                        }
                     }
                 }
-            }
-        })
-        .subscribe((status) => {
-            console.log('Supabase Realtime Status:', status);
-        });
+
+                // --- 3. SUPER ADMIN DASHBOARD REALTIME ---
+                if (window.location.hash === '#/admin' && typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
+                    if (eventType === 'INSERT') {
+                        playNotificationSound();
+                        if (typeof showToast === 'function') {
+                            showToast(`Nouvelle commande globale #${orderId} (${newOrder.total || 0} FCFA)`, "info", {
+                                title: "Super Admin"
+                            });
+                        }
+                    }
+                    if (typeof loadAllAdminOrders === 'function') {
+                        loadAllAdminOrders();
+                    }
+                }
+            })
+            .subscribe((status, err) => {
+                console.log('[Supabase Realtime Orders] Channel Status:', status, err || '');
+            });
+    } catch (e) {
+        console.warn("[Supabase Realtime] Setup error:", e);
+    }
 };
 
 window.playNotificationSound = function() {
