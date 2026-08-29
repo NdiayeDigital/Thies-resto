@@ -1193,6 +1193,205 @@ function cleanPhoneNumber(phone) {
 }
 window.cleanPhoneNumber = cleanPhoneNumber;
 
+// Validation & Real-time Formatting of Senegal Phone Numbers (+221 70/75/76/77/78/33)
+function validateSenegalPhoneNumber(rawPhone) {
+    if (!rawPhone || typeof rawPhone !== 'string' || !rawPhone.trim()) {
+        return {
+            isValid: false,
+            state: 'empty',
+            operator: null,
+            nationalNumber: '',
+            clean: '',
+            formatted: '',
+            message: 'Format attendu : 77, 78, 76, 70, 75 (ex: 77 123 45 67)'
+        };
+    }
+
+    let trimmed = rawPhone.trim();
+    let digitsOnly = trimmed.replace(/[^0-9]/g, '');
+
+    // Extract national 9-digit part
+    let national = digitsOnly;
+    if (digitsOnly.startsWith('00221')) {
+        national = digitsOnly.substring(5);
+    } else if (digitsOnly.startsWith('221')) {
+        national = digitsOnly.substring(3);
+    }
+
+    // Operator identification based on first 2 digits
+    let op = null;
+    if (national.length >= 2) {
+        const prefix = national.substring(0, 2);
+        if (prefix === '77' || prefix === '78') {
+            op = { code: prefix, name: 'Orange', color: '#ff7900', bg: 'rgba(255, 121, 0, 0.12)', icon: '🟠' };
+        } else if (prefix === '76') {
+            op = { code: prefix, name: 'Free Sénégal', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.12)', icon: '🔴' };
+        } else if (prefix === '70') {
+            op = { code: prefix, name: 'Expresso', color: '#0284c7', bg: 'rgba(2, 132, 199, 0.12)', icon: '🔵' };
+        } else if (prefix === '75') {
+            op = { code: prefix, name: 'Promobile / Wave', color: '#9333ea', bg: 'rgba(147, 51, 234, 0.12)', icon: '🟣' };
+        } else if (prefix === '33') {
+            op = { code: prefix, name: 'Ligne Fixe', color: '#4b5563', bg: 'rgba(75, 85, 99, 0.12)', icon: '☎️' };
+        }
+    }
+
+    // Formatted readable representation (+221 77 123 45 67)
+    let formatted = '';
+    if (national.length > 0) {
+        const p1 = national.substring(0, 2);
+        const p2 = national.substring(2, 5);
+        const p3 = national.substring(5, 7);
+        const p4 = national.substring(7, 9);
+        const pExtra = national.substring(9);
+        
+        let parts = [p1, p2, p3, p4].filter(p => p.length > 0);
+        formatted = '+221 ' + parts.join(' ') + (pExtra ? ' ' + pExtra : '');
+    }
+
+    if (national.length === 0) {
+        return {
+            isValid: false,
+            state: 'empty',
+            operator: null,
+            nationalNumber: '',
+            clean: '',
+            formatted: '',
+            message: 'Format attendu : 77, 78, 76, 70, 75 (ex: 77 123 45 67)'
+        };
+    }
+
+    if (national.length >= 2 && !op) {
+        return {
+            isValid: false,
+            state: 'invalid_prefix',
+            operator: null,
+            nationalNumber: national,
+            clean: '+221' + national,
+            formatted,
+            message: '❌ Préfixe invalide (les mobiles commencent par 70, 75, 76, 77 ou 78)'
+        };
+    }
+
+    if (national.length > 9) {
+        return {
+            isValid: false,
+            state: 'too_long',
+            operator: op,
+            nationalNumber: national,
+            clean: '+221' + national,
+            formatted,
+            message: `❌ Trop long (${national.length}/9 chiffres) : un numéro sénégalais comporte exactement 9 chiffres`
+        };
+    }
+
+    if (national.length < 9) {
+        const remaining = 9 - national.length;
+        const opLabel = op ? `${op.icon} ${op.name}` : 'Saisie...';
+        return {
+            isValid: false,
+            state: 'typing',
+            operator: op,
+            nationalNumber: national,
+            clean: '+221' + national,
+            formatted,
+            remaining,
+            message: `⏳ ${opLabel} • encore ${remaining} chiffre${remaining > 1 ? 's' : ''} requis`
+        };
+    }
+
+    // Exact 9 digits and recognized operator
+    return {
+        isValid: true,
+        state: 'valid',
+        operator: op,
+        nationalNumber: national,
+        clean: '+221' + national,
+        formatted,
+        message: `✅ Numéro valide (${op ? op.icon + ' ' + op.name : 'Sénégal'})`
+    };
+}
+window.validateSenegalPhoneNumber = validateSenegalPhoneNumber;
+
+function attachRealtimePhoneValidation(inputEl, feedbackEl, badgeEl, iconEl) {
+    if (!inputEl) return null;
+    if (typeof inputEl === 'string') inputEl = document.getElementById(inputEl);
+    if (!inputEl) return null;
+    if (typeof feedbackEl === 'string') feedbackEl = document.getElementById(feedbackEl);
+    if (typeof badgeEl === 'string') badgeEl = document.getElementById(badgeEl);
+    if (typeof iconEl === 'string') iconEl = document.getElementById(iconEl);
+
+    const updateUI = () => {
+        if (!inputEl) return null;
+        const val = inputEl.value;
+        const res = validateSenegalPhoneNumber(val);
+
+        if (res.state === 'empty') {
+            inputEl.style.borderColor = 'var(--border)';
+            inputEl.style.boxShadow = 'none';
+            if (feedbackEl) {
+                feedbackEl.innerHTML = `<span style="color: var(--text-secondary); font-size: 0.76rem;">💡 Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>`;
+            }
+            if (badgeEl) badgeEl.innerHTML = '';
+            if (iconEl) iconEl.innerHTML = '';
+        } else if (res.state === 'valid') {
+            inputEl.style.borderColor = '#10b981';
+            inputEl.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.15)';
+            if (feedbackEl) {
+                feedbackEl.innerHTML = `<span style="color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">${res.message} • ${res.formatted}</span>`;
+            }
+            if (badgeEl && res.operator) {
+                badgeEl.innerHTML = `<span style="background: ${res.operator.bg}; color: ${res.operator.color}; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; border: 1px solid ${res.operator.color}40;">${res.operator.icon} ${res.operator.name}</span>`;
+            }
+            if (iconEl) iconEl.innerHTML = '✅';
+        } else if (res.state === 'typing') {
+            inputEl.style.borderColor = '#f59e0b';
+            inputEl.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.12)';
+            if (feedbackEl) {
+                feedbackEl.innerHTML = `<span style="color: #d97706; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">${res.message}</span>`;
+            }
+            if (badgeEl && res.operator) {
+                badgeEl.innerHTML = `<span style="background: ${res.operator.bg}; color: ${res.operator.color}; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; border: 1px solid ${res.operator.color}40;">${res.operator.icon} ${res.operator.name}</span>`;
+            } else if (badgeEl) {
+                badgeEl.innerHTML = '';
+            }
+            if (iconEl) iconEl.innerHTML = '✍️';
+        } else if (res.state === 'invalid_prefix') {
+            inputEl.style.borderColor = '#ef4444';
+            inputEl.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+            if (feedbackEl) {
+                feedbackEl.innerHTML = `<span style="color: #dc2626; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">${res.message}</span>`;
+            }
+            if (badgeEl) {
+                badgeEl.innerHTML = `<span style="background: rgba(220, 38, 38, 0.1); color: #dc2626; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700;">Invalide</span>`;
+            }
+            if (iconEl) iconEl.innerHTML = '❌';
+        } else if (res.state === 'too_long') {
+            inputEl.style.borderColor = '#ef4444';
+            inputEl.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
+            if (feedbackEl) {
+                feedbackEl.innerHTML = `<span style="color: #dc2626; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">${res.message}</span>`;
+            }
+            if (badgeEl) {
+                badgeEl.innerHTML = `<span style="background: rgba(220, 38, 38, 0.1); color: #dc2626; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700;">Trop long</span>`;
+            }
+            if (iconEl) iconEl.innerHTML = '⚠️';
+        }
+        return res;
+    };
+
+    inputEl.addEventListener('input', updateUI);
+    inputEl.addEventListener('blur', () => {
+        const res = updateUI();
+        if (res && res.isValid && res.formatted) {
+            inputEl.value = res.formatted;
+        }
+    });
+
+    setTimeout(updateUI, 50);
+    return updateUI;
+}
+window.attachRealtimePhoneValidation = attachRealtimePhoneValidation;
+
 // ----------------------------------------------------
 // Mobile Drawer & Startup Verification Status
 // ----------------------------------------------------
@@ -2984,8 +3183,17 @@ function renderGroupTab(r, groupId = null) {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Numéro WhatsApp du Responsable <span class="required">*</span></label>
-                    <input type="tel" id="group-phone" class="form-control" placeholder="+221 77 123 45 67" required>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                        <label class="form-label" style="margin-bottom: 0;">Numéro WhatsApp du Responsable <span class="required">*</span></label>
+                        <span id="group-phone-badge" style="font-size: 0.75rem; font-weight: 600;"></span>
+                    </div>
+                    <div style="position: relative;">
+                        <input type="tel" id="group-phone" class="form-control" placeholder="+221 77 123 45 67" required autocomplete="tel" style="padding-right: 2.5rem; transition: all 0.2s ease;">
+                        <span id="group-phone-icon" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; opacity: 0.85;"></span>
+                    </div>
+                    <div id="group-phone-feedback" style="margin-top: 0.35rem; font-size: 0.78rem; min-height: 1.2rem; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s ease;">
+                        <span style="color: var(--text-secondary);">💡 Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -3026,6 +3234,17 @@ function renderGroupTab(r, groupId = null) {
             </form>
         </div>
     `;
+
+    setTimeout(() => {
+        const phoneInput = document.getElementById('group-phone');
+        const savedPhone = localStorage.getItem('customerPhone') || localStorage.getItem('user_phone') || '';
+        if (savedPhone && phoneInput && !phoneInput.value) {
+            phoneInput.value = savedPhone;
+        }
+        if (phoneInput && typeof window.attachRealtimePhoneValidation === 'function') {
+            window.attachRealtimePhoneValidation('group-phone', 'group-phone-feedback', 'group-phone-badge', 'group-phone-icon');
+        }
+    }, 30);
 }
 
 function toggleGroupAddressField(show) {
@@ -3298,8 +3517,17 @@ function renderBookingTab(r) {
             </div>
             
             <div class="form-group">
-                <label class="form-label">Numéro WhatsApp <span class="required">*</span></label>
-                <input type="tel" id="booking-phone" class="form-control" placeholder="+221 77 123 45 67" required>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <label class="form-label" style="margin-bottom: 0;">Numéro WhatsApp <span class="required">*</span></label>
+                    <span id="booking-phone-badge" style="font-size: 0.75rem; font-weight: 600;"></span>
+                </div>
+                <div style="position: relative;">
+                    <input type="tel" id="booking-phone" class="form-control" placeholder="+221 77 123 45 67" required autocomplete="tel" style="padding-right: 2.5rem; transition: all 0.2s ease;">
+                    <span id="booking-phone-icon" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; opacity: 0.85;"></span>
+                </div>
+                <div id="booking-phone-feedback" style="margin-top: 0.35rem; font-size: 0.78rem; min-height: 1.2rem; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s ease;">
+                    <span style="color: var(--text-secondary);">💡 Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>
+                </div>
             </div>
             
             <div class="form-row">
@@ -3330,6 +3558,33 @@ function renderBookingTab(r) {
             </button>
         </form>
     `;
+
+    setTimeout(() => {
+        const phoneInput = document.getElementById('booking-phone');
+        const firstnameInput = document.getElementById('booking-firstname');
+        const lastnameInput = document.getElementById('booking-lastname');
+
+        const savedPhone = localStorage.getItem('customerPhone') || localStorage.getItem('user_phone') || '';
+        const savedName = localStorage.getItem('customerName') || localStorage.getItem('user_name') || '';
+
+        if (savedPhone && phoneInput && !phoneInput.value) {
+            phoneInput.value = savedPhone;
+        }
+
+        if (savedName && firstnameInput && lastnameInput && !firstnameInput.value && !lastnameInput.value) {
+            const parts = savedName.trim().split(' ');
+            if (parts.length > 1) {
+                firstnameInput.value = parts[0];
+                lastnameInput.value = parts.slice(1).join(' ');
+            } else if (parts.length === 1) {
+                firstnameInput.value = parts[0];
+            }
+        }
+
+        if (phoneInput && typeof window.attachRealtimePhoneValidation === 'function') {
+            window.attachRealtimePhoneValidation('booking-phone', 'booking-phone-feedback', 'booking-phone-badge', 'booking-phone-icon');
+        }
+    }, 30);
 }
 
 function validateBookingDate(restaurantId) {
@@ -3750,6 +4005,85 @@ router.add('#/tracking', () => {
     `;
 });
 
+window.confirmCustomerDelivery = async function(orderId) {
+    if (!orderId) return;
+    
+    const btns = document.querySelectorAll(`[data-confirm-order-id="${orderId}"], #btn-confirm-delivery-${orderId}`);
+    btns.forEach(btn => {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Transmission...';
+    });
+
+    try {
+        // 1. Mettre à jour dans Supabase
+        if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+            try {
+                await supabaseClient.rpc('update_order_status', {
+                    p_order_id: String(orderId),
+                    p_status: 'Livrée'
+                });
+            } catch (rpcErr) {
+                console.warn('RPC update_order_status notice, using direct update:', rpcErr);
+                await supabaseClient.from('orders').update({ status: 'Livrée', updated_at: new Date().toISOString() }).eq('id', String(orderId));
+            }
+        }
+
+        // 2. Mettre à jour dans le store mémoire
+        if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
+            const memOrder = store.data.orders.find(o => String(o.id) === String(orderId));
+            if (memOrder) {
+                memOrder.status = 'Livrée';
+                store.save();
+            }
+        }
+
+        // 3. Mettre à jour dans l'historique local
+        try {
+            let history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+            history.forEach(item => {
+                if (String(item.id) === String(orderId)) {
+                    item.status = 'Livrée';
+                    item.customerConfirmedAt = new Date().toISOString();
+                }
+            });
+            localStorage.setItem('THIES_ORDER_HISTORY', JSON.stringify(history));
+        } catch (e) {}
+
+        // 4. Son et animation de célébration
+        if (typeof playNotificationSound === 'function') playNotificationSound();
+        if (typeof triggerCelebration === 'function') triggerCelebration();
+        if (navigator.vibrate) {
+            try { navigator.vibrate([100, 50, 100]); } catch (e) {}
+        }
+
+        if (typeof showToast === 'function') {
+            showToast("🎉 Merci ! Votre confirmation de réception a été transmise en direct au restaurant. Bon appétit !", "success", {
+                title: "Commande Réceptionnée !",
+                duration: 8000
+            });
+        }
+
+        // 5. Rafraîchir l'écran actif (suivi ou profil)
+        setTimeout(() => {
+            if (window.location.hash === '#/tracking' && typeof window.fetchOrderTracking === 'function') {
+                window.fetchOrderTracking();
+            } else if (window.location.hash === '#/profile' && typeof router !== 'undefined' && router.routes && router.routes['#/profile']) {
+                router.routes['#/profile']();
+            }
+        }, 300);
+
+    } catch (err) {
+        console.error("Erreur lors de la confirmation client de livraison:", err);
+        btns.forEach(btn => {
+            btn.disabled = false;
+            btn.innerHTML = '✅ Confirmer la réception';
+        });
+        if (typeof showToast === 'function') {
+            showToast("Impossible de confirmer pour l'instant. Veuillez réessayer.", "danger");
+        }
+    }
+};
+
 window.fetchOrderTracking = async function() {
     const rawPhone = document.getElementById('tracking-phone').value.trim();
     if (!rawPhone) {
@@ -3766,77 +4100,146 @@ window.fetchOrderTracking = async function() {
     try {
         if (supabaseClient) {
             try {
-            const { data, error } = await supabaseClient.rpc('get_order_tracking', {
-                p_phone: phone
-            });
-            if (!error && data) {
-                ordersData = data;
-            } else {
-                throw error || new Error("Supabase RPC failed");
+                const { data, error } = await supabaseClient.rpc('get_order_tracking', {
+                    p_phone: phone
+                });
+                if (!error && data) {
+                    ordersData = data;
+                } else {
+                    throw error || new Error("Supabase RPC failed");
+                }
+            } catch (err) {
+                console.warn("Supabase fetch failed, falling back to local memory:", err);
+                ordersData = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone);
             }
-        } catch (err) {
-            console.warn("Supabase fetch failed, falling back to local memory:", err);
+        } else {
             ordersData = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone);
         }
-    } else {
-        ordersData = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone);
-    }
-    
-    if (!ordersData || ordersData.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding: 2rem 0; color: var(--text-secondary);">Aucune commande récente trouvée pour ce numéro.</div>';
-        return;
-    }
-    
-    let html = '';
-    ordersData.forEach(order => {
-            const r = store.getRestaurantById(order.restaurant_id);
-            const rName = r ? r.name : 'Restaurant inconnu';
+        
+        if (!ordersData || ordersData.length === 0) {
+            // Also check local history
+            try {
+                const localHistory = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+                const filteredLocal = localHistory.filter(o => {
+                    const oPhone = cleanPhoneNumber(o.customerPhone || '');
+                    return oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
+                });
+                if (filteredLocal.length > 0) {
+                    ordersData = filteredLocal;
+                }
+            } catch (e) {}
+        }
+
+        if (!ordersData || ordersData.length === 0) {
+            container.innerHTML = '<div style="text-align:center; padding: 2rem 0; color: var(--text-secondary);">Aucune commande récente trouvée pour ce numéro.</div>';
+            return;
+        }
+        
+        let html = '';
+        ordersData.forEach(order => {
+            const r = store.getRestaurantById(order.restaurant_id || order.restaurantId);
+            const rName = r ? r.name : (order.restaurantName || 'Restaurant');
             
-            let statusColor = 'var(--text-secondary)';
+            let statusColor = 'var(--accent)';
             let statusIcon = '⏳';
             let stepPercent = 25;
+            let statusLabel = order.status || 'Reçue';
             
-            if (order.status === 'Reçue') { statusColor = 'var(--accent)'; statusIcon = '⏳'; stepPercent = 25; }
-            else if (order.status === 'Confirmée' || order.status === 'Prête') { statusColor = 'var(--primary)'; statusIcon = '👨‍🍳'; stepPercent = 50; }
-            else if (order.status === 'Livrée') { statusColor = '#20c997'; statusIcon = '✅'; stepPercent = 100; }
+            if (order.status === 'Reçue') {
+                statusColor = 'var(--accent)';
+                statusIcon = '⏳';
+                stepPercent = 25;
+                statusLabel = 'Reçue au restaurant';
+            } else if (order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine') {
+                statusColor = 'var(--primary)';
+                statusIcon = '👨‍🍳';
+                stepPercent = 50;
+                statusLabel = 'En préparation / En cuisine';
+            } else if (order.status === 'Prête' || order.status === 'En cours de livraison' || order.status === 'En livraison' || order.status === 'Partie en livraison') {
+                statusColor = '#0284c7';
+                statusIcon = '🛵';
+                stepPercent = 75;
+                statusLabel = 'En cours de livraison';
+            } else if (order.status === 'Livrée') {
+                statusColor = '#20c997';
+                statusIcon = '✅';
+                stepPercent = 100;
+                statusLabel = 'Livrée avec succès';
+            } else if (order.status === 'Annulée') {
+                statusColor = 'var(--danger)';
+                statusIcon = '❌';
+                stepPercent = 100;
+                statusLabel = 'Commande annulée';
+            }
             
             const isOtpVerified = order.otpVerified !== false;
+            const isDelivered = order.status === 'Livrée';
+            const isCancelled = order.status === 'Annulée';
 
             html += `
-                <div id="track-card-${order.id}" style="background: var(--bg-secondary); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1rem; position: relative; overflow: hidden;">
+                <div id="track-card-${order.id}" style="background: var(--bg-card); padding: 1.5rem; border-radius: 18px; border: 1.5px solid var(--border); margin-bottom: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow);">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                <span style="font-size: 0.8rem; color: var(--text-secondary);">Commande n° ${order.id}</span>
+                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary);">Commande n° ${order.id}</span>
                                 ${isOtpVerified ? `
                                     <span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; color: #059669; font-weight: 700; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.25);">
-                                        🛡️ Validée par SMS OTP
+                                        🛡️ Validée SMS
                                     </span>
                                 ` : ''}
                             </div>
-                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1.1rem;">${rName}</h4>
+                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1.15rem; font-weight: 800;">${rName}</h4>
                         </div>
-                        <div class="track-status-badge" style="background: rgba(255,255,255,0.1); padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; color: ${statusColor}; border: 1px solid ${statusColor}; display: flex; align-items: center; gap: 0.3rem;">
-                            <span>${statusIcon}</span> <span class="track-status-text">${order.status}</span>
+                        <div class="track-status-badge" style="background: rgba(255,255,255,0.06); padding: 0.4rem 0.85rem; border-radius: 20px; font-size: 0.85rem; font-weight: 800; color: ${statusColor}; border: 1.5px solid ${statusColor}; display: flex; align-items: center; gap: 0.4rem;">
+                            <span>${statusIcon}</span> <span class="track-status-text">${statusLabel}</span>
                         </div>
                     </div>
-                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                        ${order.items ? order.items.map(i => i.qty + 'x ' + i.name).join(', ') : ''}
+
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.4;">
+                        ${order.items ? order.items.map(i => `<span style="display: inline-block; background: var(--bg-secondary); padding: 2px 8px; border-radius: 6px; margin: 2px; font-size: 0.82rem; border: 1px solid var(--border);">${i.qty}x ${i.name}</span>`).join(' ') : ''}
                     </div>
                     
-                    <!-- Progress Bar -->
-                    <div style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-bottom: 0.5rem;">
-                        <div class="track-progress-bar" style="height: 100%; width: ${stepPercent}%; background: ${statusColor}; transition: width 0.5s ease-out, background 0.5s ease-out;"></div>
+                    <!-- Progress Bar 4 Steps -->
+                    <div style="margin-bottom: 1.25rem;">
+                        <div style="height: 8px; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; margin-bottom: 0.6rem; border: 1px solid var(--border);">
+                            <div class="track-progress-bar" style="height: 100%; width: ${stepPercent}%; background: ${statusColor}; transition: width 0.5s ease-out, background 0.5s ease-out;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">
+                            <span style="${stepPercent >= 25 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Reçue</span>
+                            <span style="${stepPercent >= 50 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
+                            <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 En livraison</span>
+                            <span style="${stepPercent >= 100 ? 'color: #059669; font-weight: 700;' : ''}">✅ Livrée</span>
+                        </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary);">
-                        <span style="${stepPercent >= 25 ? 'color: var(--text-primary); font-weight:bold;' : ''}">Reçue</span>
-                        <span style="${stepPercent >= 50 ? 'color: var(--text-primary); font-weight:bold;' : ''}">Confirmée</span>
-                        <span style="${stepPercent >= 100 ? 'color: var(--text-primary); font-weight:bold;' : ''}">Livrée</span>
-                    </div>
+
+                    <!-- Client Delivery Confirmation Action -->
+                    ${(!isDelivered && !isCancelled) ? `
+                        <div style="margin-top: 1rem; padding: 1rem 1.25rem; background: var(--bg-secondary); border: 1.5px solid rgba(32, 201, 151, 0.35); border-radius: 14px; text-align: center;">
+                            <p style="margin: 0 0 0.75rem; font-size: 0.95rem; color: var(--text-primary); font-weight: 700;">
+                                🛵 Votre commande est arrivée ou vous avez votre repas ?
+                            </p>
+                            <button type="button" id="btn-confirm-delivery-${order.id}" class="btn btn-success ripple hover-3d" onclick="confirmCustomerDelivery('${order.id}')" style="width: 100%; font-weight: 800; padding: 0.85rem 1.25rem; border-radius: 12px; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #20c997; border-color: #20c997; box-shadow: 0 4px 14px rgba(32, 201, 151, 0.3);">
+                                ✅ J'ai bien reçu ma commande
+                            </button>
+                            <span style="display: block; margin-top: 0.5rem; font-size: 0.78rem; color: var(--text-secondary);">
+                                Cliquer ici avertit immédiatement le restaurant que votre commande a été réceptionnée.
+                            </span>
+                        </div>
+                    ` : isDelivered ? `
+                        <div style="margin-top: 1rem; padding: 1rem 1.25rem; background: rgba(32, 201, 151, 0.12); border: 1.5px solid rgba(32, 201, 151, 0.35); border-radius: 14px; text-align: center;">
+                            <div style="font-size: 1.4rem; margin-bottom: 0.25rem;">🎉 🍽️</div>
+                            <div style="font-size: 1rem; font-weight: 800; color: #059669; margin-bottom: 0.25rem;">
+                                Commande livrée & réception validée !
+                            </div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                                Le restaurant a bien comptabilisé la livraison. Bon appétit !
+                            </div>
+                        </div>
+                    ` : ''}
                 </div>
             `;
             
-            // Setup Realtime Listener for this specific order (uses the relaxed SELECT RLS policy)
+            // Setup Realtime Listener for this specific order
             if (!window.trackingSubscriptions[order.id]) {
                 window.trackingSubscriptions[order.id] = supabaseClient.channel('track-' + order.id)
                     .on(
@@ -3845,13 +4248,8 @@ window.fetchOrderTracking = async function() {
                         (payload) => {
                             console.log('Order update tracked:', payload);
                             if (payload.new.status !== payload.old.status) {
-                                // Play sound
-                                const audio = document.getElementById('notification-sound');
-                                if (audio) audio.play().catch(e => console.log('Audio play blocked', e));
-                                
-                                // Refresh view
+                                playNotificationSound();
                                 window.fetchOrderTracking();
-                                
                                 showToast(`🔔 Mise à jour : Votre commande est maintenant "${payload.new.status}" !`, "success");
                             }
                         }
@@ -4069,71 +4467,223 @@ router.add('#/profile', () => {
 
     let historyCount = history.length;
 
-    // Generate Order History HTML with visual OTP status
+    // Group Order History by Month with visual progress bar
     let orderHistoryCardsHtml = '';
     if (history.length > 0) {
-        history.forEach(order => {
-            const isOtp = order.otpVerified !== false;
-            const totalFormatted = (order.total || 0).toLocaleString('fr-FR');
-            const itemsList = Array.isArray(order.items) 
-                ? order.items.map(i => `${i.qty || 1}x ${i.name || 'Produit'}`).join(', ')
-                : 'Détail de commande';
-            
-            let statusBadge = '<span class="badge badge-warning" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px;">⏳ Reçue</span>';
-            if (order.status === 'Confirmée' || order.status === 'Prête') {
-                statusBadge = '<span class="badge badge-success" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px;">👨‍🍳 Confirmée</span>';
-            } else if (order.status === 'En livraison') {
-                statusBadge = '<span class="badge badge-primary" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px;">🛵 En livraison</span>';
-            } else if (order.status === 'Livrée') {
-                statusBadge = '<span class="badge badge-success" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px;">✅ Livrée</span>';
+        const monthNamesFr = [
+            'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+        ];
+
+        const getOrderMonthInfo = (order) => {
+            let d = null;
+            if (order.savedAt) {
+                d = new Date(order.savedAt);
+            } else if (order.created_at) {
+                d = new Date(order.created_at);
+            } else if (order.date) {
+                const parts = String(order.date).split(/[\/\-\.]/);
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) {
+                        d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                    } else {
+                        d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+                    }
+                } else {
+                    const parsed = new Date(order.date);
+                    if (!isNaN(parsed.getTime())) d = parsed;
+                }
+            } else if (!isNaN(Number(order.id)) && Number(order.id) > 1600000000000) {
+                d = new Date(Number(order.id));
             }
+            if (!d || isNaN(d.getTime())) d = new Date();
 
+            const year = d.getFullYear();
+            const month = d.getMonth();
+            return {
+                key: `${year}-${String(month + 1).padStart(2, '0')}`,
+                label: `${monthNamesFr[month]} ${year}`,
+                dateObj: d
+            };
+        };
+
+        // Grouping
+        const groupedByMonth = {};
+        const monthKeys = [];
+
+        history.forEach(order => {
+            const mInfo = getOrderMonthInfo(order);
+            if (!groupedByMonth[mInfo.key]) {
+                groupedByMonth[mInfo.key] = {
+                    label: mInfo.label,
+                    dateObj: mInfo.dateObj,
+                    orders: [],
+                    totalAmount: 0
+                };
+                monthKeys.push(mInfo.key);
+            }
+            groupedByMonth[mInfo.key].orders.push(order);
+            groupedByMonth[mInfo.key].totalAmount += (Number(order.total) || 0);
+        });
+
+        // Render each month section
+        monthKeys.forEach((mKey, monthIndex) => {
+            const mData = groupedByMonth[mKey];
+            const monthTotalFormatted = mData.totalAmount.toLocaleString('fr-FR');
+            
             orderHistoryCardsHtml += `
-                <div class="profile-order-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.15rem; margin-bottom: 0.85rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem; gap: 0.5rem; flex-wrap: wrap;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
-                                <strong style="color: var(--text-primary); font-size: 0.98rem;">${order.restaurantName || 'Restaurant THIES'}</strong>
-                                <span style="font-size: 0.78rem; color: var(--text-secondary); font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: 6px;">#${order.id}</span>
-                            </div>
-                            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 3px;">
-                                📅 ${order.date || 'Aujourd\'hui'} ${order.time ? `• ${order.time}` : ''}
-                            </div>
+                <div class="profile-month-section" style="margin-bottom: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 0.85rem; background: var(--bg-input); border-radius: 12px; margin-bottom: 0.65rem; border: 1px solid var(--border);">
+                        <div style="display: flex; align-items: center; gap: 0.45rem;">
+                            <span style="font-size: 1rem;">📅</span>
+                            <strong style="font-size: 0.9rem; color: var(--text-primary); font-family: var(--font-serif);">${mData.label}</strong>
+                            <span style="font-size: 0.72rem; color: var(--text-secondary); background: var(--bg-card); padding: 2px 6px; border-radius: 8px; border: 1px solid var(--border); font-weight: 600;">
+                                ${mData.orders.length} ${mData.orders.length > 1 ? 'commandes' : 'commande'}
+                            </span>
                         </div>
-                        <div>
-                            ${statusBadge}
+                        <div style="font-size: 0.85rem; font-weight: 800; color: var(--primary);">
+                            ${monthTotalFormatted} FCFA
                         </div>
                     </div>
-
-                    <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.4;">
-                        ${itemsList}
-                    </div>
-
-                    <!-- OTP Status & Total Section -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.65rem; border-top: 1px dashed var(--border); flex-wrap: wrap; gap: 0.5rem;">
-                        <div>
-                            ${isOtp ? `
-                                <div class="badge-otp-verified" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
-                                    <span>🛡️ Validée par SMS OTP</span>
-                                </div>
-                            ` : `
-                                <div class="badge-otp-direct" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(107, 114, 128, 0.1); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                    <span>ℹ️ Commande directe</span>
-                                </div>
-                            `}
-                        </div>
-                        <div style="text-align: right;">
-                            <strong style="color: var(--primary); font-size: 0.98rem;">${totalFormatted} FCFA</strong>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
-                        <button class="btn btn-outline btn-sm" onclick="router.navigate('/tracking'); setTimeout(() => { const inp = document.getElementById('tracking-phone'); if(inp && '${order.customerPhone || customerPhone}') { inp.value = '${order.customerPhone || customerPhone}'; window.fetchOrderTracking(); } }, 150);" style="flex: 1; font-size: 0.78rem; padding: 0.4rem 0.6rem; border-radius: 10px;">
-                            📍 Suivre en direct
-                        </button>
-                    </div>
-                </div>
             `;
+
+            mData.orders.forEach(order => {
+                const isOtp = order.otpVerified !== false;
+                const totalFormatted = (order.total || 0).toLocaleString('fr-FR');
+                const itemsList = Array.isArray(order.items) 
+                    ? order.items.map(i => `<span style="display: inline-block; background: var(--bg-input); padding: 2px 7px; border-radius: 6px; margin: 2px; font-size: 0.8rem; border: 1px solid var(--border);">${i.qty || 1}x ${i.name || 'Produit'}</span>`).join(' ')
+                    : `<span style="font-size: 0.82rem; color: var(--text-secondary);">${order.items ? JSON.stringify(order.items) : 'Détail de commande'}</span>`;
+                
+                const isEnLivraison = order.status === 'En livraison' || order.status === 'En cours de livraison' || order.status === 'Partie en livraison' || order.status === 'Prête';
+                const isLivree = order.status === 'Livrée' || order.status === 'Livré';
+                const isCancelled = order.status === 'Annulée';
+
+                // Status & Progress step logic
+                let stepPercent = 25;
+                let statusColor = '#f59e0b';
+                let statusIcon = '⏳';
+                let statusBadgeText = 'Reçue';
+
+                if (order.status === 'Reçue') {
+                    stepPercent = 25;
+                    statusColor = '#f59e0b';
+                    statusIcon = '⏳';
+                    statusBadgeText = 'Reçue';
+                } else if (order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine') {
+                    stepPercent = 50;
+                    statusColor = 'var(--primary)';
+                    statusIcon = '👨‍🍳';
+                    statusBadgeText = 'En cuisine';
+                } else if (isEnLivraison) {
+                    stepPercent = 75;
+                    statusColor = '#0284c7';
+                    statusIcon = '🛵';
+                    statusBadgeText = 'En livraison';
+                } else if (isLivree) {
+                    stepPercent = 100;
+                    statusColor = '#059669';
+                    statusIcon = '✅';
+                    statusBadgeText = 'Livrée';
+                } else if (isCancelled) {
+                    stepPercent = 100;
+                    statusColor = 'var(--danger)';
+                    statusIcon = '❌';
+                    statusBadgeText = 'Annulée';
+                }
+
+                let statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
+                if (order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine') {
+                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(255, 107, 0, 0.12); color: var(--primary); border: 1px solid rgba(255, 107, 0, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
+                } else if (isEnLivraison) {
+                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
+                } else if (isLivree) {
+                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
+                } else if (isCancelled) {
+                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(220, 53, 69, 0.12); color: var(--danger); border: 1px solid rgba(220, 53, 69, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
+                }
+
+                orderHistoryCardsHtml += `
+                    <div class="profile-order-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.15rem; margin-bottom: 0.85rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                        <!-- Order Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; gap: 0.5rem; flex-wrap: wrap;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                                    <strong style="color: var(--text-primary); font-size: 0.98rem;">${order.restaurantName || 'Restaurant THIES'}</strong>
+                                    <span style="font-size: 0.78rem; color: var(--text-secondary); font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: 6px;">#${order.id}</span>
+                                </div>
+                                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 3px;">
+                                    📅 ${order.date || 'Aujourd\'hui'} ${order.time ? `• ⏰ ${order.time}` : ''}
+                                </div>
+                            </div>
+                            <div>
+                                ${statusBadge}
+                            </div>
+                        </div>
+
+                        <!-- Items ordered -->
+                        <div style="margin-bottom: 0.85rem; line-height: 1.5;">
+                            ${itemsList}
+                        </div>
+
+                        <!-- Visual Progress Bar for Order Status -->
+                        <div style="margin-bottom: 0.85rem; padding: 0.65rem 0.85rem; background: var(--bg-input); border-radius: 12px; border: 1px solid var(--border);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Statut de la commande</span>
+                                <span style="font-size: 0.75rem; font-weight: 800; color: ${statusColor};">${statusBadgeText} (${stepPercent}%)</span>
+                            </div>
+                            
+                            <!-- Progress Track -->
+                            <div style="height: 6px; background: rgba(0,0,0,0.06); border-radius: 10px; overflow: hidden; margin-bottom: 0.45rem; position: relative;">
+                                <div style="height: 100%; width: ${stepPercent}%; background: ${statusColor}; border-radius: 10px; transition: width 0.4s ease-in-out;"></div>
+                            </div>
+
+                            <!-- Milestone Labels -->
+                            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-secondary); font-weight: 600;">
+                                <span style="${stepPercent >= 25 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Reçue</span>
+                                <span style="${stepPercent >= 50 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
+                                <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 Livraison</span>
+                                <span style="${stepPercent >= 100 ? (isCancelled ? 'color: var(--danger); font-weight: 700;' : 'color: #059669; font-weight: 700;') : ''}">${isCancelled ? '❌ Annulée' : '✅ Livrée'}</span>
+                            </div>
+                        </div>
+
+                        <!-- OTP Status & Total Section -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.65rem; border-top: 1px dashed var(--border); flex-wrap: wrap; gap: 0.5rem;">
+                            <div>
+                                ${isOtp ? `
+                                    <div class="badge-otp-verified" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
+                                        <span>🛡️ Validée par SMS OTP</span>
+                                    </div>
+                                ` : `
+                                    <div class="badge-otp-direct" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(107, 114, 128, 0.1); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
+                                        <span>ℹ️ Commande directe</span>
+                                    </div>
+                                `}
+                            </div>
+                            <div style="text-align: right;">
+                                <strong style="color: var(--primary); font-size: 0.98rem;">${totalFormatted} FCFA</strong>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
+                            <button class="btn btn-outline btn-sm" onclick="router.navigate('/tracking'); setTimeout(() => { const inp = document.getElementById('tracking-phone'); if(inp && '${order.customerPhone || customerPhone}') { inp.value = '${order.customerPhone || customerPhone}'; window.fetchOrderTracking(); } }, 150);" style="flex: 1; font-size: 0.78rem; padding: 0.4rem 0.6rem; border-radius: 10px;">
+                                📍 Suivre en direct
+                            </button>
+                            ${isEnLivraison ? `
+                                <button id="btn-confirm-delivery-${order.id}" data-confirm-order-id="${order.id}" class="btn btn-success btn-sm ripple hover-3d" onclick="confirmCustomerDelivery('${order.id}')" style="flex: 1.3; font-weight: 700; font-size: 0.8rem; padding: 0.45rem 0.75rem; border-radius: 10px; background: #20c997; border-color: #20c997; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; box-shadow: 0 2px 8px rgba(32,201,151,0.25);">
+                                    ✅ Confirmer la réception
+                                </button>
+                            ` : isLivree ? `
+                                <span style="font-size: 0.78rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.35rem 0.6rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
+                                    ✅ Réception confirmée
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            orderHistoryCardsHtml += `</div>`; // Close month section
         });
     } else {
         orderHistoryCardsHtml = `
@@ -5279,8 +5829,19 @@ window.setupRealtime = function() {
                                 });
                             }
                         } else if (eventType === 'UPDATE') {
-                            if (typeof showToast === 'function') {
-                                showToast(`Commande #${orderId} mise à jour : ${newStatus}`, "info");
+                            if (newStatus === 'Livrée' || newStatus === 'Livré') {
+                                playNotificationSound();
+                                if (typeof showToast === 'function') {
+                                    showToast(`🎉 Le client a confirmé la bonne réception de la commande #${orderId} ! Statut : Livrée.`, "success", {
+                                        title: "📦 Commande Réceptionnée & Livrée !",
+                                        icon: "✅",
+                                        duration: 8500
+                                    });
+                                }
+                            } else {
+                                if (typeof showToast === 'function') {
+                                    showToast(`Commande #${orderId} mise à jour : ${newStatus}`, "info");
+                                }
                             }
                         }
 

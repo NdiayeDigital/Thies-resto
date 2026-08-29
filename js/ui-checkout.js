@@ -66,17 +66,26 @@ function renderCheckoutTab(r) {
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">Prénom <span class="required">*</span></label>
-                    <input type="text" id="order-firstname" class="form-control" placeholder="Awa" required>
+                    <input type="text" id="order-firstname" class="form-control" placeholder="Awa" required autocomplete="given-name">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Nom <span class="required">*</span></label>
-                    <input type="text" id="order-lastname" class="form-control" placeholder="Diop" required>
+                    <input type="text" id="order-lastname" class="form-control" placeholder="Diop" required autocomplete="family-name">
                 </div>
             </div>
             
             <div class="form-group">
-                <label class="form-label">Numéro WhatsApp <span class="required">*</span></label>
-                <input type="tel" id="order-phone" class="form-control" placeholder="+221 77 123 45 67" required>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                    <label class="form-label" style="margin-bottom: 0;">Numéro WhatsApp <span class="required">*</span></label>
+                    <span id="order-phone-badge" style="font-size: 0.75rem; font-weight: 600;"></span>
+                </div>
+                <div style="position: relative;">
+                    <input type="tel" id="order-phone" class="form-control" placeholder="+221 77 123 45 67" required autocomplete="tel" style="padding-right: 2.5rem; transition: all 0.2s ease;">
+                    <span id="order-phone-icon" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; opacity: 0.85;"></span>
+                </div>
+                <div id="order-phone-feedback" style="margin-top: 0.35rem; font-size: 0.78rem; min-height: 1.2rem; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s ease;">
+                    <span style="color: var(--text-secondary);">💡 Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>
+                </div>
             </div>
             
             <div class="form-group">
@@ -106,36 +115,132 @@ function renderCheckoutTab(r) {
                 </div>
             </div>
             
-                        <div class="form-group" id="delivery-address-group" style="display: none;">
-                <label class="form-label">Pointer votre position sur la carte <span class="required">*</span></label>
-                <div id="delivery-map" style="height: 200px; width: 100%; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border);"></div>
+            <div class="form-group" id="delivery-address-group" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <label class="form-label" style="margin-bottom: 0;">Position de livraison exacte <span class="required">*</span></label>
+                    <button type="button" id="btn-live-gps" class="btn btn-outline btn-sm" onclick="locateClientLive()" style="padding: 0.35rem 0.75rem; font-size: 0.8rem; border-radius: 20px; display: inline-flex; align-items: center; gap: 0.35rem; color: var(--primary); border-color: var(--primary);">
+                        📍 Ma position exacte en direct (GPS)
+                    </button>
+                </div>
+                <div id="delivery-map" style="height: 220px; width: 100%; border-radius: 14px; margin-bottom: 0.75rem; border: 1.5px solid var(--border);"></div>
+                <div id="live-gps-status" style="display: none; font-size: 0.8rem; color: #059669; font-weight: 600; margin-bottom: 0.5rem; background: rgba(16, 185, 129, 0.1); padding: 0.4rem 0.75rem; border-radius: 8px;">
+                    ✅ Position GPS en direct capturée avec succès
+                </div>
                 <div id="delivery-fee-display" style="font-weight: bold; color: var(--primary); margin-bottom: 1rem; display: none;">Frais de livraison : <span id="fee-val">0</span> FCFA</div>
                 
-                <label class="form-label">Adresse Détaillée (Optionnel)</label>
-                <input type="text" id="order-address" class="form-control" placeholder="Indication supplémentaire...">
+                <label class="form-label">Adresse Détaillée / Point de repère</label>
+                <input type="text" id="order-address" class="form-control" placeholder="Quartier, rue, villa, près de...">
             </div>
             
-                        <div class="form-group">
+            <div class="form-group">
                 <label class="form-label">Notes Spéciales / Allergies (Optionnel)</label>
                 <textarea id="order-notes" class="form-control" placeholder="Sans piment, sauce à part..."></textarea>
             </div>
             
             <div class="form-group" style="margin-top: 1rem;">
                 <label style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer;">
-                    <input type="checkbox" id="order-gdpr" required style="margin-top: 0.2rem;">
+                    <input type="checkbox" id="order-gdpr" required style="margin-top: 0.2rem;" checked>
                     <span>J'accepte que mes données (nom, téléphone) soient transmises au restaurateur pour le traitement de ma commande.</span>
                 </label>
             </div>
             
-            <button type="submit" class="btn btn-primary btn-block">
+            <button type="submit" id="btn-submit-order" class="btn btn-primary btn-block" style="font-weight: 700; font-size: 1rem; padding: 0.85rem 1.5rem; border-radius: 14px; box-shadow: 0 4px 14px rgba(255, 107, 0, 0.25);">
                 Envoyer ma commande au restaurant 🛵
             </button>
         </form>
     `;
+
+    // Pre-fill user profile & attach real-time phone validation
+    setTimeout(() => {
+        const phoneInput = document.getElementById('order-phone');
+        const firstnameInput = document.getElementById('order-firstname');
+        const lastnameInput = document.getElementById('order-lastname');
+
+        const savedPhone = localStorage.getItem('customerPhone') || localStorage.getItem('user_phone') || sessionStorage.getItem('user_phone') || '';
+        const savedName = localStorage.getItem('customerName') || localStorage.getItem('user_name') || '';
+
+        if (savedPhone && phoneInput && !phoneInput.value) {
+            phoneInput.value = savedPhone;
+        }
+
+        if (savedName && firstnameInput && lastnameInput && !firstnameInput.value && !lastnameInput.value) {
+            const parts = savedName.trim().split(' ');
+            if (parts.length > 1) {
+                firstnameInput.value = parts[0];
+                lastnameInput.value = parts.slice(1).join(' ');
+            } else if (parts.length === 1) {
+                firstnameInput.value = parts[0];
+            }
+        }
+
+        if (phoneInput && typeof window.attachRealtimePhoneValidation === 'function') {
+            window.attachRealtimePhoneValidation(
+                'order-phone',
+                'order-phone-feedback',
+                'order-phone-badge',
+                'order-phone-icon'
+            );
+        }
+    }, 30);
 }
 
 let deliveryMap = null;
 let deliveryMarker = null;
+
+window.locateClientLive = function() {
+    const btn = document.getElementById('btn-live-gps');
+    const statusEl = document.getElementById('live-gps-status');
+    if (!navigator.geolocation) {
+        if (typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée par votre navigateur.", "danger");
+        return;
+    }
+
+    if (btn) btn.innerHTML = '⏳ Localisation en direct...';
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            cart.deliveryLat = lat;
+            cart.deliveryLng = lng;
+
+            if (deliveryMap && deliveryMarker) {
+                deliveryMap.setView([lat, lng], 16);
+                deliveryMarker.setLatLng([lat, lng]);
+                deliveryMarker.fire('dragend');
+            }
+
+            if (btn) {
+                btn.innerHTML = '📍 Position GPS capturée ✅';
+                btn.classList.remove('btn-outline');
+                btn.classList.add('btn-success');
+            }
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.innerHTML = `✅ Position GPS exacte capturée (${lat.toFixed(5)}, ${lng.toFixed(5)})`;
+            }
+
+            const addressInput = document.getElementById('order-address');
+            if (addressInput && !addressInput.value.trim()) {
+                addressInput.placeholder = "Position GPS enregistrée. Précisez si besoin (villa, étage...)";
+            }
+
+            if (typeof showToast === 'function') {
+                showToast("📍 Votre position exacte en direct a été enregistrée pour la livraison.", "success");
+            }
+            if (navigator.vibrate) navigator.vibrate(60);
+        },
+        (err) => {
+            console.warn("Live Geolocation error:", err);
+            if (btn) btn.innerHTML = '📍 Ma position exacte (GPS)';
+            if (typeof showToast === 'function') {
+                showToast("Veuillez autoriser l'accès GPS pour partager votre position exacte.", "warning");
+            }
+        },
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 5000 }
+    );
+};
 
 function toggleAddressField(show) {
     const group = document.getElementById('delivery-address-group');
@@ -180,7 +285,7 @@ function toggleAddressField(show) {
                     options: { position: 'topright' },
                     onAdd: function () {
                         const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
-                        btn.innerHTML = '📍 Me localiser';
+                        btn.innerHTML = '📍 GPS Direct';
                         btn.style.backgroundColor = 'white';
                         btn.style.padding = '5px 10px';
                         btn.style.cursor = 'pointer';
@@ -191,21 +296,7 @@ function toggleAddressField(show) {
                         
                         btn.onclick = function(e) {
                             e.preventDefault();
-                            if(navigator.geolocation) {
-                                btn.innerHTML = '⏳...';
-                                navigator.geolocation.getCurrentPosition(pos => {
-                                    const lat = pos.coords.latitude;
-                                    const lng = pos.coords.longitude;
-                                    deliveryMap.setView([lat, lng], 15);
-                                    deliveryMarker.setLatLng([lat, lng]);
-                                    deliveryMarker.fire('dragend'); // Recalculate distance & fees
-                                    btn.innerHTML = '📍 Me localiser';
-                                    if(navigator.vibrate) navigator.vibrate(50);
-                                }, err => {
-                                    if(typeof showToast === 'function') showToast("Géolocalisation refusée ou impossible.", "error");
-                                    btn.innerHTML = '📍 Me localiser';
-                                });
-                            }
+                            window.locateClientLive();
                         };
                         return btn;
                     }
@@ -250,21 +341,48 @@ function checkOrderRateLimit() {
 function submitSimpleOrder(e, restaurantId) {
     e.preventDefault();
     
-    if (!checkOrderRateLimit()) return;
-    
     const r = store.getRestaurantById(restaurantId);
+    if (!r) return;
+
+    const phoneInput = document.getElementById('order-phone');
+    const rawPhone = phoneInput ? phoneInput.value.trim() : '';
+    
+    // Strict Senegal Real-time Validation Check
+    const validation = typeof validateSenegalPhoneNumber === 'function'
+        ? validateSenegalPhoneNumber(rawPhone)
+        : { isValid: /^\+221(70|75|76|77|78)\d{7}$/.test(cleanPhoneNumber(rawPhone)) };
+
+    if (!validation.isValid) {
+        if (phoneInput) {
+            phoneInput.focus();
+            phoneInput.style.borderColor = '#ef4444';
+            phoneInput.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.25)';
+            // Add a brief subtle shake
+            phoneInput.style.transform = 'translateX(-4px)';
+            setTimeout(() => { phoneInput.style.transform = 'translateX(4px)'; }, 80);
+            setTimeout(() => { phoneInput.style.transform = 'translateX(-4px)'; }, 160);
+            setTimeout(() => { phoneInput.style.transform = 'translateX(0)'; }, 240);
+        }
+        const errorMsg = validation.message || "Veuillez entrer un numéro de téléphone sénégalais valide (ex: 77 123 45 67)";
+        if (typeof showToast === 'function') {
+            showToast(errorMsg, "warning");
+        }
+        return;
+    }
+
+    if (!checkOrderRateLimit()) return;
     
     const firstname = document.getElementById('order-firstname').value.trim();
     const lastname = document.getElementById('order-lastname').value.trim();
-    const phone = cleanPhoneNumber(document.getElementById('order-phone').value.trim());
+    const phone = validation.clean || cleanPhoneNumber(rawPhone);
     const mode = document.querySelector('input[name="order-mode"]:checked').value;
-    const address = document.getElementById('order-address').value.trim();
-    const notes = document.getElementById('order-notes').value.trim();
-    
-    // Validate phone number
-    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(phone.replace(/\s+/g, ''))) {
-        showToast("Numéro de téléphone sénégalais invalide (ex: +221 77 XXX XX XX)", "danger");
-        return;
+    const address = document.getElementById('order-address') ? document.getElementById('order-address').value.trim() : '';
+    const notes = document.getElementById('order-notes') ? document.getElementById('order-notes').value.trim() : '';
+
+    // Remember customer details for future orders
+    localStorage.setItem('customerPhone', phone);
+    if (firstname || lastname) {
+        localStorage.setItem('customerName', `${firstname} ${lastname}`.trim());
     }
     
     const orderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
@@ -583,7 +701,11 @@ window.executePendingOrder = async function() {
 
         // 3. Generate WhatsApp Link with SECURE Server Data
         let itemsText = window.pendingOrderContext.order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
-        const waText = `Bonjour ${r.name}, voici ma commande officielle n°*${securedOrder.order_id}* sur THIES Resto.\n\n👤 *Client* : ${firstname} ${lastname} (${phone})\n🍽️ *Plats* : ${itemsText}\n🛵 *Mode* : ${mode}\n${order.address ? `📍 *Adresse* : ${order.address}\n` : ''}💰 *Total Sécurisé* : ${securedOrder.total_price} FCFA\n\nMerci de confirmer la réception !`;
+        let gpsLink = '';
+        if (order.deliveryLat && order.deliveryLng) {
+            gpsLink = `📍 *Position GPS en direct* : https://www.google.com/maps?q=${order.deliveryLat},${order.deliveryLng}\n`;
+        }
+        const waText = `Bonjour ${r.name}, voici ma commande officielle n°*${securedOrder.order_id}* sur THIES Resto.\n\n👤 *Client* : ${firstname} ${lastname} (${phone})\n🍽️ *Plats* : ${itemsText}\n🛵 *Mode* : ${mode}\n${order.address ? `📍 *Adresse* : ${order.address}\n` : ''}${gpsLink}💰 *Total Sécurisé* : ${securedOrder.total_price} FCFA\n\nMerci de confirmer la réception !`;
         const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
 
         container.innerHTML = `

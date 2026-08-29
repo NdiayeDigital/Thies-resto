@@ -213,37 +213,42 @@ function renderDashboardTabContent(r) {
                 // Status styles
                 let statusBadge = '';
                 let actionBtns = '';
+                const clientLat = o.deliveryLat || o.delivery_lat;
+                const clientLng = o.deliveryLng || o.delivery_lng;
                 
                 if (o.status === 'Reçue') {
                     statusBadge = `<span class="badge badge-warning" style="animation: pulseMainCircle 2s infinite;">Reçue</span>`;
                     actionBtns = `
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             <button class="btn btn-primary" onclick="changeOrderStatus('${o.id}', 'Confirmée')" style="font-weight: 700; flex: 1;">
-                                ✅ Accepter & notifier 💬
+                                👨‍🍳 Mettre en cuisine (Accepter)
                             </button>
                             <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700; flex: 1;">
                                 ❌ Refuser la commande
                             </button>
                         </div>
                     `;
-                } else if (o.status === 'Confirmée') {
-                    statusBadge = `<span class="badge badge-info">En Préparation</span>`;
+                } else if (o.status === 'Confirmée' || o.status === 'En préparation' || o.status === 'En cuisine') {
+                    statusBadge = `<span class="badge badge-info">👨‍🍳 En Cuisine</span>`;
                     actionBtns = `
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                            <button class="btn btn-success" onclick="changeOrderStatus('${o.id}', 'Prête')" style="font-weight: 700; flex: 1; background: #007bff; border-color: #007bff;">
-                                🛵 Prête & notifier client 💬
+                            <button class="btn btn-info" onclick="changeOrderStatus('${o.id}', 'En cours de livraison')" style="font-weight: 700; flex: 1; background: #0284c7; border-color: #0284c7; color: white;">
+                                🛵 Partir en livraison
+                            </button>
+                            <button class="btn btn-success" onclick="changeOrderStatus('${o.id}', 'Livrée')" style="font-weight: 700; flex: 1; background: var(--success); border-color: var(--success);">
+                                ✅ Livrée / Récupérée
                             </button>
                             <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700;">
                                 ❌ Annuler
                             </button>
                         </div>
                     `;
-                } else if (o.status === 'Prête') {
-                    statusBadge = `<span class="badge badge-success">Prête</span>`;
+                } else if (o.status === 'En cours de livraison' || o.status === 'Prête') {
+                    statusBadge = `<span class="badge badge-primary" style="background: #0284c7; border-color: #0284c7;">🛵 En Livraison</span>`;
                     actionBtns = `
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             <button class="btn btn-success" onclick="changeOrderStatus('${o.id}', 'Livrée')" style="font-weight: 700; flex: 1; background: var(--success); border-color: var(--success);">
-                                📦 Livrée / Récupérée 💬
+                                ✅ Valider Livraison effectuée
                             </button>
                             <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700;">
                                 ❌ Annuler
@@ -254,12 +259,12 @@ function renderDashboardTabContent(r) {
                     statusBadge = `<span class="badge badge-danger">Annulée</span>`;
                     actionBtns = `<span style="font-size: 0.85rem; color: var(--danger); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: rgba(var(--danger-rgb,220,53,69), 0.1); border-radius: 8px;">❌ Commande refusée / annulée</span>`;
                 } else {
-                    statusBadge = `<span class="badge badge-success" style="opacity: 0.6">Livrée / Récupérée</span>`;
+                    statusBadge = `<span class="badge badge-success">✅ Livrée</span>`;
                     const reviewText = `Bonjour ${o.customerName}, avez-vous aimé votre commande chez ${r.name} ? Laissez-nous un avis sur Thiès Resto ! https://thies-resto.com/#/r/${r.slug}`;
                     const waLink = `https://wa.me/${o.customerPhone.replace(/\+/g, '')}?text=${encodeURIComponent(reviewText)}`;
                     actionBtns = `
                         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; display: block; text-align: center; padding: 0.5rem; background: var(--bg-secondary); border-radius: 8px;">✅ Commande traitée et archivée</span>
+                            <span style="font-size: 0.85rem; color: #059669; font-weight: 700; display: block; text-align: center; padding: 0.5rem; background: rgba(16, 185, 129, 0.12); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.25);">✅ Commande livrée & comptabilisée avec succès</span>
                             <a href="${waLink}" target="_blank" class="btn btn-primary" style="font-weight: 700; background: #25D366; border-color: #25D366; display: flex; justify-content: center; align-items: center; gap: 0.5rem;">⭐ Relance Avis (WhatsApp)</a>
                         </div>
                     `;
@@ -279,6 +284,14 @@ function renderDashboardTabContent(r) {
                                 <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">👤 Client :</strong> <span style="font-weight: 700;">${o.customerName}</span></p>
                                 <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">📞 WhatsApp :</strong> <a href="https://wa.me/${o.customerPhone.replace(/\+/g, '')}" target="_blank" class="call-btn" style="margin-left:0.25rem;">💬 Ouvrir WhatsApp (${o.customerPhone})</a></p>
                                 ${o.address ? `<p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">📍 Adresse :</strong> ${o.address}</p>` : ''}
+                                ${(clientLat && clientLng) ? `
+                                    <p style="margin: 0.35rem 0; font-size: 0.9rem;">
+                                        <strong style="color:var(--text-secondary)">📍 Localisation GPS :</strong> 
+                                        <a href="https://www.google.com/maps?q=${clientLat},${clientLng}" target="_blank" class="call-btn" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; padding: 4px 10px; border-radius: 8px; margin-top: 0.2rem;">
+                                            🗺️ Ouvrir GPS Client (Google Maps)
+                                        </a>
+                                    </p>
+                                ` : ''}
                             </div>
                             <div>
                                 <p style="margin: 0.25rem 0; font-size: 0.9rem;"><strong style="color:var(--text-secondary)">🛵 Récupération :</strong> <span class="badge ${o.mode === 'Livraison' ? 'badge-primary' : 'badge-info'}" style="font-weight:700;">${o.mode}</span></p>
@@ -1218,12 +1231,12 @@ function changeOrderStatus(orderId, nextStatus) {
     let pushText = '';
     const restoName = currentRestaurantSession ? currentRestaurantSession.name || '' : '';
     
-    if (nextStatus === 'Confirmée') {
+    if (nextStatus === 'Confirmée' || nextStatus === 'En préparation' || nextStatus === 'En cuisine') {
         pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* a été *acceptée* et part en cuisine ! 🍳\n\nMontant : ${o.total} FCFA\nMode : ${o.mode}\n\nMerci pour votre confiance !`;
-    } else if (nextStatus === 'Prête') {
-        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* est *PRÊTE* ! 🛵\n\n${o.mode === 'Livraison' ? 'Elle est en cours de livraison.' : 'Vous pouvez venir la récupérer.'}\n\nBon appétit !`;
-    } else if (nextStatus === 'Livrée') {
-        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* a été *livrée avec succès*. 😋\n\nMerci et à bientôt sur Thiès à Table !`;
+    } else if (nextStatus === 'Prête' || nextStatus === 'En cours de livraison' || nextStatus === 'En livraison') {
+        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* est *EN COURS DE LIVRAISON* ! 🛵\n\n${o.mode === 'Livraison' ? 'Le livreur est en route.' : 'Vous pouvez venir la récupérer.'}\n\nBon appétit !`;
+    } else if (nextStatus === 'Livrée' || nextStatus === 'Livré') {
+        pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* a été *livrée avec succès*. 😋\n\nMerci et à bientôt sur Thiès Resto !`;
     } else if (nextStatus === 'Annulée') {
         pushText = `Bonjour ${o.customerName} 👋\n\nNous sommes désolés, votre commande n°${o.id} chez *${restoName}* a été *annulée* par le restaurant. ❌\n\nVeuillez nous excuser pour ce désagrément. N'hésitez pas à passer une nouvelle commande.`;
     }
