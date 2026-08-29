@@ -928,32 +928,26 @@ window.updateStartupVerificationUI = function() {
         }
     }
 
+    if (!authLabel && !authStatusText && !authDot) return;
+
     if (isSuperAdminSession) {
         if (authLabel) authLabel.textContent = "Super-Admin";
         if (authStatusText) authStatusText.textContent = "Connecté 👑";
-        if (authDot) {
-            authDot.className = "micro-dot red";
-        }
+        if (authDot) authDot.className = "micro-dot red";
     } else if (currentRestaurantSession) {
         if (authLabel) authLabel.textContent = currentRestaurantSession.name || "Restaurateur";
         if (authStatusText) authStatusText.textContent = "Partenaire 🏪";
-        if (authDot) {
-            authDot.className = "micro-dot green";
-        }
+        if (authDot) authDot.className = "micro-dot green";
     } else {
         const storedPhone = localStorage.getItem('thies_resto_user_phone') || localStorage.getItem('client_phone');
         if (storedPhone) {
             if (authLabel) authLabel.textContent = "Client";
             if (authStatusText) authStatusText.textContent = "Vérifié ✓";
-            if (authDot) {
-                authDot.className = "micro-dot green";
-            }
+            if (authDot) authDot.className = "micro-dot green";
         } else {
-            if (authLabel) authLabel.textContent = "Invité";
-            if (authStatusText) authStatusText.textContent = "Mode Découverte";
-            if (authDot) {
-                authDot.className = "micro-dot blue";
-            }
+            if (authLabel) authLabel.textContent = "";
+            if (authStatusText) authStatusText.textContent = "";
+            if (authDot) authDot.className = "micro-dot blue";
         }
     }
 };
@@ -1149,30 +1143,31 @@ router.add('#/', () => {
         <!-- ========== HERO SECTION ========== -->
         <section class="hero-section page-transition" style="background: linear-gradient(var(--glass-bg), var(--bg-primary)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
             <div class="hero-split-container">
-                <!-- Left: Title, Description and Search -->
-                <div class="hero-left-col hover-3d" style="padding: 2rem; border-radius: 24px; background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--border); box-shadow: var(--shadow);">
-                    <span class="greeting-text" style="display: block; font-size: 1.1rem; color: var(--primary); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 2px;">${greeting}</span>
-                    <h1 class="hero-title" style="color: var(--text-primary); text-shadow: 0 4px 20px rgba(0,0,0,0.8); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.5rem;">Découvrez les Meilleures Tables de <span style="color: var(--primary);">Thiès</span></h1>
-                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.2rem; line-height: 1.6; margin-bottom: 2.5rem;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+                <!-- Center Hero Card: Title, Description, Search and Actions -->
+                <div class="hero-left-col hover-3d" style="padding: 2.5rem 2rem; border-radius: 24px; background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--border); box-shadow: var(--shadow); max-width: 800px; margin: 0 auto; width: 100%;">
+                    <div class="hero-greeting-badge" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1.1rem; border-radius: 30px; background: rgba(242, 107, 33, 0.12); border: 1px solid rgba(242, 107, 33, 0.3); color: var(--primary); font-weight: 700; font-size: 0.85rem; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 1.5px;">
+                        <span>✨</span> <span>${greeting}</span>
+                    </div>
+                    <h1 class="hero-title" style="color: var(--text-primary); text-shadow: 0 4px 20px rgba(0,0,0,0.8); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.25rem; line-height: 1.25;">Découvrez les Meilleures Tables de <span style="color: var(--primary);">Thiès</span></h1>
+                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; max-width: 640px; margin-left: auto; margin-right: auto;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
-                    <div class="search-container hover-3d" style="margin: 0 0 2rem 0; width: 100%; max-width: 480px; position: relative;">
-                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem 3rem 1.2rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth);">
-                        <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem;">🔍</button>
+                    <div class="search-container hover-3d" style="margin: 0 auto 1.75rem auto; width: 100%; max-width: 500px; position: relative;">
+                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.1rem 3rem 1.1rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth); font-size: 16px;">
+                        <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher">🔍</button>
                     </div>
 
-                    <div class="hero-actions-container" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start; margin-top: 1.5rem; margin-bottom: 1rem;">
-                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); padding: 1.1rem 2.2rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem;">Explorer nos Menus 🍽️</button>
-                        <button class="btn btn-secondary ripple hover-3d" onclick="geolocateRestaurants()" style="background: var(--glass-bg); color: var(--text-primary); border: 1px solid var(--border); padding: 1.1rem 2.2rem; border-radius: 14px; font-weight: 600; font-size: 1.05rem;">📍 Trouver autour de moi</button>
+                    <div class="hero-actions-container" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 1.25rem; width: 100%;">
+                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); min-height: 48px; padding: 0.95rem 2rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem;">Explorer nos Menus 🍽️</button>
+                        <button class="btn btn-secondary ripple hover-3d" id="hero-geo-btn" onclick="geolocateRestaurants()" style="background: var(--bg-card); color: var(--text-primary); border: 1.5px solid var(--border); min-height: 48px; padding: 0.95rem 2rem; border-radius: 14px; font-weight: 600; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">📍 Trouver autour de moi</button>
                     </div>
                 </div>
-                
             </div>
         </section>
         <!-- VOS DERNIERES COMMANDES PERSISTANT -->
         ${historyHtml}
 
         <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
-        <section class="presentation-section" id="presentation-section">
+        <section class="presentation-section" id="presentation-section" style="margin-top: 2.5rem; padding: 3rem 1.5rem;">
             <div class="reference-row-cards">
                 <!-- Left Card: Zero Account -->
                 <div class="ref-card-text">
