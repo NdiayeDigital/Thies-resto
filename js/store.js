@@ -880,36 +880,124 @@ class Store {
     }
 
     // ============================================
-    // OTP VERIFICATION METHODS (SMS integration)
+    // OTP VERIFICATION METHODS (Twilio SMS & Fallback)
     // ============================================
 
     async generateOtp(phone) {
-        if (!supabaseClient) return false;
+        // 1. Appel du backend Twilio SMS API (/api/otp/send)
         try {
-            const { data, error } = await supabaseClient.rpc('generate_otp', {
-                p_phone: phone
+            const response = await fetch('/api/otp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone })
             });
-            if (error) throw error;
-            return data;
-        } catch (err) {
-            console.error("Erreur lors de la génération de l'OTP:", err);
-            throw err;
+            const result = await response.json();
+            if (response.ok && result.success) {
+                // Si en mode démo (clés Twilio non encore ajoutées), on garde aussi une copie locale
+                if (result.devCode) {
+                    const otpSession = {
+                        code: result.devCode,
+                        phone: phone,
+                        expiresAt: Date.now() + (5 * 60 * 1000)
+                    };
+                    try {
+                        sessionStorage.setItem('active_otp_' + phone.replace(/[^\d+]/g, ''), JSON.stringify(otpSession));
+                    } catch(e) {}
+                }
+                return result;
+            } else if (result && result.message) {
+                return { success: false, message: result.message, devCode: result.devCode };
+            }
+        } catch (apiErr) {
+            console.warn("API /api/otp/send non joignable, tentative de secours:", apiErr);
         }
+
+        // 2. Tenter via Supabase RPC si configuré
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.rpc('generate_otp', {
+                    p_phone: phone
+                });
+                if (!error && data) {
+                    if (typeof OneSignalManager !== 'undefined' && OneSignalManager.sendOtpNotification) {
+                        OneSignalManager.sendOtpNotification(phone, data);
+                    }
+                    return { success: true, isDemoMode: false, code: data };
+                }
+            } catch (err) {
+                console.warn("RPC Supabase generate_otp indisponible, bascule locale:", err);
+            }
+        }
+
+        // 3. Génération locale de secours
+        const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpSession = {
+            code: generatedCode,
+            phone: phone,
+            expiresAt: Date.now() + (5 * 60 * 1000)
+        };
+        try {
+            sessionStorage.setItem('active_otp_' + phone.replace(/[^\d+]/g, ''), JSON.stringify(otpSession));
+        } catch(e) {}
+
+        return {
+            success: true,
+            isDemoMode: true,
+            devCode: generatedCode,
+            message: "Code généré en mode local"
+        };
     }
 
     async verifyOtp(phone, code) {
-        if (!supabaseClient) return false;
+        // 1. Vérification via backend Twilio API (/api/otp/verify)
         try {
-            const { data, error } = await supabaseClient.rpc('verify_otp', {
-                p_phone: phone,
-                p_code: code
+            const response = await fetch('/api/otp/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone, code })
             });
-            if (error) throw error;
-            return data; // Returns boolean (true if verified, false otherwise)
-        } catch (err) {
-            console.error("Erreur lors de la vérification de l'OTP:", err);
-            throw err;
+            const result = await response.json();
+            if (response.ok && result.verified) {
+                return { success: true, verified: true };
+            }
+            if (result && result.message) {
+                return { success: false, verified: false, message: result.message };
+            }
+        } catch (apiErr) {
+            console.warn("API /api/otp/verify non joignable, tentative locale:", apiErr);
         }
+
+        // 2. Tenter via Supabase RPC si configuré
+        if (supabaseClient) {
+            try {
+                const { data, error } = await supabaseClient.rpc('verify_otp', {
+                    p_phone: phone,
+                    p_code: code
+                });
+                if (!error && typeof data === 'boolean' && data) {
+                    return { success: true, verified: true };
+                }
+            } catch (err) {
+                console.warn("RPC Supabase verify_otp indisponible:", err);
+            }
+        }
+
+        // 3. Vérification locale de l'OTP actif
+        try {
+            const rawSession = sessionStorage.getItem('active_otp_' + phone.replace(/[^\d+]/g, ''));
+            if (!rawSession) return { success: false, verified: false, message: "Code expiré ou inexistant" };
+            const session = JSON.parse(rawSession);
+            if (Date.now() > session.expiresAt) {
+                sessionStorage.removeItem('active_otp_' + phone.replace(/[^\d+]/g, ''));
+                return { success: false, verified: false, message: "Le code a expiré" };
+            }
+            if (session.code === String(code).trim()) {
+                sessionStorage.removeItem('active_otp_' + phone.replace(/[^\d+]/g, ''));
+                return { success: true, verified: true };
+            }
+        } catch(e) {}
+
+        return { success: false, verified: false, message: "Code incorrect" };
     }
 }
 

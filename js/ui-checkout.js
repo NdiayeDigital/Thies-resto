@@ -307,77 +307,196 @@ function submitSimpleOrder(e, restaurantId) {
     // Sinon, on demande la vérification OTP
     const container = document.getElementById('checkout-content-container');
     container.innerHTML = `
-        <div class="confirmation-screen">
-            <div class="spinner-ring" style="width:40px;height:40px;border-width:4px;margin: 0 auto 1rem;"></div>
-            <h2>Génération du code de sécurité...</h2>
-            <p style="color: var(--text-secondary);">Envoi d'un code OTP sécurisé au <strong>${phone}</strong></p>
+        <div class="confirmation-screen" style="max-width: 440px; margin: 2rem auto 0; background: var(--bg-card); padding: 2.5rem 2rem; border-radius: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center;">
+            <div class="spinner-ring" style="width:44px;height:44px;border-width:4px;margin: 0 auto 1.25rem;"></div>
+            <h2 style="font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 0.5rem;">Envoi du code de sécurité...</h2>
+            <p style="color: var(--text-secondary); font-size: 0.95rem;">Génération et transmission du SMS vers <strong>${phone}</strong></p>
         </div>
     `;
 
     // Définir la méthode globale de validation
     window.verifyOtpAndSubmitOrder = async function() {
-        const code = document.getElementById('otp-input-code').value.trim();
+        const codeInput = document.getElementById('otp-input-code');
+        if (!codeInput) return;
+        const code = codeInput.value.trim();
         if (!code || code.length < 6) {
-            if (typeof showToast === 'function') showToast("Veuillez entrer le code à 6 chiffres", "warning");
+            if (typeof showToast === 'function') showToast("Veuillez saisir le code complet à 6 chiffres", "warning");
+            codeInput.focus();
             return;
         }
 
         const btn = document.getElementById('btn-verify-otp');
+        const feedbackEl = document.getElementById('otp-feedback-msg');
         btn.disabled = true;
-        btn.innerHTML = `<div class="spinner-ring" style="width:20px;height:20px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Vérification...`;
+        btn.innerHTML = `<div class="spinner-ring" style="width:20px;height:20px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:0.5rem;"></div> Vérification en cours...`;
 
         const { phone } = window.pendingOrderContext;
 
-        // Appel RPC réel pour vérifier le code
-        const isCodeValid = await store.verifyOtp(phone, code);
+        const verifyRes = await store.verifyOtp(phone, code);
 
-        if (isCodeValid) {
+        if (verifyRes && verifyRes.verified) {
             localStorage.setItem('phoneVerified_' + phone, 'true');
             btn.innerHTML = '✅ Code Valide !';
-            executePendingOrder();
+            if (typeof showToast === 'function') showToast("Numéro validé avec succès !", "success");
+            setTimeout(() => {
+                executePendingOrder();
+            }, 400);
         } else {
-            if (typeof showToast === 'function') showToast("Code de sécurité incorrect ou expiré.", "danger");
-            btn.innerHTML = '✅ Vérifier et Commander';
+            const errText = (verifyRes && verifyRes.message) ? verifyRes.message : "Code de sécurité incorrect ou expiré.";
+            if (typeof showToast === 'function') showToast(errText, "danger");
+            if (feedbackEl) {
+                feedbackEl.style.display = 'block';
+                feedbackEl.textContent = errText;
+            }
+            btn.innerHTML = '✅ Vérifier et Valider la Commande';
             btn.disabled = false;
+            codeInput.focus();
         }
     };
 
-    // Lancer la génération d'OTP en tâche de fond
+    // Gestion du renvoi de code SMS avec compte à rebours
+    window.resendOtpSms = async function() {
+        const resendBtn = document.getElementById('btn-resend-otp');
+        if (resendBtn && resendBtn.disabled) return;
+
+        if (resendBtn) {
+            resendBtn.disabled = true;
+            resendBtn.innerHTML = `<span class="spinner-ring" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:4px;"></span> Envoi...`;
+        }
+
+        const { phone } = window.pendingOrderContext;
+        const result = await store.generateOtp(phone);
+
+        if (result && result.success) {
+            if (typeof showToast === 'function') {
+                showToast("Nouveau code SMS envoyé !", "info");
+            }
+            startOtpResendCountdown(30);
+
+            // Mise à jour de la bannière démo si applicable
+            const demoBox = document.getElementById('otp-demo-badge');
+            if (demoBox && result.devCode) {
+                demoBox.innerHTML = `🔑 <strong>Code de test:</strong> <span style="font-family: monospace; font-size: 1.1rem; color: var(--primary);">${result.devCode}</span>`;
+            }
+        } else {
+            if (typeof showToast === 'function') {
+                showToast((result && result.message) ? result.message : "Impossible de renvoyer le code", "danger");
+            }
+            if (resendBtn) {
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = `🔄 Renvoyer le code par SMS`;
+            }
+        }
+    };
+
+    function startOtpResendCountdown(seconds) {
+        let remaining = seconds;
+        const resendBtn = document.getElementById('btn-resend-otp');
+        if (!resendBtn) return;
+        resendBtn.disabled = true;
+
+        if (window._otpCountdownInterval) {
+            clearInterval(window._otpCountdownInterval);
+        }
+
+        window._otpCountdownInterval = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+                clearInterval(window._otpCountdownInterval);
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = `🔄 Renvoyer le code par SMS`;
+            } else {
+                resendBtn.innerHTML = `⏳ Renvoyer dans ${remaining}s`;
+            }
+        }, 1000);
+    }
+
+    // Lancer la génération d'OTP Twilio
     (async () => {
-        const otpSent = await store.generateOtp(phone);
+        const otpResult = await store.generateOtp(phone);
         
-        if (otpSent) {
-            if (typeof showToast === 'function') showToast("Code de sécurité SMS envoyé !", "info");
+        if (otpResult && otpResult.success) {
+            const isDemo = otpResult.isDemoMode;
+            if (typeof showToast === 'function') {
+                showToast(isDemo ? "Code de test généré (Twilio en mode démo)" : "Code OTP envoyé par SMS via Twilio !", "info");
+            }
             
             container.innerHTML = `
-                <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">📱</div>
-                    <h2>Vérification SMS</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Veuillez entrer le code de sécurité reçu par SMS au <strong>${phone}</strong>.</p>
-                    
-                    <div class="form-group">
-                        <input type="text" id="otp-input-code" class="form-control" placeholder="Ex: 839102" style="font-size: 1.5rem; letter-spacing: 5px; text-align: center; font-weight: bold; margin-bottom: 1rem;" maxlength="6">
+                <div class="confirmation-screen" style="max-width: 440px; margin: 2rem auto 0; background: var(--bg-card); padding: 2.2rem 2rem; border-radius: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center;">
+                    <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(239, 68, 68, 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.25rem;">
+                        📩
                     </div>
                     
-                    <button class="btn btn-primary" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 1rem;" id="btn-verify-otp">
-                        ✅ Vérifier et Commander
-                    </button>
+                    <h2 style="font-family: var(--font-serif); font-size: 1.45rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">
+                        Vérification par SMS
+                    </h2>
                     
-                    <button class="btn btn-secondary" onclick="router.navigate('/')" style="width: 100%;">
-                        Annuler
+                    <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5; margin-bottom: 1.25rem;">
+                        Un code de validation à 6 chiffres a été envoyé par SMS au <strong style="color: var(--text-primary); font-family: monospace;">${phone}</strong>.
+                    </p>
+
+                    ${isDemo && otpResult.devCode ? `
+                        <div id="otp-demo-badge" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--text-primary); padding: 0.65rem 1rem; border-radius: 12px; font-size: 0.85rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <span>🔑 <strong>Code de test:</strong></span>
+                            <span style="font-family: monospace; font-size: 1.15rem; font-weight: 700; color: #D97706; letter-spacing: 2px;">${otpResult.devCode}</span>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <input type="text" 
+                               id="otp-input-code" 
+                               class="form-control" 
+                               placeholder="• • • • • •" 
+                               inputmode="numeric"
+                               pattern="[0-9]*"
+                               maxlength="6" 
+                               autocomplete="one-time-code"
+                               style="font-size: 1.75rem; letter-spacing: 8px; text-align: center; font-weight: 700; border-radius: 16px; height: 56px; background: var(--bg-input); border: 2px solid var(--border);" 
+                               autofocus
+                               onkeyup="if (event.key === 'Enter') verifyOtpAndSubmitOrder();">
+                    </div>
+
+                    <div id="otp-feedback-msg" style="display: none; color: var(--danger); font-size: 0.85rem; font-weight: 600; margin-bottom: 1rem;"></div>
+                    
+                    <button class="btn btn-primary btn-block" onclick="verifyOtpAndSubmitOrder()" style="width: 100%; margin-bottom: 0.85rem; padding: 0.85rem; border-radius: 14px; font-weight: 700; font-size: 1rem;" id="btn-verify-otp">
+                        ✅ Vérifier et Valider la Commande
                     </button>
+
+                    <div style="display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; margin-top: 0.75rem;">
+                        <button id="btn-resend-otp" class="btn btn-outline btn-sm" onclick="resendOtpSms()" style="font-size: 0.82rem; padding: 0.5rem 0.85rem; border-radius: 10px;">
+                            🔄 Renvoyer le SMS
+                        </button>
+                        <button class="btn btn-secondary btn-sm" onclick="router.navigate('/cart')" style="font-size: 0.82rem; padding: 0.5rem 0.85rem; border-radius: 10px;">
+                            Annuler
+                        </button>
+                    </div>
                 </div>
             `;
+
+            startOtpResendCountdown(30);
+
+            // Auto-focus the OTP input field
+            setTimeout(() => {
+                const el = document.getElementById('otp-input-code');
+                if (el) el.focus();
+            }, 100);
+
         } else {
-            if (typeof showToast === 'function') showToast("Impossible d'envoyer le SMS. Format de numéro incorrect ?", "danger");
+            const errDesc = (otpResult && otpResult.message) ? otpResult.message : "Impossible de transmettre le SMS.";
+            if (typeof showToast === 'function') showToast(errDesc, "danger");
             container.innerHTML = `
-                <div class="confirmation-screen" style="max-width: 400px; margin: 2rem auto 0; background: var(--bg-card); padding: 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                <div class="confirmation-screen" style="max-width: 420px; margin: 2rem auto 0; background: var(--bg-card); padding: 2.5rem 2rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center;">
                     <div style="font-size: 3rem; color: var(--danger); margin-bottom: 1rem;">⚠️</div>
-                    <h2>Échec de l'envoi</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Nous n'avons pas pu valider votre numéro <strong>${phone}</strong>.</p>
-                    <button class="btn btn-secondary" onclick="router.navigate('/')" style="width: 100%;">
-                        Retour à l'accueil
-                    </button>
+                    <h2 style="font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 0.5rem;">Échec de l'envoi SMS</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5;">${errDesc}</p>
+                    <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                        <button class="btn btn-primary" onclick="proceedToOTP('${phone}')" style="padding: 0.75rem 1.25rem; border-radius: 12px;">
+                            🔄 Réessayer
+                        </button>
+                        <button class="btn btn-secondary" onclick="router.navigate('/cart')" style="padding: 0.75rem 1.25rem; border-radius: 12px;">
+                            Retour au panier
+                        </button>
+                    </div>
                 </div>
             `;
         }

@@ -165,37 +165,70 @@
     <!-- DOMPurify for secure innerHTML data rendering -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js" defer></script>
 
-    <!-- OneSignal SDK (Loaded conditionally on production domain only) -->
+    <!-- OneSignal SDK -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
-      (function() {
-        const isProductionPushDomain = typeof window !== 'undefined' && 
-          (window.location.hostname === 'thies-resto.com' || window.location.hostname === 'www.thies-resto.com');
-        if (isProductionPushDomain) {
-          window.OneSignalDeferred = window.OneSignalDeferred || [];
-          const s = document.createElement('script');
-          s.src = "https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js";
-          s.defer = true;
-          document.head.appendChild(s);
-          OneSignalDeferred.push(async function(OneSignal) {
-            try {
-              await OneSignal.init({
-                appId: "1475ba26-4ce8-4e66-8631-5cbdb9a0b3fe",
-                safari_web_id: "web.onesignal.auto.VOTRE_SAFARI_ID",
-                notifyButton: {
-                  enable: false,
-                },
-              });
-            } catch (e) {
-              console.warn("[OneSignal] Initialization error handled:", e);
-            }
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          await OneSignal.init({
+            appId: "1475ba26-4ce8-4e66-8631-5cbdb9a0b3fe"
           });
+        } catch (e) {
+          console.warn("[OneSignal] Initialisation OneSignal:", e);
         }
-      })();
+      });
     </script>
 </head>
 
 <body>
-    <!-- ========== LOADING OVERLAY REMOVED ========== -->
+    <!-- ========== SPLASH / WELCOME SCREEN (Chez Resto / Bon Appétit) ========== -->
+    <div id="splash-screen" class="splash-screen" aria-label="Écran de bienvenue">
+        <div class="splash-content">
+            <!-- Animated Cloche Logo -->
+            <div class="splash-logo-wrap">
+                <div class="splash-cloche-icon">
+                    <svg viewBox="0 0 100 100" class="cloche-svg" width="90" height="90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Cloche Handle -->
+                        <circle cx="50" cy="22" r="6" fill="#FFFFFF" />
+                        <path d="M50 28V34" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" />
+                        <!-- Cloche Dome -->
+                        <path d="M18 64C18 42 32 34 50 34C68 34 82 42 82 64H18Z" fill="#FFFFFF" fill-opacity="0.95" />
+                        <path d="M28 64C28 48 38 42 50 42C62 42 72 48 72 64H28Z" fill="rgba(220, 38, 38, 0.15)" />
+                        <!-- Cloche Platter Base -->
+                        <rect x="12" y="67" width="76" height="6" rx="3" fill="#FFFFFF" />
+                        <rect x="8" y="74" width="84" height="4" rx="2" fill="rgba(255, 255, 255, 0.8)" />
+                        <!-- Steam lines -->
+                        <path class="steam-line steam-1" d="M40 18Q38 12 42 8" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" />
+                        <path class="steam-line steam-2" d="M50 16Q52 10 48 6" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" />
+                        <path class="steam-line steam-3" d="M60 18Q58 12 62 8" stroke="#FDE68A" stroke-width="2.5" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div class="splash-badge-sub">🍽️ Bon Appétit</div>
+            </div>
+
+            <!-- Brand Titles -->
+            <h1 class="splash-title">THIES Resto</h1>
+            <p class="splash-subtitle">Tous les meilleurs restaurants et saveurs de Thiès en un seul endroit.</p>
+
+            <!-- Feature Pills -->
+            <div class="splash-features">
+                <span class="splash-pill">⚡ Livraison Rapide</span>
+                <span class="splash-pill">🍲 Plats du Jour</span>
+                <span class="splash-pill">💬 Direct WhatsApp</span>
+            </div>
+
+            <!-- Action Button -->
+            <div class="splash-actions">
+                <button type="button" class="splash-btn-enter" onclick="dismissSplashScreen()">
+                    <span>Découvrir nos restaurants</span>
+                    <i class="ri-arrow-right-line" style="font-size: 1.25rem;"></i>
+                </button>
+            </div>
+            
+            <button type="button" class="splash-skip-link" onclick="dismissSplashScreen()">Passer l'introduction →</button>
+        </div>
+    </div>
 
     <div class="app-container">
         <!-- ========== NAVIGATION BAR ========== -->
@@ -240,14 +273,148 @@
 
         <!-- ========== MAIN WORKSPACE ========== -->
         <main id="main-content">
-            <!-- SKELETON PRELOADER -->
-            <div id="initial-skeleton" style="padding: 2rem; max-width: 1200px; margin: 0 auto;">
-                <div class="skeleton" style="height: 400px; width: 100%; border-radius: 24px; margin-bottom: 2rem;"></div>
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem;">
-                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
-                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
-                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
-                    <div class="skeleton" style="height: 350px; border-radius: 20px;"></div>
+            <!-- DYNAMIC SKELETON PRELOADER -->
+            <div id="initial-skeleton" style="padding: 2rem 1.5rem; max-width: 1240px; margin: 0 auto;">
+                <!-- Live Supabase sync indicator pill -->
+                <div style="text-align: center; margin-bottom: 1.5rem;">
+                    <div class="supabase-sync-indicator">
+                        <span class="supabase-live-dot"></span>
+                        <span>Connexion instantanée aux restaurants de Thiès...</span>
+                    </div>
+                </div>
+
+                <!-- Hero Section Skeleton -->
+                <div class="skeleton-hero-card">
+                    <div class="skeleton skeleton-hero-title"></div>
+                    <div class="skeleton skeleton-hero-subtitle"></div>
+                    <div class="skeleton skeleton-hero-search"></div>
+                </div>
+
+                <!-- Category Filters Skeleton Bar -->
+                <div class="skeleton-pills-row">
+                    <div class="skeleton skeleton-filter-pill-item"></div>
+                    <div class="skeleton skeleton-filter-pill-item"></div>
+                    <div class="skeleton skeleton-filter-pill-item"></div>
+                    <div class="skeleton skeleton-filter-pill-item"></div>
+                    <div class="skeleton skeleton-filter-pill-item"></div>
+                    <div class="skeleton skeleton-filter-pill-item"></div>
+                </div>
+
+                <!-- 6 Realistic Staggered Restaurant Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.75rem;">
+                    <!-- Card 1 -->
+                    <div class="skeleton-restaurant-card">
+                        <div class="skeleton skeleton-img-box">
+                            <div class="skeleton skeleton-floating-pill"></div>
+                            <div class="skeleton skeleton-floating-heart"></div>
+                        </div>
+                        <div class="skeleton-card-content">
+                            <div class="skeleton-header-row">
+                                <div class="skeleton skeleton-title-bar"></div>
+                                <div class="skeleton skeleton-rating-badge"></div>
+                            </div>
+                            <div class="skeleton skeleton-address-line"></div>
+                            <div class="skeleton-footer-split">
+                                <div class="skeleton skeleton-category-tag"></div>
+                                <div class="skeleton skeleton-reviews-text"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="skeleton-restaurant-card">
+                        <div class="skeleton skeleton-img-box">
+                            <div class="skeleton skeleton-floating-pill"></div>
+                            <div class="skeleton skeleton-floating-heart"></div>
+                        </div>
+                        <div class="skeleton-card-content">
+                            <div class="skeleton-header-row">
+                                <div class="skeleton skeleton-title-bar" style="width: 72%;"></div>
+                                <div class="skeleton skeleton-rating-badge"></div>
+                            </div>
+                            <div class="skeleton skeleton-address-line" style="width: 75%;"></div>
+                            <div class="skeleton-footer-split">
+                                <div class="skeleton skeleton-category-tag"></div>
+                                <div class="skeleton skeleton-reviews-text"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="skeleton-restaurant-card">
+                        <div class="skeleton skeleton-img-box">
+                            <div class="skeleton skeleton-floating-pill"></div>
+                            <div class="skeleton skeleton-floating-heart"></div>
+                        </div>
+                        <div class="skeleton-card-content">
+                            <div class="skeleton-header-row">
+                                <div class="skeleton skeleton-title-bar" style="width: 58%;"></div>
+                                <div class="skeleton skeleton-rating-badge"></div>
+                            </div>
+                            <div class="skeleton skeleton-address-line" style="width: 80%;"></div>
+                            <div class="skeleton-footer-split">
+                                <div class="skeleton skeleton-category-tag"></div>
+                                <div class="skeleton skeleton-reviews-text"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 4 -->
+                    <div class="skeleton-restaurant-card">
+                        <div class="skeleton skeleton-img-box">
+                            <div class="skeleton skeleton-floating-pill"></div>
+                            <div class="skeleton skeleton-floating-heart"></div>
+                        </div>
+                        <div class="skeleton-card-content">
+                            <div class="skeleton-header-row">
+                                <div class="skeleton skeleton-title-bar" style="width: 68%;"></div>
+                                <div class="skeleton skeleton-rating-badge"></div>
+                            </div>
+                            <div class="skeleton skeleton-address-line" style="width: 90%;"></div>
+                            <div class="skeleton-footer-split">
+                                <div class="skeleton skeleton-category-tag"></div>
+                                <div class="skeleton skeleton-reviews-text"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 5 -->
+                    <div class="skeleton-restaurant-card">
+                        <div class="skeleton skeleton-img-box">
+                            <div class="skeleton skeleton-floating-pill"></div>
+                            <div class="skeleton skeleton-floating-heart"></div>
+                        </div>
+                        <div class="skeleton-card-content">
+                            <div class="skeleton-header-row">
+                                <div class="skeleton skeleton-title-bar" style="width: 62%;"></div>
+                                <div class="skeleton skeleton-rating-badge"></div>
+                            </div>
+                            <div class="skeleton skeleton-address-line" style="width: 70%;"></div>
+                            <div class="skeleton-footer-split">
+                                <div class="skeleton skeleton-category-tag"></div>
+                                <div class="skeleton skeleton-reviews-text"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card 6 -->
+                    <div class="skeleton-restaurant-card">
+                        <div class="skeleton skeleton-img-box">
+                            <div class="skeleton skeleton-floating-pill"></div>
+                            <div class="skeleton skeleton-floating-heart"></div>
+                        </div>
+                        <div class="skeleton-card-content">
+                            <div class="skeleton-header-row">
+                                <div class="skeleton skeleton-title-bar" style="width: 75%;"></div>
+                                <div class="skeleton skeleton-rating-badge"></div>
+                            </div>
+                            <div class="skeleton skeleton-address-line" style="width: 85%;"></div>
+                            <div class="skeleton-footer-split">
+                                <div class="skeleton skeleton-category-tag"></div>
+                                <div class="skeleton skeleton-reviews-text"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
@@ -269,10 +436,9 @@
             💬
         </a>
 
-        <!-- ========== TOAST NOTIFICATION ========== -->
-        <div id="toast-notification" class="toast-notification" style="display: none;">
-            <!-- Content filled dynamically -->
-        </div>
+        <!-- ========== TOAST NOTIFICATION SYSTEM ========== -->
+        <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+        <div id="toast-notification" class="toast-notification" style="display: none;"></div>
 
         <!-- ========== SOCIAL PROOF TOAST ========== -->
         <div id="social-proof-toast" style="display: none; position: fixed; bottom: 20px; left: 20px; background: var(--bg-card); color: var(--text-primary); padding: 12px 16px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000; max-width: 300px; border-left: 4px solid var(--accent); animation: slideInLeft 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); align-items: center; gap: 12px; transition: opacity 0.5s ease-out;">
@@ -391,24 +557,28 @@
     }
     </script>
 
-    <!-- ========== MOBILE BOTTOM NAV ========== -->
-    <nav class="mobile-bottom-nav">
-        <a href="#" class="nav-item active" onclick="router.navigate('/'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
-            <div class="nav-icon"><i class="ri-home-5-line"></i></div>
+    <!-- ========== MOBILE BOTTOM NAV (5 TABS - REF DESIGN) ========== -->
+    <nav class="mobile-bottom-nav" id="mobile-bottom-nav" role="navigation" aria-label="Navigation principale">
+        <a href="#" id="bottom-nav-home" class="nav-item active" onclick="router.navigate('/'); updateBottomNavActive('home'); return false;">
+            <div class="nav-icon"><i class="ri-home-5-fill"></i></div>
             <span>Accueil</span>
         </a>
-        <a href="#" class="nav-item" onclick="geolocateRestaurants(); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
-            <div class="nav-icon"><i class="ri-map-pin-2-line"></i></div>
-            <span>Proche</span>
+        <a href="#" id="bottom-nav-explore" class="nav-item" onclick="router.navigate('/explore'); updateBottomNavActive('explore'); return false;">
+            <div class="nav-icon"><i class="ri-compass-3-line"></i></div>
+            <span>Explorer</span>
         </a>
-        <a href="#" class="nav-item cart-nav-item" onclick="openCartTab(); return false;">
-            <div class="nav-icon"><i class="ri-shopping-cart-2-line"></i></div>
-            <span>Panier</span>
-            <span id="mobile-nav-cart-badge" class="cart-badge" style="display: none;">0</span>
+        <a href="#" id="bottom-nav-favorites" class="nav-item" onclick="router.navigate('/favorites'); updateBottomNavActive('favorites'); return false;">
+            <div class="nav-icon"><i class="ri-heart-3-line"></i></div>
+            <span>Favoris</span>
+            <span id="mobile-nav-fav-badge" class="nav-badge" style="display: none;">0</span>
         </a>
-        <a href="#" class="nav-item" onclick="router.navigate('/profile'); document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active'); return false;">
-            <div class="nav-icon"><i class="ri-user-line"></i></div>
-            <span>Profil</span>
+        <a href="#" id="bottom-nav-orders" class="nav-item" onclick="router.navigate('/tracking'); updateBottomNavActive('orders'); return false;">
+            <div class="nav-icon"><i class="ri-file-list-3-line"></i></div>
+            <span>Commandes</span>
+        </a>
+        <a href="#" id="bottom-nav-profile" class="nav-item" onclick="router.navigate('/profile'); updateBottomNavActive('profile'); return false;">
+            <div class="nav-icon"><i class="ri-user-3-line"></i></div>
+            <span>Compte</span>
         </a>
     </nav>
     <!-- Supabase Client Library -->
@@ -424,6 +594,7 @@
     <script defer src="js/logger.js?v=7"></script>
     <script defer src="js/data.js?v=7"></script>
     <script defer src="js/store.js?v=7"></script>
+    <script defer src="js/twilioOtpClient.js"></script>
     <script defer src="js/router.js?v=7"></script>
     <script defer src="js/admin.js?v=7"></script>
     <script defer src="js/ui-checkout.js"></script>

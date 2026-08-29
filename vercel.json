@@ -37,6 +37,14 @@
       "destination": "/api/og"
     },
     {
+      "source": "/api/otp/:action*",
+      "destination": "/api/otp?action=:action*"
+    },
+    {
+      "source": "/api/otp",
+      "destination": "/api/otp"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

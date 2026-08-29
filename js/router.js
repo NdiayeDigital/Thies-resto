@@ -65,8 +65,9 @@ class Router {
             }
         }
         
-        // Refresh Navbar State
-        updateNavbar();
+        // Refresh Navbar & Bottom Nav State
+        if (typeof updateNavbar === 'function') updateNavbar();
+        if (typeof updateBottomNavFromRoute === 'function') updateBottomNavFromRoute(hash);
     }
 }
 

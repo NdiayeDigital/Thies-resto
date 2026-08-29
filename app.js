@@ -552,13 +552,26 @@ function toggleTheme() {
     html.setAttribute('data-theme', next);
     try { localStorage.setItem('THIES_THEME', next); } catch(e) {}
     updateThemeToggleUI(next);
+    if (typeof showToast === 'function') {
+        showToast(next === 'dark' ? 'Mode Sombre activé 🌙' : 'Mode Clair activé ☀️', 'info', 1800);
+    }
 }
+window.toggleTheme = toggleTheme;
+
 function updateThemeToggleUI(theme) {
     const icon = document.getElementById('theme-toggle-icon');
     const label = document.getElementById('theme-toggle-label');
     if (icon) icon.textContent = theme === 'light' ? '🌙' : '☀️';
     if (label) label.textContent = theme === 'light' ? 'Mode Sombre' : 'Mode Clair';
+    
+    // Dynamically update mobile browser address bar color
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', theme === 'dark' ? '#0F1117' : '#DC2626');
+    }
 }
+window.updateThemeToggleUI = updateThemeToggleUI;
+
 function loadSavedTheme() {
     try {
         const saved = localStorage.getItem('THIES_THEME') || 'light';
@@ -566,6 +579,8 @@ function loadSavedTheme() {
         updateThemeToggleUI(saved);
     } catch(e) {}
 }
+window.loadSavedTheme = loadSavedTheme;
+loadSavedTheme();
 
 // ---------- CART PERSISTENCE ----------
 function saveCart() {
@@ -637,6 +652,123 @@ function getOrderHistory() {
         return JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
     } catch(e) { return []; }
 }
+
+// ---------- SPLASH SCREEN & FAVORITES & BOTTOM NAV MANAGEMENT ----------
+window.dismissSplashScreen = function() {
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+        splash.classList.add('hidden');
+        sessionStorage.setItem('thies_splash_seen', 'true');
+        setTimeout(() => {
+            splash.style.display = 'none';
+        }, 600);
+    }
+};
+
+window.showWelcomeScreen = function() {
+    const splash = document.getElementById('splash-screen');
+    if (splash) {
+        splash.style.display = 'flex';
+        splash.classList.remove('hidden');
+    }
+};
+
+window.getFavorites = function() {
+    try {
+        return JSON.parse(localStorage.getItem('THIES_FAVORITES') || '[]');
+    } catch(e) {
+        return [];
+    }
+};
+
+window.isFavorite = function(restaurantId) {
+    const favs = window.getFavorites();
+    return favs.includes(restaurantId);
+};
+
+window.toggleFavorite = function(restaurantId, event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    let favs = window.getFavorites();
+    const index = favs.indexOf(restaurantId);
+    let added = false;
+    if (index > -1) {
+        favs.splice(index, 1);
+        added = false;
+    } else {
+        favs.push(restaurantId);
+        added = true;
+    }
+    localStorage.setItem('THIES_FAVORITES', JSON.stringify(favs));
+    
+    window.updateFavoritesBadge();
+    
+    document.querySelectorAll(`[data-fav-resto-id="${restaurantId}"]`).forEach(btn => {
+        if (added) {
+            btn.classList.add('is-fav', 'active');
+            btn.innerHTML = '❤️';
+        } else {
+            btn.classList.remove('is-fav', 'active');
+            btn.innerHTML = '🤍';
+        }
+    });
+
+    if (typeof showToast === 'function') {
+        if (added) {
+            showToast("Ajouté aux favoris ❤️", "success");
+        } else {
+            showToast("Retiré des favoris", "info");
+        }
+    }
+    
+    if (window.location.hash === '#/favorites' && typeof renderFavoritesView === 'function') {
+        renderFavoritesView();
+    }
+};
+
+window.updateFavoritesBadge = function() {
+    const favs = window.getFavorites();
+    const badge = document.getElementById('mobile-nav-fav-badge');
+    if (badge) {
+        if (favs.length > 0) {
+            badge.textContent = favs.length;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+};
+
+window.updateBottomNavActive = function(tabName) {
+    document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    const target = document.getElementById('bottom-nav-' + tabName);
+    if (target) {
+        target.classList.add('active');
+    }
+};
+
+window.updateBottomNavFromRoute = function(hash) {
+    if (!hash || hash === '#/' || hash === '#') {
+        window.updateBottomNavActive('home');
+    } else if (hash.startsWith('#/explore')) {
+        window.updateBottomNavActive('explore');
+    } else if (hash.startsWith('#/favorites')) {
+        window.updateBottomNavActive('favorites');
+    } else if (hash.startsWith('#/tracking')) {
+        window.updateBottomNavActive('orders');
+    } else if (hash.startsWith('#/profile')) {
+        window.updateBottomNavActive('profile');
+    } else {
+        document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(item => {
+            item.classList.remove('active');
+        });
+    }
+    window.updateFavoritesBadge();
+};
 
 // ---------- NOTIFICATION SOUND ----------
 function playNotificationSound() {
@@ -804,32 +936,153 @@ function checkSlugAvailability() {
     }
 }
 
-// Helper to show modern notification toast
-function showToast(message, type = 'info') {
-    const toast = document.getElementById('toast-notification');
-    if (!toast) return;
-    toast.innerHTML = sanitizeHTML(message);
-    toast.style.display = 'block';
-    
-    // Color schemes
-    if (type === 'success') {
-        toast.style.backgroundColor = '#10b981';
-        toast.style.color = 'white';
-    } else if (type === 'danger') {
-        toast.style.backgroundColor = '#ef4444';
-        toast.style.color = 'white';
-    } else if (type === 'warning') {
-        toast.style.backgroundColor = '#f7b731';
-        toast.style.color = 'black';
-    } else {
-        toast.style.backgroundColor = '#ff6b35';
-        toast.style.color = 'white';
+// Modern Reusable Notification Toast System
+window.showToast = function(message, type = 'info', options = {}) {
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'toast-container';
+        container.setAttribute('aria-live', 'polite');
+        container.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(container);
     }
-    
+
+    // Limit maximum stacked toasts to 3 for clean view
+    const currentToasts = container.querySelectorAll('.toast-item:not(.toast-removing)');
+    if (currentToasts.length >= 3) {
+        const oldest = currentToasts[0];
+        window.dismissToast(oldest);
+    }
+
+    const duration = options.duration || (type === 'cart' ? 4500 : 3800);
+    const toast = document.createElement('div');
+    toast.className = `toast-item toast-${type}`;
+    toast.setAttribute('role', type === 'danger' || type === 'error' ? 'alert' : 'status');
+
+    // Determine icon / visual
+    let iconContent = '';
+    if (options.image) {
+        iconContent = `<img src="${options.image}" alt="" class="toast-dish-thumb" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60'">`;
+    } else if (options.icon) {
+        iconContent = `<div class="toast-icon-wrap">${options.icon}</div>`;
+    } else {
+        let defaultIcon = 'ℹ️';
+        if (type === 'success') defaultIcon = '✓';
+        else if (type === 'cart') defaultIcon = '🛒';
+        else if (type === 'danger' || type === 'error') defaultIcon = '✕';
+        else if (type === 'warning') defaultIcon = '⚠️';
+        iconContent = `<div class="toast-icon-wrap">${defaultIcon}</div>`;
+    }
+
+    let headline = options.title || '';
+    let subtext = '';
+
+    if (headline) {
+        subtext = message;
+    } else {
+        headline = message;
+    }
+
+    // Action button (e.g. "Voir le panier")
+    let actionBtnHtml = '';
+    if (options.actionText) {
+        actionBtnHtml = `<button type="button" class="toast-action-btn">${options.actionText}</button>`;
+    }
+
+    toast.innerHTML = `
+        <div class="toast-body">
+            ${iconContent}
+            <div class="toast-content-col">
+                <div class="toast-headline">${headline}</div>
+                ${subtext ? `<div class="toast-subtext">${subtext}</div>` : ''}
+            </div>
+            <div class="toast-actions-wrap">
+                ${actionBtnHtml}
+                <button type="button" class="toast-close-btn" aria-label="Fermer la notification">✕</button>
+            </div>
+        </div>
+        <div class="toast-progress-track">
+            <div class="toast-progress-fill" style="animation-duration: ${duration}ms;"></div>
+        </div>
+    `;
+
+    container.appendChild(toast);
+
+    // Close button
+    const closeBtn = toast.querySelector('.toast-close-btn');
+    if (closeBtn) {
+        closeBtn.onclick = (e) => {
+            e.stopPropagation();
+            window.dismissToast(toast);
+        };
+    }
+
+    // Action button callback
+    if (options.actionText && typeof options.onAction === 'function') {
+        const actionBtn = toast.querySelector('.toast-action-btn');
+        if (actionBtn) {
+            actionBtn.onclick = (e) => {
+                e.stopPropagation();
+                options.onAction();
+                window.dismissToast(toast);
+            };
+        }
+    }
+
+    // Auto-dismiss timer
+    let dismissTimeout = setTimeout(() => {
+        window.dismissToast(toast);
+    }, duration);
+
+    // Pause on hover
+    toast.onmouseenter = () => {
+        clearTimeout(dismissTimeout);
+        const fill = toast.querySelector('.toast-progress-fill');
+        if (fill) fill.style.animationPlayState = 'paused';
+    };
+
+    toast.onmouseleave = () => {
+        const fill = toast.querySelector('.toast-progress-fill');
+        if (fill) fill.style.animationPlayState = 'running';
+        dismissTimeout = setTimeout(() => {
+            window.dismissToast(toast);
+        }, 1500);
+    };
+
+    return toast;
+};
+
+// Global dismiss helper
+window.dismissToast = function(toastEl) {
+    if (!toastEl || toastEl.classList.contains('toast-removing')) return;
+    toastEl.classList.add('toast-removing');
     setTimeout(() => {
-        toast.style.display = 'none';
-    }, 4000);
-}
+        if (toastEl.parentNode) toastEl.parentNode.removeChild(toastEl);
+    }, 280);
+};
+
+// Specialized helper for adding items to the cart
+window.showCartToast = function(dish, qty = 1, restaurant = null) {
+    const itemPrice = (dish.price * qty).toLocaleString('fr-FR');
+    
+    // Play light haptic feedback if supported
+    if (navigator.vibrate) {
+        try { navigator.vibrate(35); } catch(e) {}
+    }
+
+    window.showToast(`${qty > 1 ? qty + 'x ' : ''}${dish.name} • ${itemPrice} FCFA`, 'cart', {
+        title: 'Ajouté au panier ! 🛒',
+        image: dish.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60',
+        duration: 4500,
+        actionText: 'Voir le panier ➔',
+        onAction: () => {
+            if (typeof openCartTab === 'function') {
+                openCartTab();
+            }
+        }
+    });
+};
 
 // Modern Custom Confirmation Modal to replace native confirm()
 window.showConfirmModal = function(title, message, onConfirm, onCancel = null) {
@@ -867,6 +1120,43 @@ window.showConfirmModal = function(title, message, onConfirm, onCancel = null) {
     modal.querySelector('#confirm-modal-ok').onclick = function() {
         modal.remove();
         if (onConfirm) onConfirm();
+    };
+};
+
+// Modern Custom Info / Alert Modal
+window.alertModal = window.showAlertModal = function(title, contentHtml) {
+    let modal = document.getElementById('custom-info-modal');
+    if (modal) modal.remove();
+
+    modal = document.createElement('div');
+    modal.id = 'custom-info-modal';
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+        background: rgba(0,0,0,0.65); display: flex; align-items: center;
+        justify-content: center; z-index: 100000; backdrop-filter: blur(6px);
+        animation: fadeIn 0.2s ease-out; padding: 1.25rem;
+    `;
+
+    modal.innerHTML = `
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; max-width: 480px; width: 100%; padding: 1.75rem; box-shadow: var(--shadow-lg); animation: scaleUp 0.2s ease-out; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+                <h3 style="font-family: var(--font-serif); font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin: 0;">${title}</h3>
+                <button id="info-modal-close" style="background: var(--bg-input); border: 1px solid var(--border); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); font-size: 1.1rem;">✕</button>
+            </div>
+            <div style="margin-bottom: 1.5rem; max-height: 65vh; overflow-y: auto;">
+                ${contentHtml}
+            </div>
+            <button id="info-modal-ok" class="btn btn-primary btn-block" style="border-radius: 14px; font-weight: 700; padding: 0.75rem;">Fermer</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const closeModal = () => modal.remove();
+    modal.querySelector('#info-modal-close').onclick = closeModal;
+    modal.querySelector('#info-modal-ok').onclick = closeModal;
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
     };
 };
 
@@ -1200,7 +1490,21 @@ router.add('#/', () => {
             </div>
         </section>
 
-        
+        <!-- PROMO SPECIAL DEAL CARD (Ref Mockup) -->
+        <div class="promo-banner-card">
+            <div class="promo-banner-content">
+                <div class="promo-badge-tag">🔥 Bon Plan Thiès</div>
+                <h2 class="promo-banner-title">Jusqu'à -40% sur vos plats préférés</h2>
+                <p class="promo-banner-desc">Découvrez les offres gourmandes du moment chez les restaurants partenaires de Thiès.</p>
+                <button type="button" class="promo-banner-btn" onclick="scrollToCatalogAndFilter('Fast-Food')">
+                    <span>Voir les offres</span>
+                    <i class="ri-arrow-right-line"></i>
+                </button>
+            </div>
+            <div class="promo-banner-visual">
+                <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=80" alt="Plat Savoureux" class="promo-food-img" loading="lazy">
+            </div>
+        </div>
 
         <section id="catalog-section">
             <div class="section-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; margin-bottom: 1.25rem;">
@@ -1652,6 +1956,65 @@ window.setFilter = function setFilter(category) {
     applyFilters();
 };
 
+/**
+ * Génère des cartes skeleton fluides et dynamiques avec shimmer wave
+ * @param {number} count Nombre de cartes skeletons à afficher
+ * @returns {string} HTML des skeletons
+ */
+window.renderRestaurantSkeletons = function renderRestaurantSkeletons(count = 6) {
+    const titlesWidths = ['65%', '72%', '58%', '68%', '62%', '75%'];
+    const addrWidths = ['85%', '75%', '80%', '90%', '70%', '85%'];
+    
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        const titleW = titlesWidths[i % titlesWidths.length];
+        const addrW = addrWidths[i % addrWidths.length];
+        
+        html += `
+            <div class="skeleton-restaurant-card" aria-hidden="true">
+                <div class="skeleton skeleton-img-box">
+                    <div class="skeleton skeleton-floating-pill"></div>
+                    <div class="skeleton skeleton-floating-heart"></div>
+                </div>
+                <div class="skeleton-card-content">
+                    <div class="skeleton-header-row">
+                        <div class="skeleton skeleton-title-bar" style="width: ${titleW};"></div>
+                        <div class="skeleton skeleton-rating-badge"></div>
+                    </div>
+                    <div class="skeleton skeleton-address-line" style="width: ${addrW};"></div>
+                    <div class="skeleton-footer-split">
+                        <div class="skeleton skeleton-category-tag"></div>
+                        <div class="skeleton skeleton-reviews-text"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    return html;
+};
+
+/**
+ * Génère des skeletons fluides pour les plats du menu
+ * @param {number} count Nombre de plats skeletons
+ * @returns {string} HTML des skeletons
+ */
+window.renderDishSkeletons = function renderDishSkeletons(count = 4) {
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        html += `
+            <div class="skeleton-dish-card" aria-hidden="true">
+                <div class="skeleton skeleton-dish-thumb"></div>
+                <div class="skeleton-dish-details">
+                    <div class="skeleton skeleton-dish-title"></div>
+                    <div class="skeleton skeleton-dish-desc"></div>
+                    <div class="skeleton skeleton-dish-price"></div>
+                </div>
+            </div>
+        `;
+    }
+    return html;
+};
+
 window.applyFilters = function applyFilters() {
     const searchInput = document.getElementById('search-input-field');
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -1749,12 +2112,17 @@ window.applyFilters = function applyFilters() {
         const coverUrl = r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
         let distanceBadge = '';
         if (r._tempDistance) {
-            distanceBadge = `<div style="position: absolute; top: 1rem; right: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 ${r._tempDistance} km</div>`;
+            distanceBadge = `<div style="position: absolute; top: 1rem; left: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 ${r._tempDistance} km</div>`;
         }
+
+        const isFav = window.isFavorite ? window.isFavorite(r.id) : false;
             
         cardsHtml += `
             <div class="restaurant-card hover-3d glass-panel" onclick="router.navigate('/r/${r.slug}')">
                 ${distanceBadge}
+                <button type="button" class="card-fav-btn ${isFav ? 'is-fav active' : ''}" data-fav-resto-id="${r.id}" onclick="toggleFavorite('${r.id}', event)" aria-label="Ajouter aux favoris">
+                    ${isFav ? '❤️' : '🤍'}
+                </button>
                 <div class="restaurant-card-header">
                     <img src="${coverUrl}" class="restaurant-card-img" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
                     <div class="restaurant-card-gradient"></div>
@@ -2018,9 +2386,22 @@ function getDayName(dayNum) {
 // Page: RESTAURANT PAGE (client view with tabs)
 // ----------------------------------------------------
 router.add('#/r/:slug', async (slug, startTab = 'menu', groupId = null) => {
-    // Show a small spinner if we need to fetch from network
-    if (document.getElementById('main-content').innerHTML === '') {
-        showLoadingOverlay("Chargement du menu...");
+    // Show fluid realistic skeleton if restaurant data is being fetched
+    const mainContent = document.getElementById('main-content');
+    if (mainContent && (!mainContent.innerHTML || mainContent.innerHTML.trim() === '')) {
+        mainContent.innerHTML = `
+            <div style="padding: 2rem 1.5rem; max-width: 1100px; margin: 0 auto;" class="page-transition">
+                <div class="skeleton" style="height: 300px; width: 100%; border-radius: 24px; margin-bottom: 2rem;"></div>
+                <div style="display: flex; gap: 12px; margin-bottom: 2rem; flex-wrap: wrap;">
+                    <div class="skeleton" style="width: 120px; height: 42px; border-radius: 20px;"></div>
+                    <div class="skeleton" style="width: 120px; height: 42px; border-radius: 20px;"></div>
+                    <div class="skeleton" style="width: 120px; height: 42px; border-radius: 20px;"></div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem;">
+                    ${typeof window.renderDishSkeletons === 'function' ? window.renderDishSkeletons(6) : ''}
+                </div>
+            </div>
+        `;
     }
     const r = await store.getRestaurantBySlug(slug);
     if (!r) {
@@ -2380,7 +2761,7 @@ window.addModalItemToCart = function(restaurantId, dishId) {
     }
     updateFloatingCartBar(store.getRestaurantById(restaurantId));
     
-    showToast(`(${qty}) ${dish.name} ajouté(s) au panier ! 🛒`, "success");
+    showCartToast(dish, qty, r);
 }
 
 // Cart updates
@@ -2425,7 +2806,7 @@ function addToCart(restaurantId, dishId) {
     updateFloatingCartBar(r);
     pulseCartBar();
     renderCheckoutTab(r); // update checkout page too
-    showToast(`${dish.name} ajouté !`, "success");
+    showCartToast(dish, 1, r);
 }
 
 function updateCartQty(dishId, change) {
@@ -3459,82 +3840,425 @@ window.fetchOrderTracking = async function() {
     }
 };
 // ----------------------------------------------------
-// Profile View (Mon Espace)
+// Explore View (Recherche & Filtres)
+// ----------------------------------------------------
+router.add('#/explore', () => {
+    updateSEO('home');
+    const container = document.getElementById('main-content');
+    const cartBar = document.getElementById('floating-cart-bar');
+    if (cartBar) cartBar.style.display = 'none';
+
+    container.innerHTML = `
+        <div class="explore-screen" style="max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 3rem; animation: fadeIn 0.3s ease;">
+            <div style="margin-bottom: 1.5rem;">
+                <h1 style="font-family: var(--font-serif); font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem;">Explorer à Thiès 🔍</h1>
+                <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">Recherchez un plat, une spécialité ou trouvez les restaurants les plus proches.</p>
+            </div>
+
+            <!-- Search input -->
+            <div class="search-container" style="margin-bottom: 1.25rem; width: 100%; position: relative;">
+                <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1rem 3rem 1rem 1.25rem; width: 100%; font-size: 16px;">
+                <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher">🔍</button>
+            </div>
+
+            <!-- Action button for GPS -->
+            <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="geolocateRestaurants()" style="border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    📍 Restaurants autour de moi
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="router.navigate('/favorites')" style="border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                    ❤️ Mes Favoris
+                </button>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="quick-filters-wrapper" style="margin-bottom: 1.5rem;">
+                <div class="filter-bar" id="filter-bar" role="tablist">
+                    <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')" data-category="Tous">
+                        <span class="filter-icon">🍽️</span>
+                        <span class="filter-label">Tous</span>
+                        <span class="filter-badge" id="count-all"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Fast-Food' ? 'active' : ''}" onclick="setFilter('Fast-Food')" data-category="Fast-Food">
+                        <span class="filter-icon">🍔</span>
+                        <span class="filter-label">Fast-Food</span>
+                        <span class="filter-badge" id="count-fastfood"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Dibiterie' ? 'active' : ''}" onclick="setFilter('Dibiterie')" data-category="Dibiterie">
+                        <span class="filter-icon">🔥</span>
+                        <span class="filter-label">Dibiterie</span>
+                        <span class="filter-badge" id="count-dibiterie"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')" data-category="Traditionnel">
+                        <span class="filter-icon">🍲</span>
+                        <span class="filter-label">Traditionnel</span>
+                        <span class="filter-badge" id="count-traditionnel"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')" data-category="Gastronomique">
+                        <span class="filter-icon">✨</span>
+                        <span class="filter-label">Gastronomique</span>
+                        <span class="filter-badge" id="count-gastronomique"></span>
+                    </button>
+                    <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')" data-category="Pâtisserie">
+                        <span class="filter-icon">🥐</span>
+                        <span class="filter-label">Pâtisserie</span>
+                        <span class="filter-badge" id="count-patisserie"></span>
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <span id="results-count-badge" class="results-count-badge"></span>
+            </div>
+
+            <!-- Restaurants Grid -->
+            <div class="restaurants-grid" id="restaurants-list-grid"></div>
+        </div>
+    `;
+
+    applyFilters();
+});
+
+// ----------------------------------------------------
+// Favorites View (Mes Favoris)
+// ----------------------------------------------------
+router.add('#/favorites', () => {
+    const container = document.getElementById('main-content');
+    const cartBar = document.getElementById('floating-cart-bar');
+    if (cartBar) cartBar.style.display = 'none';
+
+    renderFavoritesView();
+});
+
+function renderFavoritesView() {
+    const container = document.getElementById('main-content');
+    const favIds = window.getFavorites ? window.getFavorites() : [];
+    const allRestos = store.getRestaurants().filter(r => r.status === 'active');
+    const favRestos = allRestos.filter(r => favIds.includes(r.id));
+
+    let contentHtml = '';
+    if (favRestos.length === 0) {
+        contentHtml = `
+            <div style="text-align: center; padding: 4rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1.5px dashed var(--border); max-width: 500px; margin: 2rem auto;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem; animation: floatCloche 3s ease-in-out infinite;">❤️</div>
+                <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Aucun favori pour le moment</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.75rem;">
+                    Ajoutez vos restaurants préférés en cliquant sur l'icône cœur pour les retrouver en un clin d'œil ici.
+                </p>
+                <button type="button" class="btn btn-primary" onclick="router.navigate('/')" style="border-radius: 25px; padding: 0.75rem 1.75rem; font-weight: 700;">
+                    Découvrir nos restaurants 🍽️
+                </button>
+            </div>
+        `;
+    } else {
+        let cardsHtml = '';
+        favRestos.forEach(r => {
+            const isCurrentlyOpen = isRestaurantOpenNow(r);
+            const statusBadge = isCurrentlyOpen 
+                ? `<span class="badge badge-success restaurant-card-badge">Ouvert</span>` 
+                : `<span class="badge badge-danger restaurant-card-badge">Fermé</span>`;
+            
+            const coverUrl = r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
+            
+            cardsHtml += `
+                <div class="restaurant-card hover-3d glass-panel" onclick="router.navigate('/r/${r.slug}')">
+                    <button type="button" class="card-fav-btn is-fav active" data-fav-resto-id="${r.id}" onclick="toggleFavorite('${r.id}', event)" aria-label="Retirer des favoris">
+                        ❤️
+                    </button>
+                    <div class="restaurant-card-header">
+                        <img src="${coverUrl}" class="restaurant-card-img" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
+                        <div class="restaurant-card-gradient"></div>
+                        <div class="restaurant-card-status">
+                            ${statusBadge}
+                        </div>
+                    </div>
+                    <div class="restaurant-card-body">
+                        <div class="restaurant-card-top-row">
+                            <h3 class="restaurant-card-name" title="${r.name}">${r.name}</h3>
+                            <span class="stars-rating">★ ${r.rating.toFixed(1)}</span>
+                        </div>
+                        <p class="restaurant-card-address">
+                            <span>📍</span> <span class="restaurant-card-address-text">${r.address}</span>
+                        </p>
+                        <div class="restaurant-card-footer">
+                            <span class="restaurant-card-cuisine">${r.category}</span>
+                            <span class="restaurant-card-reviews">${r.reviewsCount} avis</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        contentHtml = `
+            <div class="restaurants-grid" style="margin-top: 1.5rem;">
+                ${cardsHtml}
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <div class="favorites-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h1 style="font-family: var(--font-serif); font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem;">Mes Favoris ❤️</h1>
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">${favRestos.length} restaurant${favRestos.length > 1 ? 's' : ''} enregistré${favRestos.length > 1 ? 's' : ''}</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="router.navigate('/')" style="border-radius: 20px;">
+                    ← Retour à l'accueil
+                </button>
+            </div>
+            ${contentHtml}
+        </div>
+    `;
+}
+
+// ----------------------------------------------------
+// Profile View (Mon Compte - Ref Mockup 5)
 // ----------------------------------------------------
 router.add('#/profile', () => {
     const container = document.getElementById('main-content');
-    
+    const cartBar = document.getElementById('floating-cart-bar');
+    if (cartBar) cartBar.style.display = 'none';
+
     // Load local data
     const history = getOrderHistory();
     const customerPhone = localStorage.getItem('customerPhone') || '';
     const customerName = localStorage.getItem('customerName') || '';
     const customerAddress = localStorage.getItem('customerAddress') || '';
-    
-    let historyHtml = '';
-    if (history.length === 0) {
-        historyHtml = `<div class="empty-history">Aucune commande passée pour le moment. Découvrez nos restaurants ! <br><button class="btn btn-primary" style="margin-top: 1rem;" onclick="router.navigate('/')">Voir les restaurants</button></div>`;
-    } else {
-        history.forEach(order => {
-            const date = new Date(order.savedAt || order.created_at || Date.now()).toLocaleString('fr-FR', {
-                day: '2-digit', month: 'short', hour: '2-digit', minute:'2-digit'
-            });
-            let itemsText = '';
-            if (Array.isArray(order.items)) {
-                itemsText = order.items.map(i => `${i.quantity}x ${i.name}`).join(', ');
-            } else {
-                itemsText = "Détails non disponibles";
-            }
-            
-            historyHtml += `
-                <div class="history-card">
-                    <div class="history-header">
-                        <strong>${order.restaurantName || 'Restaurant Inconnu'}</strong>
-                        <span style="color: var(--primary); font-weight: bold;">${order.total} FCFA</span>
-                    </div>
-                    <div class="history-items">
-                        <p style="margin-bottom: 0.5rem;">${itemsText}</p>
-                        <small style="color: var(--text-secondary);">📅 ${date}</small>
-                    </div>
-                </div>
-            `;
-        });
+    const customerEmail = localStorage.getItem('customerEmail') || '';
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+
+    // Compute initials
+    let initials = 'CR';
+    if (customerName) {
+        const parts = customerName.trim().split(' ');
+        if (parts.length >= 2) {
+            initials = (parts[0][0] + parts[1][0]).toUpperCase();
+        } else if (parts[0]) {
+            initials = parts[0].substring(0, 2).toUpperCase();
+        }
     }
 
+    let historyCount = history.length;
+
     container.innerHTML = `
-        <div id="profile-view">
-            <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.5rem;">
-                👤 Mon Espace Personnel
-            </h2>
-            
-            <div class="profile-section">
-                <h3 style="margin-bottom: 1rem; color: var(--primary);">Mes Informations</h3>
-                <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Ces informations sont stockées localement sur votre appareil pour faciliter vos prochaines commandes.</p>
-                <form id="profile-form" onsubmit="saveProfile(event)">
-                    <div class="form-group">
-                        <label>Nom Complet</label>
-                        <input type="text" id="profile-name" class="form-control" value="${customerName}" placeholder="Votre nom" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Numéro de Téléphone</label>
-                        <input type="tel" id="profile-phone" class="form-control" value="${customerPhone}" placeholder="Ex: 77 123 45 67" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Adresse de Livraison par défaut</label>
-                        <input type="text" id="profile-address" class="form-control" value="${customerAddress}" placeholder="Quartier, Rue...">
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Enregistrer mes informations</button>
-                </form>
+        <div class="account-screen">
+            <!-- Header Card (Mockup 5) -->
+            <div class="account-header-card">
+                <div class="account-avatar">
+                    ${initials}
+                </div>
+                <div class="account-info" style="flex: 1;">
+                    <h2>${customerName || 'Gourmet de Thiès'}</h2>
+                    <p>${customerPhone || 'Bienvenue sur THIES Resto'}</p>
+                    ${customerAddress ? `<p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">📍 ${customerAddress}</p>` : ''}
+                </div>
             </div>
-            
-            <div class="profile-section">
-                <h3 style="margin-bottom: 1rem; color: var(--accent);">Historique de Commandes</h3>
-                <div class="history-list">
-                    ${historyHtml}
+
+            <!-- Group 1: Coordonnées & Livraison -->
+            <div class="account-group">
+                <div class="account-group-title">Mon Profil & Coordonnées</div>
+                
+                <div class="account-item-row" onclick="toggleProfileEditForm()">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-user-settings-line"></i></span>
+                        <span>Informations personnelles</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
+                </div>
+
+                <!-- Inline Edit Form (Hidden by default or toggled) -->
+                <div id="profile-edit-box" style="display: none; padding: 1.25rem; background: var(--bg-input); border-top: 1px solid var(--border);">
+                    <form id="profile-form" onsubmit="saveProfile(event)">
+                        <div class="form-group" style="margin-bottom: 0.75rem;">
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Nom Complet</label>
+                            <input type="text" id="profile-name" class="form-control" value="${customerName}" placeholder="Ex: Awa Diop" required style="padding: 0.75rem 1rem; font-size: 0.95rem;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0.75rem;">
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Numéro de Téléphone (WhatsApp)</label>
+                            <input type="tel" id="profile-phone" class="form-control" value="${customerPhone}" placeholder="Ex: 77 123 45 67" required style="padding: 0.75rem 1rem; font-size: 0.95rem;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0.75rem;">
+                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Adresse de Livraison par défaut</label>
+                            <input type="text" id="profile-address" class="form-control" value="${customerAddress}" placeholder="Quartier, Rue, Repère..." style="padding: 0.75rem 1rem; font-size: 0.95rem;">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" style="border-radius: 14px; font-weight: 700; padding: 0.75rem;">
+                            Enregistrer mes coordonnées
+                        </button>
+                    </form>
+                </div>
+
+                <div class="account-item-row" onclick="showPaymentMethodsModal()">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-bank-card-line"></i></span>
+                        <span>Moyens de paiement acceptés (Wave, Orange Money)</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
+                </div>
+            </div>
+
+            <!-- Group 2: Activité & Commandes -->
+            <div class="account-group">
+                <div class="account-group-title">Commandes & Favoris</div>
+                
+                <div class="account-item-row" onclick="router.navigate('/tracking')">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-file-list-3-line"></i></span>
+                        <span>Suivi de commande & Historique (${historyCount})</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
+                </div>
+
+                <div class="account-item-row" onclick="router.navigate('/favorites')">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-heart-3-line"></i></span>
+                        <span>Mes restaurants favoris</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
+                </div>
+
+                <div class="account-item-row" onclick="showPromoDiscountsModal()">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-coupon-3-line"></i></span>
+                        <span>Codes promo & Bons plans</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
+                </div>
+            </div>
+
+            <!-- Group 3: Paramètres & Thème -->
+            <div class="account-group">
+                <div class="account-group-title">Préférences & Apparence</div>
+                
+                <div class="account-item-row" onclick="toggleTheme(); setTimeout(() => router.navigate('/profile'), 50);">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-moon-line"></i></span>
+                        <span>Mode Sombre / Clair</span>
+                    </div>
+                    <span style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">
+                        ${currentTheme === 'dark' ? 'Sombre 🌙' : 'Clair ☀️'}
+                    </span>
+                </div>
+
+                <div class="account-item-row" onclick="window.showWelcomeScreen();">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-sparkling-line"></i></span>
+                        <span>Revoir l'accueil de bienvenue</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
+                </div>
+            </div>
+
+            <!-- Group 4: Support & Légal -->
+            <div class="account-group">
+                <div class="account-group-title">Assistance & Légal</div>
+                
+                <a href="https://wa.me/221770000000?text=Bonjour%20support%20THIES%20Resto" target="_blank" class="account-item-row">
+                    <div class="account-item-left">
+                        <span class="account-item-icon" style="color: #22C55E;"><i class="ri-whatsapp-line"></i></span>
+                        <span>Aide et Support WhatsApp</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-external-link-line"></i></span>
+                </a>
+
+                <div class="account-item-row" onclick="router.navigate('/cgv')">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-shield-check-line"></i></span>
+                        <span>Conditions Générales d'Utilisation (CGU)</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
+                </div>
+
+                <div class="account-item-row" onclick="router.navigate('/politique-client')">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-lock-2-line"></i></span>
+                        <span>Protection des Données Personnelles</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
+                </div>
+            </div>
+
+            <!-- Group 5: Données Locales -->
+            <div class="account-group">
+                <div class="account-item-row" onclick="clearLocalCustomerData()" style="color: var(--danger);">
+                    <div class="account-item-left" style="color: var(--danger);">
+                        <span class="account-item-icon" style="color: var(--danger);"><i class="ri-delete-bin-line"></i></span>
+                        <span style="font-weight: 700;">Effacer mes données locales</span>
+                    </div>
+                    <span class="account-item-arrow" style="color: var(--danger);"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
             </div>
         </div>
     `;
 });
+
+window.toggleProfileEditForm = function() {
+    const box = document.getElementById('profile-edit-box');
+    if (box) {
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+};
+
+window.showPaymentMethodsModal = function() {
+    alertModal("Moyens de Paiement Disponibles", `
+        <div style="text-align: left; padding: 0.5rem 0;">
+            <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.95rem;">
+                Sur THIES Resto, vous payez directement auprès du restaurateur ou du livreur lors de la réception :
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">🌊</span>
+                    <div>
+                        <strong style="color: var(--text-primary);">Wave Sénégal</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Paiement instantané sans frais</div>
+                    </div>
+                </div>
+                <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">🍊</span>
+                    <div>
+                        <strong style="color: var(--text-primary);">Orange Money</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Transfert sécurisé vers le numéro du restaurant</div>
+                    </div>
+                </div>
+                <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="font-size: 1.5rem;">💵</span>
+                    <div>
+                        <strong style="color: var(--text-primary);">Espèces à la Livraison</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Règlement direct auprès du livreur</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `);
+};
+
+window.showPromoDiscountsModal = function() {
+    alertModal("Bons Plans & Réductions", `
+        <div style="text-align: left; padding: 0.5rem 0;">
+            <div style="background: linear-gradient(135deg, #DC2626, #B91C1C); color: white; padding: 1.25rem; border-radius: 16px; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(220,38,38,0.3);">
+                <div style="font-size: 0.8rem; font-weight: 800; background: #F59E0B; color: #78350F; display: inline-block; padding: 2px 8px; border-radius: 10px; margin-bottom: 0.5rem;">OFFRE DU JOUR</div>
+                <h3 style="margin: 0 0 0.25rem; font-size: 1.2rem; color: white;">Jusqu'à -40% sur vos menus</h3>
+                <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Commandez directement auprès de nos restaurants partenaires à Thiès sans intermédiaire.</p>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                💡 Les réductions sont directement appliquées sur les tarifs affichés dans les menus des restaurants partenaires.
+            </p>
+        </div>
+    `);
+};
+
+window.clearLocalCustomerData = function() {
+    if (confirm("Voulez-vous vraiment effacer vos coordonnées locales et vos favoris ?")) {
+        localStorage.removeItem('customerName');
+        localStorage.removeItem('customerPhone');
+        localStorage.removeItem('customerAddress');
+        localStorage.removeItem('customerEmail');
+        localStorage.removeItem('THIES_FAVORITES');
+        localStorage.removeItem('THIES_ORDER_HISTORY');
+        showToast("Données locales effacées avec succès", "success");
+        router.navigate('/profile');
+    }
+};
 
 window.saveProfile = function(e) {
     e.preventDefault();
@@ -3547,6 +4271,7 @@ window.saveProfile = function(e) {
     if (address) localStorage.setItem('customerAddress', address);
     
     showToast("Profil enregistré avec succès !", "success");
+    router.navigate('/profile');
 };
 
 // ----------------------------------------------------
