@@ -4,31 +4,42 @@
  */
 
 class OneSignalManager {
+    static isProductionDomain() {
+        return typeof window !== 'undefined' && 
+            (window.location.hostname === 'thies-resto.com' || window.location.hostname === 'www.thies-resto.com');
+    }
+
     static async init() {
+        if (!OneSignalManager.isProductionDomain()) {
+            console.log("[OneSignal] En environnement de développement/preview, OneSignal est en mode veille.");
+            return;
+        }
+
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(async function(OneSignal) {
-            
-            // Écouteur d'abonnement (quand le token est généré ou mis à jour)
-            OneSignal.User.PushSubscription.addEventListener("change", async (subscription) => {
-                const currentId = subscription.current.id;
-                const optIn = subscription.current.optedIn;
-                
-                console.log("OneSignal Subscription changed:", currentId, "Opt-in:", optIn);
-                
-                if (currentId && optIn && currentId !== "" && !currentId.startsWith("local-")) {
-                    await OneSignalManager.syncWithSupabase(currentId);
-                    OneSignalManager.showVerificationDialogOnce();
+            try {
+                // Écouteur d'abonnement (quand le token est généré ou mis à jour)
+                if (OneSignal.User && OneSignal.User.PushSubscription) {
+                    OneSignal.User.PushSubscription.addEventListener("change", async (subscription) => {
+                        const currentId = subscription.current && subscription.current.id;
+                        const optIn = subscription.current && subscription.current.optedIn;
+                        
+                        console.log("OneSignal Subscription changed:", currentId, "Opt-in:", optIn);
+                        
+                        if (currentId && optIn && currentId !== "" && !currentId.startsWith("local-")) {
+                            await OneSignalManager.syncWithSupabase(currentId);
+                            OneSignalManager.showVerificationDialogOnce();
+                        }
+                    });
+                    
+                    // Vérification au démarrage si déjà abonné
+                    const currentSub = OneSignal.User.PushSubscription;
+                    if (currentSub && currentSub.optedIn && currentSub.id && !currentSub.id.startsWith("local-")) {
+                        await OneSignalManager.syncWithSupabase(currentSub.id);
+                    }
                 }
-            });
-            
-            // Vérification au démarrage si déjà abonné
-            const currentSub = OneSignal.User.PushSubscription;
-            if (currentSub && currentSub.optedIn && currentSub.id && !currentSub.id.startsWith("local-")) {
-                await OneSignalManager.syncWithSupabase(currentSub.id);
-                // Si on a déjà l'ID au boot, on ne montre pas la modale, c'est que c'est déjà validé
-            } else {
-                // S'il n'est pas abonné, on peut éventuellement afficher le bouton d'opt-in custom ou utiliser le Slidedown natif.
-                // Ici on attendra que le user s'abonne via la cloche ou un bouton custom pour déclencher l'évenement.
+            } catch (err) {
+                console.warn("[OneSignal] Initialisation skipped or handled:", err);
             }
         });
     }
@@ -37,13 +48,21 @@ class OneSignalManager {
      * Demande la permission Push à l'utilisateur
      */
     static async requestPermission() {
+        if (!OneSignalManager.isProductionDomain()) {
+            console.log("[OneSignal] Simulation permission push en dev/preview.");
+            return true;
+        }
+
         return new Promise((resolve) => {
+            window.OneSignalDeferred = window.OneSignalDeferred || [];
             window.OneSignalDeferred.push(async function(OneSignal) {
                 try {
-                    await OneSignal.Slidedown.promptPush();
+                    if (OneSignal.Slidedown && typeof OneSignal.Slidedown.promptPush === 'function') {
+                        await OneSignal.Slidedown.promptPush();
+                    }
                     resolve(true);
                 } catch (error) {
-                    console.error("Erreur demande push:", error);
+                    console.warn("Erreur demande push:", error);
                     resolve(false);
                 }
             });
@@ -51,30 +70,46 @@ class OneSignalManager {
     }
 
     /**
-     * Affiche la boîte de dialogue de vérification requise par les guidelines OneSignal (une seule fois)
+     * Affiche la boîte de dialogue de vérification requise par les guidelines OneSignal (une seule fois - compacte)
      */
     static showVerificationDialogOnce() {
         const hasShown = localStorage.getItem('onesignal_verification_shown');
         if (hasShown === 'true') return;
 
         const dialog = document.createElement('div');
-        dialog.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 10000; display: flex; align-items: center; justify-content: center;";
+        dialog.id = 'onesignal-verification-toast';
+        dialog.style.cssText = "position: fixed; bottom: 85px; right: 16px; width: calc(100% - 32px); max-width: 360px; background: var(--bg-card, #121212); border: 1px solid var(--border, #333); color: var(--text-primary, #fff); border-radius: 16px; padding: 14px 16px; z-index: 10000; box-shadow: 0 10px 25px rgba(0,0,0,0.35); display: flex; flex-direction: column; gap: 10px; animation: slideInUp 0.3s ease;";
         dialog.innerHTML = `
-            <div style="background: var(--bg-primary, #ffffff); border-radius: 24px; padding: 2rem; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
-                <h2 style="color: var(--text-primary, #000); margin-bottom: 1rem; font-size: 1.5rem;">Your OneSignal SDK integration is complete!</h2>
-                <p style="color: var(--text-secondary, #666); margin-bottom: 2rem; font-size: 1rem; line-height: 1.5;">You can now send Push Notifications & In-App Messages through OneSignal. Tap below to enable push notifications.</p>
-                <button id="onesignal-got-it-btn" style="background: var(--primary, #f26b21); color: white; border: none; padding: 1rem 2rem; border-radius: 30px; font-weight: bold; font-size: 1.1rem; width: 100%; cursor: pointer;">Got it</button>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.25rem;">🔔</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary, #fff);">Notifications Activées</div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary, #aaa); line-height: 1.3;">Recevez le statut en direct de vos commandes à Thiès.</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button id="onesignal-dismiss-btn" style="background: transparent; border: 1px solid var(--border, #444); color: var(--text-secondary, #aaa); border-radius: 8px; padding: 6px 12px; font-size: 0.75rem; cursor: pointer;">Fermer</button>
+                <button id="onesignal-got-it-btn" style="background: var(--primary, #f26b21); color: white; border: none; padding: 6px 14px; border-radius: 8px; font-weight: 600; font-size: 0.75rem; cursor: pointer;">Autoriser</button>
             </div>
         `;
         
         document.body.appendChild(dialog);
         localStorage.setItem('onesignal_verification_shown', 'true');
 
-        document.getElementById('onesignal-got-it-btn').addEventListener('click', () => {
-            document.body.removeChild(dialog);
-            OneSignalManager.requestPermission();
-        });
+        const dismissBtn = document.getElementById('onesignal-dismiss-btn');
+        if (dismissBtn) {
+            dismissBtn.addEventListener('click', () => {
+                dialog.remove();
+            });
+        }
+
+        const gotItBtn = document.getElementById('onesignal-got-it-btn');
+        if (gotItBtn) {
+            gotItBtn.addEventListener('click', () => {
+                dialog.remove();
+                OneSignalManager.requestPermission();
+            });
+        }
     }
 
     /**
@@ -89,22 +124,24 @@ class OneSignalManager {
         }
 
         try {
-            console.log("Synchronisation du Player ID avec Supabase pour le numéro:", userPhone);
-            const { error } = await supabaseClient.rpc('register_push_id', {
-                p_phone: userPhone,
-                p_player_id: playerId
-            });
+            if (typeof supabaseClient !== 'undefined' && supabaseClient && typeof supabaseClient.rpc === 'function') {
+                console.log("Synchronisation du Player ID avec Supabase pour le numéro:", userPhone);
+                const { error } = await supabaseClient.rpc('register_push_id', {
+                    p_phone: userPhone,
+                    p_player_id: playerId
+                });
 
-            if (error) {
-                console.error("Erreur d'enregistrement Push DB:", error);
-            } else {
-                console.log("Player ID enregistré en base de données avec succès !");
+                if (error) {
+                    console.warn("Erreur d'enregistrement Push DB:", error);
+                } else {
+                    console.log("Player ID enregistré en base de données avec succès !");
+                }
             }
         } catch (e) {
-            console.error("Erreur inattendue Push DB:", e);
+            console.warn("Erreur inattendue Push DB:", e);
         }
     }
 }
 
-// Lancement automatique
+// Lancement automatique sécurisé
 OneSignalManager.init();

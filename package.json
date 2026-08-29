@@ -1,0 +1,14 @@
+{
+  "name": "thies-resto",
+  "version": "1.0.0",
+  "description": "Plateforme de restauration et commande en ligne avec livraison à Thiès",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "build": "node -e \"console.log('Build completed')\"",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

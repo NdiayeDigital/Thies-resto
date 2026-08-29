@@ -1,0 +1,6 @@
+{
+  "name": "THIES Resto",
+  "description": "Plateforme de restauration et commande en ligne avec livraison à Thiès",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

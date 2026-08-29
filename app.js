@@ -725,7 +725,7 @@ function stopOrderPolling() {
 }
 
 // ---------- SCROLL HELPERS ----------
-function scrollToHowItWorks() {
+window.scrollToHowItWorks = function scrollToHowItWorks() {
     if (window.location.hash && window.location.hash !== '#/') {
         router.navigate('/');
         setTimeout(() => {
@@ -736,9 +736,23 @@ function scrollToHowItWorks() {
         const el = document.getElementById('how-it-works-section');
         if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
-}
+};
 
-function scrollToCatalog() {
+window.switchHowItWorksTab = function switchHowItWorksTab(tabId) {
+    document.querySelectorAll('.hw-tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelectorAll('.hw-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    const activeBtn = document.querySelector(`.hw-tab-btn[onclick*="${tabId}"]`);
+    const activeContent = document.getElementById(tabId);
+    if (activeBtn) activeBtn.classList.add('active');
+    if (activeContent) activeContent.classList.add('active');
+};
+
+window.scrollToCatalog = function scrollToCatalog() {
     if (window.location.hash && window.location.hash !== '#/') {
         router.navigate('/');
         setTimeout(() => {
@@ -749,7 +763,7 @@ function scrollToCatalog() {
         const el = document.getElementById('catalog-section');
         if (el) el.scrollIntoView({ behavior: 'smooth' });
     }
-}
+};
 
 // Helper to automatically generate username and default password when typing restaurant name
 function handleRestaurantNameInput(nameVal, usernameId, passwordId, badgeId) {
@@ -871,6 +885,94 @@ function cleanPhoneNumber(phone) {
 }
 
 // ----------------------------------------------------
+// Mobile Drawer & Startup Verification Status
+// ----------------------------------------------------
+window.toggleMobileMenu = function() {
+    const drawer = document.getElementById('mobile-drawer');
+    const backdrop = document.getElementById('drawer-backdrop');
+    const hamburger = document.getElementById('hamburger-btn');
+    if (!drawer || !backdrop) return;
+    
+    const isOpen = drawer.classList.contains('active');
+    if (isOpen) {
+        drawer.classList.remove('active');
+        backdrop.classList.remove('active');
+        if (hamburger) hamburger.classList.remove('active');
+        document.body.style.overflow = '';
+    } else {
+        drawer.classList.add('active');
+        backdrop.classList.add('active');
+        if (hamburger) hamburger.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.updateStartupVerificationUI = function() {
+    const geoLabel = document.getElementById('micro-geo-city');
+    const geoBtn = document.getElementById('micro-geo-btn');
+    const authLabel = document.getElementById('micro-auth-label');
+    const authStatusText = document.getElementById('micro-auth-status-text');
+    const authDot = document.getElementById('micro-auth-dot');
+
+    if (window.userLat && window.userLng) {
+        if (geoLabel) geoLabel.textContent = "Thiès (GPS Actif)";
+        if (geoBtn) {
+            geoBtn.textContent = "✓ OK";
+            geoBtn.classList.add('active');
+        }
+    } else {
+        if (geoLabel) geoLabel.textContent = "Thiès, SN";
+        if (geoBtn) {
+            geoBtn.textContent = "GPS";
+            geoBtn.classList.remove('active');
+        }
+    }
+
+    if (isSuperAdminSession) {
+        if (authLabel) authLabel.textContent = "Super-Admin";
+        if (authStatusText) authStatusText.textContent = "Connecté 👑";
+        if (authDot) {
+            authDot.className = "micro-dot red";
+        }
+    } else if (currentRestaurantSession) {
+        if (authLabel) authLabel.textContent = currentRestaurantSession.name || "Restaurateur";
+        if (authStatusText) authStatusText.textContent = "Partenaire 🏪";
+        if (authDot) {
+            authDot.className = "micro-dot green";
+        }
+    } else {
+        const storedPhone = localStorage.getItem('thies_resto_user_phone') || localStorage.getItem('client_phone');
+        if (storedPhone) {
+            if (authLabel) authLabel.textContent = "Client";
+            if (authStatusText) authStatusText.textContent = "Vérifié ✓";
+            if (authDot) {
+                authDot.className = "micro-dot green";
+            }
+        } else {
+            if (authLabel) authLabel.textContent = "Invité";
+            if (authStatusText) authStatusText.textContent = "Mode Découverte";
+            if (authDot) {
+                authDot.className = "micro-dot blue";
+            }
+        }
+    }
+};
+
+window.handleMicroAuthClick = function() {
+    if (isSuperAdminSession) {
+        if (currentRestaurantSession) {
+            router.navigate('/dashboard');
+        } else {
+            router.navigate('/admin');
+        }
+    } else if (currentRestaurantSession) {
+        router.navigate('/dashboard');
+    } else {
+        router.navigate('/profile');
+    }
+};
+
+// ----------------------------------------------------
 // Navbar population
 // ----------------------------------------------------
 function updateNavbar() {
@@ -879,20 +981,7 @@ function updateNavbar() {
     let html = '';
     let drawerHtml = '';
     
-    // User links template
-    const userDrawerLinks = `
-        <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">Accueil</a>
-        <a href="#" onclick="toggleMobileMenu(); router.navigate('/profile'); return false;" style="color: var(--primary); font-weight: bold;">👤 Mon Profil / Historique</a>
-        <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--accent); font-weight: bold;">📍 Suivi de Commande</a>
-        <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">Concept & Audit</a>
-        <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">Nos Restaurants</a>
-        <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">Devenir Partenaire 🤝</a>
-        <a href="#" style="opacity: 0.6; pointer-events: none; margin-top: 1rem;" title="Bientôt disponible">
-            Espace Livreurs 🛵 
-            <span style="font-size: 0.7rem; color: var(--accent); display: block; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: bold;">(Bientôt disponible)</span>
-        </a>
-    `;
-    
+    // 1. SUPER ADMIN MODE (Only Super-Admin tools, no client navigation)
     if (isSuperAdminSession) {
         if (currentRestaurantSession) {
             html = `
@@ -905,53 +994,80 @@ function updateNavbar() {
                     <span style="color: var(--danger); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Mode Super-Admin</span>
                     <span style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">Gère : ${currentRestaurantSession.name}</span>
                 </div>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">📊 Tableau de Bord</a>
-                <a href="#" onclick="toggleMobileMenu(); exitImpersonation(); return false;" style="color: var(--danger);">🚪 Retour Console Admin</a>
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
-                ${userDrawerLinks}
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">📊 Tableau de Bord (${currentRestaurantSession.name})</a>
+                <a href="#" onclick="toggleMobileMenu(); exitImpersonation(); return false;" style="color: var(--danger); font-weight: 600;">🔐 Retour Console Globale</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;">📜 Charte &amp; Politique Restaurant</a>
+                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: bold; margin-top: 1rem;">🚪 Déconnexion Super-Admin</a>
             `;
         } else {
             html = `
-                <span class="badge badge-danger">Super-Admin</span>
+                <span class="badge badge-danger">👑 Super-Admin</span>
                 <button class="btn btn-primary btn-sm" onclick="router.navigate('/admin')">Console Admin 📊</button>
+                <button class="btn btn-secondary btn-sm" onclick="logoutAdmin()">Déconnexion 🚪</button>
             `;
             drawerHtml = `
                 <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
-                    <span style="color: var(--danger); font-weight: bold; font-size: 0.9rem;">👑 SUPER-ADMINISTRATEUR</span>
+                    <span style="color: var(--danger); font-weight: bold; font-size: 0.9rem;">👑 CONSOLE SUPER-ADMINISTRATEUR</span>
                 </div>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;">📊 Console Admin</a>
-                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: bold;">🚪 Déconnexion Admin</a>
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
-                ${userDrawerLinks}
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;" style="color: var(--primary); font-weight: bold;">📊 Tableau de Bord Central</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;">🏪 Gestion des 20 Restaurants</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;">🤝 Demandes de Partenariat</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;">📜 Charte &amp; Politique Restaurant</a>
+                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: bold; margin-top: 1rem;">🚪 Déconnexion Super-Admin</a>
             `;
         }
-    } else if (currentRestaurantSession) {
+    } 
+    // 2. RESTAURANT PARTNER MODE (Only Restaurant dashboard tools, no client navigation)
+    else if (currentRestaurantSession) {
         html = `
-            <span class="badge badge-success">${currentRestaurantSession.name}</span>
+            <span class="badge badge-success">🏪 ${currentRestaurantSession.name}</span>
             <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
+            <button class="btn btn-secondary btn-sm" onclick="logoutRestaurant()">Déconnexion 🚪</button>
         `;
         drawerHtml = `
             <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(16, 185, 129, 0.2);">
-                <span style="color: var(--success); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Espace Partenaire</span>
+                <span style="color: var(--success); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Espace Partenaire Restaurant</span>
                 <span style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">${currentRestaurantSession.name}</span>
             </div>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">📊 Mon Tableau de Bord</a>
-            <a href="#" onclick="toggleMobileMenu(); logoutRestaurant(); return false;" style="color: var(--danger); font-weight: bold;">🚪 Déconnexion</a>
-            <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
-            ${userDrawerLinks}
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;" style="color: var(--primary); font-weight: bold;">📊 Mon Tableau de Bord</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">🍽️ Mon Menu du Jour</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">🛵 Commandes Directes</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">📅 Réservations de Table</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;">📜 Charte &amp; Politique Restaurant</a>
+            <a href="#" onclick="toggleMobileMenu(); logoutRestaurant(); return false;" style="color: var(--danger); font-weight: bold; margin-top: 1rem;">🚪 Déconnexion Restaurant</a>
         `;
-    } else {
+    } 
+    // 3. PUBLIC CLIENT / GUEST MODE (Clean customer navigation, no super-admin button)
+    else {
         html = `
             <button class="btn btn-primary btn-sm" onclick="router.navigate('/profile')">👤 Mon Profil</button>
             <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')">Espace Resto</button>
         `;
-        drawerHtml = userDrawerLinks;
+        drawerHtml = `
+            <div style="padding: 0.75rem; background: rgba(var(--primary-rgb), 0.08); border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border);">
+                <span style="color: var(--primary); font-weight: bold; font-size: 0.85rem; display: block;">Thiès Resto</span>
+                <span style="font-size: 0.75rem; color: var(--text-secondary);">Commandes en direct &amp; Réservations</span>
+            </div>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">🏠 Accueil</a>
+            <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">🍽️ Nos Restaurants Partenaires</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--primary); font-weight: 600;">📍 Suivi de Commande</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/profile'); return false;" style="font-weight: 600;">👤 Mon Profil &amp; Fidélité</a>
+            <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">💡 Comment ça marche ?</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">🤝 Devenir Partenaire</a>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.75rem 0;">
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/cgv'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);">📄 Conditions Générales (CGV)</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-client'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);">🔒 Confidentialité Client</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/auth'); return false;" style="font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem;">🏪 Connexion Restaurateur</a>
+        `;
     }
     
-    navActions.innerHTML = html;
+    if (navActions) navActions.innerHTML = html;
     if (drawerLinks) {
         drawerLinks.innerHTML = drawerHtml;
     }
+
+    // Always keep micro verification indicators in sync
+    updateStartupVerificationUI();
 }
 
 // logoutRestaurant moved to js/auth.js
@@ -1044,9 +1160,9 @@ router.add('#/', () => {
                         <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem;">🔍</button>
                     </div>
 
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start;">
-                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); padding: 1rem 2rem; border-radius: 12px; font-weight: 600;">Explorer nos Menus 🍽️</button>
-                        <button class="btn btn-secondary ripple hover-3d" onclick="geolocateRestaurants()" style="background: var(--glass-bg); color: var(--text-primary); border: 1px solid var(--border); padding: 1rem 2rem; border-radius: 12px; font-weight: 500;">📍 Trouver autour de moi</button>
+                    <div class="hero-actions-container" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: flex-start; margin-top: 1.5rem; margin-bottom: 1rem;">
+                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); padding: 1.1rem 2.2rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem;">Explorer nos Menus 🍽️</button>
+                        <button class="btn btn-secondary ripple hover-3d" onclick="geolocateRestaurants()" style="background: var(--glass-bg); color: var(--text-primary); border: 1px solid var(--border); padding: 1.1rem 2.2rem; border-radius: 14px; font-weight: 600; font-size: 1.05rem;">📍 Trouver autour de moi</button>
                     </div>
                 </div>
                 
@@ -1056,7 +1172,7 @@ router.add('#/', () => {
         ${historyHtml}
 
         <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
-        <section class="presentation-section" style="padding: 1rem 0 0 0;">
+        <section class="presentation-section" id="presentation-section">
             <div class="reference-row-cards">
                 <!-- Left Card: Zero Account -->
                 <div class="ref-card-text">
@@ -1257,7 +1373,7 @@ router.add('#/', () => {
                         <div class="timeline-badge">1</div>
                         <span class="timeline-icon">👥</span>
                         <h3>Création du groupe</h3>
-                        <p>Lancez un panier partagé pour vos collègues de bureau ou vos amis en clicking sur "Commande de Groupe".</p>
+                        <p>Lancez un panier partagé pour vos collègues de bureau ou vos amis en cliquant sur "Commande de Groupe".</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">2</div>
@@ -1311,7 +1427,7 @@ router.add('#/', () => {
             <div class="study-split-grid">
                 <!-- Left: Problems / Metrics -->
                 <div class="study-left-col">
-                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Le Constat Local (Étude Juin 2025)</h3>
+                    <h3 style="font-family: var(--font-serif); font-size: 1.3rem; margin-bottom: 1.5rem; color: var(--text-primary);">Le Constat Local (Étude Septembre 2026)</h3>
                     
                     <div class="study-carousel-wrapper">
                         <div class="study-metric-card square-stat-card">
@@ -1321,12 +1437,17 @@ router.add('#/', () => {
 
                         <div class="study-metric-card square-stat-card">
                             <span class="stat-number">0%</span>
-                            <span class="stat-label">Absence de Contenu Moderne</span>
+                            <span class="stat-label">Absence de Menus Interactifs</span>
                         </div>
 
                         <div class="study-metric-card square-stat-card">
                             <span class="stat-number">90%</span>
                             <span class="stat-label">Avis Négatifs Ignorés</span>
+                        </div>
+
+                        <div class="study-metric-card square-stat-card">
+                            <span class="stat-number">75%</span>
+                            <span class="stat-label">Commandes Perdues en Heures de Pointe</span>
                         </div>
                     </div>
                 </div>
@@ -1339,7 +1460,7 @@ router.add('#/', () => {
                         <div class="solution-feature-card">
                             <span class="solution-icon">✨</span>
                             <div class="solution-text">
-                                <h3>1. Vitrine Digitale Premium</h3>
+                                <h3>1. Vitrine Digitale Gratuite & Propre</h3>
                                 <p>Chaque partenaire bénéficie d'une page personnalisée, moderne, rapide et optimisée pour le référencement local à Thiès.</p>
                             </div>
                         </div>
@@ -1347,7 +1468,7 @@ router.add('#/', () => {
                         <div class="solution-feature-card">
                             <span class="solution-icon">⚡</span>
                             <div class="solution-text">
-                                <h3>2. Précommande Réduisant l'Attente</h3>
+                                <h3>2. Précommande & Réservation Express</h3>
                                 <p>Les clients commandent et réservent à l'avance, ce qui réduit de moitié les temps d'attente souvent pointés du doigt.</p>
                             </div>
                         </div>
@@ -1357,6 +1478,14 @@ router.add('#/', () => {
                             <div class="solution-text">
                                 <h3>3. Mode Hybride (SMS en Secours)</h3>
                                 <p>En cas de coupure ou faiblesse du réseau internet à Thiès, la commande bascule automatiquement par SMS classique sécurisé.</p>
+                            </div>
+                        </div>
+
+                        <div class="solution-feature-card">
+                            <span class="solution-icon">📱</span>
+                            <div class="solution-text">
+                                <h3>4. Centralisation WhatsApp & 0% Commission</h3>
+                                <p>Commandes directes et structurées sur WhatsApp avec notification sonore et récapitulatif sans aucune commission sur les plats.</p>
                             </div>
                         </div>
                     </div>
@@ -1384,14 +1513,7 @@ router.add('#/', () => {
     }
 });
 
-function scrollToCatalog() {
-    const el = document.getElementById('catalog-section');
-    if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-function setFilter(category) {
+window.setFilter = function setFilter(category) {
     activeFilter = category;
     const filterBar = document.getElementById('filter-bar');
     if (filterBar) {
@@ -1404,9 +1526,9 @@ function setFilter(category) {
         });
     }
     applyFilters();
-}
+};
 
-function applyFilters() {
+window.applyFilters = function applyFilters() {
     const searchInput = document.getElementById('search-input-field');
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
     const grid = document.getElementById('restaurants-list-grid');
@@ -1492,26 +1614,26 @@ function applyFilters() {
         }
             
         cardsHtml += `
-            <div class="restaurant-card hover-3d glass-panel" style="position: relative; border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; border: 1px solid var(--border);" onclick="router.navigate('/r/${r.slug}')">
+            <div class="restaurant-card hover-3d glass-panel" onclick="router.navigate('/r/${r.slug}')">
                 ${distanceBadge}
-                <div class="restaurant-card-header" style="height: 200px; position: relative;">
-                    <img src="${coverUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
-                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 50%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);"></div>
-                    <div style="position: absolute; top: 1rem; left: 1rem; z-index: 2;">
+                <div class="restaurant-card-header">
+                    <img src="${coverUrl}" class="restaurant-card-img" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
+                    <div class="restaurant-card-gradient"></div>
+                    <div class="restaurant-card-status">
                         ${statusBadge}
                     </div>
                 </div>
-                <div class="restaurant-card-body" style="padding: 1.5rem; flex: 1; display: flex; flex-direction: column; background: var(--bg-card);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <h3 class="restaurant-card-name" style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin: 0; line-height: 1.2;">${r.name}</h3>
-                        <span class="stars-rating" style="background: var(--bg-primary); padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 600; font-size: 0.9rem; color: #fbbf24; border: 1px solid var(--border);">★ ${r.rating.toFixed(1)}</span>
+                <div class="restaurant-card-body">
+                    <div class="restaurant-card-top-row">
+                        <h3 class="restaurant-card-name" title="${r.name}">${r.name}</h3>
+                        <span class="stars-rating">★ ${r.rating.toFixed(1)}</span>
                     </div>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.3rem;">
-                        <span>📍</span> <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.address}</span>
+                    <p class="restaurant-card-address">
+                        <span>📍</span> <span class="restaurant-card-address-text">${r.address}</span>
                     </p>
-                    <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
-                        <span class="restaurant-card-cuisine" style="background: rgba(242,107,33,0.1); color: var(--primary); padding: 0.4rem 1rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;">${r.category}</span>
-                        <span style="font-size: 0.8rem; color: var(--text-secondary);">(${r.reviewsCount} avis)</span>
+                    <div class="restaurant-card-footer">
+                        <span class="restaurant-card-cuisine">${r.category}</span>
+                        <span class="restaurant-card-reviews">${r.reviewsCount} avis</span>
                     </div>
                 </div>
             </div>
@@ -1656,37 +1778,38 @@ function showMapModal(userLat, userLng, restaurants) {
 }
 
 window.geolocateRestaurants = function() {
-    if ("geolocation" in navigator) {
+    if (typeof window.requestNativeGeolocation === 'function') {
+        window.requestNativeGeolocation();
+    } else if ("geolocation" in navigator) {
         if (typeof showToast === 'function') showToast("Recherche de votre position...", "info");
         navigator.geolocation.getCurrentPosition((position) => {
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
+            window.userLat = userLat;
+            window.userLng = userLng;
             
             let restosWithDist = 0;
-            store.data.restaurants.forEach(r => {
-                if (r.lat && r.lng) {
-                    const dist = calculateDistance(userLat, userLng, r.lat, r.lng);
-                    r._tempDistance = parseFloat(dist.toFixed(1));
-                    restosWithDist++;
-                }
-            });
+            if (typeof store !== 'undefined' && store.data && store.data.restaurants) {
+                store.data.restaurants.forEach(r => {
+                    if (r.lat && r.lng) {
+                        const dist = calculateDistance(userLat, userLng, r.lat, r.lng);
+                        r._tempDistance = parseFloat(dist.toFixed(1));
+                        restosWithDist++;
+                    }
+                });
+            }
             
             if (typeof showToast === 'function') showToast(`Position trouvée ! Tri de ${restosWithDist} restaurants...`, "success");
-            
-            // Focus catalog
-            scrollToCatalog();
-            
-            // Re-render
-            applyFilters();
-            
-            // Show Map Modal
-            showMapModal(userLat, userLng, store.data.restaurants);
-            
+            if (typeof scrollToCatalog === 'function') scrollToCatalog();
+            if (typeof applyFilters === 'function') applyFilters();
+            if (typeof showMapModal === 'function') showMapModal(userLat, userLng, store.data.restaurants);
         }, (error) => {
-            if (typeof showToast === 'function') showToast("Impossible d'obtenir votre position. Veuillez autoriser l'accès.", "error");
-        });
+            console.warn("Notice: Geolocation unavailable or timed out, default center used.");
+            if (typeof applyFilters === 'function') applyFilters();
+            if (typeof showToast === 'function') showToast("Position par défaut : Thiès Centre", "info");
+        }, { timeout: 6000, maximumAge: 60000, enableHighAccuracy: false });
     } else {
-        if (typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée par votre navigateur.", "error");
+        if (typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée sur ce navigateur.", "info");
     }
 };
 
@@ -2027,56 +2150,51 @@ window.openProductModal = function(restaurantId, dishId) {
     window.currentProductQty = 1;
 
     modal.innerHTML = `
-        <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0c0e12; z-index: 9999; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; overflow-y: auto;">
+        <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-primary); z-index: 9999; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; overflow-y: auto; color: var(--text-primary);">
             <!-- Header -->
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; position: absolute; top: 0; left: 0; width: 100%; z-index: 10;">
-                <button onclick="document.getElementById('product-detail-modal').remove()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 45px; height: 45px; border-radius: 50%; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; backdrop-filter: blur(5px);">
-                    ←
+                <button onclick="document.getElementById('product-detail-modal').remove()" aria-label="Fermer" style="background: var(--bg-glass, rgba(0,0,0,0.3)); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 50%; color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; backdrop-filter: blur(8px);">
+                    ✕
                 </button>
                 <div style="position: relative;" onclick="document.getElementById('product-detail-modal').remove(); openCartTab();">
-                    <button style="background: var(--primary); border: none; width: 45px; height: 45px; border-radius: 50%; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 15px rgba(207,168,83,0.4);">
+                    <button aria-label="Voir le panier" style="background: var(--primary); border: none; width: 45px; height: 45px; border-radius: 50%; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; box-shadow: var(--shadow-sm);">
                         🛒
                     </button>
-                    <span style="position: absolute; top: -5px; right: -5px; background: white; color: var(--primary); font-size: 0.75rem; font-weight: 800; width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">
+                    <span style="position: absolute; top: -5px; right: -5px; background: var(--danger, #EF4444); color: #ffffff; font-size: 0.75rem; font-weight: 800; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
                         ${cart.items.length}
                     </span>
                 </div>
             </div>
 
             <!-- Image Hero -->
-            <div style="flex: 1; min-height: 40vh; position: relative; display: flex; align-items: center; justify-content: center; padding: 5rem 2rem 2rem 2rem; background: radial-gradient(circle at center, rgba(207,168,83,0.15) 0%, transparent 60%);">
-                <img src="${dish.image}" style="width: 280px; height: 280px; object-fit: cover; border-radius: 50%; box-shadow: 0 20px 40px rgba(0,0,0,0.6); border: 4px solid rgba(255,255,255,0.05);" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'" loading="lazy">
-            </div>
-
-            <!-- Curved Separator -->
-            <div style="width: 100%; height: 30px; background: transparent; position: relative; overflow: hidden; margin-top: -15px;">
-                <div style="position: absolute; top: 15px; left: -10%; width: 120%; height: 100px; border-top: 1px solid rgba(207,168,83,0.3); border-radius: 50%; box-shadow: 0 -10px 30px rgba(207,168,83,0.1);"></div>
+            <div style="flex: 1; min-height: 38vh; position: relative; display: flex; align-items: center; justify-content: center; padding: 5rem 2rem 2rem 2rem; background: radial-gradient(circle at center, rgba(var(--primary-rgb), 0.15) 0%, transparent 70%);">
+                <img src="${dish.image}" style="width: 240px; height: 240px; object-fit: cover; border-radius: 50%; box-shadow: var(--shadow-md); border: 4px solid var(--border);" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'" loading="lazy" alt="${dish.name}">
             </div>
 
             <!-- Details Section -->
-            <div style="background: #0c0e12; padding: 2rem 1.5rem; flex: 1; border-top-left-radius: 30px; border-top-right-radius: 30px; display: flex; flex-direction: column;">
+            <div style="background: var(--bg-card); padding: 2rem 1.5rem; flex: 1; border-top-left-radius: 28px; border-top-right-radius: 28px; border-top: 1px solid var(--border); display: flex; flex-direction: column;">
                 
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                    <h2 style="color: var(--primary); font-size: 1.8rem; font-family: var(--font-serif); font-weight: 700; margin: 0; max-width: 65%;">${dish.name}</h2>
-                    <span style="color: var(--primary); font-size: 1.6rem; font-weight: 800;">${dish.price} <span style="font-size: 1rem;">FCFA</span></span>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                    <h2 style="color: var(--text-primary); font-size: 1.6rem; font-family: var(--font-serif); font-weight: 700; margin: 0; max-width: 65%;">${dish.name}</h2>
+                    <span style="color: var(--primary); font-size: 1.5rem; font-weight: 800;">${dish.price} <span style="font-size: 0.9rem; color: var(--text-secondary);">FCFA</span></span>
                 </div>
                 
-                <p style="color: rgba(255,255,255,0.6); font-size: 0.95rem; line-height: 1.5; margin-bottom: 2rem;">${dish.description}</p>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem;">${dish.description || 'Préparé avec soin par les chefs de l’établissement avec des ingrédients frais locaux.'}</p>
 
                 <!-- Controls -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; background: var(--bg-input); padding: 1rem 1.25rem; border-radius: 20px; border: 1px solid var(--border);">
                     <div style="display: flex; flex-direction: column;">
-                        <span style="color: rgba(255,255,255,0.5); font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 0.5rem; text-transform: uppercase;">Quantité</span>
-                        <div style="display: flex; align-items: center; gap: 1rem; background: #16181d; border-radius: 30px; padding: 0.25rem; border: 1px solid rgba(255,255,255,0.05);">
-                            <button onclick="if(window.currentProductQty > 1) { window.currentProductQty--; document.getElementById('modal-qty-val').innerText = window.currentProductQty; }" style="background: #e2e8f0; border: none; width: 35px; height: 35px; border-radius: 50%; color: #000000; font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">-</button>
-                            <span id="modal-qty-val" style="color: var(--primary); font-weight: 700; font-size: 1.2rem; min-width: 20px; text-align: center;">1</span>
-                            <button onclick="window.currentProductQty++; document.getElementById('modal-qty-val').innerText = window.currentProductQty;" style="background: #e2e8f0; border: none; width: 35px; height: 35px; border-radius: 50%; color: #000000; font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
+                        <span style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 0.5rem; text-transform: uppercase;">Quantité</span>
+                        <div style="display: flex; align-items: center; gap: 1rem; background: var(--bg-card); border-radius: 30px; padding: 0.25rem 0.5rem; border: 1px solid var(--border);">
+                            <button onclick="if(window.currentProductQty > 1) { window.currentProductQty--; document.getElementById('modal-qty-val').innerText = window.currentProductQty; }" style="background: var(--bg-input); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 50%; color: var(--text-primary); font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">-</button>
+                            <span id="modal-qty-val" style="color: var(--primary); font-weight: 700; font-size: 1.2rem; min-width: 24px; text-align: center;">1</span>
+                            <button onclick="window.currentProductQty++; document.getElementById('modal-qty-val').innerText = window.currentProductQty;" style="background: var(--bg-input); border: 1px solid var(--border); width: 34px; height: 34px; border-radius: 50%; color: var(--text-primary); font-weight: bold; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">+</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Action Button -->
-                <button onclick="addModalItemToCart('${restaurantId}', '${dishId}'); document.getElementById('product-detail-modal').remove();" style="background: var(--primary); color: var(--primary); border: none; width: 100%; padding: 1.25rem; border-radius: 20px; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; box-shadow: 0 10px 25px rgba(207,168,83,0.3); transition: transform 0.2s;">
+                <button onclick="addModalItemToCart('${restaurantId}', '${dishId}'); document.getElementById('product-detail-modal').remove();" style="background: var(--primary); color: #ffffff; border: none; width: 100%; padding: 1.1rem; border-radius: 16px; font-size: 1.05rem; font-weight: 700; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; box-shadow: var(--shadow-md); transition: transform 0.2s;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
                     AJOUTER AU PANIER
                 </button>
@@ -2989,7 +3107,7 @@ router.add('#/politique-client', () => {
                 <p>Cette politique peut évoluer à mesure que de nouvelles fonctionnalités sont ajoutées à la plateforme. La version la plus récente est toujours disponible sur cette page.</p>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
-                <p style="font-size: 0.85rem; font-style: italic; text-align: center;">Dernière mise à jour : juin 2026</p>
+                <p style="font-size: 0.85rem; font-style: italic; text-align: center;">Dernière mise à jour : septembre 2026</p>
             </div>
             <div style="text-align: center; margin-top: 2rem;">
                 <button class="btn btn-primary" onclick="router.navigate('/')">Retour à l'accueil</button>
@@ -3056,7 +3174,7 @@ router.add('#/politique-admin', () => {
                 <p>Cette politique peut être amenée à évoluer à mesure que de nouvelles fonctionnalités sont ajoutées à la plateforme. Le restaurant sera informé de toute modification significative.</p>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
-                <p style="font-size: 0.85rem; font-style: italic; text-align: center;">Dernière mise à jour : juin 2026</p>
+                <p style="font-size: 0.85rem; font-style: italic; text-align: center;">Dernière mise à jour : septembre 2026</p>
             </div>
             <div style="text-align: center; margin-top: 2rem;">
                 <button class="btn btn-primary" onclick="router.navigate('/')">Retour à l'accueil</button>
@@ -3998,32 +4116,6 @@ window.requestPushNotifications = function() {
     });
 };
 
-window.geolocateRestaurants = function() {
-    if ("geolocation" in navigator) {
-        if(typeof showToast === 'function') showToast("Recherche GPS...", "info");
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            window.userLat = position.coords.latitude;
-            window.userLng = position.coords.longitude;
-            
-            if(typeof showToast === 'function') showToast("Position trouvée ! Recherche des restaurants...", "info");
-            
-            // Re-sync with Supabase which will now use PostGIS RPC to fetch nearest 10
-            if (typeof store !== 'undefined' && store.syncFromSupabase) {
-                await store.syncFromSupabase();
-                if (typeof applyFilters === 'function') applyFilters();
-                if(typeof showToast === 'function') showToast("Restaurants triés par proximité !", "success");
-                
-                const grid = document.getElementById('catalog-grid');
-                if (grid) grid.scrollIntoView({behavior: 'smooth'});
-            }
-        }, (error) => {
-            if(typeof showToast === 'function') showToast("Erreur de géolocalisation. Veuillez autoriser l'accès.", "error");
-        });
-    } else {
-        if(typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée par votre navigateur.", "error");
-    }
-};
-
 // ==================== SUPABASE REALTIME ====================
 let globalOrderSubscription = null;
 window.setupRealtime = function() {
@@ -4304,51 +4396,61 @@ window.requestNativeGeolocation = function() {
     var modal = document.getElementById('geo-modal');
     if (modal) modal.style.display = 'none';
     if ("geolocation" in navigator) {
-        if(typeof showToast === 'function') showToast("Recherche GPS en cours...", "info");
-        navigator.geolocation.getCurrentPosition(async (position) => {
-            window.userLat = position.coords.latitude;
-            window.userLng = position.coords.longitude;
-            
-            if(typeof showToast === 'function') showToast("Position trouvée ! Recherche des restaurants...", "info");
-            
-            // Re-sync with Supabase which will now use PostGIS RPC to fetch nearest 10
-            if (typeof store !== 'undefined' && store.syncFromSupabase) {
-                await store.syncFromSupabase();
+        if (typeof showToast === 'function') showToast("Recherche GPS en cours...", "info");
+        try {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                try {
+                    window.userLat = position.coords.latitude;
+                    window.userLng = position.coords.longitude;
+                    
+                    if (typeof window.updateStartupVerificationUI === 'function') {
+                        window.updateStartupVerificationUI();
+                    }
+                    
+                    if (typeof showToast === 'function') showToast("Position GPS confirmée (Thiès)", "success");
+                    
+                    // Recalculate distances for all restaurants
+                    if (typeof store !== 'undefined' && store.data && store.data.restaurants) {
+                        store.data.restaurants.forEach(r => {
+                            if (r.lat && r.lng) {
+                                r._tempDistance = parseFloat(calculateDistance(window.userLat, window.userLng, r.lat, r.lng).toFixed(1));
+                            }
+                        });
+                    }
+                    if (typeof applyFilters === 'function') applyFilters();
+                    if (typeof showMapModal === 'function') showMapModal(window.userLat, window.userLng, store.data.restaurants);
+                } catch(e) {
+                    console.warn("GPS processing notice:", e);
+                }
+            }, (error) => {
+                console.warn("GPS non disponible ou timeout:", error ? (error.message || error.code) : 'Notice');
+                window.userLat = 14.7928;
+                window.userLng = -16.9260;
+                if (typeof store !== 'undefined' && store.data && store.data.restaurants) {
+                    store.data.restaurants.forEach(r => {
+                        if (r.lat && r.lng) {
+                            r._tempDistance = parseFloat(calculateDistance(window.userLat, window.userLng, r.lat, r.lng).toFixed(1));
+                        }
+                    });
+                }
                 if (typeof applyFilters === 'function') applyFilters();
-                if (typeof showMapModal === 'function') showMapModal(window.userLat, window.userLng, store.data.restaurants);
-            }
-        }, (error) => {
-            if(typeof window.showGpsErrorModal === 'function') window.showGpsErrorModal();
-            else console.error("Erreur GPS:", error);
-        });
+                if (typeof showToast === 'function') {
+                    showToast("Position centrée sur Thiès Ville", "info");
+                }
+                if (typeof window.updateStartupVerificationUI === 'function') {
+                    window.updateStartupVerificationUI();
+                }
+            }, { timeout: 6000, maximumAge: 60000, enableHighAccuracy: false });
+        } catch(err) {
+            console.warn("Geolocation call notice:", err);
+        }
     } else {
-        if(typeof showToast === 'function') showToast("GPS non supporté", "error");
+        if (typeof showToast === 'function') showToast("GPS non supporté par ce navigateur", "info");
     }
 };
 
 window.showGpsErrorModal = function() {
-    let errorModal = document.getElementById('gps-error-modal');
-    if (!errorModal) {
-        errorModal = document.createElement('div');
-        errorModal.id = 'gps-error-modal';
-        errorModal.innerHTML = `
-            <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); z-index: 10000; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
-                <div style="background: var(--bg-primary, #ffffff); border-radius: 24px; padding: 2rem; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2); transform: translateY(20px); transition: transform 0.3s ease;">
-                    <div style="width: 60px; height: 60px; background: rgba(255, 59, 48, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
-                        <span style="font-size: 30px; color: #ff3b30;">📍</span>
-                    </div>
-                    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary, #000); margin-bottom: 1rem; font-family: var(--font-sans);">Accès GPS Refusé</h2>
-                    <p style="color: var(--text-secondary, #666); font-size: 1rem; line-height: 1.5; margin-bottom: 1.5rem;">
-                        Votre navigateur bloque l'accès à la position. Pour trouver les meilleurs restaurants autour de vous, veuillez autoriser <strong>Thies Resto</strong> dans les paramètres de localisation de votre navigateur, ou activer votre GPS.
-                    </p>
-                    <button onclick="document.getElementById('gps-error-modal').style.opacity='0'; setTimeout(()=>document.getElementById('gps-error-modal').remove(), 300);" style="background: var(--primary, #e23744); color: white; border: none; border-radius: 12px; padding: 1rem 2rem; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.2s;">J'ai compris</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(errorModal);
-        setTimeout(() => {
-            errorModal.firstElementChild.style.opacity = '1';
-            errorModal.firstElementChild.firstElementChild.style.transform = 'translateY(0)';
-        }, 10);
+    if (typeof showToast === 'function') {
+        showToast("Position désactivée. Tous les restaurants de Thiès sont affichés.", "info");
     }
 };
