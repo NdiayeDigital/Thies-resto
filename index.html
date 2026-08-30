@@ -229,7 +229,7 @@
             </div>
 
             <!-- Center: Logo -->
-            <div class="logo-container" onclick="router.navigate('/')">
+            <div class="logo-container" onclick="handleLogoClick()">
                 <img src="icon.png" class="logo-icon" alt="THIES Resto Logo" fetchpriority="high"
                     style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
                 <span class="logo-text">THIES Resto</span>
@@ -245,7 +245,7 @@
         <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleMobileMenu()"></div>
         <aside class="mobile-drawer" id="mobile-drawer" aria-label="Menu Mobile">
             <div class="drawer-header">
-                <div class="logo-container" onclick="toggleMobileMenu(); router.navigate('/');">
+                <div class="logo-container" onclick="toggleMobileMenu(); handleLogoClick();">
                     <img src="icon.png" class="logo-icon" alt="THIES Resto Logo"
                         style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
                     <span class="logo-text" style="font-size: 1.1rem;">THIES Resto</span>

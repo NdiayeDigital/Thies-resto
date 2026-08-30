@@ -737,17 +737,138 @@ window.updateFavoritesBadge = function() {
     }
 };
 
+window.handleLogoClick = function() {
+    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+        if (typeof router !== 'undefined') router.navigate('/dashboard');
+    } else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
+        if (typeof router !== 'undefined') router.navigate('/admin');
+    } else {
+        if (typeof router !== 'undefined') router.navigate('/');
+    }
+};
+
+window.switchDashboardSection = function(sectionName) {
+    if (typeof currentRestaurantSession === 'undefined' || !currentRestaurantSession) {
+        if (typeof showToast === 'function') showToast("Veuillez vous connecter à votre espace restaurant.", "warning");
+        if (typeof router !== 'undefined') router.navigate('/auth');
+        return;
+    }
+
+    if (sectionName === 'add-menu') {
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'add-menu';
+        if (typeof router !== 'undefined') router.navigate('/dashboard-add-menu');
+    } else if (sectionName === 'daily-menu') {
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'daily-menu';
+        if (typeof router !== 'undefined') router.navigate('/dashboard-daily-menu');
+    } else if (sectionName === 'account') {
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'account';
+        if (typeof router !== 'undefined') router.navigate('/dashboard-account');
+    } else {
+        // default: dashboard overview
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'summary';
+        if (typeof router !== 'undefined') router.navigate('/dashboard');
+    }
+
+    if (typeof updateNavbar === 'function') updateNavbar();
+};
+
+window.renderMobileBottomNav = function() {
+    const nav = document.getElementById('mobile-bottom-nav');
+    if (!nav) return;
+
+    // 1. Logged in Restaurant (Restaurant Only Navigation)
+    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
+        nav.innerHTML = `
+            <a href="#" id="bottom-nav-resto-dashboard" class="nav-item" onclick="switchDashboardSection('dashboard'); return false;">
+                <div class="nav-icon"><i class="ri-dashboard-3-line"></i></div>
+                <span>Dashboard</span>
+            </a>
+            <a href="#" id="bottom-nav-resto-add-menu" class="nav-item" onclick="switchDashboardSection('add-menu'); return false;">
+                <div class="nav-icon"><i class="ri-add-circle-line"></i></div>
+                <span>Ajouter Plat</span>
+            </a>
+            <a href="#" id="bottom-nav-resto-daily-menu" class="nav-item" onclick="switchDashboardSection('daily-menu'); return false;">
+                <div class="nav-icon"><i class="ri-restaurant-2-line"></i></div>
+                <span>Menu du jour</span>
+            </a>
+            <a href="#" id="bottom-nav-resto-account" class="nav-item" onclick="switchDashboardSection('account'); return false;">
+                <div class="nav-icon"><i class="ri-store-2-line"></i></div>
+                <span>Compte Resto</span>
+            </a>
+        `;
+    } 
+    // 2. Super Admin Session
+    else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
+        nav.innerHTML = `
+            <a href="#" id="bottom-nav-admin-console" class="nav-item active" onclick="router.navigate('/admin'); return false;">
+                <div class="nav-icon"><i class="ri-shield-user-line"></i></div>
+                <span>Console Admin</span>
+            </a>
+            <a href="#" id="bottom-nav-admin-chart" class="nav-item" onclick="router.navigate('/politique-admin'); return false;">
+                <div class="nav-icon"><i class="ri-file-text-line"></i></div>
+                <span>Charte Resto</span>
+            </a>
+            <a href="#" id="bottom-nav-admin-logout" class="nav-item" onclick="logoutAdmin(); return false;" style="color: var(--danger);">
+                <div class="nav-icon"><i class="ri-logout-box-r-line"></i></div>
+                <span>Déconnexion</span>
+            </a>
+        `;
+    }
+    // 3. Public Client Mode
+    else {
+        nav.innerHTML = `
+            <a href="#" id="bottom-nav-home" class="nav-item active" onclick="router.navigate('/'); updateBottomNavActive('home'); return false;">
+                <div class="nav-icon"><i class="ri-home-5-fill"></i></div>
+                <span>Accueil</span>
+            </a>
+            <a href="#" id="bottom-nav-explore" class="nav-item" onclick="router.navigate('/explore'); updateBottomNavActive('explore'); return false;">
+                <div class="nav-icon"><i class="ri-compass-3-line"></i></div>
+                <span>Explorer</span>
+            </a>
+            <a href="#" id="bottom-nav-favorites" class="nav-item" onclick="router.navigate('/favorites'); updateBottomNavActive('favorites'); return false;">
+                <div class="nav-icon"><i class="ri-heart-3-line"></i></div>
+                <span>Favoris</span>
+                <span id="mobile-nav-fav-badge" class="nav-badge" style="display: none;">0</span>
+            </a>
+            <a href="#" id="bottom-nav-orders" class="nav-item" onclick="router.navigate('/tracking'); updateBottomNavActive('orders'); return false;">
+                <div class="nav-icon"><i class="ri-file-list-3-line"></i></div>
+                <span>Commandes</span>
+            </a>
+            <a href="#" id="bottom-nav-profile" class="nav-item" onclick="router.navigate('/profile'); updateBottomNavActive('profile'); return false;">
+                <div class="nav-icon"><i class="ri-user-3-line"></i></div>
+                <span>Compte</span>
+            </a>
+        `;
+    }
+};
+
 window.updateBottomNavActive = function(tabName) {
     document.querySelectorAll('.mobile-bottom-nav .nav-item').forEach(item => {
         item.classList.remove('active');
     });
-    const target = document.getElementById('bottom-nav-' + tabName);
+    const target = document.getElementById('bottom-nav-' + tabName) || document.getElementById('bottom-nav-resto-' + tabName);
     if (target) {
         target.classList.add('active');
     }
 };
 
 window.updateBottomNavFromRoute = function(hash) {
+    window.renderMobileBottomNav();
+
+    // Check Restaurant routes
+    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
+        if (!hash || hash === '#/dashboard' || hash.startsWith('#/dashboard-orders')) {
+            window.updateBottomNavActive('resto-dashboard');
+        } else if (hash.startsWith('#/dashboard-add-menu') || hash.startsWith('#/dashboard-menu')) {
+            window.updateBottomNavActive('resto-add-menu');
+        } else if (hash.startsWith('#/dashboard-daily-menu') || hash.startsWith('#/dashboard-daily')) {
+            window.updateBottomNavActive('resto-daily-menu');
+        } else if (hash.startsWith('#/dashboard-account') || hash.startsWith('#/dashboard-settings')) {
+            window.updateBottomNavActive('resto-account');
+        }
+        return;
+    }
+
     if (!hash || hash === '#/' || hash === '#') {
         window.updateBottomNavActive('home');
     } else if (hash.startsWith('#/explore')) {
@@ -1500,22 +1621,34 @@ function updateNavbar() {
     } 
     // 2. RESTAURANT PARTNER MODE (Only Restaurant dashboard tools, no client navigation)
     else if (currentRestaurantSession) {
+        const currentHash = window.location.hash || '#/dashboard';
+        const isDashboard = currentHash === '#/dashboard' || currentHash.startsWith('#/dashboard-orders');
+        const isAddMenu = currentHash.startsWith('#/dashboard-add-menu') || currentHash.startsWith('#/dashboard-menu');
+        const isDailyMenu = currentHash.startsWith('#/dashboard-daily-menu') || currentHash.startsWith('#/dashboard-daily');
+        const isAccount = currentHash.startsWith('#/dashboard-account') || currentHash.startsWith('#/dashboard-settings');
+
         html = `
-            <span class="badge badge-success">🏪 ${currentRestaurantSession.name}</span>
-            <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
-            <button class="btn btn-secondary btn-sm" onclick="logoutRestaurant()">Déconnexion 🚪</button>
+            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                <span class="badge badge-success" style="font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.65rem;">🏪 ${currentRestaurantSession.name}</span>
+                <button class="btn btn-sm ${isDashboard ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardSection('dashboard')" style="font-size: 0.82rem; padding: 0.35rem 0.7rem;">📊 Dashboard</button>
+                <button class="btn btn-sm ${isAddMenu ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardSection('add-menu')" style="font-size: 0.82rem; padding: 0.35rem 0.7rem;">➕ Ajouter un menu</button>
+                <button class="btn btn-sm ${isDailyMenu ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardSection('daily-menu')" style="font-size: 0.82rem; padding: 0.35rem 0.7rem;">⭐ Menu du jour</button>
+                <button class="btn btn-sm ${isAccount ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardSection('account')" style="font-size: 0.82rem; padding: 0.35rem 0.7rem;">⚙️ Compte</button>
+                <button class="btn btn-secondary btn-sm" onclick="logoutRestaurant()" style="color: var(--danger); font-weight: 600; font-size: 0.82rem; padding: 0.35rem 0.7rem;">🚪 Déconnexion</button>
+            </div>
         `;
         drawerHtml = `
             <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(16, 185, 129, 0.2);">
                 <span style="color: var(--success); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Espace Partenaire Restaurant</span>
-                <span style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">${currentRestaurantSession.name}</span>
+                <span style="font-size: 0.85rem; color: var(--text-primary); font-weight: 700;">${currentRestaurantSession.name}</span>
             </div>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;" style="color: var(--primary); font-weight: bold;">📊 Mon Tableau de Bord</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">🍽️ Mon Menu du Jour</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">🛵 Commandes Directes</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">📅 Réservations de Table</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;">📜 Charte &amp; Politique Restaurant</a>
-            <a href="#" onclick="toggleMobileMenu(); logoutRestaurant(); return false;" style="color: var(--danger); font-weight: bold; margin-top: 1rem;">🚪 Déconnexion Restaurant</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('dashboard'); return false;" style="font-weight: 600; ${isDashboard ? 'color: var(--primary); font-weight: 700;' : ''}">📊 1. Dashboard &amp; Commandes</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('add-menu'); return false;" style="font-weight: 600; ${isAddMenu ? 'color: var(--primary); font-weight: 700;' : ''}">➕ 2. Ajouter un menu</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('daily-menu'); return false;" style="font-weight: 600; ${isDailyMenu ? 'color: var(--primary); font-weight: 700;' : ''}">⭐ 3. Menu du jour</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('account'); return false;" style="font-weight: 600; ${isAccount ? 'color: var(--primary); font-weight: 700;' : ''}">⚙️ 4. Compte Restaurant</a>
+            <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.75rem 0;">
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);">📜 Charte &amp; Politique Restaurant</a>
+            <a href="#" onclick="toggleMobileMenu(); logoutRestaurant(); return false;" style="color: var(--danger); font-weight: bold; margin-top: 0.5rem;">🚪 Déconnexion Restaurant</a>
         `;
     } 
     // 3. PUBLIC CLIENT / GUEST MODE (Clean customer navigation, no super-admin button)
@@ -1549,8 +1682,11 @@ function updateNavbar() {
         drawerLinks.innerHTML = drawerHtml;
     }
 
-    // Always keep micro verification indicators in sync
+    // Always keep micro verification indicators and bottom navigation in sync
     updateStartupVerificationUI();
+    if (typeof window.renderMobileBottomNav === 'function') {
+        window.renderMobileBottomNav();
+    }
 }
 
 // logoutRestaurant moved to js/auth.js
@@ -1569,60 +1705,62 @@ function logoutAdmin() {
 // ----------------------------------------------------
 // Helper: Render Plats du Jour Component for Landing Page
 // ----------------------------------------------------
+// Helper: Render Plats du Jour Component for Landing Page (Taille Moyenne & Design Raffiné)
+// ----------------------------------------------------
 window.renderDailySpecialsHomeSection = function() {
     if (typeof store === 'undefined' || !store.getDailyDishes) return '';
     const specials = store.getDailyDishes();
     if (!specials || specials.length === 0) return '';
 
     const cardsHtml = specials.slice(0, 10).map(dish => {
-        const dishImage = dish.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
+        const dishImage = dish.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400';
         const tagText = dish.tag || (dish.isDailySpecial ? 'Plat du jour' : 'Spécialité du Jour');
         const priceFormatted = Number(dish.price || 0).toLocaleString('fr-FR');
         const restaurantSlug = dish.restaurantSlug || dish.restaurantId;
         
         return `
-            <div class="daily-dish-card hover-3d" style="background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; min-width: 280px; max-width: 320px; flex: 1 0 280px; scroll-snap-align: start; transition: transform 0.25s ease, box-shadow 0.25s ease;">
-                <div style="position: relative; width: 100%; height: 180px; overflow: hidden; background: var(--bg-secondary);">
-                    <img src="${dishImage}" alt="${dish.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'">
+            <div class="daily-dish-card hover-3d" style="background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; min-width: 240px; max-width: 260px; flex: 1 0 240px; scroll-snap-align: start; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                <div style="position: relative; width: 100%; height: 140px; overflow: hidden; background: var(--bg-secondary);">
+                    <img src="${dishImage}" alt="${dish.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.35s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'">
                     
                     <!-- Tag Spécifique -->
-                    <div style="position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #F26B21 0%, #D9531E 100%); color: #ffffff; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(242,107,33,0.4); display: flex; align-items: center; gap: 0.35rem;">
+                    <div style="position: absolute; top: 8px; left: 8px; background: linear-gradient(135deg, #F26B21 0%, #D9531E 100%); color: #ffffff; padding: 0.2rem 0.6rem; border-radius: 16px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3px; box-shadow: 0 2px 8px rgba(242,107,33,0.35); display: flex; align-items: center; gap: 0.25rem;">
                         <span>⭐</span>
                         <span>${tagText}</span>
                     </div>
 
                     <!-- Note & Statut -->
-                    <div style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); color: #fff; padding: 0.25rem 0.6rem; border-radius: 10px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 0.25rem;">
+                    <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); color: #fff; padding: 0.15rem 0.45rem; border-radius: 8px; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; gap: 0.2rem;">
                         <span style="color: #FFC107;">★</span> ${dish.restaurantRating || '4.8'}
                     </div>
                 </div>
 
-                <div style="padding: 1.25rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
+                <div style="padding: 0.85rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
                     <div>
                         <!-- Restaurant Link -->
-                        <a href="#/restaurant/${restaurantSlug}" onclick="router.navigate('/restaurant/${restaurantSlug}'); return false;" style="font-size: 0.85rem; color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; margin-bottom: 0.4rem;">
+                        <a href="#/restaurant/${restaurantSlug}" onclick="router.navigate('/restaurant/${restaurantSlug}'); return false;" style="font-size: 0.78rem; color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; margin-bottom: 0.25rem;">
                             <span>🏪</span> <span>${dish.restaurantName || 'Restaurant Thiès'}</span>
                         </a>
                         
                         <!-- Dish Name -->
-                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.4rem 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.3rem 0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                             ${dish.name}
                         </h3>
 
                         <!-- Dish Description -->
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0 0 1rem 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                            ${dish.description || 'Préparé aujourd\'hui avec des ingrédients frais locaux par le chef de l\'établissement.'}
+                        <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4; margin: 0 0 0.75rem 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            ${dish.description || 'Préparé aujourd\'hui avec des ingrédients frais locaux.'}
                         </p>
                     </div>
 
                     <!-- Footer / Price & Order Button -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding-top: 0.85rem; border-top: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.65rem; border-top: 1px solid var(--border);">
                         <div>
-                            <span style="font-size: 0.7rem; color: var(--text-secondary); display: block; font-weight: 600; text-transform: uppercase;">Prix</span>
-                            <span style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary);">${priceFormatted} <small style="font-size: 0.75rem; color: var(--primary); font-weight: 700;">FCFA</small></span>
+                            <span style="font-size: 0.65rem; color: var(--text-secondary); display: block; font-weight: 600; text-transform: uppercase;">Prix</span>
+                            <span style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">${priceFormatted} <small style="font-size: 0.7rem; color: var(--primary); font-weight: 700;">FCFA</small></span>
                         </div>
 
-                        <button onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" class="btn btn-primary ripple" style="padding: 0.6rem 1.1rem; border-radius: 14px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; box-shadow: 0 4px 12px rgba(242,107,33,0.35);">
+                        <button onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" class="btn btn-primary ripple" style="padding: 0.45rem 0.85rem; border-radius: 10px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem; box-shadow: 0 3px 10px rgba(242,107,33,0.3);">
                             <span>🛒</span>
                             <span>Commander</span>
                         </button>
@@ -1633,23 +1771,23 @@ window.renderDailySpecialsHomeSection = function() {
     }).join('');
 
     return `
-        <!-- ========== PLATS DU JOUR SECTION ========== -->
-        <section class="daily-specials-section" id="daily-specials-section" style="margin: 2.5rem 0 2rem 0; padding: 1.5rem 0;">
-            <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
+        <!-- ========== PLATS DU JOUR DU MOMENT (TAILLE MOYENNE) ========== -->
+        <section class="daily-specials-section" id="daily-specials-section" style="margin: 1.75rem 0 1.5rem 0; padding: 1rem 0;">
+            <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.65rem; margin-bottom: 1rem;">
                 <div>
-                    <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.85rem; background: rgba(242, 107, 33, 0.12); border-radius: 20px; color: var(--primary); font-size: 0.8rem; font-weight: 700; margin-bottom: 0.4rem; border: 1px solid rgba(242,107,33,0.25);">
-                        <span>🔥</span> <span>Cuisiné Aujourd'hui à Thiès</span>
+                    <div style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.7rem; background: rgba(242, 107, 33, 0.1); border-radius: 16px; color: var(--primary); font-size: 0.75rem; font-weight: 700; margin-bottom: 0.3rem; border: 1px solid rgba(242,107,33,0.2);">
+                        <span>🔥</span> <span>Sélection Fraîche</span>
                     </div>
-                    <h2 class="section-title" style="margin: 0; font-size: 1.6rem;">Les Plats du Jour du Moment</h2>
-                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0.25rem 0 0 0;">Spécialités fraîches et suggestions du jour disponibles immédiatement en commande directe</p>
+                    <h2 class="section-title" style="margin: 0; font-size: 1.35rem;">Les Plats du Jour du Moment</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.2rem 0 0 0;">Spécialités fraîches et suggestions du jour disponibles immédiatement en commande directe</p>
                 </div>
-                <button onclick="scrollToCatalog()" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.55rem 1.1rem; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
-                    <span>Voir tous les restaurants</span> <span>➔</span>
+                <button onclick="scrollToCatalog()" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.45rem 0.9rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                    <span>Voir les restos</span> <span>➔</span>
                 </button>
             </div>
 
             <!-- Horizontal Scrollable Container with Snap -->
-            <div class="daily-specials-carousel" style="display: flex; gap: 1.25rem; overflow-x: auto; padding: 0.5rem 0.25rem 1.25rem 0.25rem; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
+            <div class="daily-specials-carousel" style="display: flex; gap: 1rem; overflow-x: auto; padding: 0.25rem 0.25rem 0.75rem 0.25rem; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
                 ${cardsHtml}
             </div>
         </section>
@@ -1691,12 +1829,9 @@ window.renderDailySpecialsHtml = function(dishes, isInnerOnly = false) {
                     <h3 class="daily-special-name">${dish.name}</h3>
                     <p class="daily-special-desc">${dish.description || 'Spécialité préparée fraîchement ce jour avec des ingrédients locaux de qualité.'}</p>
                     <div class="daily-special-footer">
-                        <button type="button" class="daily-special-order-btn" onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" title="Commander ce plat directement">
-                            <span>⚡</span> <span>Commander</span>
+                        <button type="button" class="daily-special-order-btn" onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" title="Commander ce plat directement" style="width: 100%; justify-content: center;">
+                            <span>⚡</span> <span>Commander ce plat</span>
                         </button>
-                        <a href="${restoUrl}" class="daily-special-view-btn" title="Voir la carte complète de ${dish.restaurantName}">
-                            <span>Carte ➔</span>
-                        </a>
                     </div>
                 </div>
             </div>
@@ -1704,14 +1839,14 @@ window.renderDailySpecialsHtml = function(dishes, isInnerOnly = false) {
     });
 
     const innerHtml = `
-        <section class="daily-specials-section" id="daily-specials-section" aria-label="Plats du jour à Thiès">
+        <section class="daily-specials-section" id="daily-specials-section" aria-label="Plats du Jour du Moment">
             <div class="daily-specials-header">
                 <div class="daily-specials-title-group">
                     <div class="daily-specials-pill">
                         <span>🔥</span> <span>Sélection Fraîche du Jour</span>
                     </div>
-                    <h2 class="daily-specials-title">Plats du Jour à Thiès 🍲</h2>
-                    <p class="daily-specials-subtitle">Cuisinés ce matin par nos chefs partenaires. Commandez en direct en 1-clic ou réservez votre part !</p>
+                    <h2 class="daily-specials-title">Les Plats du Jour du Moment 🍲</h2>
+                    <p class="daily-specials-subtitle">Cuisinés ce matin par nos chefs partenaires. Commandez en direct en 1-clic !</p>
                 </div>
                 <div class="daily-specials-controls">
                     <button class="daily-nav-btn" onclick="scrollDailySpecials(-1)" aria-label="Défiler vers la gauche">‹</button>
@@ -1835,9 +1970,6 @@ router.add('#/', () => {
 
         <!-- VOS DERNIERES COMMANDES PERSISTANT -->
         ${historyHtml}
-
-        <!-- ========== PLATS DU JOUR SECTION (DYNAMICALLY FETCHED FROM DATABASE) ========== -->
-        ${renderDailySpecialsHtml()}
 
         <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
         <section class="presentation-section" id="presentation-section" style="margin-top: 2.5rem; padding: 3rem 1.5rem;">
@@ -4945,23 +5077,24 @@ router.add('#/cart', () => {
 });
 
 // ----------------------------------------------------
-// Profile View (Mon Compte - Ref Mockup 5)
+// ----------------------------------------------------
+// Profile View (Mon Compte Client)
 // ----------------------------------------------------
 router.add('#/profile', () => {
     const container = document.getElementById('main-content');
     const cartBar = document.getElementById('floating-cart-bar');
     if (cartBar) cartBar.style.display = 'none';
 
-    // Load local data
-    const history = getOrderHistory();
-    const customerPhone = localStorage.getItem('customerPhone') || '';
-    const customerName = localStorage.getItem('customerName') || '';
-    const customerAddress = localStorage.getItem('customerAddress') || '';
-    const customerEmail = localStorage.getItem('customerEmail') || '';
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+    // Load local customer data
+    const isCustomerAuth = typeof customerAuth !== 'undefined' && customerAuth.isAuthenticated();
+    const customerUser = typeof customerAuth !== 'undefined' ? customerAuth.getUser() : {};
+    
+    const customerPhone = customerUser.phone || localStorage.getItem('customerPhone') || '';
+    const customerName = customerUser.name || localStorage.getItem('customerName') || '';
+    const customerAddress = customerUser.address || localStorage.getItem('customerAddress') || '';
 
     // Compute initials
-    let initials = 'CR';
+    let initials = '👤';
     if (customerName) {
         const parts = customerName.trim().split(' ');
         if (parts.length >= 2) {
@@ -4971,332 +5104,107 @@ router.add('#/profile', () => {
         }
     }
 
-    let historyCount = history.length;
-
-    // Group Order History by Month with visual progress bar
-    let orderHistoryCardsHtml = '';
-    if (history.length > 0) {
-        const monthNamesFr = [
-            'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-            'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-        ];
-
-        const getOrderMonthInfo = (order) => {
-            let d = null;
-            if (order.savedAt) {
-                d = new Date(order.savedAt);
-            } else if (order.created_at) {
-                d = new Date(order.created_at);
-            } else if (order.date) {
-                const parts = String(order.date).split(/[\/\-\.]/);
-                if (parts.length === 3) {
-                    if (parts[0].length === 4) {
-                        d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-                    } else {
-                        d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
-                    }
-                } else {
-                    const parsed = new Date(order.date);
-                    if (!isNaN(parsed.getTime())) d = parsed;
-                }
-            } else if (!isNaN(Number(order.id)) && Number(order.id) > 1600000000000) {
-                d = new Date(Number(order.id));
-            }
-            if (!d || isNaN(d.getTime())) d = new Date();
-
-            const year = d.getFullYear();
-            const month = d.getMonth();
-            return {
-                key: `${year}-${String(month + 1).padStart(2, '0')}`,
-                label: `${monthNamesFr[month]} ${year}`,
-                dateObj: d
-            };
-        };
-
-        // Grouping
-        const groupedByMonth = {};
-        const monthKeys = [];
-
-        history.forEach(order => {
-            const mInfo = getOrderMonthInfo(order);
-            if (!groupedByMonth[mInfo.key]) {
-                groupedByMonth[mInfo.key] = {
-                    label: mInfo.label,
-                    dateObj: mInfo.dateObj,
-                    orders: [],
-                    totalAmount: 0
-                };
-                monthKeys.push(mInfo.key);
-            }
-            groupedByMonth[mInfo.key].orders.push(order);
-            groupedByMonth[mInfo.key].totalAmount += (Number(order.total) || 0);
-        });
-
-        // Render each month section
-        monthKeys.forEach((mKey, monthIndex) => {
-            const mData = groupedByMonth[mKey];
-            const monthTotalFormatted = mData.totalAmount.toLocaleString('fr-FR');
-            
-            orderHistoryCardsHtml += `
-                <div class="profile-month-section" style="margin-bottom: 1.25rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.55rem 0.85rem; background: var(--bg-input); border-radius: 12px; margin-bottom: 0.65rem; border: 1px solid var(--border);">
-                        <div style="display: flex; align-items: center; gap: 0.45rem;">
-                            <span style="font-size: 1rem;">📅</span>
-                            <strong style="font-size: 0.9rem; color: var(--text-primary); font-family: var(--font-serif);">${mData.label}</strong>
-                            <span style="font-size: 0.72rem; color: var(--text-secondary); background: var(--bg-card); padding: 2px 6px; border-radius: 8px; border: 1px solid var(--border); font-weight: 600;">
-                                ${mData.orders.length} ${mData.orders.length > 1 ? 'commandes' : 'commande'}
-                            </span>
-                        </div>
-                        <div style="font-size: 0.85rem; font-weight: 800; color: var(--primary);">
-                            ${monthTotalFormatted} FCFA
-                        </div>
-                    </div>
-            `;
-
-            mData.orders.forEach(order => {
-                const isOtp = order.otpVerified !== false;
-                const totalFormatted = (order.total || 0).toLocaleString('fr-FR');
-                const itemsList = Array.isArray(order.items) 
-                    ? order.items.map(i => `<span style="display: inline-block; background: var(--bg-input); padding: 2px 7px; border-radius: 6px; margin: 2px; font-size: 0.8rem; border: 1px solid var(--border);">${i.qty || 1}x ${i.name || 'Produit'}</span>`).join(' ')
-                    : `<span style="font-size: 0.82rem; color: var(--text-secondary);">${order.items ? JSON.stringify(order.items) : 'Détail de commande'}</span>`;
-                
-                const isEnAttente = order.status === 'En attente';
-                const isRecue = order.status === 'Reçue';
-                const isEnCuisine = order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine';
-                const isPretPourLivraison = order.status === 'Prêt pour livraison' || order.status === 'Prête';
-                const isEnLivraison = order.status === 'En livraison' || order.status === 'En cours de livraison' || order.status === 'Partie en livraison';
-                const isLivree = order.status === 'Livrée' || order.status === 'Livré';
-                const isCancelled = order.status === 'Annulée';
-
-                // Status & Progress step logic (6 distinct steps)
-                let stepPercent = 15;
-                let statusColor = '#f59e0b';
-                let statusIcon = '⏳';
-                let statusBadgeText = 'En attente';
-
-                if (isEnAttente) {
-                    stepPercent = 15;
-                    statusColor = '#f59e0b';
-                    statusIcon = '⏳';
-                    statusBadgeText = 'En attente';
-                } else if (isRecue) {
-                    stepPercent = 35;
-                    statusColor = '#0284c7';
-                    statusIcon = '📥';
-                    statusBadgeText = 'Reçue';
-                } else if (isEnCuisine) {
-                    stepPercent = 55;
-                    statusColor = 'var(--primary)';
-                    statusIcon = '👨‍🍳';
-                    statusBadgeText = 'En cuisine';
-                } else if (isPretPourLivraison) {
-                    stepPercent = 75;
-                    statusColor = '#0d9488';
-                    statusIcon = '📦';
-                    statusBadgeText = 'Prêt livraison';
-                } else if (isEnLivraison) {
-                    stepPercent = 90;
-                    statusColor = '#0284c7';
-                    statusIcon = '🛵';
-                    statusBadgeText = 'En livraison';
-                } else if (isLivree) {
-                    stepPercent = 100;
-                    statusColor = '#059669';
-                    statusIcon = '✅';
-                    statusBadgeText = 'Livrée';
-                } else if (isCancelled) {
-                    stepPercent = 100;
-                    statusColor = 'var(--danger)';
-                    statusIcon = '❌';
-                    statusBadgeText = 'Annulée';
-                }
-
-                let statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(245, 158, 11, 0.12); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
-                if (isRecue) {
-                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
-                } else if (isEnCuisine) {
-                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(255, 107, 0, 0.12); color: var(--primary); border: 1px solid rgba(255, 107, 0, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
-                } else if (isPretPourLivraison) {
-                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(13, 148, 136, 0.12); color: #0d9488; border: 1px solid rgba(13, 148, 136, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
-                } else if (isEnLivraison) {
-                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
-                } else if (isLivree) {
-                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
-                } else if (isCancelled) {
-                    statusBadge = `<span class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 12px; background: rgba(220, 53, 69, 0.12); color: var(--danger); border: 1px solid rgba(220, 53, 69, 0.3); font-weight: 700;">${statusIcon} ${statusBadgeText}</span>`;
-                }
-
-                orderHistoryCardsHtml += `
-                    <div class="profile-order-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.15rem; margin-bottom: 0.85rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                        <!-- Order Header -->
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; gap: 0.5rem; flex-wrap: wrap;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
-                                    <strong style="color: var(--text-primary); font-size: 0.98rem;">${order.restaurantName || 'Restaurant THIES'}</strong>
-                                    <span style="font-size: 0.78rem; color: var(--text-secondary); font-family: monospace; background: var(--bg-input); padding: 2px 6px; border-radius: 6px;">#${order.id}</span>
-                                </div>
-                                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 3px;">
-                                    📅 ${order.date || 'Aujourd\'hui'} ${order.time ? `• ⏰ ${order.time}` : ''}
-                                </div>
-                            </div>
-                            <div>
-                                ${statusBadge}
-                            </div>
-                        </div>
-
-                        <!-- Items ordered -->
-                        <div style="margin-bottom: 0.85rem; line-height: 1.5;">
-                            ${itemsList}
-                        </div>
-
-                        <!-- Visual Progress Bar for Order Status -->
-                        <div style="margin-bottom: 0.85rem; padding: 0.65rem 0.85rem; background: var(--bg-input); border-radius: 12px; border: 1px solid var(--border);">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                                <span style="font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Progression</span>
-                                <span style="font-size: 0.75rem; font-weight: 800; color: ${statusColor};">${statusBadgeText} (${stepPercent}%)</span>
-                            </div>
-                            
-                            <!-- Progress Track -->
-                            <div style="height: 6px; background: rgba(0,0,0,0.06); border-radius: 10px; overflow: hidden; margin-bottom: 0.45rem; position: relative;">
-                                <div style="height: 100%; width: ${stepPercent}%; background: ${statusColor}; border-radius: 10px; transition: width 0.4s ease-in-out;"></div>
-                            </div>
-
-                            <!-- Milestone Labels -->
-                            <div style="display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--text-secondary); font-weight: 600;">
-                                <span style="${stepPercent >= 15 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Transmise</span>
-                                <span style="${stepPercent >= 35 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📥 Reçue</span>
-                                <span style="${stepPercent >= 55 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
-                                <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📦 Prêt</span>
-                                <span style="${stepPercent >= 90 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 Livraison</span>
-                                <span style="${stepPercent >= 100 ? (isCancelled ? 'color: var(--danger); font-weight: 700;' : 'color: #059669; font-weight: 700;') : ''}">${isCancelled ? '❌ Annulée' : '✅ Livrée'}</span>
-                            </div>
-                        </div>
-
-                        <!-- OTP Status & Total Section -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.65rem; border-top: 1px dashed var(--border); flex-wrap: wrap; gap: 0.5rem;">
-                            <div>
-                                ${isOtp ? `
-                                    <div class="badge-otp-verified" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
-                                        <span>🛡️ Validée par SMS OTP</span>
-                                    </div>
-                                ` : `
-                                    <div class="badge-otp-direct" style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(107, 114, 128, 0.1); color: var(--text-secondary); border: 1px solid var(--border); padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">
-                                        <span>ℹ️ Commande directe</span>
-                                    </div>
-                                `}
-                            </div>
-                            <div style="text-align: right;">
-                                <strong style="color: var(--primary); font-size: 0.98rem;">${totalFormatted} FCFA</strong>
-                            </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap;">
-                            <button class="btn btn-outline btn-sm" onclick="router.navigate('/tracking'); setTimeout(() => { const inp = document.getElementById('tracking-phone'); if(inp && '${order.customerPhone || customerPhone}') { inp.value = '${order.customerPhone || customerPhone}'; window.fetchOrderTracking(); } }, 150);" style="flex: 1; font-size: 0.78rem; padding: 0.4rem 0.6rem; border-radius: 10px;">
-                                📍 Suivre en direct
-                            </button>
-                            ${(isEnLivraison || isPretPourLivraison) ? `
-                                <button id="btn-confirm-delivery-${order.id}" data-confirm-order-id="${order.id}" class="btn btn-success btn-sm ripple hover-3d" onclick="confirmCustomerDelivery('${order.id}')" style="flex: 1.3; font-weight: 700; font-size: 0.8rem; padding: 0.45rem 0.75rem; border-radius: 10px; background: #20c997; border-color: #20c997; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; box-shadow: 0 2px 8px rgba(32,201,151,0.25);">
-                                    ✅ Confirmer la réception
-                                </button>
-                            ` : isLivree ? `
-                                <span style="font-size: 0.78rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.35rem 0.6rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">
-                                    ✅ Réception confirmée
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-
-            orderHistoryCardsHtml += `</div>`; // Close month section
-        });
-    } else {
-        orderHistoryCardsHtml = `
-            <div style="text-align: center; padding: 1.75rem 1rem; background: var(--bg-input); border-radius: 16px; border: 1px dashed var(--border);">
-                <div style="font-size: 2rem; margin-bottom: 0.35rem;">🛍️</div>
-                <h4 style="margin: 0 0 0.25rem; font-size: 0.95rem; color: var(--text-primary);">Aucune commande enregistrée</h4>
-                <p style="margin: 0 0 0.85rem; font-size: 0.82rem; color: var(--text-secondary);">Vos commandes validées par SMS OTP s'afficheront automatiquement ici.</p>
-                <button class="btn btn-primary btn-sm" onclick="router.navigate('/')" style="border-radius: 12px; font-weight: 700; font-size: 0.82rem; padding: 0.45rem 1rem;">
-                    Explorer les restaurants 🍲
-                </button>
-            </div>
-        `;
-    }
-
-    const isCustomerAuth = typeof customerAuth !== 'undefined' && customerAuth.isAuthenticated();
-
     container.innerHTML = `
-        <div class="account-screen">
-            <!-- Header Card (Mockup 5) -->
-            <div class="account-header-card" style="position: relative; overflow: hidden;">
-                <div class="account-avatar">
-                    ${initials}
-                </div>
-                <div class="account-info" style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                        <h2 style="margin: 0;">${customerName || 'Gourmet de Thiès'}</h2>
-                        ${isCustomerAuth ? `
-                            <span style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.15); color: #059669; padding: 0.2rem 0.55rem; border-radius: 12px; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.25);">
-                                ✓ Vérifié Nativement
-                            </span>
-                        ` : ''}
+        <div class="account-screen" style="max-width: 620px; margin: 0 auto; padding: 1.25rem 1rem 3rem;">
+            
+            <!-- TOP PROFILE HEADER CARD (Comme les applications modernes) -->
+            <div class="account-header-card" style="background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
+                <div style="display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;">
+                    <div class="account-avatar" style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #F26B21, #F59E0B); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800; box-shadow: 0 4px 14px rgba(242, 107, 33, 0.35); flex-shrink: 0;">
+                        ${initials}
                     </div>
-                    <p style="margin-top: 0.25rem;">${customerPhone || 'Connectez-vous pour mémoriser vos commandes'}</p>
-                    ${customerAddress ? `<p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">📍 ${customerAddress}</p>` : ''}
+                    <div class="account-info" style="flex: 1; min-width: 200px;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
+                            <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: var(--text-primary); font-family: var(--font-serif);">
+                                ${customerName || 'Gourmet de Thiès'}
+                            </h2>
+                            ${isCustomerAuth ? `
+                                <span style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.15); color: #059669; padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.25); display: inline-flex; align-items: center; gap: 0.25rem;">
+                                    ✓ Vérifié
+                                </span>
+                            ` : `
+                                <span style="font-size: 0.72rem; background: rgba(242, 107, 33, 0.12); color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 700;">
+                                    ⭐ Compte Client
+                                </span>
+                            `}
+                        </div>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.88rem; color: var(--text-secondary);">
+                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                <span>📱</span>
+                                <span style="color: var(--text-primary); font-weight: 600;">${customerPhone || 'Numéro WhatsApp non renseigné'}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                <span>📍</span>
+                                <span>${customerAddress || 'Adresse de livraison à Thiès non renseignée'}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                ${!isCustomerAuth ? `
-                    <button class="btn btn-primary btn-sm" onclick="if(typeof customerAuth !== 'undefined') customerAuth.openModal(); else router.navigate('/auth');" style="border-radius: 12px; font-weight: 700; font-size: 0.8rem; padding: 0.45rem 0.85rem; align-self: center;">
-                        Connexion ⚡
+
+                <!-- Profile Action Bar -->
+                <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; pt-3; border-top: 1px solid var(--border); padding-top: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-sm" onclick="toggleProfileEditForm()" style="border-radius: 12px; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 1rem; flex: 1;">
+                        ✏️ Modifier mes coordonnées
                     </button>
-                ` : ''}
-            </div>
-
-            <!-- Group 1: Historique des Commandes (Avec statut certifié) -->
-            <div class="account-group">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; padding: 0 0.25rem;">
-                    <div class="account-group-title" style="margin: 0; padding: 0;">Mes Commandes Récentes (${historyCount})</div>
-                    <span style="font-size: 0.75rem; color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 0.25rem;">
-                        🛡️ Authentification Native
-                    </span>
-                </div>
-                
-                <div style="padding: 0.25rem 0;">
-                    ${orderHistoryCardsHtml}
+                    ${isCustomerAuth ? `
+                        <button class="btn btn-secondary btn-sm" onclick="if(typeof customerAuth !== 'undefined') customerAuth.logout(); else clearLocalCustomerData();" style="border-radius: 12px; font-weight: 600; font-size: 0.85rem; padding: 0.5rem 1rem; color: var(--danger);">
+                            🚪 Déconnexion
+                        </button>
+                    ` : `
+                        <button class="btn btn-secondary btn-sm" onclick="if(typeof customerAuth !== 'undefined') customerAuth.openModal(); else router.navigate('/auth');" style="border-radius: 12px; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 1rem;">
+                            ⚡ Connexion
+                        </button>
+                    `}
                 </div>
             </div>
 
-            <!-- Group 2: Coordonnées & Livraison -->
-            <div class="account-group">
-                <div class="account-group-title">Mon Profil & Coordonnées</div>
+            <!-- MON PROFIL & COORDONNÉES FORM -->
+            <div class="account-group" id="profile-edit-card" style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+                <div style="padding: 1.25rem 1.25rem 0.5rem;">
+                    <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 0.25rem; color: var(--text-primary);">Mes Coordonnées de Livraison</h3>
+                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;">Ces informations sont utilisées pour pré-remplir automatiquement vos commandes à Thiès.</p>
+                </div>
+
+                <div style="padding: 1rem 1.25rem 1.25rem;">
+                    <form id="profile-form" onsubmit="saveProfile(event)">
+                        <div class="form-group" style="margin-bottom: 0.85rem;">
+                            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Nom Complet <span style="color: var(--primary);">*</span></label>
+                            <input type="text" id="profile-name" class="form-control" value="${customerName}" placeholder="Ex: Awa Diop" required style="padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: 12px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0.85rem;">
+                            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Numéro de Téléphone WhatsApp <span style="color: var(--primary);">*</span></label>
+                            <input type="tel" id="profile-phone" class="form-control" value="${customerPhone}" placeholder="Ex: 77 123 45 67" required style="padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: 12px;">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Adresse / Quartier par défaut (Thiès)</label>
+                            <input type="text" id="profile-address" class="form-control" value="${customerAddress}" placeholder="Ex: Cité Lamy, Grand Standing, Randène, Tivaouane..." style="padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: 12px;">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" style="border-radius: 14px; font-weight: 700; padding: 0.75rem; font-size: 0.95rem;">
+                            💾 Enregistrer mes coordonnées
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RACCOURCIS & ACTIVITÉ -->
+            <div class="account-group" style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+                <div class="account-group-title" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); padding: 1rem 1.25rem 0.5rem;">Services &amp; Raccourcis</div>
                 
-                <div class="account-item-row" onclick="toggleProfileEditForm()">
+                <div class="account-item-row" onclick="router.navigate('/favorites')">
                     <div class="account-item-left">
-                        <span class="account-item-icon"><i class="ri-user-settings-line"></i></span>
-                        <span>Informations personnelles & Téléphone</span>
+                        <span class="account-item-icon"><i class="ri-heart-3-line"></i></span>
+                        <span>Mes restaurants favoris</span>
                     </div>
                     <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
 
-                <!-- Inline Edit Form (Hidden by default or toggled) -->
-                <div id="profile-edit-box" style="display: none; padding: 1.25rem; background: var(--bg-input); border-top: 1px solid var(--border);">
-                    <form id="profile-form" onsubmit="saveProfile(event)">
-                        <div class="form-group" style="margin-bottom: 0.75rem;">
-                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Nom Complet</label>
-                            <input type="text" id="profile-name" class="form-control" value="${customerName}" placeholder="Ex: Awa Diop" required style="padding: 0.75rem 1rem; font-size: 0.95rem;">
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0.75rem;">
-                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Numéro de Téléphone (WhatsApp)</label>
-                            <input type="tel" id="profile-phone" class="form-control" value="${customerPhone}" placeholder="Ex: 77 123 45 67" required style="padding: 0.75rem 1rem; font-size: 0.95rem;">
-                        </div>
-                        <div class="form-group" style="margin-bottom: 0.75rem;">
-                            <label style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary);">Adresse de Livraison par défaut</label>
-                            <input type="text" id="profile-address" class="form-control" value="${customerAddress}" placeholder="Quartier, Rue, Repère..." style="padding: 0.75rem 1rem; font-size: 0.95rem;">
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block" style="border-radius: 14px; font-weight: 700; padding: 0.75rem;">
-                            Enregistrer mes coordonnées
-                        </button>
-                    </form>
+                <div class="account-item-row" onclick="router.navigate('/tracking')">
+                    <div class="account-item-left">
+                        <span class="account-item-icon"><i class="ri-file-list-3-line"></i></span>
+                        <span>Suivi de commande en direct</span>
+                    </div>
+                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
 
                 <div class="account-item-row" onclick="showPaymentMethodsModal()">
@@ -5306,91 +5214,18 @@ router.add('#/profile', () => {
                     </div>
                     <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
-            </div>
-
-            <!-- Group 3: Activité & Favoris -->
-            <div class="account-group">
-                <div class="account-group-title">Activité & Favoris</div>
-                
-                <div class="account-item-row" onclick="router.navigate('/tracking')">
-                    <div class="account-item-left">
-                        <span class="account-item-icon"><i class="ri-file-list-3-line"></i></span>
-                        <span>Suivi de commande en direct</span>
-                    </div>
-                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
-                </div>
-
-                <div class="account-item-row" onclick="router.navigate('/favorites')">
-                    <div class="account-item-left">
-                        <span class="account-item-icon"><i class="ri-heart-3-line"></i></span>
-                        <span>Mes restaurants favoris</span>
-                    </div>
-                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
-                </div>
 
                 <div class="account-item-row" onclick="showPromoDiscountsModal()">
                     <div class="account-item-left">
                         <span class="account-item-icon"><i class="ri-coupon-3-line"></i></span>
-                        <span>Codes promo & Bons plans</span>
+                        <span>Bons plans &amp; Réductions</span>
                     </div>
                     <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
             </div>
 
-            <!-- Group 4: Paramètres & Thème -->
-            <div class="account-group">
-                <div class="account-group-title">Préférences & Apparence</div>
-                
-                <div class="account-item-row" onclick="toggleTheme(); setTimeout(() => router.navigate('/profile'), 50);">
-                    <div class="account-item-left">
-                        <span class="account-item-icon"><i class="ri-moon-line"></i></span>
-                        <span>Mode Sombre / Clair</span>
-                    </div>
-                    <span style="font-size: 0.85rem; font-weight: 700; color: var(--primary);">
-                        ${currentTheme === 'dark' ? 'Sombre 🌙' : 'Clair ☀️'}
-                    </span>
-                </div>
-
-                <div class="account-item-row" onclick="window.showWelcomeScreen();">
-                    <div class="account-item-left">
-                        <span class="account-item-icon"><i class="ri-sparkling-line"></i></span>
-                        <span>Revoir l'accueil de bienvenue</span>
-                    </div>
-                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
-                </div>
-            </div>
-
-            <!-- Group 5: Support & Légal -->
-            <div class="account-group">
-                <div class="account-group-title">Assistance & Légal</div>
-                
-                <a href="https://wa.me/221770000000?text=Bonjour%20support%20THIES%20Resto" target="_blank" class="account-item-row">
-                    <div class="account-item-left">
-                        <span class="account-item-icon" style="color: #22C55E;"><i class="ri-whatsapp-line"></i></span>
-                        <span>Aide et Support WhatsApp</span>
-                    </div>
-                    <span class="account-item-arrow"><i class="ri-external-link-line"></i></span>
-                </a>
-
-                <div class="account-item-row" onclick="router.navigate('/cgv')">
-                    <div class="account-item-left">
-                        <span class="account-item-icon"><i class="ri-shield-check-line"></i></span>
-                        <span>Conditions Générales d'Utilisation (CGU)</span>
-                    </div>
-                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
-                </div>
-
-                <div class="account-item-row" onclick="router.navigate('/politique-client')">
-                    <div class="account-item-left">
-                        <span class="account-item-icon"><i class="ri-lock-2-line"></i></span>
-                        <span>Protection des Données Personnelles</span>
-                    </div>
-                    <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
-                </div>
-            </div>
-
-            <!-- Group 6: Données Locales -->
-            <div class="account-group">
+            <!-- EFFACER DONNÉES LOCALES -->
+            <div class="account-group" style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm);">
                 <div class="account-item-row" onclick="clearLocalCustomerData()" style="color: var(--danger);">
                     <div class="account-item-left" style="color: var(--danger);">
                         <span class="account-item-icon" style="color: var(--danger);"><i class="ri-delete-bin-line"></i></span>
@@ -5404,9 +5239,13 @@ router.add('#/profile', () => {
 });
 
 window.toggleProfileEditForm = function() {
-    const box = document.getElementById('profile-edit-box');
-    if (box) {
-        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    const card = document.getElementById('profile-edit-card');
+    const input = document.getElementById('profile-name');
+    if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (input) {
+            setTimeout(() => input.focus(), 250);
+        }
     }
 };
 

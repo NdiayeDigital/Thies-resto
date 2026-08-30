@@ -67,6 +67,19 @@ class Router {
         
         this.forceScrollTop();
 
+        // ----------------------------------------------------
+        // RESTAURANT SESSION ROUTE GUARD
+        // When a restaurant is connected, they only see the restaurant portal
+        // They do NOT see client-facing pages (accueil, explorer, favoris, suivi, compte client)
+        // ----------------------------------------------------
+        if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
+            const clientRoutes = ['#/', '#', '#/explore', '#/favorites', '#/tracking', '#/profile', '#/how-it-works'];
+            if (clientRoutes.includes(hash) || hash.startsWith('#/r/') || hash.startsWith('#/restaurant/')) {
+                this.navigate('/dashboard');
+                return;
+            }
+        }
+
         const container = document.getElementById('main-content');
         if (container) {
             container.classList.remove('page-transition');
