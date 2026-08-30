@@ -70,56 +70,6 @@ function logoutRestaurant() {
     if (typeof router !== 'undefined') router.navigate('/auth');
 }
 
-router.add('#/auth', () => {
-    // Hide cart
-    document.getElementById('floating-cart-bar').style.display = 'none';
-    stopOrderPolling();
-    hideLoadingOverlay();
-    
-    const container = document.getElementById('main-content');
-    
-    container.innerHTML = `
-        <div class="auth-container" style="max-width: 450px; margin: 3rem auto; padding: 2rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
-            <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
-                <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🏪</span>
-                <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: var(--text-primary);">Espace Partenaire</h2>
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.5rem;">Connectez-vous à votre tableau de bord restaurant.</p>
-            </div>
-
-            <!-- LOGIN FORM -->
-            <form id="login-form" onsubmit="handleRestaurantLogin(event)">
-                <div class="form-group" style="margin-bottom: 1.25rem;">
-                    <label class="form-label">Identifiant unique (slug)</label>
-                    <input type="text" id="login-username" class="form-control" placeholder="la-licorne" required>
-                </div>
-                <div class="form-group" style="margin-bottom: 0.5rem;">
-                    <label class="form-label">Mot de passe</label>
-                    <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
-                </div>
-                <div style="text-align: right; margin-bottom: 1.5rem;">
-                    <button type="button" onclick="handleForgotPassword()" style="background: none; border: none; color: var(--accent); font-size: 0.8rem; cursor: pointer; padding: 0; text-decoration: underline;">🔑 Mot de passe oublié ?</button>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Se connecter 🔓</button>
-            </form>
-
-            <!-- PARTNERSHIP CTA -->
-            <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
-                <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">Vous souhaitez rejoindre le réseau THIES Resto ?</p>
-                <button class="btn btn-secondary btn-block" onclick="router.navigate('/partnership')" style="width: 100%; font-weight: 700;">Demander un Partenariat 🤝</button>
-            </div>
-        </div>
-    `;
-});
-
-function handleForgotPassword() {
-    const username = document.getElementById('login-username') ? document.getElementById('login-username').value.trim() : '';
-    const msg = username
-        ? `Bonjour, j'ai oublié mon mot de passe pour mon espace restaurant THIES Resto. Mon identifiant est : *${username}*. Pouvez-vous m'aider à le récupérer ?`
-        : `Bonjour, j'ai oublié mon mot de passe pour mon espace restaurant sur THIES Resto. Pouvez-vous m'aider ?`;
-    const waUrl = `https://wa.me/221784799882?text=${encodeURIComponent(msg)}`;
-    window.open(waUrl, '_blank');
-}
-
 // ----------------------------------------------------
 // Page: DEMANDE DE PARTENARIAT
 // ----------------------------------------------------
@@ -312,115 +262,8 @@ window.handleRegImageUpload = async function(event) {
 
 
 
-async function handleRestaurantLogin(e) {
-    e.preventDefault();
-    const username = document.getElementById('login-username').value.trim().toLowerCase();
-    const pass = document.getElementById('login-password').value.trim();
-    
-    const isAdmin = username === 'thiesresto';
-
-    if (isAdmin) {
-        if (!supabaseClient) {
-            showToast("Erreur de connexion serveur", "danger");
-            return;
-        }
-        const { data: isValid, error } = await supabaseClient.rpc('verify_admin_login', {
-            p_password: pass
-        });
-        if (error) {
-            console.error("Supabase Admin login error:", error);
-            if (typeof showToast === 'function') showToast(`Erreur Serveur: ${error.message}`, "danger");
-            return;
-        }
-        if (!isValid) {
-            if (typeof showToast === 'function') showToast("Mot de passe Super-Admin incorrect", "danger");
-            return;
-        }
-        isSuperAdminSession = true;
-        try {
-            sessionStorage.setItem('thies_admin_logged', 'true');
-            sessionStorage.setItem('admin_session', 'true');
-            sessionStorage.setItem('admin_password', pass);
-        } catch (e) {
-            console.warn("Impossible de sauvegarder la session administrateur dans sessionStorage", e);
-        }
-        if (typeof showToast === 'function') showToast("Connexion réussie ! Bienvenue Admin.", "success");
-        if (typeof updateNavbar === 'function') updateNavbar();
-        
-        // BUG FIX: Sync admin data immediately so the dashboard isn't empty
-        if (typeof store !== 'undefined' && store.syncFromSupabase) {
-            await store.syncFromSupabase();
-        }
-
-        setTimeout(() => {
-            const modal = document.getElementById('auth-modal');
-            if (modal) modal.style.display = 'none';
-            router.navigate('/admin');
-        }, 500);
-        return;
-    }
-    
-    let r = null;
-    
-    // Vérification via Supabase RPC
-    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        try {
-            const { data, error } = await supabaseClient.rpc('verify_restaurant_login', {
-                p_username: username,
-                p_password: pass
-            });
-            if (error) {
-                console.error("Supabase login error", error);
-                if (typeof showToast === 'function') showToast(`Erreur Serveur: ${error.message}`, "danger");
-                return;
-            }
-            if (data && data.length > 0) {
-                r = {
-                    id: data[0].id,
-                    name: data[0].name,
-                    slug: data[0].slug,
-                    status: data[0].status,
-                    password: pass
-                };
-            }
-        } catch(err) {
-            console.error("Supabase login error", err);
-            if (typeof showToast === 'function') showToast(`Erreur Réseau: ${err.message}`, "danger");
-            return;
-        }
-    }
-    
-    if (!r) {
-        if (typeof showToast === 'function') showToast("Identifiant ou mot de passe introuvable", "danger");
-        return;
-    }
-
-    if (r.status === 'pending') {
-        if (typeof showToast === 'function') showToast("Votre compte est en cours de validation.", "warning");
-        return;
-    }
-    
-    if (r.status === 'suspended') {
-        if (typeof showToast === 'function') showToast("Votre compte a été suspendu temporairement.", "danger");
-        return;
-    }
-    
-    currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: pass };
-    try {
-        sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
-    } catch (e) {
-        console.warn("Impossible de sauvegarder la session restaurant dans sessionStorage", e);
-    }
-    
-    if (typeof updateNavbar === 'function') updateNavbar();
-    if (typeof showToast === 'function') showToast(`Bienvenue, ${r.name} !`, "success");
-    
-    setTimeout(() => {
-        const modal = document.getElementById('auth-modal');
-        if (modal) modal.style.display = 'none';
-        router.navigate('/dashboard');
-    }, 1000);
-}
+// Auth handlers are managed primarily in js/auth.js with multi-layer resilience
+// The global implementations are exported on window in js/auth.js
 
 function handleRestaurantRegister(e) {
     e.preventDefault();
@@ -1724,6 +1567,176 @@ function logoutAdmin() {
 }
 
 // ----------------------------------------------------
+// Helper: Render Plats du Jour Component for Landing Page
+// ----------------------------------------------------
+window.renderDailySpecialsHomeSection = function() {
+    if (typeof store === 'undefined' || !store.getDailyDishes) return '';
+    const specials = store.getDailyDishes();
+    if (!specials || specials.length === 0) return '';
+
+    const cardsHtml = specials.slice(0, 10).map(dish => {
+        const dishImage = dish.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
+        const tagText = dish.tag || (dish.isDailySpecial ? 'Plat du jour' : 'Spécialité du Jour');
+        const priceFormatted = Number(dish.price || 0).toLocaleString('fr-FR');
+        const restaurantSlug = dish.restaurantSlug || dish.restaurantId;
+        
+        return `
+            <div class="daily-dish-card hover-3d" style="background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; min-width: 280px; max-width: 320px; flex: 1 0 280px; scroll-snap-align: start; transition: transform 0.25s ease, box-shadow 0.25s ease;">
+                <div style="position: relative; width: 100%; height: 180px; overflow: hidden; background: var(--bg-secondary);">
+                    <img src="${dishImage}" alt="${dish.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500'">
+                    
+                    <!-- Tag Spécifique -->
+                    <div style="position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #F26B21 0%, #D9531E 100%); color: #ffffff; padding: 0.35rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(242,107,33,0.4); display: flex; align-items: center; gap: 0.35rem;">
+                        <span>⭐</span>
+                        <span>${tagText}</span>
+                    </div>
+
+                    <!-- Note & Statut -->
+                    <div style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.65); backdrop-filter: blur(8px); color: #fff; padding: 0.25rem 0.6rem; border-radius: 10px; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 0.25rem;">
+                        <span style="color: #FFC107;">★</span> ${dish.restaurantRating || '4.8'}
+                    </div>
+                </div>
+
+                <div style="padding: 1.25rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
+                    <div>
+                        <!-- Restaurant Link -->
+                        <a href="#/restaurant/${restaurantSlug}" onclick="router.navigate('/restaurant/${restaurantSlug}'); return false;" style="font-size: 0.85rem; color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; margin-bottom: 0.4rem;">
+                            <span>🏪</span> <span>${dish.restaurantName || 'Restaurant Thiès'}</span>
+                        </a>
+                        
+                        <!-- Dish Name -->
+                        <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.4rem 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            ${dish.name}
+                        </h3>
+
+                        <!-- Dish Description -->
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0 0 1rem 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                            ${dish.description || 'Préparé aujourd\'hui avec des ingrédients frais locaux par le chef de l\'établissement.'}
+                        </p>
+                    </div>
+
+                    <!-- Footer / Price & Order Button -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding-top: 0.85rem; border-top: 1px solid var(--border);">
+                        <div>
+                            <span style="font-size: 0.7rem; color: var(--text-secondary); display: block; font-weight: 600; text-transform: uppercase;">Prix</span>
+                            <span style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary);">${priceFormatted} <small style="font-size: 0.75rem; color: var(--primary); font-weight: 700;">FCFA</small></span>
+                        </div>
+
+                        <button onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" class="btn btn-primary ripple" style="padding: 0.6rem 1.1rem; border-radius: 14px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; box-shadow: 0 4px 12px rgba(242,107,33,0.35);">
+                            <span>🛒</span>
+                            <span>Commander</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    return `
+        <!-- ========== PLATS DU JOUR SECTION ========== -->
+        <section class="daily-specials-section" id="daily-specials-section" style="margin: 2.5rem 0 2rem 0; padding: 1.5rem 0;">
+            <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.25rem;">
+                <div>
+                    <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.85rem; background: rgba(242, 107, 33, 0.12); border-radius: 20px; color: var(--primary); font-size: 0.8rem; font-weight: 700; margin-bottom: 0.4rem; border: 1px solid rgba(242,107,33,0.25);">
+                        <span>🔥</span> <span>Cuisiné Aujourd'hui à Thiès</span>
+                    </div>
+                    <h2 class="section-title" style="margin: 0; font-size: 1.6rem;">Les Plats du Jour du Moment</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0.25rem 0 0 0;">Spécialités fraîches et suggestions du jour disponibles immédiatement en commande directe</p>
+                </div>
+                <button onclick="scrollToCatalog()" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.55rem 1.1rem; border-radius: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <span>Voir tous les restaurants</span> <span>➔</span>
+                </button>
+            </div>
+
+            <!-- Horizontal Scrollable Container with Snap -->
+            <div class="daily-specials-carousel" style="display: flex; gap: 1.25rem; overflow-x: auto; padding: 0.5rem 0.25rem 1.25rem 0.25rem; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch;">
+                ${cardsHtml}
+            </div>
+        </section>
+    `;
+};
+
+// ----------------------------------------------------
+// PLATS DU JOUR (DAILY SPECIALS) COMPONENT
+// ----------------------------------------------------
+window.renderDailySpecialsHtml = function(dishes, isInnerOnly = false) {
+    const dailyList = (Array.isArray(dishes) && dishes.length > 0) ? dishes : (typeof store !== 'undefined' ? store.getDailyDishes() : []);
+    if (!dailyList || dailyList.length === 0) {
+        return isInnerOnly ? '' : '<div id="daily-specials-section-container" style="display:none;"></div>';
+    }
+
+    let cardsHtml = '';
+    dailyList.forEach(dish => {
+        const tag = dish.tag || 'Plat du jour';
+        const formattedPrice = Number(dish.price || 0).toLocaleString() + ' FCFA';
+        const restoUrl = `#/restaurant/${dish.restaurantSlug}`;
+        const defaultFallback = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
+        const imgUrl = dish.image || defaultFallback;
+        const rating = (dish.restaurantRating || 4.5).toFixed(1);
+
+        cardsHtml += `
+            <div class="daily-special-card hover-3d" id="daily-dish-card-${dish.id}" onclick="if (event.target.closest('.daily-special-resto-name') || event.target.closest('.daily-special-view-btn') || event.target.closest('.daily-special-order-btn')) return; openProductModal('${dish.restaurantId}', '${dish.id}')">
+                <div class="daily-special-img-wrapper">
+                    <img src="${imgUrl}" alt="${dish.name}" class="daily-special-img" loading="lazy" onerror="this.src='${defaultFallback}'">
+                    <span class="daily-special-tag-badge" title="Plat du jour">⭐ ${tag}</span>
+                    <span class="daily-special-price-badge">${formattedPrice}</span>
+                </div>
+                <div class="daily-special-body">
+                    <div class="daily-special-resto-row">
+                        <a href="${restoUrl}" class="daily-special-resto-name" title="Voir le restaurant ${dish.restaurantName}">
+                            <span>📍</span> <span>${dish.restaurantName}</span>
+                        </a>
+                        <span class="daily-special-rating">★ ${rating}</span>
+                    </div>
+                    <h3 class="daily-special-name">${dish.name}</h3>
+                    <p class="daily-special-desc">${dish.description || 'Spécialité préparée fraîchement ce jour avec des ingrédients locaux de qualité.'}</p>
+                    <div class="daily-special-footer">
+                        <button type="button" class="daily-special-order-btn" onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" title="Commander ce plat directement">
+                            <span>⚡</span> <span>Commander</span>
+                        </button>
+                        <a href="${restoUrl}" class="daily-special-view-btn" title="Voir la carte complète de ${dish.restaurantName}">
+                            <span>Carte ➔</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    const innerHtml = `
+        <section class="daily-specials-section" id="daily-specials-section" aria-label="Plats du jour à Thiès">
+            <div class="daily-specials-header">
+                <div class="daily-specials-title-group">
+                    <div class="daily-specials-pill">
+                        <span>🔥</span> <span>Sélection Fraîche du Jour</span>
+                    </div>
+                    <h2 class="daily-specials-title">Plats du Jour à Thiès 🍲</h2>
+                    <p class="daily-specials-subtitle">Cuisinés ce matin par nos chefs partenaires. Commandez en direct en 1-clic ou réservez votre part !</p>
+                </div>
+                <div class="daily-specials-controls">
+                    <button class="daily-nav-btn" onclick="scrollDailySpecials(-1)" aria-label="Défiler vers la gauche">‹</button>
+                    <button class="daily-nav-btn" onclick="scrollDailySpecials(1)" aria-label="Défiler vers la droite">›</button>
+                </div>
+            </div>
+            <div class="daily-specials-scroll" id="daily-specials-scroll">
+                ${cardsHtml}
+            </div>
+        </section>
+    `;
+
+    if (isInnerOnly) return innerHtml;
+    return `<div id="daily-specials-section-container">${innerHtml}</div>`;
+};
+
+window.scrollDailySpecials = function(direction) {
+    const scrollContainer = document.getElementById('daily-specials-scroll');
+    if (scrollContainer) {
+        const scrollAmount = 310 * direction;
+        scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+};
+
+// ----------------------------------------------------
 // Page: LANDING PAGE (catalog)
 // ----------------------------------------------------
 router.add('#/', () => {
@@ -1819,8 +1832,12 @@ router.add('#/', () => {
                 </div>
             </div>
         </section>
+
         <!-- VOS DERNIERES COMMANDES PERSISTANT -->
         ${historyHtml}
+
+        <!-- ========== PLATS DU JOUR SECTION (DYNAMICALLY FETCHED FROM DATABASE) ========== -->
+        ${renderDailySpecialsHtml()}
 
         <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
         <section class="presentation-section" id="presentation-section" style="margin-top: 2.5rem; padding: 3rem 1.5rem;">
@@ -1861,6 +1878,9 @@ router.add('#/', () => {
                 <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=80" alt="Plat Savoureux" class="promo-food-img" loading="lazy">
             </div>
         </div>
+
+        <!-- ========== PLATS DU JOUR DU MOMENT ========== -->
+        ${renderDailySpecialsHomeSection()}
 
         <section id="catalog-section">
             <div class="section-header" style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; margin-bottom: 1.25rem;">
@@ -2199,6 +2219,18 @@ router.add('#/', () => {
 
     if (typeof applyFilters === 'function') applyFilters();
     if (typeof startSocialProof === 'function') startSocialProof();
+    
+    // Dynamically re-sync daily specials from database
+    if (typeof store !== 'undefined' && typeof store.fetchDailyDishes === 'function') {
+        store.fetchDailyDishes().then(dishes => {
+            const specialsContainer = document.getElementById('daily-specials-section-container');
+            if (specialsContainer && Array.isArray(dishes) && dishes.length > 0) {
+                specialsContainer.innerHTML = renderDailySpecialsHtml(dishes, true);
+                specialsContainer.style.display = 'block';
+            }
+        }).catch(e => console.warn("Daily specials async fetch error:", e));
+    }
+
     hideLoadingOverlay();
     } catch (err) {
         console.error("Error in home route:", err);
@@ -2857,8 +2889,10 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
             
             <div class="restaurant-status-row">
                 ${statusBadge}
-                <span class="stars-rating">★ ${r.rating.toFixed(1)}</span>
-                <span style="color: var(--text-secondary)">(${r.reviewsCount} avis)</span>
+                <button type="button" onclick="switchRestoTab('reviews')" style="background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 0.35rem;" title="Voir les avis clients">
+                    <span class="stars-rating" style="color: #F59E0B; font-weight: 700;">★ ${(Number(r.rating) || 5.0).toFixed(1)}</span>
+                    <span style="color: var(--text-secondary); text-decoration: underline;">(${r.reviewsCount || (r.reviews ? r.reviews.length : 0)} avis)</span>
+                </button>
             </div>
             
             <p class="restaurant-meta-info">
@@ -3576,7 +3610,9 @@ function submitGroupOrder(e, restaurantId, grandTotal) {
         note: `Commande de groupe (${activeGroupOrder.id}). Détails : ${participantsDetail}`,
         status: "Reçue",
         date,
-        time
+        time,
+        timestamp: Date.now(),
+        createdAt: new Date().toISOString()
     };
 
     store.addOrder(order);
@@ -3873,80 +3909,146 @@ Merci de me confirmer la disponibilité !`;
 // 5. Reviews Panel
 function renderReviewsTab(r) {
     const container = document.getElementById('reviews-content-container');
+    if (!container) return;
     
-    // Calculate stats
-    let totalScore = r.reviews.reduce((sum, rev) => sum + rev.rating, 0);
-    let avg = r.reviews.length > 0 ? (totalScore / r.reviews.length).toFixed(1) : "0.0";
+    // Calculate stats & stars breakdown
+    const reviews = Array.isArray(r.reviews) ? r.reviews : [];
+    const totalReviews = reviews.length;
+    let totalScore = reviews.reduce((sum, rev) => sum + (Number(rev.rating) || 5), 0);
+    let avg = totalReviews > 0 ? (totalScore / totalReviews).toFixed(1) : "0.0";
+    
+    // Counts per star rating (5, 4, 3, 2, 1)
+    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(rev => {
+        const star = Math.min(5, Math.max(1, Math.round(Number(rev.rating) || 5)));
+        counts[star] = (counts[star] || 0) + 1;
+    });
+
+    let breakdownHtml = '';
+    for (let star = 5; star >= 1; star--) {
+        const count = counts[star] || 0;
+        const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+        breakdownHtml += `
+            <div class="review-breakdown-bar">
+                <span style="width: 45px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 2px;">
+                    ${star} <span style="color: #F59E0B; font-size: 0.85rem;">★</span>
+                </span>
+                <div class="review-progress-track">
+                    <div class="review-progress-fill" style="width: ${pct}%;"></div>
+                </div>
+                <span style="width: 35px; text-align: right; color: var(--text-secondary); font-size: 0.75rem;">${count}</span>
+            </div>
+        `;
+    }
     
     let listHtml = '';
-    
-    if (r.reviews.length === 0) {
-        listHtml = `<div style="text-align: center; color: var(--text-secondary); padding: 2rem 0;">Aucun avis pour l'instant. Soyez le premier !</div>`;
+    if (totalReviews === 0) {
+        listHtml = `
+            <div style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem; background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🌟</div>
+                <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">Soyez le premier à donner votre avis !</h4>
+                <p style="font-size: 0.85rem; max-width: 400px; margin: 0 auto;">Partagez votre expérience culinaire avec la communauté thiessoise.</p>
+            </div>
+        `;
     } else {
-        r.reviews.forEach(rev => {
-            const stars = '★'.repeat(rev.rating) + '☆'.repeat(5 - rev.rating);
+        reviews.forEach(rev => {
+            const numRating = Math.min(5, Math.max(1, Math.round(Number(rev.rating) || 5)));
+            const stars = '★'.repeat(numRating) + '☆'.repeat(5 - numRating);
             const replyBlock = rev.reply 
-                ? `<div class="review-reply"><div class="review-reply-author">Réponse de ${r.name}</div>${rev.reply}</div>` 
+                ? `<div class="review-reply"><div class="review-reply-author">Réponse du restaurant ${r.name}</div>${rev.reply}</div>` 
                 : '';
+            
+            const initials = (rev.author || 'Anonyme')
+                .split(' ')
+                .map(n => n[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2) || 'AN';
                 
             listHtml += `
-                <div class="review-item">
+                <div class="review-item" style="box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
                     <div class="review-header">
-                        <div>
-                            <span class="review-author">${rev.author}</span>
-                            <div class="stars-rating" style="display:block; font-size: 0.8rem;">${stars}</div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">
+                                ${initials}
+                            </div>
+                            <div>
+                                <span class="review-author" style="font-size: 0.95rem; font-weight: 700; display: block;">${rev.author || 'Client vérifié'}</span>
+                                <div class="stars-rating" style="display: flex; align-items: center; gap: 4px; font-size: 0.9rem; color: #F59E0B; margin-top: 2px;">
+                                    ${stars}
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary); margin-left: 4px;">(${numRating}/5)</span>
+                                </div>
+                            </div>
                         </div>
-                        <span class="review-date">${rev.date}</span>
+                        <span class="review-date" style="font-size: 0.75rem; color: var(--text-secondary);">${rev.date || 'Récemment'}</span>
                     </div>
-                    <p class="review-comment">${rev.comment}</p>
+                    <p class="review-comment" style="margin-top: 0.75rem; line-height: 1.5; font-size: 0.9rem;">${rev.comment}</p>
                     ${replyBlock}
                 </div>
             `;
         });
     }
 
+    // Pre-fill user name if logged in
+    const defaultAuthor = (typeof customerAuth !== 'undefined' && customerAuth.currentUser && customerAuth.currentUser.name) 
+        ? customerAuth.currentUser.name 
+        : '';
+
     container.innerHTML = `
-        <div class="reviews-summary">
-            <div class="rating-big-box">
-                <div class="rating-big-num">${avg}</div>
-                <div class="stars-rating" style="font-size: 0.9rem;">${'★'.repeat(Math.round(avg))}${'☆'.repeat(5 - Math.round(avg))}</div>
-                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">${r.reviews.length} avis</div>
+        <div class="reviews-summary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; align-items: center;">
+            <div class="rating-big-box" style="border-right: none; padding-right: 0; text-align: center;">
+                <div class="rating-big-num" style="color: var(--primary); font-size: 3rem;">${avg}</div>
+                <div class="stars-rating" style="font-size: 1.1rem; color: #F59E0B; margin: 0.35rem 0;">
+                    ${'★'.repeat(Math.round(Number(avg)))}${'☆'.repeat(5 - Math.round(Number(avg)))}
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">
+                    Basé sur ${totalReviews} avis client${totalReviews > 1 ? 's' : ''}
+                </div>
             </div>
             <div style="flex-grow: 1;">
-                <p style="font-size: 0.85rem; color: var(--text-secondary);">
-                    Les avis proviennent de clients ayant commandé sur notre plateforme. Ils alimentent directement la note du restaurant.
-                </p>
+                ${breakdownHtml}
             </div>
         </div>
 
-        <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Laisser un avis</h3>
-        <form id="review-form" onsubmit="submitReview(event, '${r.id}')" style="background: var(--bg-card); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 2rem;">
-            <div class="form-group">
-                <label class="form-label">Note</label>
-                <div class="stars-selector" id="stars-selector-container">
-                    <span onclick="setStarsSelector(1)">★</span>
-                    <span onclick="setStarsSelector(2)">★</span>
-                    <span onclick="setStarsSelector(3)">★</span>
-                    <span onclick="setStarsSelector(4)">★</span>
-                    <span onclick="setStarsSelector(5)">★</span>
+        <div style="margin-bottom: 2.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0;">✍️ Laisser un avis et une note</h3>
+            </div>
+            <form id="review-form" onsubmit="submitReview(event, '${r.id}')" style="background: var(--bg-card); padding: 1.5rem; border-radius: 18px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Votre note pour ${r.name} <span class="required" style="color: var(--accent);">*</span></label>
+                    <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                        <div class="stars-selector" id="stars-selector-container">
+                            <span onclick="setStarsSelector(1)" title="1 étoile - Décevant">★</span>
+                            <span onclick="setStarsSelector(2)" title="2 étoiles - Moyen">★</span>
+                            <span onclick="setStarsSelector(3)" title="3 étoiles - Bon">★</span>
+                            <span onclick="setStarsSelector(4)" title="4 étoiles - Très bon">★</span>
+                            <span onclick="setStarsSelector(5)" title="5 étoiles - Excellent">★</span>
+                        </div>
+                        <span id="star-rating-label" style="font-weight: 700; font-size: 0.9rem; color: #92400E; background: #FEF3C7; padding: 0.2rem 0.6rem; border-radius: 8px;">5/5 - Excellent ⭐</span>
+                    </div>
+                    <input type="hidden" id="review-rating-val" value="5">
                 </div>
-                <input type="hidden" id="review-rating-val" value="5">
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Votre Nom <span class="required">*</span></label>
-                <input type="text" id="review-author-name" class="form-control" placeholder="Seydou Kane" required>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">Commentaire <span class="required">*</span></label>
-                <textarea id="review-comment-text" class="form-control" placeholder="Racontez votre expérience..." required></textarea>
-            </div>
-            
-            <button type="submit" class="btn btn-secondary btn-sm">Publier l'avis</button>
-        </form>
+                
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 600;">Votre nom complet <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="text" id="review-author-name" class="form-control" placeholder="ex: Seydou Kane" value="${defaultAuthor}" required>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label class="form-label" style="font-weight: 600;">Votre retour d'expérience <span class="required" style="color: var(--accent);">*</span></label>
+                    <textarea id="review-comment-text" class="form-control" rows="3" placeholder="Qualité des plats, rapidité, accueil, emballage..." required></textarea>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="font-weight: 700; padding: 0.75rem 1.5rem;">
+                    ✨ Publier mon avis
+                </button>
+            </form>
+        </div>
 
-        <h3 style="font-size: 1.1rem; margin-bottom: 1rem;">Tous les avis</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0;">💬 Tous les retours clients (${totalReviews})</h3>
+        </div>
         <div class="reviews-list">
             ${listHtml}
         </div>
@@ -3957,10 +4059,23 @@ function renderReviewsTab(r) {
 }
 
 let currentSelectedRating = 5;
+const RATING_LABELS = {
+    1: "1/5 - Décevant 😞",
+    2: "2/5 - Moyen 😐",
+    3: "3/5 - Bon 🙂",
+    4: "4/5 - Très bon ! 😊",
+    5: "5/5 - Excellent ! 🌟"
+};
+
 function setStarsSelector(num) {
     currentSelectedRating = num;
     const input = document.getElementById('review-rating-val');
     if (input) input.value = num;
+    
+    const label = document.getElementById('star-rating-label');
+    if (label) {
+        label.textContent = RATING_LABELS[num] || `${num}/5`;
+    }
     
     const stars = document.querySelectorAll('#stars-selector-container span');
     stars.forEach((s, idx) => {
@@ -3976,10 +4091,19 @@ function submitReview(e, restaurantId) {
     e.preventDefault();
     
     const r = store.getRestaurantById(restaurantId);
+    if (!r) {
+        showToast("Restaurant introuvable", "danger");
+        return;
+    }
     
     const name = document.getElementById('review-author-name').value.trim();
     const comment = document.getElementById('review-comment-text').value.trim();
-    const rating = parseInt(document.getElementById('review-rating-val').value);
+    const rating = parseInt(document.getElementById('review-rating-val').value) || 5;
+    
+    if (!name || !comment) {
+        showToast("Veuillez remplir tous les champs obligatoires.", "warning");
+        return;
+    }
     
     const date = new Date().toISOString().split('T')[0];
     
@@ -3992,12 +4116,16 @@ function submitReview(e, restaurantId) {
         reply: null
     };
     
-    // Add review
+    if (!Array.isArray(r.reviews)) {
+        r.reviews = [];
+    }
+    
+    // Add review at the beginning of the list
     r.reviews.unshift(newRev);
     
     // Recalculate average rating & counts
-    let totalScore = r.reviews.reduce((sum, rev) => sum + rev.rating, 0);
-    r.rating = totalScore / r.reviews.length;
+    let totalScore = r.reviews.reduce((sum, rev) => sum + (Number(rev.rating) || 5), 0);
+    r.rating = Number((totalScore / r.reviews.length).toFixed(1));
     r.reviewsCount = r.reviews.length;
     
     store.updateRestaurant(r.id, { 
@@ -4006,7 +4134,7 @@ function submitReview(e, restaurantId) {
         reviewsCount: r.reviewsCount
     });
 
-    showToast("Merci pour votre avis !", "success");
+    showToast("✨ Merci ! Votre avis et votre note ont été publiés.", "success");
     
     // Re-render restaurant view on reviews tab
     renderRestaurantView(r, 'reviews');
@@ -4281,220 +4409,356 @@ window.confirmCustomerDelivery = async function(orderId) {
 window.fetchOrderTracking = async function() {
     const rawPhone = document.getElementById('tracking-phone')?.value.trim() || '';
     if (!rawPhone) {
-        showToast("Veuillez saisir votre numéro", "warning");
+        showToast("Veuillez saisir votre numéro de téléphone", "warning");
         return;
     }
     const phone = cleanPhoneNumber(rawPhone);
     const container = document.getElementById('tracking-result-container');
     if (!container) return;
     
-    container.innerHTML = '<div style="text-align:center; padding: 2rem 0;"><div class="spinner-ring" style="width:34px;height:34px;border-width:3px; margin: 0 auto 0.75rem;"></div><div style="font-size: 0.88rem; color: var(--text-secondary);">Recherche des commandes en direct...</div></div>';
+    container.innerHTML = '<div style="text-align:center; padding: 2rem 0;"><div class="spinner-ring" style="width:34px;height:34px;border-width:3px; margin: 0 auto 0.75rem;"></div><div style="font-size: 0.88rem; color: var(--text-secondary);">Recherche de votre dernière commande et de votre historique...</div></div>';
     
-    let ordersData = [];
+    let allOrders = [];
     
     try {
+        // 1. Récupération depuis Supabase
         if (supabaseClient) {
             try {
                 const { data, error } = await supabaseClient.rpc('get_order_tracking', {
                     p_phone: phone
                 });
-                if (!error && data) {
-                    ordersData = data;
-                } else {
-                    throw error || new Error("Supabase RPC failed");
+                if (!error && Array.isArray(data)) {
+                    data.forEach(o => { if (o && o.id) allOrders.push(o); });
                 }
             } catch (err) {
-                console.warn("Supabase fetch failed, falling back to local memory:", err);
-                ordersData = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone);
+                console.warn("Supabase tracking fetch notice:", err);
             }
-        } else {
-            ordersData = store.data.orders.filter(o => cleanPhoneNumber(o.customerPhone) === phone);
         }
         
-        if (!ordersData || ordersData.length === 0) {
-            // Also check local history
-            try {
-                const localHistory = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
-                const filteredLocal = localHistory.filter(o => {
-                    const oPhone = cleanPhoneNumber(o.customerPhone || '');
-                    return oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
-                });
-                if (filteredLocal.length > 0) {
-                    ordersData = filteredLocal;
+        // 2. Récupération depuis la mémoire locale du store
+        if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
+            const memoryOrders = store.data.orders.filter(o => {
+                const oPhone = cleanPhoneNumber(o.customerPhone || '');
+                return oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
+            });
+            memoryOrders.forEach(mo => {
+                if (!allOrders.some(x => String(x.id) === String(mo.id))) {
+                    allOrders.push(mo);
                 }
+            });
+        }
+        
+        // 3. Récupération depuis l'historique persistent (localStorage)
+        try {
+            const localHistory = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+            localHistory.forEach(localItem => {
+                const oPhone = cleanPhoneNumber(localItem.customerPhone || '');
+                if (oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)))) {
+                    if (!allOrders.some(x => String(x.id) === String(localItem.id))) {
+                        allOrders.push(localItem);
+                    }
+                }
+            });
+        } catch (e) {}
+
+        if (!allOrders || allOrders.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; padding: 2.5rem 1rem; color: var(--text-secondary); background: var(--bg-page); border-radius: 18px; border: 1px dashed var(--border); margin-top: 1rem;">
+                    <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔍</span>
+                    <h4 style="color: var(--text-primary); margin: 0 0 0.35rem; font-size: 1.1rem; font-weight: 700;">Aucune commande trouvée</h4>
+                    <p style="margin: 0 0 1.25rem; font-size: 0.88rem; line-height: 1.4;">Aucune commande enregistrée pour le numéro <strong>${phone}</strong>.</p>
+                    <button class="btn btn-primary" onclick="router.navigate('/')" style="border-radius: 12px; font-weight: 700; padding: 0.6rem 1.25rem; font-size: 0.9rem;">
+                        Commander maintenant 🍲
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Tri par date décroissante : la plus récente en premier
+        allOrders.sort((a, b) => {
+            const dateA = new Date(a.created_at || a.savedAt || a.date || 0).getTime();
+            const dateB = new Date(b.created_at || b.savedAt || b.date || 0).getTime();
+            if (!isNaN(dateA) && !isNaN(dateB) && dateA !== dateB) return dateB - dateA;
+            return String(b.id).localeCompare(String(a.id), undefined, { numeric: true });
+        });
+
+        // =========================================================================
+        // REGLE : Le client ne suit en direct QUE sa DERNIÈRE commande (la plus récente)
+        // Les autres commandes sont consultables dans l'historique ci-dessous
+        // =========================================================================
+        const latestOrder = allOrders[0];
+        const previousOrders = allOrders.slice(1);
+
+        // Sauvegarder l'ID de la commande suivie
+        if (latestOrder && latestOrder.id) {
+            try {
+                localStorage.setItem('trackingOrderId', String(latestOrder.id));
+                localStorage.setItem('trackingPhone', String(phone));
             } catch (e) {}
         }
 
-        if (!ordersData || ordersData.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding: 2rem 0; color: var(--text-secondary);"><span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">🔍</span>Aucune commande active ou récente trouvée pour ce numéro.</div>';
-            return;
+        const r = store.getRestaurantById(latestOrder.restaurant_id || latestOrder.restaurantId);
+        const rName = r ? r.name : (latestOrder.restaurantName || 'Restaurant de Thiès');
+        const rWhatsapp = r ? (r.whatsapp || r.phone) : null;
+        
+        const isEnAttente = latestOrder.status === 'En attente';
+        const isRecue = latestOrder.status === 'Reçue';
+        const isEnCuisine = latestOrder.status === 'Confirmée' || latestOrder.status === 'En préparation' || latestOrder.status === 'En cuisine';
+        const isPretPourLivraison = latestOrder.status === 'Prêt pour livraison' || latestOrder.status === 'Prête';
+        const isEnLivraison = latestOrder.status === 'En cours de livraison' || latestOrder.status === 'En livraison' || latestOrder.status === 'Partie en livraison';
+        const isLivree = latestOrder.status === 'Livrée' || latestOrder.status === 'Livré';
+        const isCancelled = latestOrder.status === 'Annulée';
+
+        let statusColor = '#f59e0b';
+        let statusIcon = '⏳';
+        let stepPercent = 15;
+        let statusLabel = 'En attente de confirmation';
+        let stepDescription = 'Votre commande a été transmise. En attente de confirmation par le restaurant.';
+
+        if (isEnAttente) {
+            statusColor = '#f59e0b';
+            statusIcon = '⏳';
+            stepPercent = 15;
+            statusLabel = 'En attente (Restaurant)';
+            stepDescription = 'Votre commande a été transmise. Le restaurant doit confirmer la réception.';
+        } else if (isRecue) {
+            statusColor = '#0284c7';
+            statusIcon = '📥';
+            stepPercent = 35;
+            statusLabel = 'Reçue & Acceptée';
+            stepDescription = 'Le restaurant a bien réceptionné votre commande ! Elle va être mise en cuisine.';
+        } else if (isEnCuisine) {
+            statusColor = 'var(--primary)';
+            statusIcon = '👨‍🍳';
+            stepPercent = 55;
+            statusLabel = 'En cuisine (Préparation)';
+            stepDescription = 'Vos plats sont en cours de cuisson et de préparation par le chef.';
+        } else if (isPretPourLivraison) {
+            statusColor = '#0d9488';
+            statusIcon = '📦';
+            stepPercent = 75;
+            statusLabel = 'Prêt pour livraison';
+            stepDescription = 'Vos plats sont prêts et emballés ! En attente de prise en charge par le livreur.';
+        } else if (isEnLivraison) {
+            statusColor = '#0284c7';
+            statusIcon = '🛵';
+            stepPercent = 90;
+            statusLabel = 'En cours de livraison';
+            stepDescription = 'Le livreur est en route ! Dès que vous recevez vos plats, confirmez ci-dessous.';
+        } else if (isLivree) {
+            statusColor = '#059669';
+            statusIcon = '✅';
+            stepPercent = 100;
+            statusLabel = 'Livrée avec succès';
+            stepDescription = 'Commande réceptionnée et validée avec succès. Bon appétit !';
+        } else if (isCancelled) {
+            statusColor = 'var(--danger)';
+            statusIcon = '❌';
+            stepPercent = 100;
+            statusLabel = 'Commande annulée';
+            stepDescription = 'Cette commande a été annulée ou refusée par le restaurant.';
         }
         
-        let html = '';
-        ordersData.forEach(order => {
-            const r = store.getRestaurantById(order.restaurant_id || order.restaurantId);
-            const rName = r ? r.name : (order.restaurantName || 'Restaurant');
-            
-            const isEnAttente = order.status === 'En attente';
-            const isRecue = order.status === 'Reçue';
-            const isEnCuisine = order.status === 'Confirmée' || order.status === 'En préparation' || order.status === 'En cuisine';
-            const isPretPourLivraison = order.status === 'Prêt pour livraison' || order.status === 'Prête';
-            const isEnLivraison = order.status === 'En cours de livraison' || order.status === 'En livraison' || order.status === 'Partie en livraison';
-            const isLivree = order.status === 'Livrée' || order.status === 'Livré';
-            const isCancelled = order.status === 'Annulée';
+        const isOtpVerified = latestOrder.otpVerified !== false;
+        const totalFormatted = Number(latestOrder.total || latestOrder.certifiedTotal || 0).toLocaleString();
 
-            let statusColor = '#f59e0b';
-            let statusIcon = '⏳';
-            let stepPercent = 15;
-            let statusLabel = 'En attente de confirmation';
-            let stepDescription = 'Votre commande a été transmise. En attente de confirmation par le restaurant.';
-
-            if (isEnAttente) {
-                statusColor = '#f59e0b';
-                statusIcon = '⏳';
-                stepPercent = 15;
-                statusLabel = 'En attente (Restaurant)';
-                stepDescription = 'Votre commande a été transmise. Le restaurant doit confirmer la réception.';
-            } else if (isRecue) {
-                statusColor = '#0284c7';
-                statusIcon = '📥';
-                stepPercent = 35;
-                statusLabel = 'Reçue & Acceptée';
-                stepDescription = 'Le restaurant a bien réceptionné votre commande ! Elle va être mise en cuisine.';
-            } else if (isEnCuisine) {
-                statusColor = 'var(--primary)';
-                statusIcon = '👨‍🍳';
-                stepPercent = 55;
-                statusLabel = 'En cuisine (Préparation)';
-                stepDescription = 'Vos plats sont en cours de cuisson et de préparation par le chef.';
-            } else if (isPretPourLivraison) {
-                statusColor = '#0d9488';
-                statusIcon = '📦';
-                stepPercent = 75;
-                statusLabel = 'Prêt pour livraison';
-                stepDescription = 'Vos plats sont prêts et emballés ! En attente de prise en charge par le livreur.';
-            } else if (isEnLivraison) {
-                statusColor = '#0284c7';
-                statusIcon = '🛵';
-                stepPercent = 90;
-                statusLabel = 'En cours de livraison';
-                stepDescription = 'Le livreur est en route ! Dès que vous recevez vos plats, confirmez ci-dessous.';
-            } else if (isLivree) {
-                statusColor = '#059669';
-                statusIcon = '✅';
-                stepPercent = 100;
-                statusLabel = 'Livrée avec succès';
-                stepDescription = 'Commande réceptionnée et validée avec succès. Bon appétit !';
-            } else if (isCancelled) {
-                statusColor = 'var(--danger)';
-                statusIcon = '❌';
-                stepPercent = 100;
-                statusLabel = 'Commande annulée';
-                stepDescription = 'Cette commande a été annulée ou refusée par le restaurant.';
-            }
-            
-            const isOtpVerified = order.otpVerified !== false;
-
-            html += `
-                <div id="track-card-${order.id}" style="background: var(--bg-card); padding: 1.4rem; border-radius: 18px; border: 1.5px solid var(--border); margin-bottom: 1.25rem; position: relative; overflow: hidden; box-shadow: var(--shadow);">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                <span style="font-size: 0.85rem; font-weight: 700; color: var(--text-primary); font-family: monospace;">#${order.id}</span>
-                                ${isOtpVerified ? `
-                                    <span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; color: #059669; font-weight: 700; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.25);">
-                                        🛡️ Authentifiée
-                                    </span>
-                                ` : ''}
-                            </div>
-                            <h4 style="margin: 0; color: var(--text-primary); font-size: 1.2rem; font-weight: 800;">${rName}</h4>
+        let html = `
+            <!-- =========================================================================
+                 1. CARTE PRINCIPALE : SUIVI DE LA DERNIÈRE COMMANDE UNIQUE
+                 ========================================================================= -->
+            <div class="active-track-hero" id="track-card-${latestOrder.id}">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div>
+                        <div class="track-pill-latest">
+                            <span>📍</span> <span>Dernière Commande en Direct</span>
                         </div>
-                        <div class="track-status-badge" style="background: rgba(255,255,255,0.06); padding: 0.4rem 0.85rem; border-radius: 20px; font-size: 0.85rem; font-weight: 800; color: ${statusColor}; border: 1.5px solid ${statusColor}; display: flex; align-items: center; gap: 0.4rem;">
-                            <span>${statusIcon}</span> <span class="track-status-text">${statusLabel}</span>
-                        </div>
-                    </div>
-
-                    <div style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;">
-                        ${order.items ? (Array.isArray(order.items) ? order.items.map(i => `<span style="display: inline-block; background: var(--bg-secondary); padding: 2px 8px; border-radius: 6px; margin: 2px; font-size: 0.82rem; border: 1px solid var(--border);">${i.qty}x ${i.name}</span>`).join(' ') : 'Détail commande') : ''}
-                    </div>
-
-                    <!-- Step explanation banner -->
-                    <div style="background: var(--bg-page); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.15rem; font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.6rem;">
-                        <span style="font-size: 1.2rem;">${statusIcon}</span>
-                        <span style="line-height: 1.4;">${stepDescription}</span>
-                    </div>
-                    
-                    <!-- Progress Bar 6 Distinct Steps -->
-                    <div style="margin-bottom: 1.25rem;">
-                        <div style="height: 8px; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; margin-bottom: 0.6rem; border: 1px solid var(--border);">
-                            <div class="track-progress-bar" style="height: 100%; width: ${stepPercent}%; background: ${statusColor}; transition: width 0.5s ease-out, background 0.5s ease-out;"></div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; gap: 2px;">
-                            <span style="${stepPercent >= 15 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Transmise</span>
-                            <span style="${stepPercent >= 35 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📥 Reçue</span>
-                            <span style="${stepPercent >= 55 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
-                            <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📦 Prêt</span>
-                            <span style="${stepPercent >= 90 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 Livraison</span>
-                            <span style="${stepPercent >= 100 ? (isCancelled ? 'color: var(--danger); font-weight: 700;' : 'color: #059669; font-weight: 700;') : ''}">${isCancelled ? '❌ Annulée' : '✅ Livrée'}</span>
-                        </div>
-                    </div>
-
-                    <!-- Client Delivery Confirmation Action (ACTIVE ONLY IN PHASE DE LIVRAISON) -->
-                    ${isEnLivraison ? `
-                        <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(32, 201, 151, 0.08); border: 2px solid #20c997; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.15);">
-                            <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">🛵 📦</div>
-                            <h4 style="margin: 0 0 0.35rem; font-size: 1.05rem; color: #059669; font-weight: 800;">
-                                Le livreur est arrivé ?
-                            </h4>
-                            <p style="margin: 0 0 1rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.4;">
-                                Confirmez que vous avez bien reçu votre repas en mains propres pour finaliser la commande.
-                            </p>
-                            <button type="button" id="btn-confirm-delivery-${order.id}" data-confirm-order-id="${order.id}" class="btn btn-success ripple hover-3d" onclick="confirmCustomerDelivery('${order.id}')" style="width: 100%; font-weight: 800; padding: 0.9rem 1.25rem; border-radius: 14px; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #20c997; border-color: #20c997; box-shadow: 0 4px 14px rgba(32, 201, 151, 0.35);">
-                                ✅ J'ai bien reçu ma commande
-                            </button>
-                        </div>
-                    ` : isLivree ? `
-                        <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(16, 185, 129, 0.1); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 16px; text-align: center;">
-                            <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🎉 🍽️</div>
-                            <div style="font-size: 1.05rem; font-weight: 800; color: #059669; margin-bottom: 0.25rem;">
-                                Commande livrée & réception validée !
-                            </div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-                                Le restaurant a bien comptabilisé votre réception. Bon appétit !
-                            </div>
-                            ${r ? `
-                                <a href="#/r/${r.slug || r.id}" class="btn btn-outline btn-sm" style="font-weight: 700; border-radius: 10px; font-size: 0.82rem; padding: 0.4rem 0.85rem;">
-                                    ⭐ Donner un avis sur le restaurant
-                                </a>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                            <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-primary); font-family: monospace;">#${latestOrder.id}</span>
+                            ${isOtpVerified ? `
+                                <span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; color: #059669; font-weight: 700; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.25);">
+                                    🛡️ Authentifiée
+                                </span>
                             ` : ''}
+                            ${latestOrder.date ? `<span style="font-size: 0.78rem; color: var(--text-secondary);">📅 ${latestOrder.date}</span>` : ''}
+                        </div>
+                        <h3 style="margin: 0; color: var(--text-primary); font-size: 1.3rem; font-weight: 800;">${rName}</h3>
+                    </div>
+                    <div class="track-status-badge" style="background: rgba(255,255,255,0.06); padding: 0.45rem 0.95rem; border-radius: 20px; font-size: 0.85rem; font-weight: 800; color: ${statusColor}; border: 1.5px solid ${statusColor}; display: flex; align-items: center; gap: 0.4rem;">
+                        <span>${statusIcon}</span> <span class="track-status-text">${statusLabel}</span>
+                    </div>
+                </div>
+
+                <!-- Detail items -->
+                <div style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.5; background: var(--bg-page); padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px;">Articles commandés :</div>
+                    <div>
+                        ${latestOrder.items ? (Array.isArray(latestOrder.items) ? latestOrder.items.map(i => `<span style="display: inline-block; background: var(--bg-card); padding: 3px 8px; border-radius: 6px; margin: 2px; font-size: 0.82rem; border: 1px solid var(--border); font-weight: 600; color: var(--text-primary);">${i.qty}x ${i.name}</span>`).join(' ') : 'Détail commande') : ''}
+                    </div>
+                    ${totalFormatted !== '0' ? `
+                        <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.92rem; font-weight: 700; color: var(--text-primary);">
+                            <span>Total de la commande :</span>
+                            <span style="color: var(--primary); font-size: 1.05rem;">${totalFormatted} FCFA</span>
                         </div>
                     ` : ''}
                 </div>
+
+                <!-- Step explanation banner -->
+                <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.15rem; font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.6rem;">
+                    <span style="font-size: 1.25rem;">${statusIcon}</span>
+                    <span style="line-height: 1.4;">${stepDescription}</span>
+                </div>
+                
+                <!-- Progress Bar 6 Distinct Steps -->
+                <div style="margin-bottom: 1.25rem;">
+                    <div style="height: 8px; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; margin-bottom: 0.6rem; border: 1px solid var(--border);">
+                        <div class="track-progress-bar" style="height: 100%; width: ${stepPercent}%; background: ${statusColor}; transition: width 0.5s ease-out, background 0.5s ease-out;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; gap: 2px;">
+                        <span style="${stepPercent >= 15 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Transmise</span>
+                        <span style="${stepPercent >= 35 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📥 Reçue</span>
+                        <span style="${stepPercent >= 55 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
+                        <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📦 Prêt</span>
+                        <span style="${stepPercent >= 90 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 Livraison</span>
+                        <span style="${stepPercent >= 100 ? (isCancelled ? 'color: var(--danger); font-weight: 700;' : 'color: #059669; font-weight: 700;') : ''}">${isCancelled ? '❌ Annulée' : '✅ Livrée'}</span>
+                    </div>
+                </div>
+
+                <!-- Client Delivery Confirmation Action (ACTIVE ONLY IN PHASE DE LIVRAISON) -->
+                ${isEnLivraison ? `
+                    <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(32, 201, 151, 0.08); border: 2px solid #20c997; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.15);">
+                        <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">🛵 📦</div>
+                        <h4 style="margin: 0 0 0.35rem; font-size: 1.05rem; color: #059669; font-weight: 800;">
+                            Le livreur est arrivé ?
+                        </h4>
+                        <p style="margin: 0 0 1rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.4;">
+                            Confirmez que vous avez bien reçu votre repas en mains propres pour finaliser la commande.
+                        </p>
+                        <button type="button" id="btn-confirm-delivery-${latestOrder.id}" data-confirm-order-id="${latestOrder.id}" class="btn btn-success ripple hover-3d" onclick="confirmCustomerDelivery('${latestOrder.id}')" style="width: 100%; font-weight: 800; padding: 0.9rem 1.25rem; border-radius: 14px; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #20c997; border-color: #20c997; box-shadow: 0 4px 14px rgba(32, 201, 151, 0.35);">
+                            ✅ J'ai bien reçu ma commande
+                        </button>
+                    </div>
+                ` : isLivree ? `
+                    <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(16, 185, 129, 0.1); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 16px; text-align: center;">
+                        <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🎉 🍽️</div>
+                        <div style="font-size: 1.05rem; font-weight: 800; color: #059669; margin-bottom: 0.25rem;">
+                            Commande livrée & réception validée !
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                            Le restaurant a bien comptabilisé votre réception. Bon appétit !
+                        </div>
+                        ${r ? `
+                            <a href="#/restaurant/${r.slug || r.id}" class="btn btn-outline btn-sm" style="font-weight: 700; border-radius: 10px; font-size: 0.82rem; padding: 0.4rem 0.85rem;">
+                                ⭐ Donner un avis / Recommander chez ${r.name}
+                            </a>
+                        ` : ''}
+                    </div>
+                ` : ''}
+
+                <!-- Contact Restaurant Help / Assistance -->
+                <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
+                    ${rWhatsapp ? `
+                        <a href="https://wa.me/${String(rWhatsapp).replace(/\+/g, '').replace(/\s+/g, '')}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            <span>💬</span> <span>WhatsApp Restaurant</span>
+                        </a>
+                    ` : ''}
+                    ${r ? `
+                        <a href="#/restaurant/${r.slug || r.id}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            <span>🏪</span> <span>Voir la carte</span>
+                        </a>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+
+        // =========================================================================
+        // 2. SECTION HISTORIQUE : TOUTES LES COMMANDES PASSÉES DU CLIENT
+        // =========================================================================
+        html += `
+            <div class="history-track-section" id="customer-orders-history-section">
+                <div class="history-track-header">
+                    <h3 class="history-track-title">
+                        <span>📋</span> <span>Historique de vos commandes (${allOrders.length})</span>
+                    </h3>
+                    <a href="#/profile" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; border-radius: 10px; font-weight: 600;">
+                        👤 Voir mon compte
+                    </a>
+                </div>
+        `;
+
+        if (previousOrders.length > 0) {
+            html += `<div style="display: flex; flex-direction: column; gap: 0.75rem;">`;
+            previousOrders.forEach(pOrder => {
+                const pR = store.getRestaurantById(pOrder.restaurant_id || pOrder.restaurantId);
+                const pRName = pR ? pR.name : (pOrder.restaurantName || 'Restaurant de Thiès');
+                const pTotal = Number(pOrder.total || pOrder.certifiedTotal || 0).toLocaleString();
+                const isPLivree = pOrder.status === 'Livrée' || pOrder.status === 'Livré';
+                const isPAnnulee = pOrder.status === 'Annulée';
+                const pBadgeColor = isPLivree ? '#059669' : (isPAnnulee ? 'var(--danger)' : '#f59e0b');
+                const pBadgeBg = isPLivree ? 'rgba(16, 185, 129, 0.1)' : (isPAnnulee ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)');
+                const pDate = pOrder.date || (pOrder.created_at ? new Date(pOrder.created_at).toLocaleDateString('fr-FR') : 'Date antérieure');
+
+                html += `
+                    <div class="history-track-item">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.4rem;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                    <span style="font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">${pRName}</span>
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary); font-family: monospace;">#${pOrder.id}</span>
+                                </div>
+                                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
+                                    📅 ${pDate} ${pOrder.time ? `• ⏰ ${pOrder.time}` : ''}
+                                </div>
+                            </div>
+                            <span style="background: ${pBadgeBg}; color: ${pBadgeColor}; border: 1px solid ${pBadgeColor}; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">
+                                ${pOrder.status || 'Terminée'}
+                            </span>
+                        </div>
+                        <div style="font-size: 0.82rem; color: var(--text-secondary);">
+                            ${pOrder.items ? (Array.isArray(pOrder.items) ? pOrder.items.map(i => `${i.qty}x ${i.name}`).join(', ') : 'Détail') : 'Commande'}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px dashed var(--border); font-size: 0.85rem;">
+                            <span style="color: var(--text-secondary);">Montant réglé :</span>
+                            <strong style="color: var(--text-primary); font-size: 0.95rem;">${pTotal} FCFA</strong>
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+        } else {
+            html += `
+                <div style="text-align: center; padding: 1.25rem; background: var(--bg-card); border-radius: 14px; border: 1px dashed var(--border); color: var(--text-secondary); font-size: 0.85rem;">
+                    <span>✨</span> C'est votre première commande enregistrée ! Dès vos prochains repas, l'historique complet de toutes vos commandes apparaîtra ici.
+                </div>
             `;
-            
-            // Setup Realtime Listener for this specific order
-            if (supabaseClient && !window.trackingSubscriptions[order.id]) {
-                window.trackingSubscriptions[order.id] = supabaseClient.channel('track-' + order.id)
-                    .on(
-                        'postgres_changes',
-                        { event: 'UPDATE', schema: 'public', table: 'orders', filter: 'id=eq.' + order.id },
-                        (payload) => {
-                            console.log('Order update tracked:', payload);
-                            if (payload.new && payload.old && payload.new.status !== payload.old.status) {
-                                playNotificationSound();
-                                window.fetchOrderTracking();
+        }
+
+        html += `</div>`; // Close history section
+
+        container.innerHTML = html;
+
+        // Setup Realtime Listener specifically for the active latest order
+        if (supabaseClient && !window.trackingSubscriptions[latestOrder.id]) {
+            window.trackingSubscriptions[latestOrder.id] = supabaseClient.channel('track-' + latestOrder.id)
+                .on(
+                    'postgres_changes',
+                    { event: 'UPDATE', schema: 'public', table: 'orders', filter: 'id=eq.' + latestOrder.id },
+                    (payload) => {
+                        console.log('Order update tracked in realtime:', payload);
+                        if (payload.new && payload.old && payload.new.status !== payload.old.status) {
+                            if (typeof playNotificationSound === 'function') playNotificationSound();
+                            window.fetchOrderTracking();
+                            if (typeof showToast === 'function') {
                                 showToast(`🔔 Mise à jour : Votre commande est maintenant "${payload.new.status}" !`, "success");
                             }
                         }
-                    )
-                    .subscribe();
-            }
-        });
-        
-        container.innerHTML = html;
+                    }
+                )
+                .subscribe();
+        }
         
     } catch (err) {
-        console.error(err);
+        console.error("fetchOrderTracking error:", err);
         container.innerHTML = '<p style="color: var(--danger); text-align: center;">Une erreur est survenue lors de la récupération.</p>';
     }
 };
@@ -6117,6 +6381,15 @@ window.setupRealtime = function() {
                 }
 
                 // --- 2. RESTAURATEUR DASHBOARD REALTIME ---
+                if (eventType === 'INSERT') {
+                    // Planifier le déclenchement de vérification à 10 minutes précises
+                    setTimeout(() => {
+                        if (typeof window.checkUntreatedOrdersFor10MinAlert === 'function') {
+                            window.checkUntreatedOrdersFor10MinAlert();
+                        }
+                    }, 10 * 60 * 1000 + 1000);
+                }
+
                 if (window.location.hash === '#/dashboard' && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
                     if (newOrder.restaurant_id === currentRestaurantSession.id) {
                         if (eventType === 'INSERT') {
@@ -6148,6 +6421,9 @@ window.setupRealtime = function() {
                             store.syncFromSupabase().then(() => {
                                 if (typeof renderDashboardTabContent === 'function') {
                                     renderDashboardTabContent(currentRestaurantSession);
+                                }
+                                if (typeof window.checkUntreatedOrdersFor10MinAlert === 'function') {
+                                    window.checkUntreatedOrdersFor10MinAlert();
                                 }
                             });
                         }
@@ -6185,6 +6461,218 @@ window.playNotificationSound = function() {
         console.error("Audio play failed:", e);
     }
 };
+
+// ---------- ALARME AUDIO D'URGENCE POUR COMMANDE EN ATTENTE (+10 MIN) ----------
+window.playUrgentReminderSound = function() {
+    try {
+        // 1. Jouer le son de notification standard
+        if (typeof window.playNotificationSound === 'function') {
+            window.playNotificationSound();
+        }
+        // 2. Synthétiseur acoustique d'alerte Web Audio API (haute fiabilité sans dépendance externe)
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+            const ctx = new AudioCtx();
+            const now = ctx.currentTime;
+            
+            // Premier bip d'urgence (880 Hz)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(880, now);
+            gain1.gain.setValueAtTime(0.3, now);
+            gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.18);
+            
+            // Deuxième bip plus aigu (1174 Hz)
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(1174.66, now + 0.22);
+            gain2.gain.setValueAtTime(0.35, now + 0.22);
+            gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.42);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.22);
+            osc2.stop(now + 0.42);
+
+            // Troisième tonalité accentuée (1318 Hz)
+            const osc3 = ctx.createOscillator();
+            const gain3 = ctx.createGain();
+            osc3.type = 'triangle';
+            osc3.frequency.setValueAtTime(1318.51, now + 0.46);
+            gain3.gain.setValueAtTime(0.4, now + 0.46);
+            gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+            osc3.connect(gain3);
+            gain3.connect(ctx.destination);
+            osc3.start(now + 0.46);
+            osc3.stop(now + 0.75);
+        }
+    } catch(e) {
+        console.warn("Urgent alarm synth notice:", e);
+    }
+};
+
+// ---------- GESTIONNAIRE D'ANCIENNETÉ ET NOTIFICATIONS COMMANDES NON TRAITÉES (+10 MIN) ----------
+window.getOrderTimestamp = function(order) {
+    if (!order) return Date.now();
+    if (typeof order.timestamp === 'number' && !isNaN(order.timestamp) && order.timestamp > 0) {
+        return order.timestamp;
+    }
+    if (order.createdAt || order.created_at) {
+        const d = new Date(order.createdAt || order.created_at);
+        if (!isNaN(d.getTime())) return d.getTime();
+    }
+    if (order.date && order.time) {
+        try {
+            const cleanTime = String(order.time).trim();
+            const [h, m] = cleanTime.split(':');
+            const d = new Date(order.date);
+            if (!isNaN(d.getTime())) {
+                d.setHours(Number(h) || 12, Number(m) || 0, 0, 0);
+                return d.getTime();
+            }
+        } catch (e) {}
+    }
+    if (order.date) {
+        const d = new Date(order.date);
+        if (!isNaN(d.getTime())) return d.getTime();
+    }
+    return Date.now();
+};
+
+window.isOrderUntreated = function(order) {
+    if (!order) return false;
+    const status = String(order.status || '').trim();
+    return status === 'En attente' || status === 'Reçue' || status === 'pending';
+};
+
+window.getUntreatedElapsedMinutes = function(order) {
+    const ts = window.getOrderTimestamp(order);
+    const diffMs = Date.now() - ts;
+    return Math.max(0, Math.floor(diffMs / 60000));
+};
+
+window.checkUntreatedOrdersFor10MinAlert = function() {
+    if (typeof store === 'undefined' || !store.data || !Array.isArray(store.data.orders)) return;
+
+    let ordersToCheck = store.data.orders;
+    
+    // Si un restaurant est connecté, on cible ses commandes
+    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id) {
+        ordersToCheck = ordersToCheck.filter(o => o.restaurantId === currentRestaurantSession.id);
+    }
+
+    let notifiedMap = {};
+    try {
+        notifiedMap = JSON.parse(localStorage.getItem('THIES_10MIN_NOTIFIED_ORDERS') || '{}');
+    } catch(e) { notifiedMap = {}; }
+
+    let hasNewAlert = false;
+
+    ordersToCheck.forEach(order => {
+        if (window.isOrderUntreated(order)) {
+            const elapsed = window.getUntreatedElapsedMinutes(order);
+            if (elapsed >= 10) {
+                const orderKey = String(order.id);
+                
+                // Si pas encore notifié pour le seuil des 10 minutes
+                if (!notifiedMap[orderKey]) {
+                    notifiedMap[orderKey] = Date.now();
+                    hasNewAlert = true;
+
+                    const restaurant = store.getRestaurantById ? store.getRestaurantById(order.restaurantId) : null;
+                    const restoName = restaurant ? restaurant.name : (currentRestaurantSession ? currentRestaurantSession.name : 'Votre Restaurant');
+
+                    console.warn(`[Alerte 10 min] Commande #${order.id} non traitée depuis ${elapsed} minutes chez ${restoName} !`);
+
+                    // 1. Notification Push Système Navigateur (Web Push API)
+                    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                        try {
+                            const notif = new Notification("⚠️ RAPPEL : Commande non traitée (+10 min)", {
+                                body: `La commande #${order.id} (${Number(order.total || 0).toLocaleString()} FCFA) chez ${restoName} attend d'être traitée depuis ${elapsed} minutes !`,
+                                icon: 'icon.png',
+                                badge: 'icon.png',
+                                tag: `unprocessed-10min-${order.id}`,
+                                requireInteraction: true
+                            });
+                            notif.onclick = function() {
+                                window.focus();
+                                if (typeof router !== 'undefined' && router.navigate) {
+                                    router.navigate('/dashboard');
+                                }
+                                if (typeof switchDashboardTab === 'function') {
+                                    switchDashboardTab('orders');
+                                }
+                            };
+                        } catch(e) {
+                            console.warn("Native notification push error:", e);
+                        }
+                    }
+
+                    // 2. Notification Push OneSignal si configuré
+                    if (typeof OneSignalManager !== 'undefined' && OneSignalManager.sendUnprocessedOrderNotification) {
+                        OneSignalManager.sendUnprocessedOrderNotification(order, restoName);
+                    }
+
+                    // 3. Alarme sonore d'urgence
+                    window.playUrgentReminderSound();
+                    if (navigator.vibrate) {
+                        try { navigator.vibrate([250, 100, 250, 100, 400]); } catch(e) {}
+                    }
+
+                    // 4. Toast d'alerte haute priorité avec bouton d'action directe
+                    if (typeof showToast === 'function') {
+                        showToast(`⚠️ URGENT : La commande #${order.id} (${order.customerName || 'Client'}) attend depuis ${elapsed} minutes sans traitement !`, "danger", {
+                            title: "🚨 Commande Non Traitée (>10 min)",
+                            icon: "⏰",
+                            duration: 12000,
+                            actionText: "Traiter Immédiatement",
+                            onAction: () => {
+                                if (typeof router !== 'undefined' && router.navigate) {
+                                    router.navigate('/dashboard');
+                                }
+                                if (typeof switchDashboardTab === 'function') {
+                                    switchDashboardTab('orders');
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+    });
+
+    if (hasNewAlert) {
+        try {
+            localStorage.setItem('THIES_10MIN_NOTIFIED_ORDERS', JSON.stringify(notifiedMap));
+        } catch(e) {}
+    }
+};
+
+// Démarrer la surveillance automatique toutes les 20 secondes
+if (!window._unprocessedOrderInterval) {
+    window._unprocessedOrderInterval = setInterval(() => {
+        if (typeof window.checkUntreatedOrdersFor10MinAlert === 'function') {
+            window.checkUntreatedOrdersFor10MinAlert();
+        }
+    }, 20000);
+}
+
+// Surveillance au réveil de l'onglet
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && typeof window.checkUntreatedOrdersFor10MinAlert === 'function') {
+        window.checkUntreatedOrdersFor10MinAlert();
+    }
+});
+window.addEventListener('focus', () => {
+    if (typeof window.checkUntreatedOrdersFor10MinAlert === 'function') {
+        window.checkUntreatedOrdersFor10MinAlert();
+    }
+});
 window.captureGPSCoordinates = function() {
     if ("geolocation" in navigator) {
         if(typeof showToast === 'function') showToast("Recherche GPS...", "info");

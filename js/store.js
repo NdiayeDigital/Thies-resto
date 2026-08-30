@@ -32,13 +32,15 @@ try {
 } catch(e) {}
 
 try {
-    const sessionStr = sessionStorage.getItem('resto_session');
+    const sessionStr = sessionStorage.getItem('resto_session') || localStorage.getItem('resto_session');
     if (sessionStr) {
         currentRestaurantSession = JSON.parse(sessionStr);
     }
-    isSuperAdminSession = sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true';
+    isSuperAdminSession = sessionStorage.getItem('admin_session') === 'true' || 
+                          sessionStorage.getItem('thies_admin_logged') === 'true' || 
+                          localStorage.getItem('admin_session') === 'true';
 } catch (e) {
-    console.warn("sessionStorage is not accessible or invalid. Session data will be held in memory only.", e);
+    console.warn("Session storage restore warning:", e);
 }
 
 // Supabase Configuration
@@ -64,6 +66,16 @@ class Store {
             groupOrders: []
         };
         
+        // Restore local overrides (customized menus, real images, plats du jour)
+        try {
+            const savedOverrides = JSON.parse(localStorage.getItem('thies_restaurant_overrides') || '{}');
+            this.data.restaurants.forEach(r => {
+                if (savedOverrides[r.id]) {
+                    Object.assign(r, savedOverrides[r.id]);
+                }
+            });
+        } catch(e) {}
+
         // Background sync with Supabase
         if (supabaseClient) {
             this.syncPromise = this.syncFromSupabase();
@@ -72,11 +84,27 @@ class Store {
         }
     }
 
-    // load() has been removed as data is exclusively fetched from Supabase
-    
-    // save() is now a no-op to prevent errors, all data is pushed to Supabase directly
+    // Persist local custom changes (menu additions, real dish photos, plats du jour tags)
     save() {
-        // No local storage saving anymore.
+        try {
+            const overrides = {};
+            this.data.restaurants.forEach(r => {
+                if (r.menu && r.menu.length > 0) {
+                    overrides[r.id] = {
+                        menu: r.menu,
+                        name: r.name,
+                        coverImage: r.coverImage,
+                        isOpenManual: r.isOpenManual,
+                        address: r.address,
+                        whatsapp: r.whatsapp,
+                        openHours: r.openHours
+                    };
+                }
+            });
+            localStorage.setItem('thies_restaurant_overrides', JSON.stringify(overrides));
+        } catch(e) {
+            console.warn("Could not save restaurant overrides to localStorage", e);
+        }
     }
 
     async syncFromSupabase() {
@@ -189,20 +217,25 @@ class Store {
                         });
                     }
                     if (adminData.orders) {
-                        const mappedOrders = adminData.orders.map(o => ({
-                            id: o.id,
-                            restaurantId: o.restaurant_id,
-                            customerName: o.customer_name,
-                            customerPhone: o.customer_phone,
-                            mode: o.mode,
-                            address: o.address,
-                            items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
-                            total: Number(o.total),
-                            note: o.note,
-                            status: o.status,
-                            date: o.date,
-                            time: o.time
-                        }));
+                        const mappedOrders = adminData.orders.map(o => {
+                            const ts = o.created_at ? new Date(o.created_at).getTime() : (o.date && o.time ? new Date(`${o.date}T${o.time}`).getTime() : Date.now());
+                            return {
+                                id: o.id,
+                                restaurantId: o.restaurant_id,
+                                customerName: o.customer_name,
+                                customerPhone: o.customer_phone,
+                                mode: o.mode,
+                                address: o.address,
+                                items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                                total: Number(o.total),
+                                note: o.note,
+                                status: o.status,
+                                date: o.date,
+                                time: o.time,
+                                createdAt: o.created_at || (o.date && o.time ? `${o.date}T${o.time}` : new Date().toISOString()),
+                                timestamp: isNaN(ts) ? Date.now() : ts
+                            };
+                        });
                         this.data.orders = mappedOrders.sort((a,b) => b.id.localeCompare(a.id));
                     }
                     if (adminData.reservations) {
@@ -227,20 +260,25 @@ class Store {
                     p_password: currentRestaurantSession.password
                 });
                 if (!ordersError && myOrders) {
-                    const mappedOrders = myOrders.map(o => ({
-                        id: o.id,
-                        restaurantId: o.restaurant_id,
-                        customerName: o.customer_name,
-                        customerPhone: o.customer_phone,
-                        mode: o.mode,
-                        address: o.address,
-                        items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
-                        total: Number(o.total),
-                        note: o.note,
-                        status: o.status,
-                        date: o.date,
-                        time: o.time
-                    }));
+                    const mappedOrders = myOrders.map(o => {
+                        const ts = o.created_at ? new Date(o.created_at).getTime() : (o.date && o.time ? new Date(`${o.date}T${o.time}`).getTime() : Date.now());
+                        return {
+                            id: o.id,
+                            restaurantId: o.restaurant_id,
+                            customerName: o.customer_name,
+                            customerPhone: o.customer_phone,
+                            mode: o.mode,
+                            address: o.address,
+                            items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                            total: Number(o.total),
+                            note: o.note,
+                            status: o.status,
+                            date: o.date,
+                            time: o.time,
+                            createdAt: o.created_at || (o.date && o.time ? `${o.date}T${o.time}` : new Date().toISOString()),
+                            timestamp: isNaN(ts) ? Date.now() : ts
+                        };
+                    });
                     this.data.orders = mappedOrders.sort((a,b) => b.id.localeCompare(a.id));
                 }
                 
@@ -639,7 +677,9 @@ class Store {
                         price: item.price,
                         category: item.category,
                         image: fallbackImg,
-                        available: item.is_available !== undefined ? item.is_available : true
+                        isDailySpecial: item.is_daily_special !== undefined ? item.is_daily_special : (item.isDailySpecial !== undefined ? item.isDailySpecial : (item.tag === 'Plat du jour')),
+                        tag: item.tag || (item.is_daily_special ? 'Plat du jour' : (item.isDailySpecial ? 'Plat du jour' : null)),
+                        available: item.is_available !== undefined ? item.is_available : (item.available !== undefined ? item.available : true)
                     };
                 });
             }
@@ -666,6 +706,72 @@ class Store {
             }
             return [];
         }
+    }
+
+    getDailyDishes() {
+        const activeRestos = this.getRestaurants().filter(r => r.status === 'active');
+        const dailyDishes = [];
+        
+        activeRestos.forEach(resto => {
+            if (Array.isArray(resto.menu)) {
+                resto.menu.forEach(dish => {
+                    const isDaily = dish.isDailySpecial === true || 
+                                    dish.is_daily_special === true || 
+                                    (dish.tag && String(dish.tag).toLowerCase().includes('jour')) ||
+                                    (dish.tags && Array.isArray(dish.tags) && dish.tags.some(t => String(t).toLowerCase().includes('jour')));
+                    
+                    if (isDaily && dish.available !== false && dish.is_available !== false) {
+                        dailyDishes.push({
+                            ...dish,
+                            restaurantId: resto.id,
+                            restaurantName: resto.name,
+                            restaurantSlug: resto.slug,
+                            restaurantCategory: resto.category,
+                            restaurantRating: resto.rating || 4.5,
+                            restaurantAddress: resto.address || 'Thiès',
+                            restaurantOpen: typeof isRestaurantOpen === 'function' ? isRestaurantOpen(resto) : (resto.isOpenManual !== false),
+                            tag: dish.tag || 'Plat du jour'
+                        });
+                    }
+                });
+            }
+        });
+
+        // Fallback: If no explicit daily specials yet, showcase the first signature dish from each active restaurant
+        if (dailyDishes.length === 0) {
+            activeRestos.slice(0, 8).forEach(resto => {
+                let menuList = resto.menu;
+                if ((!menuList || menuList.length === 0) && typeof MENU_TEMPLATES !== 'undefined' && MENU_TEMPLATES[resto.category]) {
+                    menuList = MENU_TEMPLATES[resto.category];
+                }
+                if (Array.isArray(menuList) && menuList.length > 0) {
+                    const primeDish = menuList[0];
+                    if (primeDish && primeDish.available !== false) {
+                        dailyDishes.push({
+                            ...primeDish,
+                            restaurantId: resto.id,
+                            restaurantName: resto.name,
+                            restaurantSlug: resto.slug,
+                            restaurantCategory: resto.category,
+                            restaurantRating: resto.rating || 4.5,
+                            restaurantAddress: resto.address || 'Thiès',
+                            restaurantOpen: typeof isRestaurantOpen === 'function' ? isRestaurantOpen(resto) : (resto.isOpenManual !== false),
+                            tag: primeDish.tag || 'Plat du jour'
+                        });
+                    }
+                }
+            });
+        }
+
+        return dailyDishes;
+    }
+
+    async fetchDailyDishes() {
+        if (!this.syncPromise) {
+            this.syncPromise = this.syncFromSupabase();
+        }
+        await this.syncPromise;
+        return this.getDailyDishes();
     }
 
     async getRestaurantBySlug(slug) {

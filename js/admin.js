@@ -21,7 +21,30 @@ router.add('#/dashboard', () => {
 
 function renderDashboardShell() {
     const container = document.getElementById('main-content');
-    const r = store.getRestaurantById(currentRestaurantSession.id);
+    if (!currentRestaurantSession || !currentRestaurantSession.id) {
+        router.navigate('/auth');
+        return;
+    }
+    let r = store.getRestaurantById(currentRestaurantSession.id);
+    if (!r) {
+        const seedList = typeof SEED_RESTAURANTS !== 'undefined' ? SEED_RESTAURANTS : [];
+        r = seedList.find(x => x.id === currentRestaurantSession.id || x.slug === currentRestaurantSession.slug || x.username === currentRestaurantSession.slug) || {
+            id: currentRestaurantSession.id,
+            name: currentRestaurantSession.name || "Mon Restaurant",
+            slug: currentRestaurantSession.slug || "restaurant",
+            status: "active",
+            category: "Traditionnel",
+            menu: [],
+            reviews: [],
+            createdAt: '2026-06-25T00:00:00Z',
+            subscriptionPack: 'Pack Pro (Annuel)'
+        };
+        // Register in store so subsequent calls work seamlessly
+        if (store && store.data && Array.isArray(store.data.restaurants)) {
+            const exists = store.data.restaurants.some(item => item.id === r.id);
+            if (!exists) store.data.restaurants.push(r);
+        }
+    }
     
     let impersonateBanner = '';
     if (isSuperAdminSession) {
@@ -138,23 +161,48 @@ function renderDashboardTabContent(r) {
         const orders = store.getOrdersByRestaurant(r.id);
         const todayStr = new Date().toISOString().split('T')[0];
         const todayOrders = orders.filter(o => o.date === todayStr);
-        const pendingOrders = orders.filter(o => o.status === 'Reçue');
+        const pendingOrders = orders.filter(o => typeof window.isOrderUntreated === 'function' ? window.isOrderUntreated(o) : (o.status === 'En attente' || o.status === 'Reçue'));
+        const delayed10mOrders = pendingOrders.filter(o => (typeof window.getUntreatedElapsedMinutes === 'function' ? window.getUntreatedElapsedMinutes(o) : 0) >= 10);
         const todayRevenue = todayOrders.filter(o => o.status === 'Livrée').reduce((sum, o) => sum + o.total, 0);
         
         const reservations = store.getReservationsByRestaurant(r.id);
         const upcomingRes = reservations.filter(res => res.status === 'En attente' || res.status === 'Confirmée').length;
 
+        // Banner for overdue orders
+        let overdueBannerHtml = '';
+        if (delayed10mOrders.length > 0) {
+            overdueBannerHtml = `
+                <div class="delayed-order-banner">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 2rem;">🚨</span>
+                        <div>
+                            <strong style="color: #dc2626; font-size: 1.05rem; display: block;">ATTENTION : ${delayed10mOrders.length} commande(s) en attente depuis +10 minutes !</strong>
+                            <span style="color: var(--text-secondary); font-size: 0.85rem;">Traitez-les immédiatement pour éviter l'impatience ou l'annulation du client.</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" onclick="filterOrdersDashboard('Retard (>10 min)'); switchDashboardTab('orders');" style="font-weight: 800; white-space: nowrap; background: #dc2626; border-color: #991b1b; color: white;">
+                        ⚡ Traiter d'urgence (${delayed10mOrders.length})
+                    </button>
+                </div>
+            `;
+        }
+
         panel.innerHTML = `
-            <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary);">Résumé du Jour</h2>
-                <button class="btn btn-primary btn-sm" onclick="requestPushNotifications()">🔔 Activer Notifications</button>
+            <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                <h2 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary); margin: 0;">Résumé du Jour</h2>
+                <button class="btn btn-primary btn-sm" onclick="requestPushNotifications()">🔔 Activer Notifications Push</button>
             </div>
             
+            ${overdueBannerHtml}
+
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                <div class="stat-card" style="border-top: 4px solid var(--accent); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                <div class="stat-card" style="border-top: 4px solid ${delayed10mOrders.length > 0 ? '#dc2626' : 'var(--accent)'}; background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow); ${delayed10mOrders.length > 0 ? 'box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.3);' : ''}">
                     <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">⏳ Commandes en attente</span>
-                    <span style="font-size: 2rem; font-weight: 800; color: var(--accent);">${pendingOrders.length}</span>
-                    ${pendingOrders.length > 0 ? `<button class="btn btn-primary btn-sm" style="margin-top: 1rem; width: 100%;" onclick="switchDashboardTab('orders')">Voir les commandes</button>` : ''}
+                    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                        <span style="font-size: 2rem; font-weight: 800; color: ${delayed10mOrders.length > 0 ? '#dc2626' : 'var(--accent)'};">${pendingOrders.length}</span>
+                        ${delayed10mOrders.length > 0 ? `<span style="font-size: 0.85rem; font-weight: 800; color: #dc2626; background: rgba(220, 38, 38, 0.12); padding: 2px 8px; border-radius: 6px;">dont ${delayed10mOrders.length} en retard >10min</span>` : ''}
+                    </div>
+                    ${pendingOrders.length > 0 ? `<button class="btn ${delayed10mOrders.length > 0 ? 'btn-danger' : 'btn-primary'} btn-sm" style="margin-top: 1rem; width: 100%; font-weight: 700;" onclick="${delayed10mOrders.length > 0 ? "filterOrdersDashboard('Retard (>10 min)'); switchDashboardTab('orders');" : "switchDashboardTab('orders');"}">${delayed10mOrders.length > 0 ? '🚨 Traiter les retards' : 'Voir les commandes'}</button>` : ''}
                 </div>
                 <div class="stat-card" style="border-top: 4px solid var(--success); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
                     <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">💰 C.A. d'Aujourd'hui</span>
@@ -186,11 +234,14 @@ function renderDashboardTabContent(r) {
         
         const todayOrders = orders.filter(o => o.date === todayStr);
         const todayRevenue = todayOrders.filter(o => o.status === 'Livrée').reduce((sum, o) => sum + o.total, 0);
-        const pendingOrders = orders.filter(o => o.status === 'Reçue').length;
+        const pendingOrders = orders.filter(o => typeof window.isOrderUntreated === 'function' ? window.isOrderUntreated(o) : (o.status === 'En attente' || o.status === 'Reçue'));
+        const delayed10mOrders = pendingOrders.filter(o => (typeof window.getUntreatedElapsedMinutes === 'function' ? window.getUntreatedElapsedMinutes(o) : 0) >= 10);
 
         // Apply filters
         let filteredOrders = [...orders];
-        if (currentOrderStatusFilter === 'En attente') {
+        if (currentOrderStatusFilter === 'Retard (>10 min)') {
+            filteredOrders = orders.filter(o => (typeof window.isOrderUntreated === 'function' ? window.isOrderUntreated(o) : false) && (typeof window.getUntreatedElapsedMinutes === 'function' ? window.getUntreatedElapsedMinutes(o) : 0) >= 10);
+        } else if (currentOrderStatusFilter === 'En attente') {
             filteredOrders = orders.filter(o => o.status === 'En attente' || o.status === 'Reçue');
         } else if (currentOrderStatusFilter === 'En cuisine') {
             filteredOrders = orders.filter(o => o.status === 'En cuisine' || o.status === 'En préparation' || o.status === 'Confirmée');
@@ -214,6 +265,10 @@ function renderDashboardTabContent(r) {
             filteredOrders.forEach(o => {
                 const itemsStr = o.items.map(i => `<span style="background: var(--bg-secondary); padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border); display: inline-block; margin: 0.15rem 0.15rem 0.15rem 0;">${i.name} <strong>x${i.qty}</strong></span>`).join(' ');
                 
+                const isUntreated = typeof window.isOrderUntreated === 'function' ? window.isOrderUntreated(o) : (o.status === 'En attente' || o.status === 'Reçue');
+                const elapsedMinutes = typeof window.getUntreatedElapsedMinutes === 'function' ? window.getUntreatedElapsedMinutes(o) : 0;
+                const isOverdue = isUntreated && elapsedMinutes >= 10;
+
                 // Status styles
                 let statusBadge = '';
                 let actionBtns = '';
@@ -235,8 +290,26 @@ function renderDashboardTabContent(r) {
                     </div>
                 `;
 
-                if (o.status === 'En attente') {
-                    statusBadge = `<span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid #f59e0b; font-weight: 800; animation: pulseMainCircle 2s infinite;">⏳ En attente (Nouvelle)</span>`;
+                if (isOverdue) {
+                    statusBadge = `<span class="badge badge-danger pulse-red-alert" style="background: #dc2626; color: white; border: 1px solid #991b1b; font-weight: 800; display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 8px;">🚨 NON TRAITÉE (${elapsedMinutes} MIN)</span>`;
+                    actionBtns = `
+                        <div style="margin-bottom: 0.75rem;">
+                            <button class="btn btn-danger pulse-red-alert" onclick="changeOrderStatus('${o.id}', 'En cuisine')" style="width: 100%; font-weight: 800; background: #dc2626; border-color: #991b1b; color: white; font-size: 0.95rem; padding: 0.75rem; border-radius: 10px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);">
+                                ⚡ 1-CLIC : Accepter & Mettre en Cuisine Immédiatement
+                            </button>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="changeOrderStatus('${o.id}', 'Reçue')" style="font-weight: 700; flex: 1.2; background: #d97706; border-color: #d97706; color: white;">
+                                📥 Confirmer Réception
+                            </button>
+                            <button class="btn btn-danger" onclick="changeOrderStatus('${o.id}', 'Annulée')" style="font-weight: 700; flex: 0.7;">
+                                ❌ Refuser
+                            </button>
+                        </div>
+                        ${quickStatusSelect}
+                    `;
+                } else if (o.status === 'En attente') {
+                    statusBadge = `<span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706; border: 1px solid #f59e0b; font-weight: 800; animation: pulseMainCircle 2s infinite;">⏳ En attente (${elapsedMinutes} min)</span>`;
                     actionBtns = `
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             <button class="btn btn-primary" onclick="changeOrderStatus('${o.id}', 'Reçue')" style="font-weight: 700; flex: 1.2; background: #d97706; border-color: #d97706; color: white;">
@@ -252,7 +325,7 @@ function renderDashboardTabContent(r) {
                         ${quickStatusSelect}
                     `;
                 } else if (o.status === 'Reçue') {
-                    statusBadge = `<span class="badge" style="background: rgba(2, 132, 199, 0.15); color: #0284c7; border: 1px solid #0284c7; font-weight: 800;">📥 Reçue au Restaurant</span>`;
+                    statusBadge = `<span class="badge" style="background: rgba(2, 132, 199, 0.15); color: #0284c7; border: 1px solid #0284c7; font-weight: 800;">📥 Reçue (${elapsedMinutes} min)</span>`;
                     actionBtns = `
                         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             <button class="btn btn-primary" onclick="changeOrderStatus('${o.id}', 'En cuisine')" style="font-weight: 700; flex: 1.2; background: var(--primary); border-color: var(--primary); color: white;">
@@ -380,14 +453,41 @@ function renderDashboardTabContent(r) {
             });
         }
 
-        const filterBtnsHtml = ['Tous', 'En attente', 'En cuisine', 'Prêt pour livraison', 'En livraison', 'Livrées'].map(f => {
+        const filterTypes = ['Tous'];
+        if (delayed10mOrders.length > 0) {
+            filterTypes.push('Retard (>10 min)');
+        }
+        filterTypes.push('En attente', 'En cuisine', 'Prêt pour livraison', 'En livraison', 'Livrées');
+
+        const filterBtnsHtml = filterTypes.map(f => {
             const isActive = currentOrderStatusFilter === f;
+            const isDelayedBtn = f === 'Retard (>10 min)';
+            const btnClass = isActive ? (isDelayedBtn ? 'btn-danger pulse-red-alert' : 'btn-primary') : (isDelayedBtn ? 'btn-danger' : 'btn-secondary');
+            const style = isDelayedBtn && !isActive ? 'background: rgba(220, 38, 38, 0.15); color: #dc2626; border: 1.5px solid #dc2626; font-weight: 800;' : '';
             return `
-                <button class="btn ${isActive ? 'btn-primary' : 'btn-secondary'}" style="padding: 0.4rem 1rem; font-size: 0.85rem; font-weight: 700; border-radius: 20px;" onclick="filterOrdersDashboard('${f}')">
-                    ${f === 'En attente' ? '⏳ ' : f === 'En cuisine' ? '👨‍🍳 ' : f === 'Prêt pour livraison' ? '📦 ' : f === 'En livraison' ? '🛵 ' : f === 'Livrées' ? '✅ ' : '📋 '}${f}
+                <button class="btn ${btnClass}" style="padding: 0.4rem 1rem; font-size: 0.85rem; font-weight: 700; border-radius: 20px; ${style}" onclick="filterOrdersDashboard('${f}')">
+                    ${f === 'Retard (>10 min)' ? `🚨 Retard >10min (${delayed10mOrders.length})` : f === 'En attente' ? '⏳ En attente' : f === 'En cuisine' ? '👨‍🍳 En cuisine' : f === 'Prêt pour livraison' ? '📦 Prêt' : f === 'En livraison' ? '🛵 En livraison' : f === 'Livrées' ? '✅ Livrées' : '📋 Tous'}
                 </button>
             `;
         }).join(' ');
+
+        let ordersPageBanner = '';
+        if (delayed10mOrders.length > 0 && currentOrderStatusFilter !== 'Retard (>10 min)') {
+            ordersPageBanner = `
+                <div class="delayed-order-banner" style="margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1.8rem;">🚨</span>
+                        <div>
+                            <strong style="color: #dc2626; font-size: 1rem; display: block;">${delayed10mOrders.length} commande(s) non traitée(s) depuis plus de 10 minutes !</strong>
+                            <span style="color: var(--text-secondary); font-size: 0.85rem;">Traitez-les d'urgence pour satisfaire vos clients.</span>
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" onclick="filterOrdersDashboard('Retard (>10 min)')" style="font-weight: 800; font-size: 0.85rem; background: #dc2626; border-color: #991b1b; color: white;">
+                        Afficher les retards (${delayed10mOrders.length})
+                    </button>
+                </div>
+            `;
+        }
 
         panel.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
@@ -400,6 +500,8 @@ function renderDashboardTabContent(r) {
                 </div>
             </div>
             
+            ${ordersPageBanner}
+
             <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
                 <div class="stat-card" style="border-top: 4px solid var(--primary); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
                     <span class="stat-card-title" style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">📅 Commandes du jour</span>
@@ -407,11 +509,14 @@ function renderDashboardTabContent(r) {
                 </div>
                 <div class="stat-card" style="border-top: 4px solid var(--success); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
                     <span class="stat-card-title" style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">💰 Chiffre d'affaires (Jour)</span>
-                    <span class="stat-card-value" style="font-size: 1.75rem; font-weight: 800; color: var(--success);">${todayRevenue} FCFA</span>
+                    <span class="stat-card-value" style="font-size: 1.75rem; font-weight: 800; color: var(--success);">${todayRevenue.toLocaleString()} FCFA</span>
                 </div>
-                <div class="stat-card" style="border-top: 4px solid var(--accent); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
+                <div class="stat-card" style="border-top: 4px solid ${delayed10mOrders.length > 0 ? '#dc2626' : 'var(--accent)'}; background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow); ${delayed10mOrders.length > 0 ? 'box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.3);' : ''}">
                     <span class="stat-card-title" style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">⏳ Commandes en attente</span>
-                    <span class="stat-card-value" style="font-size: 1.75rem; font-weight: 800; color: var(--accent);">${pendingOrders}</span>
+                    <div style="display: flex; align-items: baseline; gap: 0.5rem;">
+                        <span class="stat-card-value" style="font-size: 1.75rem; font-weight: 800; color: ${delayed10mOrders.length > 0 ? '#dc2626' : 'var(--accent)'};">${pendingOrders.length}</span>
+                        ${delayed10mOrders.length > 0 ? `<span style="font-size: 0.82rem; font-weight: 800; color: #dc2626; background: rgba(220, 38, 38, 0.12); padding: 2px 8px; border-radius: 6px;">dont ${delayed10mOrders.length} > 10 min</span>` : ''}
+                    </div>
                 </div>
             </div>
 
@@ -539,14 +644,21 @@ function renderDashboardTabContent(r) {
             menuHtml = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem 0;">Aucun plat n'a encore été ajouté. Créez-en un ci-dessous !</div>`;
         } else {
             r.menu.forEach(d => {
+                const isDaily = d.isDailySpecial === true || d.is_daily_special === true || (d.tag && String(d.tag).toLowerCase().includes('jour'));
                 menuHtml += `
-                    <div class="dish-card" style="flex-direction: row; height: auto; align-items: center; padding: 0.75rem; gap: 1rem;">
+                    <div class="dish-card" style="flex-direction: row; height: auto; align-items: center; padding: 0.75rem; gap: 1rem; border-left: ${isDaily ? '4px solid var(--primary)' : '1px solid var(--border)'};">
                         <img src="${d.image}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100'">
                         <div style="flex-grow: 1;">
-                            <h4 style="font-size: 0.95rem;">${d.name}</h4>
-                            <div style="color: var(--primary); font-weight: 700; font-size: 0.85rem;">${d.price} FCFA</div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <h4 style="font-size: 0.95rem; margin: 0;">${d.name}</h4>
+                                ${isDaily ? `<span style="background: rgba(242, 107, 33, 0.15); color: var(--primary); font-weight: 800; padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; border: 1px solid rgba(242, 107, 33, 0.3);">⭐ ${d.tag || 'Plat du jour'}</span>` : ''}
+                            </div>
+                            <div style="color: var(--primary); font-weight: 700; font-size: 0.85rem; margin-top: 0.2rem;">${d.price} FCFA</div>
                         </div>
-                        <div style="display: flex; gap: 0.5rem;">
+                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end;">
+                            <button class="btn ${isDaily ? 'btn-primary' : 'btn-secondary'} btn-sm" style="padding: 0.35rem 0.5rem; font-size: 0.75rem;" onclick="toggleDishDailySpecial('${d.id}')" title="Mettre en avant sur la page d'accueil">
+                                ${isDaily ? '⭐ En Vedette' : '☆ Mettre en Plat du jour'}
+                            </button>
                             <button class="btn ${d.available === false ? 'btn-danger' : 'btn-success'} btn-sm" style="padding: 0.35rem 0.5rem;" onclick="toggleDishAvailability('${d.id}', ${d.available !== false})">
                                 ${d.available === false ? '❌ Rupture' : '✅ Dispo'}
                             </button>
@@ -559,12 +671,20 @@ function renderDashboardTabContent(r) {
         }
 
         panel.innerHTML = `
-            <h2 style="font-size: 1.25rem; margin-bottom: 1rem;">Menu du Jour</h2>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                <div>
+                    <h2 style="font-size: 1.25rem; margin: 0;">Menu &amp; Plats du Jour</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0 0;">Gérez vos plats et marquez vos créations fraîches pour les afficher sur la page d'accueil.</p>
+                </div>
+            </div>
             
             <div style="display: grid; grid-template-columns: 1fr; gap: 1.5rem;">
                 <!-- Current Dishes List -->
                 <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.25rem; border-radius: 20px;">
-                    <h3 style="font-size: 1rem; margin-bottom: 1rem;">Plats actifs</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h3 style="font-size: 1rem; margin: 0;">Plats au menu (${r.menu.length})</h3>
+                        <span style="font-size: 0.8rem; color: var(--text-secondary);">Les plats étoilés apparaissent en page d'accueil</span>
+                    </div>
                     <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                         ${menuHtml}
                     </div>
@@ -578,12 +698,12 @@ function renderDashboardTabContent(r) {
                         
                         <div class="form-group">
                             <label class="form-label">Nom du plat <span class="required">*</span></label>
-                            <input type="text" id="dish-name" class="form-control" placeholder="Yassa Poulet..." required>
+                            <input type="text" id="dish-name" class="form-control" placeholder="Yassa Poulet au Feu de Bois..." required>
                         </div>
                         
                         <div class="form-group">
                             <label class="form-label">Description <span class="required">*</span></label>
-                            <textarea id="dish-desc" class="form-control" placeholder="Ingrédients, accompagnements..." required></textarea>
+                            <textarea id="dish-desc" class="form-control" placeholder="Ingrédients frais, accompagnements..." required></textarea>
                         </div>
                         
                         <div class="form-row">
@@ -592,32 +712,43 @@ function renderDashboardTabContent(r) {
                                 <input type="number" id="dish-price" class="form-control" placeholder="2500" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Photo du plat <span class="required">*</span></label>
-                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                    <input type="file" id="dish-image-file" class="form-control" accept="image/*" onchange="handleDishImageUpload(event)" style="padding: 0.35rem; height: auto;">
-                                    <span id="dish-image-status" style="font-size: 0.75rem; color: var(--success); display: none;">Upload en cours...</span>
-                                    <input type="hidden" id="dish-image-custom" value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">
-                                    <div style="text-align: center; margin: 0.25rem 0; font-size: 0.8rem; color: var(--text-secondary);">OU choisir une image par défaut</div>
-                                    <select id="dish-image-select" class="form-control" onchange="document.getElementById('dish-image-custom').value = this.value">
-                                        <option value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">Poisson Rouge / Thieb</option>
-                                        <option value="https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500">Poulet / Yassa</option>
-                                        <option value="https://images.unsplash.com/photo-1544025162-d76694265947?w=500">Grillades / Viandes / Dibi</option>
-                                        <option value="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500">Burger / Sandwich</option>
-                                        <option value="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500">Frites dorées</option>
-                                        <option value="https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500">Boisson / Jus maison</option>
-                                    </select>
-                                </div>
-                            </div>
+                                <label class="form-label">Tag Spécifique</label>
+                                <select id="dish-tag-select" class="form-control">
+                                    <option value="Plat du jour">⭐ Plat du jour</option>
+                                    <option value="Spécialité du Jour">🍲 Spécialité du Jour</option>
+                                    <option value="Suggestion du Chef">👨‍🍳 Suggestion du Chef</option>
+                                    <option value="Formule Midi">🥗 Formule Midi</option>
+                                    <option value="Fait Maison">🔥 Fait Maison</option>
+                                </select>
                             </div>
                         </div>
 
+                        <!-- PLAT DU JOUR PROMOTION CHECKBOX -->
+                        <div style="background: rgba(242, 107, 33, 0.08); border: 1.5px dashed rgba(242, 107, 33, 0.4); border-radius: 14px; padding: 0.9rem 1.1rem; margin-bottom: 1.25rem;">
+                            <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-weight: 700; color: var(--text-primary); font-size: 0.95rem; margin: 0;">
+                                <input type="checkbox" id="dish-is-daily-special" style="width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer;" checked>
+                                <span>🌟 Mettre en avant ce plat dans le composant « Plats du Jour » sur la page d'accueil</span>
+                            </label>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.35rem 0 0 2.25rem;">Ce plat bénéficiera d'une visibilité maximale avec commande directe en 1-clic pour tous les visiteurs.</p>
+                        </div>
+
                         <div class="form-group">
-                            <label class="form-label">Ou coller l'URL d'une image (Google, etc.)</label>
-                            <input type="text" id="dish-image-custom" class="form-control" placeholder="https://images.unsplash.com/... (optionnel)">
+                            <label class="form-label">Photo du plat <span class="required">*</span></label>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <select id="dish-image-select" class="form-control" onchange="document.getElementById('dish-image-custom').value = this.value">
+                                    <option value="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500">Poisson Rouge / Thieb</option>
+                                    <option value="https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500">Poulet / Yassa</option>
+                                    <option value="https://images.unsplash.com/photo-1544025162-d76694265947?w=500">Grillades / Viandes / Dibi</option>
+                                    <option value="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500">Burger / Sandwich</option>
+                                    <option value="https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500">Frites dorées</option>
+                                    <option value="https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500">Boisson / Jus maison</option>
+                                </select>
+                                <input type="text" id="dish-image-custom" class="form-control" placeholder="https://images.unsplash.com/... (URL personnalisée optionnelle)">
+                            </div>
                         </div>
                         
                         <div class="form-group" style="margin-top: 1rem;">
-                            <label class="form-label">📸 Télécharger depuis votre téléphone / appareil</label>
+                            <label class="form-label">📸 Ou télécharger depuis votre appareil (téléphone/PC)</label>
                             <input type="file" id="dish-image-file" class="form-control" accept="image/*" onchange="handleDishImageUpload(event)" style="padding: 0.35rem; height: auto;">
                             <div id="dish-image-preview-container" style="display: none; margin-top: 0.75rem; align-items: center; gap: 0.75rem; background: var(--bg-secondary); padding: 0.5rem; border-radius: 10px; border: 1px solid var(--border);">
                                 <img id="dish-image-preview" src="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
@@ -626,11 +757,12 @@ function renderDashboardTabContent(r) {
                         </div>
                         
                         <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                            <button type="submit" class="btn btn-primary" style="flex:1;">Enregistrer</button>
+                            <button type="submit" class="btn btn-primary" style="flex:1;">Enregistrer le Plat</button>
                             <button type="button" class="btn btn-secondary" style="display:none;" id="dish-cancel-edit-btn" onclick="resetDishForm()">Annuler la modification</button>
                         </div>
                     </form>
                 </div>
+            </div>
             </div>
         `;
     } 
@@ -1413,6 +1545,25 @@ function deleteDish(dishId) {
     }
 }
 
+function toggleDishDailySpecial(dishId) {
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    const dish = r.menu.find(d => d.id === dishId);
+    if (!dish) return;
+    
+    const wasDaily = dish.isDailySpecial === true || dish.is_daily_special === true || (dish.tag && String(dish.tag).toLowerCase().includes('jour'));
+    dish.isDailySpecial = !wasDaily;
+    dish.is_daily_special = !wasDaily;
+    if (dish.isDailySpecial) {
+        if (!dish.tag) dish.tag = 'Plat du jour';
+        showToast(`« ${dish.name} » est maintenant mis en avant comme Plat du Jour ! ⭐`, "success");
+    } else {
+        showToast(`« ${dish.name} » retiré des Plats du Jour.`, "info");
+    }
+    
+    store.updateRestaurant(r.id, { menu: r.menu });
+    switchDashboardTab('menu');
+}
+
 function openEditDishForm(dishId) {
     const r = store.getRestaurantById(currentRestaurantSession.id);
     const dish = r.menu.find(d => d.id === dishId);
@@ -1423,6 +1574,20 @@ function openEditDishForm(dishId) {
     document.getElementById('dish-name').value = dish.name;
     document.getElementById('dish-desc').value = dish.description;
     document.getElementById('dish-price').value = dish.price;
+    
+    const isDailyCheckbox = document.getElementById('dish-is-daily-special');
+    if (isDailyCheckbox) {
+        isDailyCheckbox.checked = dish.isDailySpecial === true || dish.is_daily_special === true || (dish.tag && String(dish.tag).toLowerCase().includes('jour'));
+    }
+    
+    const tagSelect = document.getElementById('dish-tag-select');
+    if (tagSelect) {
+        if (dish.tag && Array.from(tagSelect.options).some(o => o.value === dish.tag)) {
+            tagSelect.value = dish.tag;
+        } else {
+            tagSelect.value = 'Plat du jour';
+        }
+    }
     
     const selectImg = document.getElementById('dish-image-select');
     const customImg = document.getElementById('dish-image-custom');
@@ -1443,6 +1608,13 @@ function resetDishForm() {
     document.getElementById('dish-name').value = '';
     document.getElementById('dish-desc').value = '';
     document.getElementById('dish-price').value = '';
+    
+    const isDailyCheckbox = document.getElementById('dish-is-daily-special');
+    if (isDailyCheckbox) isDailyCheckbox.checked = true;
+    
+    const tagSelect = document.getElementById('dish-tag-select');
+    if (tagSelect) tagSelect.value = 'Plat du jour';
+    
     document.getElementById('dish-image-select').selectedIndex = 0;
     document.getElementById('dish-image-custom').value = '';
     document.getElementById('dish-cancel-edit-btn').style.display = 'none';
@@ -1616,6 +1788,12 @@ function saveDish(e) {
     const customImage = document.getElementById('dish-image-custom').value.trim();
     const image = customImage || document.getElementById('dish-image-select').value;
     
+    const isDailyElem = document.getElementById('dish-is-daily-special');
+    const isDailySpecial = isDailyElem ? isDailyElem.checked : true;
+    
+    const tagElem = document.getElementById('dish-tag-select');
+    const tag = tagElem ? tagElem.value : 'Plat du jour';
+    
     if (dishId) {
         // Edit mode
         const dish = r.menu.find(d => d.id === dishId);
@@ -1624,7 +1802,10 @@ function saveDish(e) {
             dish.description = desc;
             dish.price = price;
             dish.image = image;
-            showToast("Plat modifié !", "success");
+            dish.isDailySpecial = isDailySpecial;
+            dish.is_daily_special = isDailySpecial;
+            dish.tag = isDailySpecial ? tag : null;
+            showToast("Plat modifié avec succès !", "success");
         }
     } else {
         // Add mode
@@ -1634,9 +1815,13 @@ function saveDish(e) {
             name,
             description: desc,
             price,
-            image
+            image,
+            isDailySpecial,
+            is_daily_special: isDailySpecial,
+            tag: isDailySpecial ? tag : null,
+            available: true
         });
-        showToast("Plat ajouté au menu du jour !", "success");
+        showToast("Plat ajouté au menu du jour ! ⭐", "success");
     }
     
     store.updateRestaurant(r.id, { menu: r.menu });
@@ -1681,6 +1866,12 @@ function saveProfileSettings(e, restoId) {
     
     if (newPass) {
         updates.password = newPass;
+        try {
+            const stored = JSON.parse(localStorage.getItem('thies_custom_passwords') || '{}');
+            stored[r.slug] = newPass;
+            if (r.username) stored[r.username] = newPass;
+            localStorage.setItem('thies_custom_passwords', JSON.stringify(stored));
+        } catch (e) {}
     }
     
     store.updateRestaurant(r.id, updates);

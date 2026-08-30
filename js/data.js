@@ -59,44 +59,44 @@ const DISH_IMAGE_OPTIONS = [
 // Default Menu templates by Category
 const MENU_TEMPLATES = {
     "Traditionnel": [
-        { id: 'dish_1', name: 'Thiéboudiène Penda Mbaye', description: 'Riz au poisson rouge traditionnel sénégalais, légumes frais (chou, manioc, carotte) et sauce tamarin douce.', price: 2500, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_2', name: 'Yassa Poulet au Feu de Bois', description: 'Poulet mariné au citron vert, moutarde et oignons caramélisés fondants, servi avec riz blanc brisé.', price: 2200, image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_1', name: 'Thiéboudiène Penda Mbaye', description: 'Riz au poisson rouge traditionnel sénégalais, légumes frais (chou, manioc, carotte) et sauce tamarin douce.', price: 2500, image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Plat du jour' },
+        { id: 'dish_2', name: 'Yassa Poulet au Feu de Bois', description: 'Poulet mariné au citron vert, moutarde et oignons caramélisés fondants, servi avec riz blanc brisé.', price: 2200, image: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Spécialité du Jour' },
         { id: 'dish_3', name: 'Mafé Viande de Bœuf', description: 'Mijoté de bœuf tendre dans une sauce onctueuse à base de pâte d\'arachide locale, riz blanc.', price: 2000, image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_4', name: 'Jus de Bissap Glacé', description: 'Boisson rafraîchissante maison à base d\'infusion de fleurs d\'hibiscus séchées, menthe et sucre.', price: 500, image: 'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_5', name: 'Jus de Bouye (Pain de Singe)', description: 'Jus local onctueux à base de pulpe de fruits de baobab et de lait concentré sucré.', price: 500, image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60' }
     ],
     "Grillades / Dibi": [
-        { id: 'dish_6', name: 'Dibi d\'Agneau Traditionnel (Portion)', description: 'Viande d\'agneau coupée en morceaux, marinée et grillée façon dibiterie, servie avec oignons et piment.', price: 4500, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_6', name: 'Dibi d\'Agneau Traditionnel (Portion)', description: 'Viande d\'agneau coupée en morceaux, marinée et grillée façon dibiterie, servie avec oignons et piment.', price: 4500, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Plat du jour' },
         { id: 'dish_7', name: 'Dibi de Poulet (Demi Poulet)', description: 'Demi-poulet mariné aux épices locales et grillé lentement, accompagné d\'oignons émincés.', price: 3500, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_8', name: 'Merguez Braisées de Thiès', description: 'Brochettes de merguez maison grillées, servies avec frites croustillantes.', price: 2500, image: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_4', name: 'Jus de Bissap Glacé', description: 'Infusion de fleurs d\'hibiscus séchées parfumée à la menthe.', price: 500, image: 'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&auto=format&fit=crop&q=60' }
     ],
     "Dibiterie": [
-        { id: 'dish_6', name: 'Dibi d\'Agneau Traditionnel (Portion)', description: 'Viande d\'agneau coupée en morceaux, marinée et grillée façon dibiterie, servie avec oignons et piment.', price: 4500, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_6', name: 'Dibi d\'Agneau Traditionnel (Portion)', description: 'Viande d\'agneau coupée en morceaux, marinée et grillée façon dibiterie, servie avec oignons et piment.', price: 4500, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Plat du jour' },
         { id: 'dish_7', name: 'Dibi de Poulet (Demi Poulet)', description: 'Demi-poulet mariné aux épices locales et grillé lentement, accompagné d\'oignons émincés.', price: 3500, image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_8', name: 'Merguez Braisées de Thiès', description: 'Brochettes de merguez maison grillées, servies avec frites croustillantes.', price: 2500, image: 'https://images.unsplash.com/photo-1534939561126-855b8675edd7?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_4', name: 'Jus de Bissap Glacé', description: 'Infusion de fleurs d\'hibiscus séchées parfumée à la menthe.', price: 500, image: 'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=500&auto=format&fit=crop&q=60' }
     ],
     "Fast Food": [
-        { id: 'dish_9', name: 'Burger Teranga Double Cheese', description: 'Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison.', price: 2000, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_9', name: 'Burger Teranga Double Cheese', description: 'Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison.', price: 2000, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Plat du jour' },
         { id: 'dish_10', name: 'Chawarma Poulet Fromage', description: 'Pain libanais roulé garni de poulet émincé grillé, frites maison, crème d\'ail et fromage.', price: 1500, image: 'https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_11', name: 'Frites Maison (Portion XXL)', description: 'Pommes de terre fraîches coupées à la main et frites dorées aux herbes aromatiques.', price: 800, image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_5', name: 'Jus de Bouye', description: 'Jus onctueux à base de fruit de baobab.', price: 500, image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60' }
     ],
     "Fast-Food": [
-        { id: 'dish_9', name: 'Burger Teranga Double Cheese', description: 'Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison.', price: 2000, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_9', name: 'Burger Teranga Double Cheese', description: 'Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison.', price: 2000, image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Plat du jour' },
         { id: 'dish_10', name: 'Chawarma Poulet Fromage', description: 'Pain libanais roulé garni de poulet émincé grillé, frites maison, crème d\'ail et fromage.', price: 1500, image: 'https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_11', name: 'Frites Maison (Portion XXL)', description: 'Pommes de terre fraîches coupées à la main et frites dorées aux herbes aromatiques.', price: 800, image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60' },
         { id: 'dish_5', name: 'Jus de Bouye', description: 'Jus onctueux à base de fruit de baobab.', price: 500, image: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60' }
     ],
     "Pâtisserie": [
-        { id: 'dish_12', name: 'Croissant Beurre Français', description: 'Feuilletage croustillant pur beurre, doré à souhait.', price: 500, image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_12', name: 'Croissant Beurre Français', description: 'Feuilletage croustillant pur beurre, doré à souhait.', price: 500, image: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Plat du jour' },
         { id: 'dish_13', name: 'Pain au Chocolat (Chocolatine)', description: 'Viennoiserie feuilletée avec deux barres de chocolat noir.', price: 600, image: 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_14', name: 'Formule Petit-Déjeuner Express', description: 'Un café Touba ou expresso, un croissant, et un verre de jus frais d\'orange.', price: 1500, image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&auto=format&fit=crop&q=60' }
+        { id: 'dish_14', name: 'Formule Petit-Déjeuner Express', description: 'Un café Touba ou expresso, un croissant, et un verre de jus frais d\'orange.', price: 1500, image: 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Formule du Jour' }
     ],
     "Gastronomique": [
-        { id: 'dish_15', name: 'Lotte rôtie sauce vanille de Casamance', description: 'Médaillon de lotte poêlé, purée fine de patate douce et émulsion à la vanille.', price: 7500, image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop&q=60' },
-        { id: 'dish_16', name: 'Filet de Bœuf braisé au Café Touba', description: 'Filet tendre de bœuf du pays, sauce corsée infusée au café Touba et poivre de Selim, petits légumes.', price: 8000, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60' },
+        { id: 'dish_15', name: 'Lotte rôtie sauce vanille de Casamance', description: 'Médaillon de lotte poêlé, purée fine de patate douce et émulsion à la vanille.', price: 7500, image: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Plat du jour' },
+        { id: 'dish_16', name: 'Filet de Bœuf braisé au Café Touba', description: 'Filet tendre de bœuf du pays, sauce corsée infusée au café Touba et poivre de Selim, petits légumes.', price: 8000, image: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60', isDailySpecial: true, tag: 'Suggestion du Chef' },
         { id: 'dish_17', name: 'Moelleux au Chocolat & Coulis Bissap', description: 'Dessert gourmand au cœur coulant, parfumé d\'un coulis acidulé au bissap rouge.', price: 2500, image: 'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop&q=60' }
     ]
 };
@@ -155,7 +155,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_restaurantmadiba",
-        "password":  "restaurantmadiba221",
         "cover_image":  "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -299,7 +298,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_lesdelices",
-        "password":  "lesdelices221",
         "cover_image":  "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -443,7 +441,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "pending",
         "username":  "le-jardin-des-saveurs",
-        "password":  "le-jardin-des-saveurs_221",
         "cover_image":  "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -587,7 +584,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_croissantmagique",
-        "password":  "croissantmagique221",
         "cover_image":  "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -695,7 +691,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_lalicorne",
-        "password":  "lalicorne221",
         "cover_image":  "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -803,7 +798,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_lecafedurail",
-        "password":  "lecafedurail221",
         "cover_image":  "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -947,7 +941,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_iledegoree",
-        "password":  "iledegoree221",
         "cover_image":  "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1091,7 +1084,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "le-festin-africain",
-        "password":  "le-festin-africain_221",
         "cover_image":  "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1235,7 +1227,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "snack-du-marche",
-        "password":  "snack-du-marche_221",
         "cover_image":  "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1361,7 +1352,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_obsrestochicha",
-        "password":  "obsrestochicha221",
         "cover_image":  "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1505,7 +1495,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_samsprestige",
-        "password":  "samsprestige221",
         "cover_image":  "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1631,7 +1620,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_caseateranga",
-        "password":  "caseateranga221",
         "cover_image":  "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -1775,7 +1763,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_alamindelice",
-        "password":  "alamindelice221",
         "cover_image":  null,
         "menu":  [
                      {
@@ -1896,7 +1883,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_nadia",
-        "password":  "nadia221",
         "cover_image":  "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2022,7 +2008,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_tacosdethies",
-        "password":  "tacosdethies221",
         "cover_image":  "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2166,7 +2151,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_pamanda",
-        "password":  "pamanda221",
         "cover_image":  "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2292,7 +2276,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_restaurantkhaymateslem",
-        "password":  "restaurantkhaymateslem221",
         "cover_image":  "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2400,7 +2383,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_nicetimecomplexe",
-        "password":  "nicetimecomplexe221",
         "cover_image":  "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2526,7 +2508,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_lacasablancaise",
-        "password":  "lacasablancaise221",
         "cover_image":  "https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2635,7 +2616,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_latabledesgourmets",
-        "password":  "latabledesgourmets221",
         "cover_image":  "https://images.unsplash.com/photo-1544025162-d76694265947?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {
@@ -2743,7 +2723,6 @@ const SEED_RESTAURANTS = [
         "is_open_manual":  true,
         "status":  "active",
         "username":  "id_bibafood",
-        "password":  "bibafood221",
         "cover_image":  "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [
                      {

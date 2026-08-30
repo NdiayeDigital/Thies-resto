@@ -112,6 +112,7 @@ class Router {
         // Refresh Navbar & Bottom Nav State
         if (typeof updateNavbar === 'function') updateNavbar();
         if (typeof updateBottomNavFromRoute === 'function') updateBottomNavFromRoute(hash);
+        if (typeof updateFaqVisibility === 'function') updateFaqVisibility(hash);
 
         // Ensure top position after DOM render
         requestAnimationFrame(() => this.forceScrollTop());

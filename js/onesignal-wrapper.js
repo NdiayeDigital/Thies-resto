@@ -142,6 +142,74 @@ class OneSignalManager {
         }
     }
     /**
+     * Envoie une notification Push d'urgence pour commande non traitée depuis plus de 10 minutes
+     * @param {Object} order - Détails de la commande
+     * @param {string} restaurantName - Nom du restaurant
+     */
+    static async sendUnprocessedOrderNotification(order, restaurantName) {
+        console.log(`[OneSignal] Alerte commande non traitée (+10min): #${order.id} (${restaurantName})`);
+        
+        const title = "⚠️ RAPPEL COMMANDE NON TRAITÉE (+10 min)";
+        const message = `La commande n°${order.id} chez ${restaurantName} (${Number(order.total || 0).toLocaleString()} FCFA) attend d'être traitée depuis plus de 10 minutes !`;
+
+        // 1. Notification locale via le navigateur si disponible
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            try {
+                const browserNotif = new Notification(title, {
+                    body: message,
+                    icon: 'icon.png',
+                    badge: 'icon.png',
+                    tag: `unprocessed-order-${order.id}`,
+                    requireInteraction: true
+                });
+                browserNotif.onclick = function() {
+                    window.focus();
+                    if (typeof router !== 'undefined' && router.navigate) {
+                        router.navigate('/dashboard');
+                    }
+                    if (typeof switchDashboardTab === 'function') {
+                        switchDashboardTab('orders');
+                    }
+                };
+            } catch (err) {
+                console.warn("[OneSignal] Notification API native erreur:", err);
+            }
+        }
+
+        // 2. Tenter envoi via l'API REST OneSignal
+        const appId = "1475ba26-4ce8-4e66-8631-5cbdb9a0b3fe";
+        const apiKey = "1475ba26-4ce8-4e66-8631-5cbdb9a0b3fe";
+
+        try {
+            const response = await fetch('https://onesignal.com/api/v1/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Authorization': `Basic ${apiKey}`
+                },
+                body: JSON.stringify({
+                    app_id: appId,
+                    included_segments: ["All"],
+                    target_channel: "push",
+                    headings: { "fr": title },
+                    contents: { "fr": message },
+                    data: {
+                        type: "unprocessed_order_10min",
+                        orderId: order.id,
+                        restaurantId: order.restaurantId
+                    }
+                })
+            });
+            const result = await response.json();
+            console.log("[OneSignal] Réponse notification push commande en retard:", result);
+            return { success: true, data: result };
+        } catch (error) {
+            console.warn("[OneSignal] Envoi push distant:", error);
+            return { success: true, fallback: true };
+        }
+    }
+
+    /**
      * Envoie ou simule l'envoi d'une notification OTP avec OneSignal
      * @param {string} phone - Numéro de téléphone du destinataire (+221...)
      * @param {string} otpCode - Code à 6 chiffres généré

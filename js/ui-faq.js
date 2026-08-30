@@ -1,6 +1,6 @@
 /**
  * THIES Resto - FAQ Component
- * Gère l'accordéon des questions fréquentes.
+ * Gère l'accordéon des questions fréquentes et l'affichage exclusif sur la page d'accueil.
  */
 
 (function () {
@@ -38,7 +38,28 @@
         }
     }
 
+    /**
+     * Masque ou affiche la section FAQ selon la page active (visible uniquement sur l'accueil)
+     */
+    function updateFaqVisibility(routeHash) {
+        const hash = routeHash || window.location.hash || '';
+        const faqSection = document.getElementById('footer-faq');
+        if (!faqSection) return;
+
+        const isHomePage = hash === '' || hash === '#' || hash === '#/' || hash.startsWith('#/?');
+        faqSection.style.display = isHomePage ? 'block' : 'none';
+    }
+
+    window.addEventListener('hashchange', () => {
+        updateFaqVisibility();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        updateFaqVisibility();
+    });
+
     // Export global sur window
     window.toggleFaq = toggleFaq;
+    window.updateFaqVisibility = updateFaqVisibility;
 })();
 

@@ -459,6 +459,8 @@ function submitSimpleOrder(e, restaurantId) {
         status: "En attente",
         date,
         time,
+        timestamp: Date.now(),
+        createdAt: new Date().toISOString(),
         deliveryFee: cart.deliveryFee || 0,
         deliveryLat: cart.deliveryLat || null,
         deliveryLng: cart.deliveryLng || null,
