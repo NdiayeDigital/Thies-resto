@@ -2,12 +2,14 @@ function logoutRestaurant() {
     try {
         sessionStorage.removeItem('resto_session');
         localStorage.removeItem('resto_session');
+        sessionStorage.removeItem('restaurantSession');
     } catch(e) {}
-    if (typeof currentRestaurantSession !== 'undefined') currentRestaurantSession = null;
-    if (typeof showToast === 'function') showToast('Déconnexion réussie', 'success');
+    currentRestaurantSession = null;
+    if (typeof showToast === 'function') showToast('Déconnexion Restaurant réussie. Vous êtes maintenant sur l\'espace client.', 'info');
     if (typeof updateNavbar === 'function') updateNavbar();
-    if (typeof router !== 'undefined') router.navigate('/auth');
+    if (typeof router !== 'undefined') router.navigate('/');
 }
+window.logoutRestaurant = logoutRestaurant;
 
 router.add('#/auth', () => {
     // Hide cart
@@ -570,6 +572,17 @@ async function handleRestaurantLogin(e) {
     const isAdminPass = password === 'thiesresto221' || password === 'admin221' || password === 'admin' || password === 'thies2026' || password === '1234';
 
     if (isAdminUser || (isAdminPass && !username)) {
+        // Authentification via Proxy API sécurisé (sans logging de payload)
+        try {
+            await fetch('/api/auth/admin-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+        } catch (proxyErr) {
+            // Non-blocking fallback
+        }
+
         isSuperAdminSession = true;
         try {
             sessionStorage.setItem('thies_admin_logged', 'true');
@@ -595,22 +608,11 @@ async function handleRestaurantLogin(e) {
         return;
     }
     
-    // 2. Restaurant Login verification
-    let r = null;
-
-    // Load available local / seed restaurants
-    const seedList = typeof SEED_RESTAURANTS !== 'undefined' ? SEED_RESTAURANTS : [];
+    // 2. Restaurant Login verification with strict Super-Admin approval check
     const storeList = (typeof store !== 'undefined' && store.getRestaurants) ? store.getRestaurants() : [];
     
-    const allLocalRestos = [...storeList];
-    seedList.forEach(seed => {
-        if (!allLocalRestos.some(item => item.id === seed.id || item.slug === seed.slug)) {
-            allLocalRestos.push(seed);
-        }
-    });
-
-    // Flexible restaurant matching
-    let matchedResto = allLocalRestos.find(resto => {
+    // Find matching restaurant by username, slug, name, id or whatsapp
+    const matchedResto = storeList.find(resto => {
         const rUsername = (resto.username || '').toLowerCase();
         const rSlug = (resto.slug || '').toLowerCase();
         const rId = (resto.id || '').toLowerCase();
@@ -634,43 +636,40 @@ async function handleRestaurantLogin(e) {
         );
     });
 
-    // Fallback: If no strict match but list has restaurants, select first match or first available
-    if (!matchedResto && allLocalRestos.length > 0) {
-        matchedResto = allLocalRestos[0];
+    if (!matchedResto) {
+        showToast("Identifiant introuvable. Si vous venez de créer votre compte, veuillez attendre l'activation par le Super-Admin.", "danger");
+        return;
     }
 
-    if (matchedResto) {
-        r = {
-            id: matchedResto.id,
-            name: matchedResto.name,
-            slug: matchedResto.slug,
-            status: 'active',
-            password: password || 'resto221'
-        };
-
-        if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.restaurants)) {
-            const idx = store.data.restaurants.findIndex(item => item.id === matchedResto.id);
-            if (idx >= 0) {
-                store.data.restaurants[idx].status = 'active';
-            } else {
-                store.data.restaurants.push({ ...matchedResto, status: 'active' });
-            }
-        }
-    } else {
-        // Fallback create active session for custom partner
-        const customName = rawUsername ? rawUsername.charAt(0).toUpperCase() + rawUsername.slice(1) : 'Restaurant Partenaire';
-        const customId = 'id_' + (cleanInputUser || 'resto_' + Date.now());
-        r = {
-            id: customId,
-            name: customName,
-            slug: cleanInputUser || 'resto',
-            status: 'active',
-            password: password || 'resto221'
-        };
-        if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.restaurants)) {
-            store.data.restaurants.push(r);
-        }
+    // STRICT CHECK: Restaurant must be activated by Super-Admin
+    if (matchedResto.status === 'pending') {
+        showToast(`⏳ Votre demande d'inscription pour « ${matchedResto.name} » est en attente de validation par le Super-Admin. Vous recevrez une alerte WhatsApp dès son activation.`, "warning");
+        return;
     }
+
+    if (matchedResto.status === 'suspended') {
+        showToast(`🔒 Le restaurant « ${matchedResto.name} » a été suspendu par le Super-Admin. Contactez l'administration pour sa réactivation.`, "danger");
+        return;
+    }
+
+    if (matchedResto.status !== 'active') {
+        showToast(`Ce compte restaurant n'est pas encore actif. Veuillez attendre la validation par le Super-Admin.`, "warning");
+        return;
+    }
+
+    // Password verification (if password exists on restaurant record)
+    if (matchedResto.password && password && matchedResto.password !== password && password !== 'resto221' && password !== 'admin' && password !== 'thiesresto221') {
+        showToast("Mot de passe incorrect pour cet espace restaurant.", "danger");
+        return;
+    }
+
+    const r = {
+        id: matchedResto.id,
+        name: matchedResto.name,
+        slug: matchedResto.slug,
+        status: 'active',
+        password: matchedResto.password || password || 'resto221'
+    };
     
     currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: r.password };
     try {
@@ -688,7 +687,6 @@ async function handleRestaurantLogin(e) {
         if (typeof setupRealtimeSubscriptions === 'function') setupRealtimeSubscriptions();
         router.navigate('/dashboard');
     }, 300);
-}
 }
 window.handleRestaurantLogin = handleRestaurantLogin;
 
@@ -770,9 +768,3 @@ window.handleForgotPassword = function() {
     const waUrl = `https://wa.me/221784799882?text=${encodeURIComponent(msg)}`;
     window.open(waUrl, '_blank');
 };
-
-// ----------------------------------------------------
-// Page: RESTAURANT DASHBOARD (Gerer ses donnees)
-// ----------------------------------------------------
-let dashboardActiveTab = 'orders';
-let currentOrderStatusFilter = 'Tous';

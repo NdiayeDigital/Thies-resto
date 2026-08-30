@@ -68,13 +68,52 @@ class Router {
         this.forceScrollTop();
 
         // ----------------------------------------------------
-        // RESTAURANT SESSION ROUTE GUARD
-        // When a restaurant is connected, they only see the restaurant portal
-        // They do NOT see client-facing pages (accueil, explorer, favoris, suivi, compte client)
+        // STRICT SESSION ROUTE GUARDS (Super-Admin & Restaurant Isolation)
         // ----------------------------------------------------
-        if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
-            const clientRoutes = ['#/', '#', '#/explore', '#/favorites', '#/tracking', '#/profile', '#/how-it-works'];
-            if (clientRoutes.includes(hash) || hash.startsWith('#/r/') || hash.startsWith('#/restaurant/')) {
+        
+        // 1. SUPER ADMIN LOCK-IN: Super-Admin can only access Admin and Management routes until disconnected
+        if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
+            const allowedAdminRoutes = [
+                '#/admin',
+                '#/admin-login',
+                '#/politique-admin'
+            ];
+            const allowedImpersonationRoutes = [
+                '#/dashboard',
+                '#/dashboard-add-menu',
+                '#/dashboard-daily-menu',
+                '#/dashboard-account',
+                '#/dashboard-orders',
+                '#/admin',
+                '#/politique-admin'
+            ];
+
+            if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+                if (!allowedImpersonationRoutes.includes(hash)) {
+                    this.navigate('/dashboard');
+                    return;
+                }
+            } else {
+                if (!allowedAdminRoutes.includes(hash)) {
+                    this.navigate('/admin');
+                    return;
+                }
+            }
+        }
+
+        // 2. RESTAURANT PARTNER LOCK-IN: Restaurant can only access Dashboard routes until disconnected
+        else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
+            const allowedRestoRoutes = [
+                '#/dashboard',
+                '#/dashboard-add-menu',
+                '#/dashboard-daily-menu',
+                '#/dashboard-account',
+                '#/dashboard-orders',
+                '#/auth',
+                '#/politique-admin'
+            ];
+
+            if (!allowedRestoRoutes.includes(hash)) {
                 this.navigate('/dashboard');
                 return;
             }

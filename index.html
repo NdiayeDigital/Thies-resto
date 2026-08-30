@@ -14,30 +14,30 @@
     <link rel="icon" type="image/png" href="/icon.png">
     <link rel="apple-touch-icon" href="/icon.png">
     
+    <!-- Global Logger & Security Shield (Loaded first) -->
+    <script src="js/logger.js?v=8"></script>
     <script>
         // Global Error Tracking (Phase 5)
         window.thiesRestoErrors = [];
         window.__earlyErrorHandler = function(msg, url, line, col, error) {
-            const errorText = (msg || '') + ' ' + ((error && error.stack) || '');
-            if (errorText.includes('thies-resto.com') || errorText.includes('OneSignal')) {
-                // Ignore OneSignal domain-lock notifications in preview/dev
+            const errorText = String((msg || '') + ' ' + ((error && error.stack) || ''));
+            if (errorText.includes('thies-resto.com') || errorText.includes('OneSignal') || errorText.includes('ResizeObserver')) {
                 return true;
             }
-            window.thiesRestoErrors.push({msg, url, line, col, error: error ? error.stack : null, time: new Date()});
+            const safeMsg = typeof window.maskSensitiveData === 'function' ? window.maskSensitiveData(msg) : msg;
+            window.thiesRestoErrors.push({msg: safeMsg, url, line, col, time: new Date()});
             var loader = document.getElementById('loading-overlay');
             if(loader) loader.style.display = 'none';
-            console.error("[SENTRY MOCK] Global Error Caught:", msg, url, line);
         };
         window.onerror = window.__earlyErrorHandler;
         window.addEventListener('unhandledrejection', function(event) {
-            const reasonMsg = (event.reason && (event.reason.message || event.reason.toString())) || '';
+            const reasonMsg = String((event.reason && (event.reason.message || event.reason.toString())) || '');
             if (reasonMsg.includes('thies-resto.com') || reasonMsg.includes('OneSignal')) {
-                // Ignore OneSignal domain-lock notifications in preview/dev
                 event.preventDefault();
                 return;
             }
-            window.thiesRestoErrors.push({msg: event.reason, time: new Date(), type: 'unhandledrejection'});
-            console.error("[SENTRY MOCK] Unhandled Promise Rejection:", event.reason);
+            const safeReason = typeof window.maskSensitiveData === 'function' ? window.maskSensitiveData(event.reason) : event.reason;
+            window.thiesRestoErrors.push({msg: safeReason, time: new Date(), type: 'unhandledrejection'});
         });
     </script>
 
@@ -659,7 +659,7 @@
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <!-- App Logic -->
-    <script defer src="js/logger.js?v=7"></script>
+    <script defer src="js/googleMapsService.js"></script>
     <script defer src="js/data.js?v=7"></script>
     <script defer src="js/store.js?v=7"></script>
     <script defer src="js/customer-auth.js"></script>

@@ -138,24 +138,32 @@ function renderDashboardShell() {
         `;
     }
 
-    const isDashboardGroup = ['summary', 'orders', 'reservations', 'accounting', 'reviews'].includes(dashboardActiveTab);
+    const isSummaryTab = dashboardActiveTab === 'summary';
+    const isOrdersTab = dashboardActiveTab === 'orders';
     const isAddMenuGroup = ['add-menu', 'menu'].includes(dashboardActiveTab);
     const isDailyMenuGroup = dashboardActiveTab === 'daily-menu';
-    const isAccountGroup = ['account', 'settings', 'subscription'].includes(dashboardActiveTab);
+    const isAccountGroup = ['account', 'settings', 'subscription', 'accounting', 'reservations', 'reviews'].includes(dashboardActiveTab);
+
+    // Calcul du nombre de commandes en attente pour le badge
+    const currentOrders = store.getOrdersByRestaurant(r.id);
+    const pendingOrdersCount = currentOrders.filter(o => o.status === 'En attente' || o.status === 'Reçue').length;
 
     container.innerHTML = `
         ${impersonateBanner}
         ${trialAlertBanner}
         <div class="dashboard-grid">
             <aside class="sidebar">
-                <button class="sidebar-btn ${isDashboardGroup ? 'active' : ''}" onclick="switchDashboardTab('summary')">
-                    📊 Dashboard
+                <button class="sidebar-btn ${isSummaryTab ? 'active' : ''}" onclick="switchDashboardTab('summary')">
+                    📊 Vue d'ensemble
+                </button>
+                <button class="sidebar-btn ${isOrdersTab ? 'active' : ''}" onclick="switchDashboardTab('orders')">
+                    📦 Commandes entrantes ${pendingOrdersCount > 0 ? `<span style="background: #dc2626; color: white; border-radius: 10px; padding: 2px 7px; font-size: 0.75rem; margin-left: auto; font-weight: 800;">${pendingOrdersCount}</span>` : ''}
                 </button>
                 <button class="sidebar-btn ${isAddMenuGroup ? 'active' : ''}" onclick="switchDashboardTab('add-menu')">
-                    ➕ Ajouter un menu
+                    🍲 Gestion des Menus (${(r.menu || []).length})
                 </button>
                 <button class="sidebar-btn ${isDailyMenuGroup ? 'active' : ''}" onclick="switchDashboardTab('daily-menu')">
-                    ⭐ Menu du jour
+                    ⭐ Plats du jour
                 </button>
                 <button class="sidebar-btn ${isAccountGroup ? 'active' : ''}" onclick="switchDashboardTab('account')">
                     ⚙️ Compte Restaurant
@@ -286,8 +294,36 @@ function renderDashboardTabContent(r) {
                 </div>
             </div>
             
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div style="background: var(--bg-card); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <strong style="font-size: 1.05rem; color: var(--text-primary);">📦 Commandes Entrantes</strong>
+                            <span class="badge" style="background: rgba(242, 107, 33, 0.12); color: var(--primary); font-weight: 700;">${orders.length} au total</span>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1rem 0;">Gérez le flux de vos commandes en temps réel, acceptez les commandes et mettez-les en cuisine.</p>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="switchDashboardTab('orders')" style="font-weight: 700;">
+                        Consulter les Commandes 📦
+                    </button>
+                </div>
+
+                <div style="background: var(--bg-card); padding: 1.25rem; border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <strong style="font-size: 1.05rem; color: var(--text-primary);">🍲 Gestion des Menus</strong>
+                            <span class="badge" style="background: rgba(13, 148, 136, 0.12); color: #0d9488; font-weight: 700;">${(r.menu || []).length} plats</span>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0 0 1rem 0;">Ajoutez de nouveaux plats, modifiez les prix, activez les ruptures ou mettez un plat du jour en vedette.</p>
+                    </div>
+                    <button class="btn btn-secondary btn-block" onclick="switchDashboardTab('add-menu')" style="font-weight: 700;">
+                        Gérer les Menus & Plats ➕
+                    </button>
+                </div>
+            </div>
+
             <h3 style="font-family: var(--font-serif); font-size: 1.2rem; color: var(--text-primary); margin-bottom: 1rem;">Action Rapide : Statut du Restaurant</h3>
-            <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+            <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 16px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
                 <div>
                     <strong style="display: block; font-size: 1.1rem; margin-bottom: 0.25rem;">${r.isOpenManual ? '🟢 Ouvert aux commandes' : '🔴 Actuellement fermé (Manuel)'}</strong>
                     <span style="font-size: 0.9rem; color: var(--text-secondary);">Gérez l'ouverture exceptionnelle (ex: rupture de stock totale, fermeture inattendue)</span>
@@ -2134,6 +2170,15 @@ async function handleAdminLogin(e) {
     const user = (document.getElementById('admin-user') ? document.getElementById('admin-user').value : '').trim().toLowerCase();
     const pass = (document.getElementById('admin-pass') ? document.getElementById('admin-pass').value : '').trim();
     
+    // 1. Call secure proxy API (Zero Payload Logging)
+    try {
+        await fetch('/api/auth/admin-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+    } catch (proxyErr) {}
+
     // Accept standard admin usernames or passwords
     const isUserAdmin = !user || user === 'thiesresto' || user === 'admin' || user === 'superadmin' || user === 'super-admin' || user === 'root';
     const isPassAdmin = pass === 'thiesresto221' || pass === 'admin221' || pass === 'admin' || pass === 'thies2026' || pass === '1234' || pass.length >= 3;
@@ -2207,119 +2252,188 @@ function renderAdminView() {
     // Calculate network figures
     const restos = store.getRestaurants();
     const activeRestos = restos.filter(r => r.status === 'active');
-    const pendingCount = restos.filter(r => r.status === 'pending').length;
+    const pendingRestos = restos.filter(r => r.status === 'pending');
+    const pendingCount = pendingRestos.length;
     
-    const orders = store.data.orders;
-    const reservations = store.data.reservations;
+    const orders = store.data.orders || [];
+    const reservations = store.data.reservations || [];
     
     // Estimated Gross Merchandise Volume (Chiffre d'Affaires global)
-    // On calcule la somme exacte des chiffres d'affaires de toutes les commandes validées (livrées ou terminées)
-    const completedOrders = orders.filter(o => o.status === 'completed' || o.status === 'delivered');
-    const totalGmv = completedOrders.reduce((sum, o) => sum + o.total, 0);
+    // Somme exacte des chiffres d'affaires de toutes les commandes livrées / validées
+    const completedOrders = orders.filter(o => o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered');
+    const pendingOrders = orders.filter(o => o.status === 'En attente' || o.status === 'Reçue' || o.status === 'Confirmée' || o.status === 'En cuisine' || o.status === 'Prêt pour livraison' || o.status === 'En livraison');
+    const cancelledOrders = orders.filter(o => o.status === 'Annulée' || o.status === 'cancelled');
+    const totalGmv = completedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+
+    // Calculate Platform SaaS subscriptions income
+    let totalPlatformRevenue = 0;
+    const subscriptionRows = restos.filter(r => r.status !== 'pending').map(r => {
+        const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+        const diffTime = Math.abs(new Date() - createdAt);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        let daysLeft = 90 - diffDays;
+        let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
+        let revenue = 0;
+        
+        if (packSubscribed === 'Pack Simple') revenue = 5000;
+        else if (packSubscribed === 'Pack Startup') revenue = 15000;
+        else if (packSubscribed === 'Pack Entreprise') revenue = 25000;
+        
+        if (r.status === 'active' || r.status === 'suspended') {
+            totalPlatformRevenue += revenue;
+        }
+        
+        let statusBadge = daysLeft > 0 
+            ? `<span class="badge badge-success" style="font-size:0.75rem;">Essai offert (${daysLeft}j)</span>` 
+            : `<span class="badge badge-danger" style="font-size:0.75rem;">Période expirée</span>`;
+        
+        return `
+            <tr>
+                <td><strong>${r.name}</strong><div style="font-size:0.75rem; color:var(--text-secondary);">${r.category || 'Restaurant'}</div></td>
+                <td>${statusBadge}</td>
+                <td><span class="badge" style="background: ${packSubscribed === 'Aucun (Gratuit)' ? 'rgba(148,163,184,0.15)' : 'rgba(242,107,33,0.12)'}; color: ${packSubscribed === 'Aucun (Gratuit)' ? 'var(--text-secondary)' : 'var(--primary)'}; font-weight:700;">${packSubscribed}</span></td>
+                <td style="font-weight: 800; color: var(--text-primary);">${revenue > 0 ? revenue.toLocaleString() + ' FCFA' : '0 FCFA'}</td>
+            </tr>
+        `;
+    }).join('');
 
     container.innerHTML = `
-        <div style="padding: 2rem 1.5rem; max-width: 1000px; margin: 0 auto;">
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
+        <div class="admin-shell">
+            <!-- Executive Header -->
+            <div class="admin-header-box">
                 <div>
-                    <h1 style="font-size: 1.75rem;">Super-Admin Console</h1>
-                    <p style="color: var(--text-secondary); font-size: 0.85rem;">Supervisez l'intégralité du réseau de restauration de Thiès.</p>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
-                    <span class="badge badge-danger">Live Monitor</span>
-                    <button class="btn btn-outline" style="color: var(--danger); border-color: var(--danger); font-size: 0.8rem; padding: 0.3rem 0.6rem;" onclick="handleLogout()">🚪 Déconnexion</button>
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <span class="stat-card-title">Total Restaurants</span>
-                    <span class="stat-card-value">${activeRestos.length} actifs</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-card-title">En attente d'activation</span>
-                    <span class="stat-card-value" style="color: ${pendingCount > 0 ? 'var(--accent)' : 'inherit'}">${pendingCount} demandes</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-card-title">Volume d'affaires généré</span>
-                    <span class="stat-card-value">${totalGmv.toLocaleString()} FCFA</span>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-card-title">Commandes / Réservations</span>
-                    <span class="stat-card-value">${orders.length} | ${reservations.length}</span>
-                </div>
-            </div>
-
-            <!-- Section Abonnements -->
-            ${(function() {
-                let totalPlatformRevenue = 0;
-                let rowsHtml = restos.filter(r => r.status !== 'pending').map(r => {
-                    const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
-                    const diffTime = Math.abs(new Date() - createdAt);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    let daysLeft = 90 - diffDays;
-                    let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
-                    let revenue = 0;
-                    
-                    if (packSubscribed === 'Pack Simple') revenue = 5000;
-                    else if (packSubscribed === 'Pack Startup') revenue = 15000;
-                    else if (packSubscribed === 'Pack Entreprise') revenue = 25000;
-                    
-                    if (r.status === 'active' || r.status === 'suspended') {
-                        totalPlatformRevenue += revenue;
-                    }
-                    
-                    let statusHtml = '';
-                    if (daysLeft > 0) {
-                        statusHtml = `<span class="badge badge-success">En cours (${daysLeft} jrs restants)</span>`;
-                    } else {
-                        statusHtml = `<span class="badge badge-danger">Expiré</span>`;
-                    }
-                    
-                    return `
-                    <tr style="border-bottom: 1px solid var(--border);">
-                        <td style="padding: 1rem;"><strong>${r.name}</strong></td>
-                        <td style="padding: 1rem;">${statusHtml}</td>
-                        <td style="padding: 1rem;"><span class="badge" style="background: ${packSubscribed === 'Aucun (Gratuit)' ? '#e2e8f0' : 'rgba(var(--accent-rgb), 0.1)'}; color: ${packSubscribed === 'Aucun (Gratuit)' ? '#64748b' : 'var(--accent)'};">${packSubscribed}</span></td>
-                        <td style="padding: 1rem; font-weight: 700; color: var(--text-secondary);">${revenue > 0 ? revenue.toLocaleString() + ' FCFA' : '0 FCFA'}</td>
-                    </tr>`;
-                }).join('');
-                
-                return `
-                <section style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 2rem; border: 1px solid var(--border);">
-                    <h3 style="margin-top: 0; color: var(--text-primary); border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                        <span>💳 Abonnements & Revenus Plateforme</span>
-                        <span style="color: var(--success); font-weight: 800; font-size: 1.2rem; background: rgba(var(--success-rgb), 0.1); padding: 0.4rem 0.8rem; border-radius: 8px;">Revenus Plateforme: ${totalPlatformRevenue.toLocaleString()} FCFA / mois</span>
-                    </h3>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1rem;">Suivi des packs d'hébergement souscrits par les restaurants après leurs 3 mois gratuits.</p>
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
-                            <thead>
-                                <tr style="background: var(--bg-secondary); text-align: left; border-bottom: 2px solid var(--border);">
-                                    <th style="padding: 1rem;">Restaurant</th>
-                                    <th style="padding: 1rem;">Statut Gratuité</th>
-                                    <th style="padding: 1rem;">Pack Souscrit</th>
-                                    <th style="padding: 1rem;">Revenu (Mensuel)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rowsHtml || '<tr><td colspan="4" style="padding: 1rem; text-align: center; color: var(--text-secondary);">Aucun restaurant actif</td></tr>'}
-                            </tbody>
-                        </table>
+                    <div style="display:inline-flex; align-items:center; gap:0.4rem; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--primary); margin-bottom:0.35rem;">
+                        <span>🇸🇳 Thiès Resto</span> • <span>Supervision Centrale</span>
                     </div>
-                </section>`;
-            })()}
-
-            <!-- Tab selections -->
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; flex-wrap: wrap;">
-                <button class="btn btn-sm ${adminActiveTab === 'pending' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('pending')">⏳ Demandes (${pendingCount})</button>
-                <button class="btn btn-sm ${adminActiveTab === 'active' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('active')">🏪 Réseau Actif (${activeRestos.length})</button>
-                <button class="btn btn-sm ${adminActiveTab === 'create' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('create')">➕ Ajouter</button>
-                <button class="btn btn-sm ${adminActiveTab === 'accounting' ? 'btn-primary' : 'btn-secondary'}" onclick="switchAdminTab('accounting')">📊 Comptabilité</button>
+                    <h1 class="admin-header-title">
+                        <span>🛡️ Console Super-Admin</span>
+                    </h1>
+                    <p class="admin-header-subtitle">Supervision en direct du réseau de restauration, des flux de commandes et de la comptabilité globale de Thiès.</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <div class="admin-live-badge">
+                        <span class="admin-live-dot"></span>
+                        <span>Flux Direct</span>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="renderAdminView(); showToast('Données actualisées en direct', 'info');" style="font-weight:700; border-radius:10px;">
+                        🔄 Actualiser
+                    </button>
+                    <button class="btn btn-outline btn-sm" style="color: var(--danger); border-color: var(--danger); font-weight:700; border-radius:10px;" onclick="handleLogout()">
+                        🚪 Déconnexion
+                    </button>
+                </div>
             </div>
 
+            <!-- Bento Key Metrics Grid -->
+            <div class="admin-kpi-grid">
+                <div class="admin-kpi-card kpi-success">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">Chiffre d'Affaires Global</span>
+                            <span class="admin-kpi-icon">💰</span>
+                        </div>
+                        <div class="admin-kpi-value" style="color: #10b981;">${totalGmv.toLocaleString()} <span style="font-size: 0.95rem; font-weight: 700;">FCFA</span></div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        <span style="font-weight:700; color: #10b981;">${completedOrders.length}</span> commandes livrées avec succès
+                    </div>
+                </div>
 
+                <div class="admin-kpi-card kpi-primary">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">Total Commandes Réseau</span>
+                            <span class="admin-kpi-icon">📦</span>
+                        </div>
+                        <div class="admin-kpi-value">${orders.length}</div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        <span>${reservations.length} réservation(s) de table</span>
+                    </div>
+                </div>
+
+                <div class="admin-kpi-card kpi-warning">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">En Cours / En Cuisine</span>
+                            <span class="admin-kpi-icon">⏳</span>
+                        </div>
+                        <div class="admin-kpi-value" style="color: #f59e0b;">${pendingOrders.length}</div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        <span style="color: var(--text-secondary);">${cancelledOrders.length} commande(s) annulée(s)</span>
+                    </div>
+                </div>
+
+                <div class="admin-kpi-card ${pendingCount > 0 ? 'kpi-danger' : 'kpi-info'}">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">Réseau Établissements</span>
+                            <span class="admin-kpi-icon">🏪</span>
+                        </div>
+                        <div class="admin-kpi-value">${activeRestos.length} <span style="font-size:0.9rem; color:var(--text-secondary); font-weight:600;">actifs</span></div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        ${pendingCount > 0 
+                            ? `<span style="color: #ef4444; font-weight:800;">🚨 ${pendingCount} demande(s) en attente de validation</span>`
+                            : `<span style="color: #10b981; font-weight:700;">✅ Toutes les demandes sont traitées</span>`}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Platform SaaS Subscriptions Section -->
+            <div class="admin-card-section" style="margin-bottom: 2rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem; border-bottom:1px solid var(--border); padding-bottom:0.75rem;">
+                    <div>
+                        <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+                            <span>💳 Abonnements Plateforme & SaaS</span>
+                        </h3>
+                        <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">Offre de lancement : 3 mois gratuits, puis abonnement récurrent selon le pack choisi.</p>
+                    </div>
+                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; padding: 0.4rem 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.95rem;">
+                        Revenus SaaS Récurrents : ${totalPlatformRevenue.toLocaleString()} FCFA / mois
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="admin-table-modern">
+                        <thead>
+                            <tr>
+                                <th>Restaurant</th>
+                                <th>Période Gratuite (3 Mois)</th>
+                                <th>Formule Souscrite</th>
+                                <th>Revenu Plateforme</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${subscriptionRows || '<tr><td colspan="4" style="text-align:center; padding:1.5rem; color:var(--text-secondary);">Aucun restaurant configuré</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tab Selection Pill Bar -->
+            <div class="admin-nav-tabs">
+                <button class="admin-nav-tab-btn ${adminActiveTab === 'pending' ? 'active' : ''}" onclick="switchAdminTab('pending')">
+                    <span>⏳ Demandes d'inscription</span>
+                    <span class="admin-tab-count">${pendingCount}</span>
+                </button>
+                <button class="admin-nav-tab-btn ${adminActiveTab === 'active' ? 'active' : ''}" onclick="switchAdminTab('active')">
+                    <span>🏪 Réseau Partenaires</span>
+                    <span class="admin-tab-count">${activeRestos.length}</span>
+                </button>
+                <button class="admin-nav-tab-btn ${adminActiveTab === 'create' ? 'active' : ''}" onclick="switchAdminTab('create')">
+                    <span>➕ Nouveau Restaurant</span>
+                </button>
+                <button class="admin-nav-tab-btn ${adminActiveTab === 'accounting' ? 'active' : ''}" onclick="switchAdminTab('accounting')">
+                    <span>📊 Comptabilité & Flux Commandes</span>
+                    <span class="admin-tab-count">${orders.length}</span>
+                </button>
+            </div>
+
+            <!-- Active Tab Container -->
             <div id="admin-table-container">
-                <!-- Tables populated dynamically -->
+                <!-- Injected via renderAdminTabTable() -->
             </div>
         </div>
     `;
@@ -2334,13 +2448,20 @@ function switchAdminTab(tab) {
 
 function renderAdminTabTable() {
     const tableContainer = document.getElementById('admin-table-container');
+    if (!tableContainer) return;
     const restos = store.getRestaurants();
     
     if (adminActiveTab === 'pending') {
         const pending = restos.filter(r => r.status === 'pending');
         
         if (pending.length === 0) {
-            tableContainer.innerHTML = `<div style="text-align: center; background: var(--bg-card); padding: 3rem; border-radius: 16px; color: var(--text-secondary); border: 1px solid var(--border);">Aucune demande d'inscription en attente.</div>`;
+            tableContainer.innerHTML = `
+                <div class="admin-card-section" style="text-align: center; padding: 3.5rem 1.5rem;">
+                    <div style="font-size: 3rem; margin-bottom: 0.75rem;">🎉</div>
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; color: var(--text-primary);">Aucune demande en attente</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.88rem; max-width: 450px; margin: 0 auto;">Toutes les candidatures de restaurants ont été traitées. Les nouveaux établissements apparaîtront ici dès leur inscription.</p>
+                </div>
+            `;
             return;
         }
 
@@ -2348,36 +2469,58 @@ function renderAdminTabTable() {
         pending.forEach(r => {
             rowsHtml += `
                 <tr>
-                    <td><strong>${r.name}</strong></td>
-                    <td>${r.category}</td>
-                    <td>${r.address}</td>
-                    <td><a href="https://wa.me/${r.whatsapp.replace(/\+/g, '')}" target="_blank" class="call-btn">💬 ${r.whatsapp}</a></td>
-                    <td>${r.openHours}</td>
                     <td>
-                        <button class="btn btn-success btn-sm" onclick="approveRestaurant('${r.id}')">Valider (Activer) ✅</button>
-                        <button class="btn btn-danger btn-sm" onclick="rejectRestaurant('${r.id}')">Refuser ❌</button>
+                        <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">${r.name}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Identifiant : @${r.username || r.slug}</div>
+                    </td>
+                    <td><span class="badge badge-info" style="font-size: 0.75rem;">${r.category || 'Traditionnel'}</span></td>
+                    <td style="font-size: 0.85rem;">📍 ${r.address || 'Thiès'}</td>
+                    <td>
+                        <a href="https://wa.me/${(r.whatsapp || '').replace(/\D/g, '')}" target="_blank" class="admin-action-btn" style="background: rgba(37, 211, 102, 0.12); color: #25d366; border-color: rgba(37, 211, 102, 0.25); text-decoration: none;">
+                            💬 ${(r.whatsapp || 'Non renseigné')}
+                        </a>
+                    </td>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary);">🕒 ${r.openHours || '12:00 - 23:00'}</td>
+                    <td>
+                        <div class="admin-action-btn-group">
+                            <button class="admin-action-btn btn-activate" onclick="approveRestaurant('${r.id}')" title="Valider et notifier par WhatsApp">
+                                ✅ Activer Partenaire
+                            </button>
+                            <button class="admin-action-btn btn-suspend" onclick="rejectRestaurant('${r.id}')" title="Refuser la demande">
+                                ❌ Refuser
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
         });
 
         tableContainer.innerHTML = `
-            <div class="table-responsive">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Nom</th>
-                            <th>Catégorie</th>
-                            <th>Adresse</th>
-                            <th>WhatsApp</th>
-                            <th>Horaires</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rowsHtml}
-                    </tbody>
-                </table>
+            <div class="admin-card-section" style="padding: 0; overflow: hidden;">
+                <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">⏳ Demandes d'inscription en attente de validation</h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Validez les comptes des restaurateurs pour leur ouvrir l'accès à leur espace de gestion.</p>
+                    </div>
+                    <span class="badge badge-warning" style="font-weight: 800;">${pending.length} en attente</span>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="admin-table-modern">
+                        <thead>
+                            <tr>
+                                <th>Restaurant & Slug</th>
+                                <th>Catégorie</th>
+                                <th>Adresse</th>
+                                <th>WhatsApp</th>
+                                <th>Horaires</th>
+                                <th>Action Super-Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
     } 
@@ -2385,28 +2528,31 @@ function renderAdminTabTable() {
         const activeOrSuspended = restos.filter(r => r.status === 'active' || r.status === 'suspended');
         
         if (activeOrSuspended.length === 0) {
-            tableContainer.innerHTML = `<div style="text-align: center; background: var(--bg-card); padding: 3rem; border-radius: 16px; color: var(--text-secondary);">Aucun restaurant configuré dans le réseau.</div>`;
+            tableContainer.innerHTML = `
+                <div class="admin-card-section" style="text-align: center; padding: 3rem 1.5rem;">
+                    <p style="color: var(--text-secondary); margin: 0;">Aucun restaurant configuré dans le réseau.</p>
+                </div>
+            `;
             return;
         }
 
         let rowsHtml = '';
         activeOrSuspended.forEach(r => {
             const rOrdersList = store.getOrdersByRestaurant(r.id);
-            const rReservations = store.getReservationsByRestaurant(r.id).length;
-            const rCompletedOrders = rOrdersList.filter(o => o.status === 'completed' || o.status === 'delivered');
-            const rRevenue = rCompletedOrders.reduce((sum, o) => sum + o.total, 0);
+            const rCompletedOrders = rOrdersList.filter(o => o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered');
+            const rRevenue = rCompletedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
             
             const statusLabel = r.status === 'active' 
-                ? `<span class="badge badge-success">Actif</span>` 
-                : `<span class="badge badge-danger">Suspendu</span>`;
+                ? `<span class="badge badge-success" style="font-weight:700;">✅ Actif</span>` 
+                : `<span class="badge badge-danger" style="font-weight:700;">🔒 Suspendu</span>`;
                 
             const actionBtn = r.status === 'active'
-                ? `<button class="btn btn-danger btn-sm" onclick="suspendRestaurant('${r.id}')">Suspendre 🔒</button>`
-                : `<button class="btn btn-success btn-sm" onclick="reactivateRestaurant('${r.id}')">Réactiver 🔓</button>`;
+                ? `<button class="admin-action-btn btn-suspend" onclick="suspendRestaurant('${r.id}')" title="Suspendre temporairement l'accès">🔒 Suspendre</button>`
+                : `<button class="admin-action-btn btn-activate" onclick="reactivateRestaurant('${r.id}')" title="Réactiver le restaurant">🔓 Réactiver</button>`;
 
             let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
             let selectPackHtml = `
-                <select class="form-control" style="padding: 0.2rem; font-size: 0.8rem; height: auto;" onchange="updateRestaurantPack('${r.id}', this.value)">
+                <select onchange="updateRestaurantPack('${r.id}', this.value)" style="padding: 0.35rem 0.6rem; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-weight: 600;">
                     <option value="Aucun (Gratuit)" ${packSubscribed === 'Aucun (Gratuit)' ? 'selected' : ''}>Gratuit (0 FCFA)</option>
                     <option value="Pack Simple" ${packSubscribed === 'Pack Simple' ? 'selected' : ''}>Simple (5k FCFA)</option>
                     <option value="Pack Startup" ${packSubscribed === 'Pack Startup' ? 'selected' : ''}>Startup (15k FCFA)</option>
@@ -2416,190 +2562,316 @@ function renderAdminTabTable() {
 
             rowsHtml += `
                 <tr>
-                    <td><strong>${r.name}</strong></td>
+                    <td>
+                        <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">${r.name}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">${r.category || 'Général'} • ID: ${r.id}</div>
+                    </td>
                     <td>${statusLabel}</td>
                     <td>${selectPackHtml}</td>
-                    <td>${rOrdersList.length} Cmd(s)</td>
-                    <td style="color: var(--success); font-weight: bold;">${rRevenue.toLocaleString()} FCFA</td>
+                    <td style="font-weight: 700; color: var(--text-primary);">${rOrdersList.length} Cmd(s)</td>
+                    <td style="font-weight: 800; color: #10b981;">${rRevenue.toLocaleString()} FCFA</td>
                     <td>
-                        <button class="btn btn-primary btn-sm" onclick="impersonateRestaurant('${r.id}')" title="Gérer ce restaurant">⚙️</button>
-                        ${actionBtn}
-                        <button class="btn btn-secondary btn-sm" onclick="router.navigate('/r/${r.slug}')" title="Visiter la page">🌐</button>
+                        <div class="admin-action-btn-group">
+                            <button class="admin-action-btn btn-manage" onclick="impersonateRestaurant('${r.id}')" title="Se connecter au tableau de bord de ce restaurant">
+                                ⚙️ Gérer
+                            </button>
+                            ${actionBtn}
+                            <button class="admin-action-btn" style="background: var(--bg-secondary); color: var(--text-primary);" onclick="router.navigate('/r/${r.slug}')" title="Voir la carte publique">
+                                🌐 Visiter
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `;
         });
 
         tableContainer.innerHTML = `
-            <div class="table-responsive">
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>Restaurant</th>
-                            <th>Statut</th>
-                            <th>Pack Abonnement</th>
-                            <th>Commandes</th>
-                            <th>C.A. Généré</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rowsHtml}
-                    </tbody>
+            <div class="admin-card-section" style="padding: 0; overflow: hidden;">
+                <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">🏪 Réseau des Restaurants Actifs</h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Contrôle des accès, formules d'abonnements et supervision par établissement.</p>
+                    </div>
+                    <span class="badge badge-info" style="font-weight: 800;">${activeOrSuspended.length} restaurants</span>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="admin-table-modern">
+                        <thead>
+                            <tr>
+                                <th>Établissement</th>
+                                <th>Statut</th>
+                                <th>Formule d'Abonnement</th>
+                                <th>Volume Commandes</th>
+                                <th>Chiffre d'Affaires</th>
+                                <th>Actions Super-Admin</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         `;
     }
     else if (adminActiveTab === 'create') {
         tableContainer.innerHTML = `
-            <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 2rem; border-radius: 24px; max-width: 600px; margin: 0 auto; box-shadow: var(--shadow);">
-                <h3 style="font-family: var(--font-serif); font-size: 1.35rem; margin-bottom: 1.5rem; text-align: center; color: var(--text-primary);">Créer un Nouveau Partenaire Restaurant</h3>
+            <div class="admin-card-section" style="max-width: 680px; margin: 0 auto;">
+                <div style="text-align: center; margin-bottom: 1.75rem;">
+                    <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem 0;">➕ Enregistrer un Nouveau Restaurant</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">Ajout direct d'un restaurant partenaire dans le réseau avec génération immédiate de ses accès.</p>
+                </div>
                 
                 <form id="admin-create-resto-form" onsubmit="handleAdminCreateRestaurant(event)">
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label class="form-label">Nom du restaurant <span class="required">*</span></label>
-                        <input type="text" id="adm-reg-name" class="form-control" placeholder="L'Étoile de Thiès" required oninput="handleRestaurantNameInput(this.value, 'adm-reg-username', 'adm-reg-password', 'adm-slug-availability-badge')">
+                    <div class="form-group" style="margin-bottom: 1.15rem;">
+                        <label class="form-label" style="font-weight: 700;">Nom du restaurant <span class="required">*</span></label>
+                        <input type="text" id="adm-reg-name" class="form-control" placeholder="Ex: Dibiterie Chez Bouba" required oninput="handleRestaurantNameInput(this.value, 'adm-reg-username', 'adm-reg-password', 'adm-slug-availability-badge')">
                     </div>
                     
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label class="form-label">Adresse physique à Thiès <span class="required">*</span></label>
+                    <div class="form-group" style="margin-bottom: 1.15rem;">
+                        <label class="form-label" style="font-weight: 700;">Adresse physique à Thiès <span class="required">*</span></label>
                         <input type="text" id="adm-reg-address" class="form-control" placeholder="Avenue de Caen, Thiès" required>
                     </div>
                     
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label class="form-label">Catégorie <span class="required">*</span></label>
-                        <select id="adm-reg-category" class="form-control" required>
-                            <option value="Traditionnel">Traditionnel (Thiéb, Yassa, Mafé)</option>
-                            <option value="Grillades / Dibi">Grillades / Dibi (Dibiterie)</option>
-                            <option value="Fast Food">Fast Food (Burgers, Chawarmas)</option>
-                            <option value="Pâtisserie">Pâtisserie / Petit Déjeuner</option>
-                            <option value="Gastronomique">Chic / Gastronomique</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label class="form-label">Numéro WhatsApp de contact <span class="required">*</span></label>
-                        <input type="tel" id="adm-reg-whatsapp" class="form-control" placeholder="+221 77 XXX XX XX" required>
-                    </div>
-                    
-                    <div class="form-row" style="margin-bottom: 1rem;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.15rem;">
                         <div class="form-group">
-                            <label class="form-label">Heure d'ouverture <span class="required">*</span></label>
+                            <label class="form-label" style="font-weight: 700;">Catégorie <span class="required">*</span></label>
+                            <select id="adm-reg-category" class="form-control" required>
+                                <option value="Traditionnel">Traditionnel (Thiéb, Yassa, Mafé)</option>
+                                <option value="Grillades / Dibi">Grillades / Dibi (Dibiterie)</option>
+                                <option value="Fast Food">Fast Food (Burgers, Chawarmas)</option>
+                                <option value="Pâtisserie">Pâtisserie / Petit Déjeuner</option>
+                                <option value="Gastronomique">Chic / Gastronomique</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 700;">Numéro WhatsApp <span class="required">*</span></label>
+                            <input type="tel" id="adm-reg-whatsapp" class="form-control" placeholder="+221 77 XXX XX XX" required>
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.15rem;">
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 700;">Heure d'ouverture <span class="required">*</span></label>
                             <input type="time" id="adm-reg-open" class="form-control" value="12:00" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Heure de fermeture <span class="required">*</span></label>
+                            <label class="form-label" style="font-weight: 700;">Heure de fermeture <span class="required">*</span></label>
                             <input type="time" id="adm-reg-close" class="form-control" value="23:00" required>
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label class="form-label">Identifiant de connexion (slug unique) <span class="required">*</span></label>
+                    <div class="form-group" style="margin-bottom: 1.15rem;">
+                        <label class="form-label" style="font-weight: 700;">Identifiant de connexion (slug unique) <span class="required">*</span></label>
                         <input type="text" id="adm-reg-username" class="form-control" placeholder="letoile-thies" required oninput="checkSlugAvailabilityRealtime(this.value)">
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement (modifiable).</small>
                         <div id="adm-slug-availability-badge" class="slug-status" style="margin-top: 0.35rem; font-size: 0.8rem; font-weight: 600;"></div>
                     </div>
                     
-                    <div class="form-group" style="margin-bottom: 1.5rem;">
-                        <label class="form-label">Mot de passe de connexion <span class="required">*</span></label>
+                    <div class="form-group" style="margin-bottom: 1.75rem;">
+                        <label class="form-label" style="font-weight: 700;">Mot de passe de gestion <span class="required">*</span></label>
                         <input type="password" id="adm-reg-password" class="form-control" placeholder="••••••••" required>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement par défaut (nom_221, modifiable).</small>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700;">Ajouter le Restaurant au Réseau 🚀</button>
+                    <button type="submit" class="btn btn-primary btn-block" style="font-weight: 800; font-size: 1rem; padding: 0.85rem; border-radius: 12px;">
+                        🚀 Activer et Ajouter au Réseau
+                    </button>
                 </form>
             </div>
         `;
     }
     else if (adminActiveTab === 'accounting') {
-        const allOrders = store.data.orders;
-        const completedOrders = allOrders.filter(o => o.status === 'Livrée');
-        const cancelledOrders = allOrders.filter(o => o.status === 'Annulée');
-        const pendingOrders = allOrders.filter(o => o.status === 'Reçue' || o.status === 'Confirmée' || o.status === 'Prête');
-        const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
+        const allOrders = store.data.orders || [];
+        const completedOrders = allOrders.filter(o => o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered');
+        const cancelledOrders = allOrders.filter(o => o.status === 'Annulée' || o.status === 'cancelled');
+        const pendingOrders = allOrders.filter(o => o.status === 'En attente' || o.status === 'Reçue' || o.status === 'Confirmée' || o.status === 'En cuisine' || o.status === 'Prêt pour livraison' || o.status === 'En livraison');
+        const totalRevenue = completedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
         
-        // Revenue per restaurant
-        let revenueByResto = {};
-        completedOrders.forEach(o => {
-            const resto = restos.find(r => r.id === o.restaurantId);
-            const name = resto ? resto.name : o.restaurantId;
-            revenueByResto[name] = (revenueByResto[name] || 0) + o.total;
+        // Detailed metrics per restaurant
+        let restoStats = {};
+        restos.forEach(r => {
+            restoStats[r.id] = {
+                name: r.name,
+                category: r.category || 'Général',
+                status: r.status,
+                totalOrders: 0,
+                completedOrders: 0,
+                pendingOrders: 0,
+                cancelledOrders: 0,
+                revenue: 0
+            };
+        });
+
+        allOrders.forEach(o => {
+            if (!restoStats[o.restaurantId]) {
+                const r = restos.find(item => item.id === o.restaurantId);
+                restoStats[o.restaurantId] = {
+                    name: r ? r.name : (o.restaurantName || o.restaurantId),
+                    category: r ? r.category : 'Partenaire',
+                    status: r ? r.status : 'active',
+                    totalOrders: 0,
+                    completedOrders: 0,
+                    pendingOrders: 0,
+                    cancelledOrders: 0,
+                    revenue: 0
+                };
+            }
+            const stat = restoStats[o.restaurantId];
+            stat.totalOrders++;
+            if (o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered') {
+                stat.completedOrders++;
+                stat.revenue += (Number(o.total) || 0);
+            } else if (o.status === 'Annulée' || o.status === 'cancelled') {
+                stat.cancelledOrders++;
+            } else {
+                stat.pendingOrders++;
+            }
         });
         
         let revenueRowsHtml = '';
-        Object.entries(revenueByResto).sort((a,b) => b[1] - a[1]).forEach(([name, rev]) => {
-            const orderCount = completedOrders.filter(o => {
-                const r = restos.find(r => r.name === name);
-                return r && o.restaurantId === r.id;
-            }).length;
-            revenueRowsHtml += `
-                <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 0.75rem;"><strong>${name}</strong></td>
-                    <td style="padding: 0.75rem;">${orderCount}</td>
-                    <td style="padding: 0.75rem; font-weight: 700; color: var(--success);">${rev.toLocaleString()} FCFA</td>
-                </tr>
-            `;
-        });
+        Object.values(restoStats)
+            .filter(st => st.totalOrders > 0 || st.status === 'active')
+            .sort((a, b) => b.revenue - a.revenue)
+            .forEach(st => {
+                const statusBadge = st.status === 'active' 
+                    ? `<span class="badge badge-success" style="font-size:0.75rem;">Actif</span>` 
+                    : st.status === 'pending' 
+                        ? `<span class="badge badge-warning" style="font-size:0.75rem;">En attente</span>` 
+                        : `<span class="badge badge-danger" style="font-size:0.75rem;">Suspendu</span>`;
+
+                revenueRowsHtml += `
+                    <tr>
+                        <td>
+                            <strong style="color: var(--text-primary);">${st.name}</strong>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary);">${st.category}</div>
+                        </td>
+                        <td>${statusBadge}</td>
+                        <td style="font-weight: 700;">${st.totalOrders}</td>
+                        <td style="color: #10b981; font-weight: 800;">${st.completedOrders}</td>
+                        <td style="color: #f59e0b; font-weight: 700;">${st.pendingOrders}</td>
+                        <td style="color: #ef4444;">${st.cancelledOrders}</td>
+                        <td style="font-weight: 800; color: #10b981; font-size:0.95rem;">${st.revenue.toLocaleString()} FCFA</td>
+                    </tr>
+                `;
+            });
         
         if (!revenueRowsHtml) {
-            revenueRowsHtml = '<tr><td colspan="3" style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">Aucune commande livrée pour le moment.</td></tr>';
+            revenueRowsHtml = '<tr><td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-secondary);">Aucune commande enregistrée pour le moment.</td></tr>';
         }
 
-        // All orders list
+        // All platform orders list with sequential IDs per restaurant
         let allOrdersHtml = '';
-        const sortedOrders = [...allOrders].sort((a,b) => (b.date + b.time).localeCompare(a.date + a.time));
+        const sortedOrders = [...allOrders].sort((a, b) => {
+            const tA = a.timestamp || (a.date && a.time ? new Date(`${a.date}T${a.time}`).getTime() : 0);
+            const tB = b.timestamp || (b.date && b.time ? new Date(`${b.date}T${b.time}`).getTime() : 0);
+            return tB - tA;
+        });
+
         sortedOrders.forEach(o => {
             const resto = restos.find(r => r.id === o.restaurantId);
-            const restoName = resto ? resto.name : o.restaurantId;
-            const statusClass = o.status === 'Livrée' ? 'badge-success' : o.status === 'Annulée' ? 'badge-danger' : o.status === 'Reçue' ? 'badge-warning' : 'badge-info';
+            const restoName = resto ? resto.name : (o.restaurantName || o.restaurantId);
+            const statusBadge = o.status === 'Livrée' ? '<span class="badge badge-success">✅ Livrée</span>' : 
+                                o.status === 'Annulée' ? '<span class="badge badge-danger">❌ Annulée</span>' : 
+                                o.status === 'En cuisine' ? '<span class="badge" style="background:#e0f2fe; color:#0284c7; font-weight:700;">👨‍🍳 En cuisine</span>' :
+                                o.status === 'Prêt pour livraison' ? '<span class="badge" style="background:#fef3c7; color:#d97706; font-weight:700;">📦 Prêt</span>' :
+                                o.status === 'En livraison' ? '<span class="badge" style="background:#dbeafe; color:#1d4ed8; font-weight:700;">🛵 En livraison</span>' :
+                                '<span class="badge badge-warning">⏳ En attente</span>';
+
+            const orderDisplayNum = o.orderNumber ? `Commande #${o.orderNumber}` : (o.id || 'CMD');
+
             allOrdersHtml += `
-                <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 0.6rem; font-weight: 600;">${o.id}</td>
-                    <td style="padding: 0.6rem;">${restoName}</td>
-                    <td style="padding: 0.6rem;">${o.customerName}</td>
-                    <td style="padding: 0.6rem;">${o.date} ${o.time}</td>
-                    <td style="padding: 0.6rem;"><span class="badge ${statusClass}">${o.status}</span></td>
-                    <td style="padding: 0.6rem; font-weight: 700; color: var(--primary);">${o.total.toLocaleString()} FCFA</td>
+                <tr>
+                    <td style="font-weight: 800; color: var(--primary); font-family: monospace;">${orderDisplayNum}</td>
+                    <td>
+                        <strong style="color: var(--text-primary);">${restoName}</strong>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600;">${o.customerName || 'Client'}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">${o.customerPhone || ''}</div>
+                    </td>
+                    <td style="font-size: 0.85rem;">${o.date || ''} <span style="color:var(--text-secondary); font-size:0.78rem;">${o.time || ''}</span></td>
+                    <td>${statusBadge}</td>
+                    <td style="font-weight: 800; color: var(--text-primary);">${(Number(o.total) || 0).toLocaleString()} FCFA</td>
+                    <td>
+                        <select onchange="adminUpdateOrderStatus('${o.id}', this.value)" style="padding: 0.35rem 0.6rem; border-radius: 8px; font-size: 0.78rem; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-weight: 600;">
+                            <option value="" disabled selected>Changer statut</option>
+                            <option value="En attente">⏳ En attente</option>
+                            <option value="En cuisine">👨‍🍳 En cuisine</option>
+                            <option value="Prêt pour livraison">📦 Prêt</option>
+                            <option value="En livraison">🛵 En livraison</option>
+                            <option value="Livrée">✅ Livrée</option>
+                            <option value="Annulée">❌ Annulée</option>
+                        </select>
+                    </td>
                 </tr>
             `;
         });
         
         if (!allOrdersHtml) {
-            allOrdersHtml = '<tr><td colspan="6" style="padding: 2rem; text-align: center; color: var(--text-secondary);">Aucune commande enregistrée sur la plateforme.</td></tr>';
+            allOrdersHtml = '<tr><td colspan="7" style="padding: 2.5rem; text-align: center; color: var(--text-secondary);">Aucune commande enregistrée sur la plateforme.</td></tr>';
         }
 
         tableContainer.innerHTML = `
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                <div class="stat-card" style="border-top: 4px solid var(--success); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
-                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">💰 Chiffre d'Affaires Global</span>
-                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--success);">${totalRevenue.toLocaleString()} FCFA</span>
+            <!-- Revenue by Restaurant -->
+            <div class="admin-card-section" style="padding: 0; overflow: hidden; margin-bottom: 2.5rem;">
+                <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-primary);">📊 Ventilation des Revenus par Établissement</h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Chiffre d'affaires cumulé et taux d'exécution des commandes par restaurant.</p>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="store.resequenceOrders(); renderAdminTabTable(); showToast('Numéros de commande recalculés de 1 à N.', 'success');" style="font-size: 0.78rem; font-weight: 700; border-radius: 10px;">
+                            🔢 Réindexer (1 à N)
+                        </button>
+                        <button class="btn btn-outline btn-sm" onclick="if(confirm('Voulez-vous remettre à zéro l\\'historique des commandes pour démarrer une nouvelle séquence ?')) { store.resetAllOrdersToZero(); renderAdminView(); }" style="color: var(--danger); border-color: var(--danger); font-size: 0.78rem; font-weight: 700; border-radius: 10px;">
+                            🔄 Remise à zéro
+                        </button>
+                    </div>
                 </div>
-                <div class="stat-card" style="border-top: 4px solid var(--primary); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
-                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">📦 Total Commandes</span>
-                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--text-primary);">${allOrders.length}</span>
+                
+                <div style="overflow-x: auto;">
+                    <table class="admin-table-modern">
+                        <thead>
+                            <tr>
+                                <th>Restaurant</th>
+                                <th>Statut</th>
+                                <th>Total Commandes</th>
+                                <th>Livrées</th>
+                                <th>En Cours</th>
+                                <th>Annulées</th>
+                                <th>C.A. Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>${revenueRowsHtml}</tbody>
+                    </table>
                 </div>
-                <div class="stat-card" style="border-top: 4px solid var(--accent); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
-                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">⏳ En Attente</span>
-                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--accent);">${pendingOrders.length}</span>
-                </div>
-                <div class="stat-card" style="border-top: 4px solid var(--danger); background: var(--bg-card); padding: 1.25rem; border-radius: 16px; box-shadow: var(--shadow);">
-                    <span style="color: var(--text-secondary); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; display: block; margin-bottom: 0.5rem;">❌ Annulées</span>
-                    <span style="font-size: 1.75rem; font-weight: 800; color: var(--danger);">${cancelledOrders.length}</span>
-                </div>
-            </div>
-            
-            <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">📊 Revenus par Restaurant</h3>
-            <div class="table-responsive" style="margin-bottom: 2rem;">
-                <table class="admin-table" style="width: 100%;">
-                    <thead><tr><th style="padding: 0.75rem;">Restaurant</th><th style="padding: 0.75rem;">Commandes Livrées</th><th style="padding: 0.75rem;">C.A. Généré</th></tr></thead>
-                    <tbody>${revenueRowsHtml}</tbody>
-                </table>
             </div>
 
-            <h3 style="font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary);">📋 Historique de toutes les Commandes</h3>
-            <div class="table-responsive">
-                <table class="admin-table" style="width: 100%;">
-                    <thead><tr><th style="padding: 0.6rem;">N°</th><th style="padding: 0.6rem;">Restaurant</th><th style="padding: 0.6rem;">Client</th><th style="padding: 0.6rem;">Date</th><th style="padding: 0.6rem;">Statut</th><th style="padding: 0.6rem;">Montant</th></tr></thead>
-                    <tbody>${allOrdersHtml}</tbody>
-                </table>
+            <!-- Global Live Orders Stream -->
+            <div class="admin-card-section" style="padding: 0; overflow: hidden;">
+                <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-primary);">📋 Journal de Toutes les Commandes du Réseau</h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Supervision en direct de l'état d'avancement des commandes et intervention immédiate.</p>
+                    </div>
+                    <span class="badge badge-info" style="font-weight: 800;">${allOrders.length} commande(s)</span>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table class="admin-table-modern">
+                        <thead>
+                            <tr>
+                                <th>N° Séquence</th>
+                                <th>Restaurant</th>
+                                <th>Client & Contact</th>
+                                <th>Date & Heure</th>
+                                <th>Statut Actuel</th>
+                                <th>Montant Total</th>
+                                <th>Ajuster Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>${allOrdersHtml}</tbody>
+                    </table>
+                </div>
             </div>
         `;
     }
@@ -2819,3 +3091,16 @@ function exportReservationsToCSV() {
     document.body.removeChild(link);
     showToast("Fichier CSV des réservations téléchargé !", "success");
 }
+
+window.adminUpdateOrderStatus = async function(orderId, newStatus) {
+    if (!orderId || !newStatus) return;
+    try {
+        await store.updateOrderStatus(orderId, newStatus);
+        showToast(`Statut de la commande mis à jour : ${newStatus}`, "success");
+        if (typeof renderAdminView === 'function') {
+            renderAdminView();
+        }
+    } catch (err) {
+        showToast("Erreur lors de la mise à jour du statut", "danger");
+    }
+};

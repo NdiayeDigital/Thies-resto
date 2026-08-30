@@ -76,6 +76,38 @@ class Store {
             });
         } catch(e) {}
 
+        // Restore locally saved custom restaurants
+        try {
+            const savedCustomRestos = JSON.parse(localStorage.getItem('thies_custom_restaurants') || '[]');
+            if (Array.isArray(savedCustomRestos)) {
+                savedCustomRestos.forEach(customR => {
+                    const exists = this.data.restaurants.some(r => r.id === customR.id || r.slug === customR.slug);
+                    if (!exists) {
+                        this.data.restaurants.push(customR);
+                    }
+                });
+            }
+        } catch(e) {}
+
+        // Restore locally stored orders and ensure clean sequence per restaurant
+        try {
+            const savedOrders = JSON.parse(localStorage.getItem('thies_platform_orders') || '[]');
+            if (Array.isArray(savedOrders)) {
+                this.data.orders = savedOrders;
+            }
+        } catch(e) {}
+
+        // Restore locally stored reservations
+        try {
+            const savedReservations = JSON.parse(localStorage.getItem('thies_platform_reservations') || '[]');
+            if (Array.isArray(savedReservations)) {
+                this.data.reservations = savedReservations;
+            }
+        } catch(e) {}
+
+        // Ensure order numbers are indexed 1..N per restaurant
+        this.resequenceOrders();
+
         // Background sync with Supabase
         if (supabaseClient) {
             this.syncPromise = this.syncFromSupabase();
@@ -84,10 +116,11 @@ class Store {
         }
     }
 
-    // Persist local custom changes (menu additions, real dish photos, plats du jour tags)
+    // Persist all state (restaurant overrides, orders, reservations, custom partners)
     save() {
         try {
             const overrides = {};
+            const customRestos = [];
             this.data.restaurants.forEach(r => {
                 if (r.menu && r.menu.length > 0) {
                     overrides[r.id] = {
@@ -97,13 +130,70 @@ class Store {
                         isOpenManual: r.isOpenManual,
                         address: r.address,
                         whatsapp: r.whatsapp,
-                        openHours: r.openHours
+                        openHours: r.openHours,
+                        status: r.status,
+                        subscriptionPack: r.subscriptionPack
                     };
+                }
+                // If it's a dynamic or newly added restaurant
+                if (r.id.startsWith('r') && parseInt(r.id.slice(1), 10) > 10 || r.id.startsWith('id_')) {
+                    customRestos.push(r);
                 }
             });
             localStorage.setItem('thies_restaurant_overrides', JSON.stringify(overrides));
+            localStorage.setItem('thies_custom_restaurants', JSON.stringify(customRestos));
+            localStorage.setItem('thies_platform_orders', JSON.stringify(this.data.orders));
+            localStorage.setItem('thies_platform_reservations', JSON.stringify(this.data.reservations));
         } catch(e) {
-            console.warn("Could not save restaurant overrides to localStorage", e);
+            console.warn("Could not save platform state to localStorage", e);
+        }
+    }
+
+    // Calcul du prochain numéro de commande séquentiel (1 à N) indépendant par restaurant
+    getNextRestaurantOrderNumber(restaurantId) {
+        if (!restaurantId) return 1;
+        const restoOrders = this.data.orders.filter(o => o.restaurantId === restaurantId);
+        if (!restoOrders || restoOrders.length === 0) return 1;
+        
+        const maxNum = restoOrders.reduce((max, o) => {
+            const num = Number(o.orderNumber) || 0;
+            return num > max ? num : max;
+        }, 0);
+        
+        return maxNum + 1;
+    }
+
+    // Remise à zéro / réindexation propre de tous les numéros de commande de 1 à N par restaurant
+    resequenceOrders() {
+        if (!this.data.orders || this.data.orders.length === 0) return;
+        
+        const restoMap = {};
+        // Trier chronologiquement (plus ancienne à plus récente)
+        const sorted = [...this.data.orders].sort((a, b) => {
+            const tA = a.timestamp || (a.date && a.time ? new Date(`${a.date}T${a.time}`).getTime() : 0);
+            const tB = b.timestamp || (b.date && b.time ? new Date(`${b.date}T${b.time}`).getTime() : 0);
+            return tA - tB;
+        });
+
+        sorted.forEach(order => {
+            if (!restoMap[order.restaurantId]) restoMap[order.restaurantId] = [];
+            restoMap[order.restaurantId].push(order);
+        });
+
+        Object.keys(restoMap).forEach(restoId => {
+            restoMap[restoId].forEach((o, index) => {
+                o.orderNumber = index + 1;
+                o.id = `CMD-${o.orderNumber}`;
+            });
+        });
+    }
+
+    // Réinitialisation complète des commandes à 0 pour démarrer une nouvelle séquence propre
+    resetAllOrdersToZero() {
+        this.data.orders = [];
+        this.save();
+        if (typeof showToast === 'function') {
+            showToast("Les numéros de commande ont été réinitialisés à zéro pour tous les restaurants.", "info");
         }
     }
 
@@ -819,6 +909,12 @@ class Store {
     }
 
     addOrder(order) {
+        if (!order.orderNumber) {
+            order.orderNumber = this.getNextRestaurantOrderNumber(order.restaurantId);
+        }
+        if (!order.id || order.id.startsWith('ORD-')) {
+            order.id = `CMD-${order.orderNumber}`;
+        }
         
         if (window.clientTracker) {
             const behaviorStr = window.clientTracker.getBehaviorReport();

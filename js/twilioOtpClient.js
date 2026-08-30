@@ -8,7 +8,7 @@
  * @param {string} phone - Numéro de téléphone au format local (+221...) ou standard
  * @returns {Promise<{ success: boolean, phone?: string, isDemoMode?: boolean, devCode?: string, message: string, retryAfter?: number }>}
  */
-export async function sendTwilioOtp(phone) {
+async function sendTwilioOtp(phone) {
     if (!phone) {
         return { success: false, message: "Le numéro de téléphone est requis." };
     }
@@ -39,7 +39,7 @@ export async function sendTwilioOtp(phone) {
  * @param {string} code - Code à 6 chiffres entré par l'utilisateur
  * @returns {Promise<{ success: boolean, verified: boolean, message: string }>}
  */
-export async function verifyTwilioOtp(phone, code) {
+async function verifyTwilioOtp(phone, code) {
     if (!phone || !code) {
         return { success: false, verified: false, message: "Numéro de téléphone et code requis." };
     }

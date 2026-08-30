@@ -238,8 +238,9 @@ function renderCheckoutTab(r) {
 
 let deliveryMap = null;
 let deliveryMarker = null;
+let googleDeliveryPicker = null;
 
-window.locateClientLive = function() {
+window.locateClientLive = async function() {
     const btn = document.getElementById('btn-live-gps');
     const statusEl = document.getElementById('live-gps-status');
     if (!navigator.geolocation) {
@@ -247,7 +248,38 @@ window.locateClientLive = function() {
         return;
     }
 
-    if (btn) btn.innerHTML = '⏳ Localisation en direct...';
+    if (btn) btn.innerHTML = '⏳ Localisation GPS en direct...';
+
+    if (window.googleMapsService) {
+        try {
+            const coords = await window.googleMapsService.startLiveTracking();
+            cart.deliveryLat = coords.lat;
+            cart.deliveryLng = coords.lng;
+
+            if (btn) {
+                btn.innerHTML = '📍 Position GPS capturée ✅';
+                btn.classList.remove('btn-outline');
+                btn.classList.add('btn-success');
+            }
+            if (statusEl) {
+                statusEl.style.display = 'block';
+                statusEl.innerHTML = `✅ Position GPS exacte capturée (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)})`;
+            }
+
+            const addressInput = document.getElementById('order-address');
+            if (addressInput && !addressInput.value.trim()) {
+                addressInput.placeholder = "Position GPS enregistrée. Précisez si besoin (villa, étage...)";
+            }
+
+            if (typeof showToast === 'function') {
+                showToast("📍 Votre position exacte en direct a été synchronisée sur la carte !", "success");
+            }
+            if (navigator.vibrate) navigator.vibrate(60);
+            return;
+        } catch (e) {
+            console.warn('[Google Maps Live Checkout Geolocation]', e);
+        }
+    }
 
     navigator.geolocation.getCurrentPosition(
         (pos) => {
@@ -257,7 +289,16 @@ window.locateClientLive = function() {
             cart.deliveryLat = lat;
             cart.deliveryLng = lng;
 
-            if (deliveryMap && deliveryMarker) {
+            // Update Google Maps if active
+            if (window.googleMapsService && window.google && window.google.maps) {
+                const gmap = window.googleMapsService.activeMaps.get('delivery-map');
+                if (gmap) {
+                    gmap.panTo({ lat, lng });
+                    gmap.setZoom(16);
+                }
+            }
+
+            if (deliveryMap && deliveryMarker && typeof deliveryMarker.setLatLng === 'function') {
                 deliveryMap.setView([lat, lng], 16);
                 deliveryMarker.setLatLng([lat, lng]);
                 deliveryMarker.fire('dragend');
@@ -279,7 +320,7 @@ window.locateClientLive = function() {
             }
 
             if (typeof showToast === 'function') {
-                showToast("📍 Votre position exacte en direct a été enregistrée pour la livraison.", "success");
+                showToast("📍 Votre position exacte en direct a été enregistrée pour la livraison à Thiès.", "success");
             }
             if (navigator.vibrate) navigator.vibrate(60);
         },
@@ -290,7 +331,7 @@ window.locateClientLive = function() {
                 showToast("Veuillez autoriser l'accès GPS pour partager votre position exacte.", "warning");
             }
         },
-        { enableHighAccuracy: true, timeout: 12000, maximumAge: 5000 }
+        { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
 };
 
@@ -299,62 +340,67 @@ function toggleAddressField(show) {
     if (show) {
         group.style.display = 'block';
         
-        setTimeout(() => {
-            if (!deliveryMap) {
-                deliveryMap = L.map('delivery-map').setView([14.7928, -16.9260], 13);
+        setTimeout(async () => {
+            const mapContainer = document.getElementById('delivery-map');
+            if (!mapContainer) return;
+
+            const r = store.getRestaurantById(cart.restaurantId) || {};
+            const rLat = Number(r.lat) || 14.7928;
+            const rLng = Number(r.lng) || -16.9260;
+
+            const updateDeliveryCostFromPos = (pos) => {
+                cart.deliveryLat = pos.lat;
+                cart.deliveryLng = pos.lng;
+                const dist = calculateDistance(rLat, rLng, pos.lat, pos.lng);
+                if (dist > 10) {
+                    if (typeof showToast === 'function') showToast("Attention : Vous êtes à plus de 10km du restaurant.", "warning");
+                }
+                let fee = Math.floor(dist * 200);
+                fee = Math.max(500, Math.min(fee, 1500));
+                cart.deliveryFee = fee;
+                
+                const feeDisplay = document.getElementById('delivery-fee-display');
+                if (feeDisplay) {
+                    feeDisplay.style.display = 'block';
+                    const feeVal = document.getElementById('fee-val');
+                    if (feeVal) feeVal.innerText = Number(fee).toLocaleString('fr-FR');
+                }
+                recalculateCart();
+                
+                const totalEls = document.querySelectorAll('.cart-total-price');
+                totalEls.forEach(el => el.innerText = Number(cart.total).toLocaleString('fr-FR') + " FCFA");
+            };
+
+            // Use Google Maps Platform Picker if available
+            if (window.googleMapsService) {
+                try {
+                    await window.googleMapsService.renderDeliveryPickerMap('delivery-map', (pos) => {
+                        updateDeliveryCostFromPos(pos);
+                    });
+                    // Initial calculation
+                    updateDeliveryCostFromPos({ lat: rLat, lng: rLng });
+                    return;
+                } catch (e) {
+                    console.warn('[Google Maps Delivery Picker] Fallback:', e);
+                }
+            }
+
+            // Leaflet fallback if Google Maps loader fails
+            if (!deliveryMap && typeof L !== 'undefined') {
+                deliveryMap = L.map('delivery-map').setView([rLat, rLng], 14);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '© OpenStreetMap contributors'
+                    attribution: '© OpenStreetMap'
                 }).addTo(deliveryMap);
                 
-                const r = store.getRestaurantById(cart.restaurantId);
-                const rLat = r.lat || 14.7928;
-                const rLng = r.lng || -16.9260;
-                L.marker([rLat, rLng]).addTo(deliveryMap).bindPopup(r.name).openPopup();
+                L.marker([rLat, rLng]).addTo(deliveryMap).bindPopup(r.name || 'Restaurant').openPopup();
                 
-                deliveryMarker = L.marker([14.7928, -16.9260], {draggable: true}).addTo(deliveryMap);
+                deliveryMarker = L.marker([rLat, rLng], {draggable: true}).addTo(deliveryMap);
                 
                 deliveryMarker.on('dragend', function(e) {
                     const pos = deliveryMarker.getLatLng();
-                    cart.deliveryLat = pos.lat;
-                    cart.deliveryLng = pos.lng;
-                    const dist = calculateDistance(rLat, rLng, pos.lat, pos.lng);
-                    if (dist > 10) {
-                        if(typeof showToast === 'function') showToast("Attention: Vous êtes à plus de 10km du restaurant.", "warning");
-                    }
-                    let fee = Math.floor(dist * 200);
-                    fee = Math.min(fee, 1500);
-                    cart.deliveryFee = fee;
-                    document.getElementById('delivery-fee-display').style.display = 'block';
-                    document.getElementById('fee-val').innerText = fee;
-                    recalculateCart();
-                    
-                    const totalEls = document.querySelectorAll('.cart-total-price');
-                    totalEls.forEach(el => el.innerText = cart.total + " FCFA");
+                    updateDeliveryCostFromPos(pos);
                 });
-                
-                // Bouton de géolocalisation automatique
-                const GeoControl = L.Control.extend({
-                    options: { position: 'topright' },
-                    onAdd: function () {
-                        const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control');
-                        btn.innerHTML = '📍 GPS Direct';
-                        btn.style.backgroundColor = 'white';
-                        btn.style.padding = '5px 10px';
-                        btn.style.cursor = 'pointer';
-                        btn.style.fontWeight = 'bold';
-                        btn.style.border = '2px solid rgba(0,0,0,0.2)';
-                        btn.style.borderRadius = '4px';
-                        btn.style.color = 'var(--primary, #d35400)';
-                        
-                        btn.onclick = function(e) {
-                            e.preventDefault();
-                            window.locateClientLive();
-                        };
-                        return btn;
-                    }
-                });
-                deliveryMap.addControl(new GeoControl());
-            } else {
+            } else if (deliveryMap) {
                 deliveryMap.invalidateSize();
             }
         }, 100);
@@ -362,10 +408,11 @@ function toggleAddressField(show) {
     } else {
         group.style.display = 'none';
         cart.deliveryFee = 0;
-        document.getElementById('delivery-fee-display').style.display = 'none';
+        const feeDisplay = document.getElementById('delivery-fee-display');
+        if (feeDisplay) feeDisplay.style.display = 'none';
         recalculateCart();
         const totalEls = document.querySelectorAll('.cart-total-price');
-        totalEls.forEach(el => el.innerText = cart.total + " FCFA");
+        totalEls.forEach(el => el.innerText = Number(cart.total).toLocaleString('fr-FR') + " FCFA");
     }
 }
 
@@ -437,7 +484,9 @@ function submitSimpleOrder(e, restaurantId) {
         localStorage.setItem('customerName', `${firstname} ${lastname}`.trim());
     }
     
-    const orderId = "ORD-" + Math.floor(1000 + Math.random() * 9000);
+    // Calculate sequence number for this specific restaurant (starts at 1 per restaurant)
+    const orderSeq = store.getNextRestaurantOrderNumber(r.id);
+    const orderId = "CMD-" + orderSeq;
     const date = new Date().toISOString().split('T')[0];
     const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     
@@ -448,6 +497,7 @@ function submitSimpleOrder(e, restaurantId) {
 
     const order = {
         id: orderId,
+        orderNumber: orderSeq,
         restaurantId: r.id,
         customerName: `${firstname} ${lastname}`,
         customerPhone: phone,

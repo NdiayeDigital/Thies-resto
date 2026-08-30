@@ -64,11 +64,15 @@ class ClientTracker {
 function logoutRestaurant() {
     try {
         sessionStorage.removeItem('resto_session');
+        localStorage.removeItem('resto_session');
+        sessionStorage.removeItem('restaurantSession');
     } catch(e) {}
-    if (typeof currentRestaurantSession !== 'undefined') currentRestaurantSession = null;
-    if (typeof showToast === 'function') showToast('Déconnexion réussie', 'success');
-    if (typeof router !== 'undefined') router.navigate('/auth');
+    currentRestaurantSession = null;
+    if (typeof showToast === 'function') showToast('Déconnexion Restaurant réussie. Vous êtes maintenant sur l\'espace client.', 'info');
+    if (typeof updateNavbar === 'function') updateNavbar();
+    if (typeof router !== 'undefined') router.navigate('/');
 }
+window.logoutRestaurant = logoutRestaurant;
 
 // ----------------------------------------------------
 // Page: DEMANDE DE PARTENARIAT
@@ -1654,6 +1658,9 @@ function updateNavbar() {
     // 3. PUBLIC CLIENT / GUEST MODE (Clean customer navigation, no super-admin button)
     else {
         html = `
+            <button class="btn btn-outline btn-sm" onclick="router.navigate('/map')" title="Carte Interactive Google Maps" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.85rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;">
+                <span>🗺️ Carte</span>
+            </button>
             <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')" title="Espace Resto / Connexion Restaurateur" aria-label="Espace Resto" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.9rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;">
                 <span style="font-size: 1.05rem; line-height: 1;">🏪</span>
                 <span>Espace Resto</span>
@@ -1665,6 +1672,7 @@ function updateNavbar() {
                 <span style="font-size: 0.75rem; color: var(--text-secondary);">Commandes en direct &amp; Réservations</span>
             </div>
             <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">🏠 Accueil</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/map'); return false;">🗺️ Carte Interactive (Google Maps)</a>
             <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">🍽️ Nos Restaurants Partenaires</a>
             <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--primary); font-weight: 600;">📍 Suivi de Commande</a>
             <a href="#" onclick="toggleMobileMenu(); router.navigate('/profile'); return false;" style="font-weight: 600;">👤 Mon Profil &amp; Fidélité</a>
@@ -1694,13 +1702,22 @@ function updateNavbar() {
 function logoutAdmin() {
     try {
         sessionStorage.removeItem('admin_session');
+        sessionStorage.removeItem('thies_admin_logged');
+        sessionStorage.removeItem('admin_password');
+        localStorage.removeItem('admin_session');
+        sessionStorage.removeItem('resto_session');
+        sessionStorage.removeItem('restaurantSession');
+        localStorage.removeItem('resto_session');
     } catch (e) {
-        console.warn("Failed to clear admin_session from sessionStorage", e);
+        console.warn("Failed to clear admin_session from storage", e);
     }
     isSuperAdminSession = false;
-    showToast("Session administrateur déconnectée", "success");
-    router.navigate('/');
+    currentRestaurantSession = null;
+    if (typeof showToast === 'function') showToast("Déconnexion Super-Admin réussie. Vous êtes maintenant sur l'espace client.", "info");
+    if (typeof updateNavbar === 'function') updateNavbar();
+    if (typeof router !== 'undefined') router.navigate('/');
 }
+window.logoutAdmin = logoutAdmin;
 
 // ----------------------------------------------------
 // Helper: Render Plats du Jour Component for Landing Page
@@ -1961,8 +1978,9 @@ router.add('#/', () => {
                     </div>
 
                     <div class="hero-actions-container" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 0.5rem; width: 100%;">
-                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); min-height: 48px; padding: 0.95rem 2rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem;">Explorer nos Menus 🍽️</button>
-                        <button class="btn btn-secondary ripple hover-3d" id="hero-geo-btn" onclick="geolocateRestaurants()" style="background: var(--bg-card); color: var(--text-primary); border: 1.5px solid var(--border); min-height: 48px; padding: 0.95rem 2rem; border-radius: 14px; font-weight: 600; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">📍 Trouver autour de moi</button>
+                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); min-height: 48px; padding: 0.95rem 1.8rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem;">Explorer nos Menus 🍽️</button>
+                        <button class="btn btn-secondary ripple hover-3d" id="hero-geo-btn" onclick="geolocateRestaurants()" style="background: var(--bg-card); color: var(--text-primary); border: 1.5px solid var(--border); min-height: 48px; padding: 0.95rem 1.6rem; border-radius: 14px; font-weight: 600; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">📍 Autour de moi</button>
+                        <button class="btn btn-outline ripple hover-3d" onclick="window.openGoogleMapsExplorer()" style="border: 1.5px solid var(--primary); color: var(--primary); min-height: 48px; padding: 0.95rem 1.6rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">🗺️ Carte Google Maps</button>
                     </div>
                 </div>
             </div>
@@ -2684,8 +2702,14 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 
 // ----------------------------------------------------
-// Map Modal Logic
 // ----------------------------------------------------
+// Google Maps Platform - Explorer & Modal Logic
+// ----------------------------------------------------
+window.openGoogleMapsExplorer = function(userLat = 14.7928, userLng = -16.9260) {
+    const allRestos = store && store.getRestaurants ? store.getRestaurants().filter(r => r.status === 'active') : [];
+    showMapModal(userLat, userLng, allRestos);
+};
+
 function showMapModal(userLat, userLng, restaurants) {
     let mapModal = document.getElementById('map-modal');
     if (!mapModal) {
@@ -2696,18 +2720,32 @@ function showMapModal(userLat, userLng, restaurants) {
         mapModal.style.left = '0';
         mapModal.style.width = '100vw';
         mapModal.style.height = '100vh';
-        mapModal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+        mapModal.style.backgroundColor = 'rgba(0,0,0,0.85)';
         mapModal.style.zIndex = '99999';
         mapModal.style.display = 'flex';
         mapModal.style.flexDirection = 'column';
+        mapModal.style.backdropFilter = 'blur(8px)';
         
         mapModal.innerHTML = `
-            <div style="background: var(--bg-card); width: 100%; height: 100%; max-width: 800px; max-height: 90vh; margin: auto; border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; position: relative; border: 1px solid var(--border);">
-                <div style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0;">📍 Restaurants autour de moi</h3>
-                    <button id="close-map-btn" style="background: transparent; border: none; font-size: 2rem; cursor: pointer; color: var(--text-primary); line-height: 1;">&times;</button>
+            <div style="background: var(--bg-card, #ffffff); width: 100%; height: 100%; max-width: 1020px; max-height: 94vh; margin: auto; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; position: relative; border: 1.5px solid var(--border, #e5e7eb); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+                <!-- Header -->
+                <div style="padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border, #e5e7eb); display: flex; justify-content: space-between; align-items: center; background: var(--bg-page, #f9fafb); flex-wrap: wrap; gap: 0.75rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="font-size: 1.6rem;">🗺️</span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">Restaurants à Thiès sur Google Maps</h3>
+                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Explorez les meilleures adresses culinaires en direct</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <button type="button" id="map-modal-gps-btn" class="btn btn-outline btn-sm" onclick="geolocateRestaurants()" style="border-radius: 20px; font-size: 0.8rem; padding: 0.4rem 0.85rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            📍 Me localiser
+                        </button>
+                        <button id="close-map-btn" style="background: transparent; border: none; font-size: 1.8rem; cursor: pointer; color: var(--text-primary); line-height: 1; padding: 0 0.5rem;" aria-label="Fermer la carte">&times;</button>
+                    </div>
                 </div>
-                <div id="leaflet-map" style="flex: 1; width: 100%;"></div>
+                <!-- Google Maps Container -->
+                <div id="google-maps-explorer-canvas" style="flex: 1; width: 100%; min-height: 380px; position: relative;"></div>
             </div>
         `;
         document.body.appendChild(mapModal);
@@ -2718,97 +2756,77 @@ function showMapModal(userLat, userLng, restaurants) {
     }
     
     mapModal.style.display = 'flex';
-    
-    // Check if Leaflet is loaded
-    if (typeof L === 'undefined') {
-        if (typeof showToast === 'function') showToast("Erreur: Carte non chargée.", "danger");
-        return;
-    }
 
-    if (!window.myLeafletMap) {
-        window.myLeafletMap = L.map('leaflet-map').setView([userLat, userLng], 14);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
-        }).addTo(window.myLeafletMap);
-    } else {
-        window.myLeafletMap.setView([userLat, userLng], 14);
-    }
-    
-    // Clear existing markers
-    if (window.myMapMarkers) {
-        window.myMapMarkers.forEach(m => window.myLeafletMap.removeLayer(m));
-    }
-    window.myMapMarkers = [];
-    
-    // Add user marker
-    const userIcon = L.divIcon({
-        className: 'user-marker',
-        html: '<div style="background-color: var(--primary); width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>',
-        iconSize: [20, 20]
-    });
-    
-    const userMarker = L.marker([userLat, userLng], {icon: userIcon})
-        .addTo(window.myLeafletMap)
-        .bindPopup("<b>Vous êtes ici 🎯</b>").openPopup();
-    window.myMapMarkers.push(userMarker);
-    
-    let anyClose = false;
+    const targetList = (restaurants && restaurants.length > 0)
+        ? restaurants
+        : (store && store.getRestaurants ? store.getRestaurants().filter(r => r.status === 'active') : []);
 
-    // Add restaurant markers
-    restaurants.forEach(r => {
-        if (r.lat && r.lng) {
-            const isClose = r._tempDistance && r._tempDistance < 20; // threshold: 20km
-            if (isClose) anyClose = true;
-            
-            const marker = L.marker([r.lat, r.lng])
-                .addTo(window.myLeafletMap)
-                .bindTooltip(r.name, {permanent: true, direction: "top", className: "map-label"}).bindPopup(`
-                    <div style="text-align:center;">
-                        <b style="font-size:1.1rem;">${r.name}</b><br>
-                        <span style="color:var(--text-secondary); font-size:0.85rem;">${r.address}</span><br>
-                        <span style="font-size:0.8rem; color:var(--primary); font-weight:bold;">${r._tempDistance ? r._tempDistance + ' km' : ''}</span><br>
-                        <a href="#/r/${r.slug}" style="display:inline-block; margin-top:8px; padding:6px 12px; background:var(--primary); color:white; border-radius:4px; text-decoration:none;" onclick="document.getElementById('map-modal').style.display='none';">Voir le menu</a>
-                    </div>
-                `);
-            window.myMapMarkers.push(marker);
-        }
-    });
-
-    if (!anyClose) {
-        if (typeof showToast === 'function') {
-            showToast("Les restaurants sont un peu loin de vous. Commandez en ligne pour vous faire livrer ! 🛵", "info");
-        }
-        const warningDiv = document.createElement('div');
-        warningDiv.style.background = 'var(--warning)';
-        warningDiv.style.color = '#000';
-        warningDiv.style.padding = '10px 15px';
-        warningDiv.style.textAlign = 'center';
-        warningDiv.style.fontWeight = 'bold';
-        warningDiv.style.fontSize = '0.9rem';
-        warningDiv.innerHTML = `📍 Votre position a été trouvée, mais les restaurants sont un peu loin de vous. <br><a href="#/catalog" onclick="document.getElementById('map-modal').style.display='none';" style="color: #000; text-decoration: underline; margin-top: 5px; display: inline-block;">Faites-vous livrer en commandant en ligne ! 🛵</a>`;
-        
-        const mapContainer = document.getElementById('leaflet-map');
-        if (mapContainer && mapContainer.parentNode) {
-            // Remove previous warning if exists to prevent duplicates
-            const oldWarning = document.getElementById('map-distance-warning');
-            if (oldWarning) oldWarning.remove();
-            
-            warningDiv.id = 'map-distance-warning';
-            mapContainer.parentNode.insertBefore(warningDiv, mapContainer);
-        }
+    if (window.googleMapsService) {
+        window.googleMapsService.renderExplorerMap('google-maps-explorer-canvas', targetList, {
+            userLat: userLat || window.userLat,
+            userLng: userLng || window.userLng,
+            onMarkerClick: (resto) => {
+                // If user clicks info window button, close modal
+                const modal = document.getElementById('map-modal');
+                if (modal) modal.style.display = 'none';
+            }
+        });
     }
-    
-    // Force Leaflet to recalculate size since it was hidden
-    setTimeout(() => {
-        window.myLeafletMap.invalidateSize();
-    }, 200);
 }
 
-window.geolocateRestaurants = function() {
-    if (typeof window.requestNativeGeolocation === 'function') {
-        window.requestNativeGeolocation();
-    } else if ("geolocation" in navigator) {
-        if (typeof showToast === 'function') showToast("Recherche de votre position...", "info");
+window.geolocateRestaurants = async function(shouldOpenModal = false) {
+    // Show UI loading state on GPS buttons
+    const heroBtn = document.getElementById('hero-geo-btn');
+    const modalBtn = document.getElementById('map-modal-gps-btn');
+    if (heroBtn) heroBtn.innerHTML = `<span>⏳</span> <span>Localisation GPS...</span>`;
+    if (modalBtn) modalBtn.innerHTML = `<span>⏳</span> <span>Localisation GPS...</span>`;
+
+    if (window.googleMapsService) {
+        try {
+            const coords = await window.googleMapsService.locateAndPan();
+            const userLat = coords.lat;
+            const userLng = coords.lng;
+            window.userLat = userLat;
+            window.userLng = userLng;
+
+            let restosWithDist = 0;
+            if (typeof store !== 'undefined' && store.data && store.data.restaurants) {
+                store.data.restaurants.forEach(r => {
+                    if (r.lat && r.lng) {
+                        const dist = calculateDistance(userLat, userLng, Number(r.lat), Number(r.lng));
+                        r._tempDistance = parseFloat(dist.toFixed(1));
+                        restosWithDist++;
+                    }
+                });
+            }
+
+            if (heroBtn) {
+                heroBtn.innerHTML = `<span>🟢</span> <span>Position en direct (${coords.isDefault ? 'Thiès' : 'GPS'})</span>`;
+                setTimeout(() => {
+                    heroBtn.innerHTML = `<span>📍</span> <span>Autour de moi</span>`;
+                }, 4000);
+            }
+            if (modalBtn) {
+                modalBtn.innerHTML = `<span>🟢</span> <span>GPS synchronisé</span>`;
+                setTimeout(() => {
+                    modalBtn.innerHTML = `<span>📍</span> <span>Me localiser</span>`;
+                }, 4000);
+            }
+
+            if (typeof applyFilters === 'function') applyFilters();
+
+            const mapModal = document.getElementById('map-modal');
+            if (shouldOpenModal || (mapModal && mapModal.style.display === 'flex')) {
+                showMapModal(userLat, userLng, store.data ? store.data.restaurants : []);
+            }
+            return coords;
+        } catch (err) {
+            console.warn("[Google Maps Geolocation] Fallback to standard GPS:", err);
+        }
+    }
+
+    if ("geolocation" in navigator) {
+        if (typeof showToast === 'function') showToast("Recherche de votre position à Thiès...", "info");
         navigator.geolocation.getCurrentPosition((position) => {
             const userLat = position.coords.latitude;
             const userLng = position.coords.longitude;
@@ -2819,7 +2837,7 @@ window.geolocateRestaurants = function() {
             if (typeof store !== 'undefined' && store.data && store.data.restaurants) {
                 store.data.restaurants.forEach(r => {
                     if (r.lat && r.lng) {
-                        const dist = calculateDistance(userLat, userLng, r.lat, r.lng);
+                        const dist = calculateDistance(userLat, userLng, Number(r.lat), Number(r.lng));
                         r._tempDistance = parseFloat(dist.toFixed(1));
                         restosWithDist++;
                     }
@@ -2827,18 +2845,61 @@ window.geolocateRestaurants = function() {
             }
             
             if (typeof showToast === 'function') showToast(`Position trouvée ! Tri de ${restosWithDist} restaurants...`, "success");
-            if (typeof scrollToCatalog === 'function') scrollToCatalog();
+            if (heroBtn) heroBtn.innerHTML = `<span>🟢</span> <span>GPS en direct</span>`;
+            if (modalBtn) modalBtn.innerHTML = `<span>🟢</span> <span>GPS synchronisé</span>`;
             if (typeof applyFilters === 'function') applyFilters();
-            if (typeof showMapModal === 'function') showMapModal(userLat, userLng, store.data.restaurants);
+            if (shouldOpenModal) showMapModal(userLat, userLng, store.data ? store.data.restaurants : []);
         }, (error) => {
             console.warn("Notice: Geolocation unavailable or timed out, default center used.");
+            if (heroBtn) heroBtn.innerHTML = `<span>📍</span> <span>Autour de moi</span>`;
+            if (modalBtn) modalBtn.innerHTML = `<span>📍</span> <span>Me localiser</span>`;
             if (typeof applyFilters === 'function') applyFilters();
             if (typeof showToast === 'function') showToast("Position par défaut : Thiès Centre", "info");
-        }, { timeout: 6000, maximumAge: 60000, enableHighAccuracy: false });
+            if (shouldOpenModal) showMapModal(14.7928, -16.9260, store.data ? store.data.restaurants : []);
+        }, { timeout: 8000, maximumAge: 0, enableHighAccuracy: true });
     } else {
         if (typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée sur ce navigateur.", "info");
+        if (shouldOpenModal) showMapModal(14.7928, -16.9260, store.data ? store.data.restaurants : []);
     }
 };
+
+// Route: #/map for Dedicated Full-Page Google Maps View
+router.add('#/map', () => {
+    updateSEO('home');
+    const container = document.getElementById('main-content');
+    const cartBar = document.getElementById('floating-cart-bar');
+    if (cartBar) cartBar.style.display = 'none';
+
+    container.innerHTML = `
+        <div class="map-page-container page-transition" style="max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h1 style="font-family: var(--font-serif); font-size: 1.85rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem;">Carte Interactive des Restaurants 🗺️</h1>
+                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">Retrouvez toutes les adresses gourmandes de Thiès en direct avec Google Maps Platform.</p>
+                </div>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <button class="btn btn-secondary btn-sm" onclick="geolocateRestaurants()" style="border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                        📍 Me Localiser
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="router.navigate('/')" style="border-radius: 20px;">
+                        🍽️ Vue Catalogue
+                    </button>
+                </div>
+            </div>
+
+            <!-- Google Maps Embedded Explorer -->
+            <div id="google-maps-page-canvas" style="height: 600px; width: 100%; border-radius: 24px; border: 1.5px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 2rem;"></div>
+        </div>
+    `;
+
+    const allRestos = store && store.getRestaurants ? store.getRestaurants().filter(r => r.status === 'active') : [];
+    if (window.googleMapsService) {
+        window.googleMapsService.renderExplorerMap('google-maps-page-canvas', allRestos, {
+            userLat: window.userLat || 14.7928,
+            userLng: window.userLng || -16.9260
+        });
+    }
+});
 
 
 function filterRestaurantsList() {
@@ -3047,9 +3108,10 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
         <nav class="tabs-nav">
             <button class="tab-btn ${activeTab === 'menu' ? 'active' : ''}" onclick="switchRestoTab('menu')">Menu du Jour 🍕</button>
             <button class="tab-btn ${activeTab === 'checkout' ? 'active' : ''}" id="tab-checkout-btn" onclick="switchRestoTab('checkout')">Commander 🛒</button>
+            <button class="tab-btn ${activeTab === 'map' ? 'active' : ''}" onclick="switchRestoTab('map')">Plan & Accès 📍</button>
             <button class="tab-btn ${activeTab === 'group' ? 'active' : ''}" onclick="switchRestoTab('group')">Commande de Groupe 👥</button>
             <button class="tab-btn ${activeTab === 'booking' ? 'active' : ''}" onclick="switchRestoTab('booking')">Réserver une Table 📅</button>
-            <button class="tab-btn ${activeTab === 'reviews' ? 'active' : ''}" onclick="switchRestoTab('reviews')">Avis Clients (${r.reviews.length}) 💬</button>
+            <button class="tab-btn ${activeTab === 'reviews' ? 'active' : ''}" onclick="switchRestoTab('reviews')">Avis Clients (${r.reviews ? r.reviews.length : 0}) 💬</button>
         </nav>
 
         <div class="tab-content">
@@ -3061,6 +3123,22 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
             <!-- PANEL: CHECKOUT -->
             <div class="tab-panel ${activeTab === 'checkout' ? 'active' : ''}" id="panel-checkout">
                 <div id="checkout-content-container"></div>
+            </div>
+
+            <!-- PANEL: GOOGLE MAPS PLAN & ACCESS -->
+            <div class="tab-panel ${activeTab === 'map' ? 'active' : ''}" id="panel-map">
+                <div style="background: var(--bg-card); border-radius: 18px; padding: 1.5rem; border: 1.5px solid var(--border); margin-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 0.25rem;">📍 Localisation : ${r.name}</h3>
+                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">${r.address || 'Thiès, Sénégal'} • Horaires : ${r.openHours || '11h00 - 23h00'}</p>
+                        </div>
+                        <a href="${googleMapsLink}" target="_blank" class="btn btn-primary btn-sm" style="border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem;">
+                            🗺️ Ouvrir Itinéraire Google Maps
+                        </a>
+                    </div>
+                    <div id="resto-detail-gmap" style="height: 420px; width: 100%; border-radius: 16px; border: 1.5px solid var(--border); overflow: hidden;"></div>
+                </div>
             </div>
 
             <!-- PANEL: GROUP ORDER -->
@@ -3087,6 +3165,10 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
     renderBookingTab(r);
     renderReviewsTab(r);
     
+    if (activeTab === 'map' && window.googleMapsService) {
+        setTimeout(() => window.googleMapsService.renderRestaurantDetailMap('resto-detail-gmap', r), 150);
+    }
+    
     // Update floating cart visibility
     updateFloatingCartBar(r);
 }
@@ -3097,7 +3179,7 @@ function switchRestoTab(tabName) {
     
     btns.forEach(btn => {
         btn.classList.remove('active');
-        if (btn.innerText.toLowerCase().includes(tabName === 'checkout' ? 'commander' : tabName === 'booking' ? 'réserver' : tabName === 'group' ? 'groupe' : tabName === 'reviews' ? 'avis' : 'menu')) {
+        if (btn.innerText.toLowerCase().includes(tabName === 'checkout' ? 'commander' : tabName === 'booking' ? 'réserver' : tabName === 'group' ? 'groupe' : tabName === 'reviews' ? 'avis' : tabName === 'map' ? 'plan' : 'menu')) {
             btn.classList.add('active');
         }
     });
@@ -3110,6 +3192,9 @@ function switchRestoTab(tabName) {
     if (r) {
         updateFloatingCartBar(r);
         if (tabName === 'checkout') renderCheckoutTab(r);
+        if (tabName === 'map' && window.googleMapsService) {
+            setTimeout(() => window.googleMapsService.renderRestaurantDetailMap('resto-detail-gmap', r), 100);
+        }
     }
     
     // Window scroll to top of tabs smoothly
@@ -6768,70 +6853,11 @@ window.closeGeoModal = function() {
     if (modal) modal.style.display = 'none';
 };
 
-window.geolocateRestaurants = function() {
-    // Show pedagogical modal first instead of native prompt
-    var modal = document.getElementById('geo-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    } else {
-        window.requestNativeGeolocation();
-    }
-};
-
 window.requestNativeGeolocation = function() {
     var modal = document.getElementById('geo-modal');
     if (modal) modal.style.display = 'none';
-    if ("geolocation" in navigator) {
-        if (typeof showToast === 'function') showToast("Recherche GPS en cours...", "info");
-        try {
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                try {
-                    window.userLat = position.coords.latitude;
-                    window.userLng = position.coords.longitude;
-                    
-                    if (typeof window.updateStartupVerificationUI === 'function') {
-                        window.updateStartupVerificationUI();
-                    }
-                    
-                    if (typeof showToast === 'function') showToast("Position GPS confirmée (Thiès)", "success");
-                    
-                    // Recalculate distances for all restaurants
-                    if (typeof store !== 'undefined' && store.data && store.data.restaurants) {
-                        store.data.restaurants.forEach(r => {
-                            if (r.lat && r.lng) {
-                                r._tempDistance = parseFloat(calculateDistance(window.userLat, window.userLng, r.lat, r.lng).toFixed(1));
-                            }
-                        });
-                    }
-                    if (typeof applyFilters === 'function') applyFilters();
-                    if (typeof showMapModal === 'function') showMapModal(window.userLat, window.userLng, store.data.restaurants);
-                } catch(e) {
-                    console.warn("GPS processing notice:", e);
-                }
-            }, (error) => {
-                console.warn("GPS non disponible ou timeout:", error ? (error.message || error.code) : 'Notice');
-                window.userLat = 14.7928;
-                window.userLng = -16.9260;
-                if (typeof store !== 'undefined' && store.data && store.data.restaurants) {
-                    store.data.restaurants.forEach(r => {
-                        if (r.lat && r.lng) {
-                            r._tempDistance = parseFloat(calculateDistance(window.userLat, window.userLng, r.lat, r.lng).toFixed(1));
-                        }
-                    });
-                }
-                if (typeof applyFilters === 'function') applyFilters();
-                if (typeof showToast === 'function') {
-                    showToast("Position centrée sur Thiès Ville", "info");
-                }
-                if (typeof window.updateStartupVerificationUI === 'function') {
-                    window.updateStartupVerificationUI();
-                }
-            }, { timeout: 6000, maximumAge: 60000, enableHighAccuracy: false });
-        } catch(err) {
-            console.warn("Geolocation call notice:", err);
-        }
-    } else {
-        if (typeof showToast === 'function') showToast("GPS non supporté par ce navigateur", "info");
+    if (typeof window.geolocateRestaurants === 'function') {
+        window.geolocateRestaurants(true);
     }
 };
 
