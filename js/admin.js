@@ -1,8 +1,11 @@
 // Page: RESTAURANT DASHBOARD (Gerer ses donnees)
 // ----------------------------------------------------
-let dashboardActiveTab = 'summary';
+let dashboardActiveTab = 'accounting';
 let currentOrderStatusFilter = 'Tous';
 let currentAccountingFilter = 'all'; // all, today, week, month
+window.currentOrdersSubView = window.currentOrdersSubView || 'orders';
+window.currentDishesSubView = window.currentDishesSubView || 'all';
+window.currentAccountSubView = window.currentAccountSubView || 'profile';
 
 router.add('#/dashboard', () => {
     // Hide cart
@@ -15,7 +18,20 @@ router.add('#/dashboard', () => {
         return;
     }
     
-    dashboardActiveTab = 'summary';
+    dashboardActiveTab = 'accounting';
+    startOrderPolling(currentRestaurantSession.id);
+    hideLoadingOverlay();
+    renderDashboardShell();
+});
+
+router.add('#/dashboard-accounting', () => {
+    const cart = document.getElementById('floating-cart-bar');
+    if (cart) cart.style.display = 'none';
+    if (!currentRestaurantSession) {
+        router.navigate('/auth');
+        return;
+    }
+    dashboardActiveTab = 'accounting';
     startOrderPolling(currentRestaurantSession.id);
     hideLoadingOverlay();
     renderDashboardShell();
@@ -29,6 +45,48 @@ router.add('#/dashboard-orders', () => {
         return;
     }
     dashboardActiveTab = 'orders';
+    window.currentOrdersSubView = 'orders';
+    startOrderPolling(currentRestaurantSession.id);
+    hideLoadingOverlay();
+    renderDashboardShell();
+});
+
+router.add('#/dashboard-reservations', () => {
+    const cart = document.getElementById('floating-cart-bar');
+    if (cart) cart.style.display = 'none';
+    if (!currentRestaurantSession) {
+        router.navigate('/auth');
+        return;
+    }
+    dashboardActiveTab = 'orders';
+    window.currentOrdersSubView = 'reservations';
+    startOrderPolling(currentRestaurantSession.id);
+    hideLoadingOverlay();
+    renderDashboardShell();
+});
+
+router.add('#/dashboard-dishes', () => {
+    const cart = document.getElementById('floating-cart-bar');
+    if (cart) cart.style.display = 'none';
+    if (!currentRestaurantSession) {
+        router.navigate('/auth');
+        return;
+    }
+    dashboardActiveTab = 'dishes';
+    startOrderPolling(currentRestaurantSession.id);
+    hideLoadingOverlay();
+    renderDashboardShell();
+});
+
+router.add('#/dashboard-menu', () => {
+    const cart = document.getElementById('floating-cart-bar');
+    if (cart) cart.style.display = 'none';
+    if (!currentRestaurantSession) {
+        router.navigate('/auth');
+        return;
+    }
+    dashboardActiveTab = 'dishes';
+    window.currentDishesSubView = 'all';
     startOrderPolling(currentRestaurantSession.id);
     hideLoadingOverlay();
     renderDashboardShell();
@@ -41,7 +99,8 @@ router.add('#/dashboard-add-menu', () => {
         router.navigate('/auth');
         return;
     }
-    dashboardActiveTab = 'add-menu';
+    dashboardActiveTab = 'dishes';
+    window.currentDishesSubView = 'add';
     startOrderPolling(currentRestaurantSession.id);
     hideLoadingOverlay();
     renderDashboardShell();
@@ -54,7 +113,8 @@ router.add('#/dashboard-daily-menu', () => {
         router.navigate('/auth');
         return;
     }
-    dashboardActiveTab = 'daily-menu';
+    dashboardActiveTab = 'dishes';
+    window.currentDishesSubView = 'daily';
     startOrderPolling(currentRestaurantSession.id);
     hideLoadingOverlay();
     renderDashboardShell();
@@ -68,6 +128,35 @@ router.add('#/dashboard-account', () => {
         return;
     }
     dashboardActiveTab = 'account';
+    window.currentAccountSubView = 'profile';
+    startOrderPolling(currentRestaurantSession.id);
+    hideLoadingOverlay();
+    renderDashboardShell();
+});
+
+router.add('#/dashboard-subscription', () => {
+    const cart = document.getElementById('floating-cart-bar');
+    if (cart) cart.style.display = 'none';
+    if (!currentRestaurantSession) {
+        router.navigate('/auth');
+        return;
+    }
+    dashboardActiveTab = 'account';
+    window.currentAccountSubView = 'subscription';
+    startOrderPolling(currentRestaurantSession.id);
+    hideLoadingOverlay();
+    renderDashboardShell();
+});
+
+router.add('#/dashboard-reviews', () => {
+    const cart = document.getElementById('floating-cart-bar');
+    if (cart) cart.style.display = 'none';
+    if (!currentRestaurantSession) {
+        router.navigate('/auth');
+        return;
+    }
+    dashboardActiveTab = 'account';
+    window.currentAccountSubView = 'reviews';
     startOrderPolling(currentRestaurantSession.id);
     hideLoadingOverlay();
     renderDashboardShell();
@@ -141,14 +230,10 @@ function renderDashboardShell() {
         `;
     }
 
-    const isOrdersGroup = ['orders', 'summary'].includes(dashboardActiveTab);
-    const isMenuGroup = ['add-menu', 'menu'].includes(dashboardActiveTab);
-    const isDailyMenuGroup = dashboardActiveTab === 'daily-menu';
-    const isAccountGroup = ['account', 'settings'].includes(dashboardActiveTab);
-    const isSubGroup = dashboardActiveTab === 'subscription';
-    const isAccountingGroup = dashboardActiveTab === 'accounting';
-    const isReviewsGroup = dashboardActiveTab === 'reviews';
-    const isReservationsGroup = dashboardActiveTab === 'reservations';
+    const isAccounting = dashboardActiveTab === 'accounting';
+    const isOrders = dashboardActiveTab === 'orders' || dashboardActiveTab === 'reservations';
+    const isDishes = dashboardActiveTab === 'dishes' || dashboardActiveTab === 'menu' || dashboardActiveTab === 'add-menu' || dashboardActiveTab === 'daily-menu';
+    const isAccount = dashboardActiveTab === 'account' || dashboardActiveTab === 'settings' || dashboardActiveTab === 'subscription' || dashboardActiveTab === 'reviews' || dashboardActiveTab === 'profile';
 
     // Calcul du nombre de commandes en attente pour le badge
     const currentOrders = store.getOrdersByRestaurant(r.id);
@@ -163,38 +248,22 @@ function renderDashboardShell() {
                     <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); font-weight: 600;">Espace Établissement</div>
                     <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-top: 0.15rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.name}</div>
                 </div>
-                <button class="sidebar-btn ${isOrdersGroup ? 'active' : ''}" onclick="switchDashboardTab('orders')">
+                <button class="sidebar-btn ${isAccounting ? 'active' : ''}" onclick="switchDashboardTab('accounting')">
+                    <i class="ri-bar-chart-2-line"></i>
+                    <span>Comptabilité</span>
+                </button>
+                <button class="sidebar-btn ${isOrders ? 'active' : ''}" onclick="switchDashboardTab('orders')">
                     <i class="ri-file-list-3-line"></i>
                     <span>Commandes</span>
                     ${pendingOrdersCount > 0 ? `<span style="background: var(--danger); color: white; border-radius: 10px; padding: 1px 6px; font-size: 0.72rem; margin-left: auto; font-weight: 700;">${pendingOrdersCount}</span>` : ''}
                 </button>
-                <button class="sidebar-btn ${isMenuGroup ? 'active' : ''}" onclick="switchDashboardTab('menu')">
+                <button class="sidebar-btn ${isDishes ? 'active' : ''}" onclick="switchDashboardTab('dishes')">
                     <i class="ri-restaurant-line"></i>
-                    <span>Menu &amp; Plats</span>
+                    <span>Plats</span>
                 </button>
-                <button class="sidebar-btn ${isDailyMenuGroup ? 'active' : ''}" onclick="switchDashboardTab('daily-menu')">
-                    <i class="ri-calendar-event-line"></i>
-                    <span>Plats du jour</span>
-                </button>
-                <button class="sidebar-btn ${isAccountGroup ? 'active' : ''}" onclick="switchDashboardTab('account')">
+                <button class="sidebar-btn ${isAccount ? 'active' : ''}" onclick="switchDashboardTab('account')">
                     <i class="ri-user-settings-line"></i>
-                    <span>Compte Restaurant</span>
-                </button>
-                <button class="sidebar-btn ${isSubGroup ? 'active' : ''}" onclick="switchDashboardTab('subscription')">
-                    <i class="ri-bank-card-line"></i>
-                    <span>Abonnement &amp; Pack</span>
-                </button>
-                <button class="sidebar-btn ${isAccountingGroup ? 'active' : ''}" onclick="switchDashboardTab('accounting')">
-                    <i class="ri-bar-chart-2-line"></i>
-                    <span>Comptabilité</span>
-                </button>
-                <button class="sidebar-btn ${isReviewsGroup ? 'active' : ''}" onclick="switchDashboardTab('reviews')">
-                    <i class="ri-chat-smile-2-line"></i>
-                    <span>Avis Clients</span>
-                </button>
-                <button class="sidebar-btn ${isReservationsGroup ? 'active' : ''}" onclick="switchDashboardTab('reservations')">
-                    <i class="ri-calendar-check-line"></i>
-                    <span>Réservations</span>
+                    <span>Compte</span>
                 </button>
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.75rem 0;" class="desktop-only">
                 <button class="sidebar-btn desktop-only" onclick="logoutRestaurant()" style="color: var(--danger); font-weight: 600;">
@@ -211,8 +280,29 @@ function renderDashboardShell() {
     renderDashboardTabContent(r);
 }
 
-function switchDashboardTab(tab) {
-    dashboardActiveTab = tab;
+function switchDashboardTab(tab, subTab) {
+    if (tab === 'summary' || tab === 'accounting') {
+        dashboardActiveTab = 'accounting';
+    } else if (tab === 'reservations') {
+        dashboardActiveTab = 'orders';
+        window.currentOrdersSubView = 'reservations';
+    } else if (tab === 'orders') {
+        dashboardActiveTab = 'orders';
+        if (subTab) window.currentOrdersSubView = subTab;
+    } else if (tab === 'menu' || tab === 'add-menu' || tab === 'daily-menu' || tab === 'dishes') {
+        dashboardActiveTab = 'dishes';
+        if (tab === 'daily-menu' || subTab === 'daily') window.currentDishesSubView = 'daily';
+        else if (tab === 'add-menu' || subTab === 'add') window.currentDishesSubView = 'add';
+        else if (subTab) window.currentDishesSubView = subTab;
+    } else if (tab === 'subscription' || tab === 'reviews' || tab === 'settings' || tab === 'account' || tab === 'profile') {
+        dashboardActiveTab = 'account';
+        if (tab === 'subscription' || subTab === 'subscription') window.currentAccountSubView = 'subscription';
+        else if (tab === 'reviews' || subTab === 'reviews') window.currentAccountSubView = 'reviews';
+        else if (subTab) window.currentAccountSubView = subTab;
+    } else {
+        dashboardActiveTab = tab;
+    }
+
     if (typeof updateNavbar === 'function') updateNavbar();
     if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
     const r = store.getRestaurantById(currentRestaurantSession.id);
@@ -220,19 +310,29 @@ function switchDashboardTab(tab) {
 }
 
 function getDashboardSubNavHtml(activeTab) {
+    const r = currentRestaurantSession ? store.getRestaurantById(currentRestaurantSession.id) : null;
+    const currentOrders = r ? store.getOrdersByRestaurant(r.id) : [];
+    const pendingOrdersCount = currentOrders.filter(o => o.status === 'En attente' || o.status === 'Reçue').length;
+
+    const isAccounting = activeTab === 'accounting' || activeTab === 'summary';
+    const isOrders = activeTab === 'orders' || activeTab === 'reservations';
+    const isDishes = activeTab === 'dishes' || activeTab === 'menu' || activeTab === 'add-menu' || activeTab === 'daily-menu';
+    const isAccount = activeTab === 'account' || activeTab === 'settings' || activeTab === 'subscription' || activeTab === 'reviews' || activeTab === 'profile';
+
     return `
         <div class="dashboard-subnav" style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; overflow-x: auto; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);">
-            <button class="btn btn-sm ${activeTab === 'orders' ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('orders')" style="font-weight: 600; border-radius: 12px; padding: 0.4rem 0.85rem; white-space: nowrap; font-size: 0.82rem;">
-                <i class="ri-file-list-3-line"></i> Commandes
+            <button class="btn btn-sm ${isAccounting ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('accounting')" style="font-weight: 700; border-radius: 12px; padding: 0.45rem 0.95rem; white-space: nowrap; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <i class="ri-bar-chart-2-line"></i> <span>Comptabilité</span>
             </button>
-            <button class="btn btn-sm ${activeTab === 'reservations' ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('reservations')" style="font-weight: 600; border-radius: 12px; padding: 0.4rem 0.85rem; white-space: nowrap; font-size: 0.82rem;">
-                <i class="ri-calendar-check-line"></i> Réservations
+            <button class="btn btn-sm ${isOrders ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('orders')" style="font-weight: 700; border-radius: 12px; padding: 0.45rem 0.95rem; white-space: nowrap; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <i class="ri-file-list-3-line"></i> <span>Commandes</span>
+                ${pendingOrdersCount > 0 ? `<span style="background: var(--danger); color: white; border-radius: 10px; padding: 1px 6px; font-size: 0.7rem; font-weight: 700; margin-left: 0.25rem;">${pendingOrdersCount}</span>` : ''}
             </button>
-            <button class="btn btn-sm ${activeTab === 'accounting' ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('accounting')" style="font-weight: 600; border-radius: 12px; padding: 0.4rem 0.85rem; white-space: nowrap; font-size: 0.82rem;">
-                <i class="ri-bar-chart-2-line"></i> Comptabilité
+            <button class="btn btn-sm ${isDishes ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('dishes')" style="font-weight: 700; border-radius: 12px; padding: 0.45rem 0.95rem; white-space: nowrap; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <i class="ri-restaurant-line"></i> <span>Plats</span>
             </button>
-            <button class="btn btn-sm ${activeTab === 'reviews' ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('reviews')" style="font-weight: 600; border-radius: 12px; padding: 0.4rem 0.85rem; white-space: nowrap; font-size: 0.82rem;">
-                <i class="ri-chat-smile-2-line"></i> Avis Clients
+            <button class="btn btn-sm ${isAccount ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('account')" style="font-weight: 700; border-radius: 12px; padding: 0.45rem 0.95rem; white-space: nowrap; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <i class="ri-user-settings-line"></i> <span>Compte</span>
             </button>
         </div>
     `;
@@ -270,105 +370,156 @@ function renderDashboardTabContent(r) {
         return;
     }
     
-    if (dashboardActiveTab === 'summary') {
-        const orders = store.getOrdersByRestaurant(r.id);
+    if (dashboardActiveTab === 'accounting' || dashboardActiveTab === 'summary') {
+        let orders = store.getOrdersByRestaurant(r.id);
         const todayStr = new Date().toISOString().split('T')[0];
-        const todayOrders = orders.filter(o => o.date === todayStr);
-        const pendingOrders = orders.filter(o => typeof window.isOrderUntreated === 'function' ? window.isOrderUntreated(o) : (o.status === 'En attente' || o.status === 'Reçue'));
-        const delayed10mOrders = pendingOrders.filter(o => (typeof window.getUntreatedElapsedMinutes === 'function' ? window.getUntreatedElapsedMinutes(o) : 0) >= 10);
-        const todayRevenue = todayOrders.filter(o => o.status === 'Livrée').reduce((sum, o) => sum + o.total, 0);
         
-        const reservations = store.getReservationsByRestaurant(r.id);
-        const upcomingRes = reservations.filter(res => res.status === 'En attente' || res.status === 'Confirmée').length;
+        if (currentAccountingFilter === 'today') {
+            orders = orders.filter(o => o.date === todayStr);
+        } else if (currentAccountingFilter === 'week') {
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            orders = orders.filter(o => o.date >= weekAgo && o.date <= todayStr);
+        } else if (currentAccountingFilter === 'month') {
+            const today = new Date();
+            const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+            orders = orders.filter(o => o.date >= monthAgo && o.date <= todayStr);
+        }
 
-        // Banner for overdue orders
-        let overdueBannerHtml = '';
-        if (delayed10mOrders.length > 0) {
-            overdueBannerHtml = `
-                <div class="delayed-order-banner">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span style="font-size: 2rem;">🚨</span>
-                        <div>
-                            <strong style="color: #dc2626; font-size: 1.05rem; display: block;">ATTENTION : ${delayed10mOrders.length} commande(s) en attente depuis +10 minutes !</strong>
-                            <span style="color: var(--text-secondary); font-size: 0.85rem;">Traitez-les immédiatement pour éviter l'impatience ou l'annulation du client.</span>
-                        </div>
-                    </div>
-                    <button class="btn btn-danger" onclick="filterOrdersDashboard('Retard (>10 min)'); switchDashboardTab('orders');" style="font-weight: 800; white-space: nowrap; background: #dc2626; border-color: #991b1b; color: white;">
-                        ⚡ Traiter d'urgence (${delayed10mOrders.length})
-                    </button>
-                </div>
+        const completedOrders = orders.filter(o => o.status === 'Livrée');
+        const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
+        const totalOrdersCount = orders.length;
+        const completedOrdersCount = completedOrders.length;
+        const avgCart = completedOrdersCount > 0 ? Math.round(totalRevenue / completedOrdersCount) : 0;
+        
+        // Breakdown by mode
+        const deliveryOrders = completedOrders.filter(o => o.mode === 'Livraison');
+        const takeawayOrders = completedOrders.filter(o => o.mode === 'A emporter' || o.mode === 'Emporter' || o.mode === 'À emporter');
+        const dineInOrders = completedOrders.filter(o => o.mode === 'Sur place');
+        
+        const deliveryRev = deliveryOrders.reduce((sum, o) => sum + o.total, 0);
+        const takeawayRev = takeawayOrders.reduce((sum, o) => sum + o.total, 0);
+        const dineInRev = dineInOrders.reduce((sum, o) => sum + o.total, 0);
+
+        // Build list of completed or all orders
+        let rowsHtml = '';
+        if (orders.length === 0) {
+            rowsHtml = `
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        Aucune commande enregistrée pour la période sélectionnée.
+                    </td>
+                </tr>
             `;
+        } else {
+            orders.forEach(o => {
+                const statusBadge = o.status === 'Livrée' 
+                    ? `<span class="badge badge-success" style="background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3);">Livrée (Payée)</span>`
+                    : o.status === 'Reçue'
+                    ? `<span class="badge badge-warning" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">En attente</span>`
+                    : `<span class="badge badge-info" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">${o.status}</span>`;
+
+                rowsHtml += `
+                    <tr class="accounting-row" data-client="${(o.customerName || '').toLowerCase()}" data-id="${o.id.toLowerCase()}">
+                        <td><strong>${o.date} ${o.time || ''}</strong></td>
+                        <td>${o.customerName || 'Client anonyme'}</td>
+                        <td><a href="tel:${o.customerPhone}" style="color: var(--success); font-weight: bold;">📞 ${o.customerPhone}</a></td>
+                        <td>${o.mode}</td>
+                        <td style="color: var(--primary); font-weight: bold;">${o.total.toLocaleString()} FCFA</td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+            });
         }
 
         panel.innerHTML = `
-            ${getDashboardSubNavHtml('summary')}
-            <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-                <h2 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary); margin: 0;">Résumé du Jour</h2>
-                <button class="btn btn-primary btn-sm" onclick="requestPushNotifications()">🔔 Activer Notifications Push</button>
-            </div>
-            
-            ${overdueBannerHtml}
-
-            <div class="stats-grid">
-                <div class="stat-card ${delayed10mOrders.length > 0 ? 'stat-card-urgent' : ''}">
-                    <span class="stat-card-title">⏳ Commandes en attente</span>
-                    <div style="display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap;">
-                        <span class="stat-card-value" style="color: ${delayed10mOrders.length > 0 ? '#dc2626' : 'var(--text-primary)'};">${pendingOrders.length}</span>
-                        ${delayed10mOrders.length > 0 ? `<span style="font-size: 0.78rem; font-weight: 700; color: #dc2626; background: rgba(220, 38, 38, 0.12); padding: 2px 6px; border-radius: 6px;">dont ${delayed10mOrders.length} > 10min</span>` : ''}
-                    </div>
-                    ${pendingOrders.length > 0 ? `<button class="btn ${delayed10mOrders.length > 0 ? 'btn-danger' : 'btn-primary'} btn-sm" style="margin-top: 0.75rem; width: 100%; font-weight: 700;" onclick="${delayed10mOrders.length > 0 ? "filterOrdersDashboard('Retard (>10 min)'); switchDashboardTab('orders');" : "switchDashboardTab('orders');"}">${delayed10mOrders.length > 0 ? '🚨 Traiter les retards' : 'Voir les commandes'}</button>` : ''}
-                </div>
-                <div class="stat-card">
-                    <span class="stat-card-title">💰 C.A. d'Aujourd'hui</span>
-                    <span class="stat-card-value" style="color: var(--success);">${todayRevenue.toLocaleString()} FCFA</span>
-                    <div style="margin-top: 0.35rem; font-size: 0.78rem; color: var(--text-secondary);">${todayOrders.length} commandes aujourd'hui</div>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-card-title">📅 Réservations Actives</span>
-                    <span class="stat-card-value" style="color: var(--primary);">${upcomingRes}</span>
-                    <button class="btn btn-secondary btn-sm" style="margin-top: 0.75rem; width: 100%; font-weight: 600;" onclick="switchDashboardTab('reservations')">Voir l'agenda</button>
-                </div>
-            </div>
-            
-            <div class="dashboard-actions-grid">
-                <div class="dashboard-action-card">
+            ${getDashboardSubNavHtml('accounting')}
+            <div class="accounting-dashboard">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
                     <div>
-                        <h4>
-                            <span>📦 Commandes Entrantes</span>
-                            <span class="badge badge-primary">${orders.length}</span>
-                        </h4>
-                        <p>Gérez le flux de vos commandes en temps réel, acceptez les commandes et mettez-les en cuisine d'un simple clic.</p>
+                        <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: var(--text-primary); margin: 0;">📊 Journal de Comptabilité</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0 0;">Suivi des chiffres d'affaires et historique complet des commandes clients.</p>
                     </div>
-                    <button class="btn btn-primary btn-block" onclick="switchDashboardTab('orders')" style="font-weight: 700; min-height: 44px;">
-                        Consulter les Commandes 📦
-                    </button>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                        <select class="form-control" style="width: auto; margin: 0; padding: 0.25rem 0.5rem; font-size: 0.85rem;" onchange="currentAccountingFilter = this.value; renderDashboardTabContent(store.getRestaurantById('${r.id}'))">
+                            <option value="all" ${currentAccountingFilter === 'all' ? 'selected' : ''}>Toutes les dates</option>
+                            <option value="today" ${currentAccountingFilter === 'today' ? 'selected' : ''}>Aujourd'hui</option>
+                            <option value="week" ${currentAccountingFilter === 'week' ? 'selected' : ''}>7 derniers jours</option>
+                            <option value="month" ${currentAccountingFilter === 'month' ? 'selected' : ''}>30 derniers jours</option>
+                        </select>
+                        <button class="btn btn-primary btn-sm" onclick="exportOrdersCSV('${r.id}')">💾 Exporter CSV</button>
+                        <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Imprimer</button>
+                    </div>
                 </div>
 
-                <div class="dashboard-action-card">
-                    <div>
-                        <h4>
-                            <span>🍲 Gestion des Menus</span>
-                            <span class="badge badge-info">${(r.menu || []).length} plats</span>
-                        </h4>
-                        <p>Ajoutez de nouveaux plats, modifiez les prix, activez les ruptures ou mettez un plat du jour en vedette.</p>
-                    </div>
-                    <button class="btn btn-secondary btn-block" onclick="switchDashboardTab('add-menu')" style="font-weight: 700; min-height: 44px;">
-                        Gérer les Menus & Plats ➕
-                    </button>
+                <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem; position: relative; height: 250px;">
+                    <canvas id="revenueChart"></canvas>
                 </div>
-            </div>
 
-            <h3 style="font-family: var(--font-serif); font-size: 1.15rem; color: var(--text-primary); margin: 1.5rem 0 0.75rem 0;">Statut Opérationnel</h3>
-            <div style="background: var(--bg-card); padding: 1.15rem; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <strong style="display: block; font-size: 1.05rem; margin-bottom: 0.2rem; color: var(--text-primary);">${r.isOpenManual ? '🟢 Ouvert aux commandes' : '🔴 Actuellement fermé (Manuel)'}</strong>
-                    <span style="font-size: 0.82rem; color: var(--text-secondary);">Gérez l'ouverture ou la fermeture exceptionnelle de la cuisine</span>
+                <div class="accounting-stats-grid">
+                    <div class="accounting-card">
+                        <div class="accounting-card-title">Chiffre d'Affaires Total</div>
+                        <div class="accounting-card-value" style="color: var(--success);">${totalRevenue.toLocaleString()} FCFA</div>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Commandes validées & livrées</small>
+                    </div>
+                    <div class="accounting-card">
+                        <div class="accounting-card-title">Commandes traitées</div>
+                        <div class="accounting-card-value">${completedOrdersCount} / ${totalOrdersCount}</div>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Commandes livrées sur le total</small>
+                    </div>
+                    <div class="accounting-card">
+                        <div class="accounting-card-title">Panier Moyen</div>
+                        <div class="accounting-card-value" style="color: var(--primary);">${avgCart.toLocaleString()} FCFA</div>
+                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Par commande encaissée</small>
+                    </div>
                 </div>
-                <button class="btn ${r.isOpenManual ? 'btn-danger' : 'btn-success'}" onclick="toggleRestaurantManualStatus('${r.id}')" style="min-height: 44px; font-weight: 700;">
-                    ${r.isOpenManual ? 'Forcer la Fermeture 🔴' : 'Ré-ouvrir 🟢'}
-                </button>
+
+                <div class="accounting-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 2rem;">
+                    <div class="accounting-card" style="padding: 1rem 1.25rem;">
+                        <div class="accounting-card-title" style="font-size: 0.7rem;">🛵 Livraison</div>
+                        <div class="accounting-card-value" style="font-size: 1.2rem;">${deliveryRev.toLocaleString()} F</div>
+                        <small style="color: var(--text-secondary); font-size: 0.7rem;">${deliveryOrders.length} commande(s)</small>
+                    </div>
+                    <div class="accounting-card" style="padding: 1rem 1.25rem;">
+                        <div class="accounting-card-title" style="font-size: 0.7rem;">🛍️ À Emporter</div>
+                        <div class="accounting-card-value" style="font-size: 1.2rem;">${takeawayRev.toLocaleString()} F</div>
+                        <small style="color: var(--text-secondary); font-size: 0.7rem;">${takeawayOrders.length} commande(s)</small>
+                    </div>
+                    <div class="accounting-card" style="padding: 1rem 1.25rem;">
+                        <div class="accounting-card-title" style="font-size: 0.7rem;">🍽️ Sur Place</div>
+                        <div class="accounting-card-value" style="font-size: 1.2rem;">${dineInRev.toLocaleString()} F</div>
+                        <small style="color: var(--text-secondary); font-size: 0.7rem;">${dineInOrders.length} commande(s)</small>
+                    </div>
+                </div>
+
+                <div class="accounting-table-container">
+                    <div class="accounting-header-actions">
+                        <h3 style="font-size: 1.1rem; color: var(--text-primary); font-family: var(--font-serif);">Historique Général des Commandes</h3>
+                        <input type="text" placeholder="Rechercher par client ou N°..." class="accounting-search" oninput="filterAccountingTable(this.value)">
+                    </div>
+
+                    <div class="table-responsive-accounting">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Date & Heure</th>
+                                    <th>Client (Prénom & Nom)</th>
+                                    <th>Téléphone</th>
+                                    <th>Mode</th>
+                                    <th>Montant Total</th>
+                                    <th>Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         `;
+        
+        setTimeout(() => renderRevenueChart(orders), 100);
     }
     else if (dashboardActiveTab === 'orders') {
         if (store && typeof store.checkAndAutoCancelStaleOrders === 'function') {
@@ -378,8 +529,12 @@ function renderDashboardTabContent(r) {
         const todayStr = new Date().toISOString().split('T')[0];
         
         const todayOrders = orders.filter(o => o.date === todayStr);
-        const todayRevenue = todayOrders.filter(o => o.status === 'Livrée').reduce((sum, o) => sum + o.total, 0);
+        const todayRevenue = todayOrders.filter(o => o.status === 'Livrée' || o.status === 'Livré').reduce((sum, o) => sum + (Number(o.total) || 0), 0);
         const pendingOrders = orders.filter(o => typeof window.isOrderUntreated === 'function' ? window.isOrderUntreated(o) : (o.status === 'En attente' || o.status === 'Reçue'));
+        const kitchenOrders = orders.filter(o => o.status === 'En cuisine' || o.status === 'En préparation' || o.status === 'Confirmée');
+        const readyOrders = orders.filter(o => o.status === 'Prêt pour livraison' || o.status === 'Prête');
+        const deliveryOrders = orders.filter(o => o.status === 'En cours de livraison' || o.status === 'En livraison' || o.status === 'Partie en livraison');
+        const deliveredOrders = orders.filter(o => o.status === 'Livrée' || o.status === 'Livré');
         const delayed10mOrders = pendingOrders.filter(o => (typeof window.getUntreatedElapsedMinutes === 'function' ? window.getUntreatedElapsedMinutes(o) : 0) >= 10);
 
         // Apply filters
@@ -389,41 +544,55 @@ function renderDashboardTabContent(r) {
         } else if (currentOrderStatusFilter === 'En attente') {
             filteredOrders = orders.filter(o => o.status === 'En attente' || o.status === 'Reçue');
         } else if (currentOrderStatusFilter === 'En cuisine') {
-            filteredOrders = orders.filter(o => o.status === 'En cuisine' || o.status === 'En préparation' || o.status === 'Confirmée');
+            filteredOrders = kitchenOrders;
         } else if (currentOrderStatusFilter === 'Prêt pour livraison') {
-            filteredOrders = orders.filter(o => o.status === 'Prêt pour livraison' || o.status === 'Prête');
+            filteredOrders = readyOrders;
         } else if (currentOrderStatusFilter === 'En livraison') {
-            filteredOrders = orders.filter(o => o.status === 'En cours de livraison' || o.status === 'En livraison' || o.status === 'Partie en livraison');
+            filteredOrders = deliveryOrders;
         } else if (currentOrderStatusFilter === 'Livrées') {
-            filteredOrders = orders.filter(o => o.status === 'Livrée' || o.status === 'Livré');
+            filteredOrders = deliveredOrders;
+        }
+
+        // Apply search query if present
+        if (window.dashboardOrdersSearchQuery && window.dashboardOrdersSearchQuery.trim()) {
+            const q = window.dashboardOrdersSearchQuery.toLowerCase().trim();
+            filteredOrders = filteredOrders.filter(o => {
+                const name = (o.customerName || '').toLowerCase();
+                const phone = (o.customerPhone || '').toLowerCase();
+                const addr = (o.address || '').toLowerCase();
+                const idStr = String(o.id || '').toLowerCase();
+                const itemsStr = (o.items || []).map(i => i.name || '').join(' ').toLowerCase();
+                return name.includes(q) || phone.includes(q) || addr.includes(q) || idStr.includes(q) || itemsStr.includes(q);
+            });
         }
 
         let listHtml = '';
         if (filteredOrders.length === 0) {
             listHtml = `
-                <div style="text-align: center; color: var(--text-secondary); padding: 4rem 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;">
-                    <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">📦</span>
-                    Aucune commande ne correspond au filtre <strong>"${currentOrderStatusFilter}"</strong>.
+                <div style="text-align: center; color: var(--text-secondary); padding: 3.5rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;">
+                    <span style="font-size: 3rem; display: block; margin-bottom: 0.75rem;">📦</span>
+                    <p style="font-weight: 700; font-size: 1rem; color: var(--text-primary); margin: 0 0 0.5rem 0;">Aucune commande trouvée</p>
+                    <p style="font-size: 0.85rem; margin: 0;">Aucune commande ne correspond au filtre <strong>"${currentOrderStatusFilter}"</strong>${window.dashboardOrdersSearchQuery ? ` ou à la recherche "${window.dashboardOrdersSearchQuery}"` : ''}.</p>
                 </div>
             `;
         } else {
             filteredOrders.forEach(o => {
-                const itemsStr = o.items.map(i => `<span style="background: var(--bg-secondary); padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border); display: inline-block; margin: 0.15rem 0.15rem 0.15rem 0;">${i.name} <strong>x${i.qty}</strong></span>`).join(' ');
+                const itemsStr = (o.items || []).map(i => `<span style="background: var(--bg-secondary); padding: 0.25rem 0.55rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; border: 1px solid var(--border); display: inline-block; margin: 0.15rem 0.15rem 0.15rem 0;">${i.name} <strong>x${i.qty || i.quantity || 1}</strong></span>`).join(' ');
                 
                 const isUntreated = typeof window.isOrderUntreated === 'function' ? window.isOrderUntreated(o) : (o.status === 'En attente' || o.status === 'Reçue');
                 const elapsedMinutes = typeof window.getUntreatedElapsedMinutes === 'function' ? window.getUntreatedElapsedMinutes(o) : 0;
                 const isOverdue = isUntreated && elapsedMinutes >= 10;
 
-                // Status styles
+                // Status styles & controls
                 let statusBadge = '';
                 let actionBtns = '';
-                const clientLat = o.deliveryLat || o.delivery_lat;
-                const clientLng = o.deliveryLng || o.delivery_lng;
+                const clientLat = o.deliveryLat || o.delivery_lat || o.client_lat;
+                const clientLng = o.deliveryLng || o.delivery_lng || o.client_lng;
                 
                 const quickStatusSelect = `
-                    <div style="margin-top: 0.75rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; background: var(--bg-secondary); padding: 0.4rem 0.75rem; border-radius: 10px; border: 1px solid var(--border);">
-                        <label for="status-sel-${o.id}" style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); margin: 0;">Changer statut rapide :</label>
-                        <select id="status-sel-${o.id}" class="form-control" onchange="changeOrderStatus('${o.id}', this.value)" style="width: auto; padding: 0.25rem 0.6rem; font-size: 0.82rem; font-weight: 700; border-radius: 8px; margin: 0; background: var(--bg-card); color: var(--text-primary);">
+                    <div style="margin-top: 0.75rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; background: var(--bg-secondary); padding: 0.45rem 0.75rem; border-radius: 10px; border: 1px solid var(--border);">
+                        <label for="status-sel-${o.id}" style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); margin: 0;">⚡ Changement d'état :</label>
+                        <select id="status-sel-${o.id}" class="form-control" onchange="changeOrderStatus('${o.id}', this.value)" style="width: auto; padding: 0.3rem 0.65rem; font-size: 0.82rem; font-weight: 700; border-radius: 8px; margin: 0; background: var(--bg-card); color: var(--text-primary); cursor: pointer;">
                             <option value="En attente" ${o.status === 'En attente' ? 'selected' : ''}>⏳ En attente</option>
                             <option value="Reçue" ${o.status === 'Reçue' ? 'selected' : ''}>📥 Reçue / Acceptée</option>
                             <option value="En cuisine" ${(o.status === 'En cuisine' || o.status === 'Confirmée' || o.status === 'En préparation') ? 'selected' : ''}>👨‍🍳 En cuisine</option>
@@ -558,7 +727,7 @@ function renderDashboardTabContent(r) {
                 } else {
                     statusBadge = `<span class="badge badge-success" style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid #10b981; font-weight: 800;">✅ Livrée</span>`;
                     const reviewText = `Bonjour ${o.customerName}, avez-vous aimé votre commande chez ${r.name} ? Laissez-nous un avis sur Thiès Resto ! https://thies-resto.com/#/r/${r.slug}`;
-                    const waLink = `https://wa.me/${o.customerPhone.replace(/\+/g, '')}?text=${encodeURIComponent(reviewText)}`;
+                    const waLink = `https://wa.me/${(o.customerPhone || '').replace(/\+/g, '')}?text=${encodeURIComponent(reviewText)}`;
                     actionBtns = `
                         <div class="quick-actions-container">
                             <span style="font-size: 0.82rem; color: #059669; font-weight: 700; display: block; text-align: center; padding: 0.45rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.25);">✅ Réception confirmée & comptabilisée</span>
@@ -569,23 +738,37 @@ function renderDashboardTabContent(r) {
                 }
 
                 listHtml += `
-                    <div class="dashboard-list-item ${isOverdue ? 'is-urgent' : ''}">
-                        <div class="list-item-header">
-                            <div>
-                                <span class="list-item-title">N° ${o.id}</span>
-                                <span style="margin-left: 0.5rem;">${statusBadge}</span>
+                    <div class="dashboard-list-item ${isOverdue ? 'is-urgent' : ''}" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+                        <div class="list-item-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <span class="list-item-title" style="font-family: monospace; font-size: 1.1rem; font-weight: 900; color: var(--primary);">N° ${o.id}</span>
+                                <span>${statusBadge}</span>
                             </div>
-                            <span class="list-item-time">🕒 Le ${o.date} à ${o.time}</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="list-item-time" style="font-size: 0.82rem; color: var(--text-secondary);">🕒 ${o.date} à ${o.time}</span>
+                                <button type="button" class="btn btn-sm" onclick="openCustomerDetailsModal('${o.id}')" title="Voir la fiche client détaillée" style="background: rgba(var(--primary-rgb), 0.12); color: var(--primary); font-weight: 700; border: 1px solid rgba(var(--primary-rgb), 0.25); border-radius: 8px; padding: 0.35rem 0.65rem; font-size: 0.78rem; display: inline-flex; align-items: center; gap: 0.35rem; cursor: pointer;">
+                                    <span>👤 Fiche Client</span>
+                                </button>
+                            </div>
                         </div>
-                        <div class="list-item-details">
+                        <div class="list-item-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1rem; background: var(--bg-secondary); padding: 0.85rem; border-radius: 12px;">
                             <div>
-                                <p style="margin: 0.2rem 0; font-size: 0.88rem;"><strong style="color:var(--text-secondary)">👤 Client :</strong> <span style="font-weight: 700;">${o.customerName}</span></p>
-                                <p style="margin: 0.2rem 0; font-size: 0.88rem;"><strong style="color:var(--text-secondary)">📞 WhatsApp :</strong> <a href="https://wa.me/${o.customerPhone.replace(/\+/g, '')}" target="_blank" class="call-btn" style="margin-left:0.25rem;">💬 WhatsApp (${o.customerPhone})</a></p>
+                                <p style="margin: 0.2rem 0; font-size: 0.88rem; display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;">
+                                    <strong style="color:var(--text-secondary)">👤 Client :</strong> 
+                                    <button type="button" onclick="openCustomerDetailsModal('${o.id}')" style="background: none; border: none; padding: 0; font-weight: 800; color: var(--primary); text-decoration: underline; cursor: pointer; font-size: 0.9rem;" title="Cliquer pour afficher les détails du client">
+                                        ${o.customerName || 'Client'}
+                                    </button>
+                                </p>
+                                <p style="margin: 0.2rem 0; font-size: 0.88rem;">
+                                    <strong style="color:var(--text-secondary)">📞 Contact :</strong> 
+                                    <a href="tel:${o.customerPhone}" style="color: var(--text-primary); font-weight: 600; text-decoration: none; margin-right: 0.4rem;">${o.customerPhone}</a>
+                                    <a href="https://wa.me/${(o.customerPhone || '').replace(/\D/g, '')}" target="_blank" class="call-btn" style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.76rem; color: #25D366; font-weight: 700; text-decoration: none;">💬 WhatsApp</a>
+                                </p>
                                 ${o.address ? `<p style="margin: 0.2rem 0; font-size: 0.88rem;"><strong style="color:var(--text-secondary)">📍 Adresse :</strong> ${o.address}</p>` : ''}
                                 ${(clientLat && clientLng) ? `
                                     <p style="margin: 0.3rem 0; font-size: 0.88rem;">
                                         <strong style="color:var(--text-secondary)">📍 GPS Client :</strong> 
-                                        <a href="https://www.google.com/maps?q=${clientLat},${clientLng}" target="_blank" class="call-btn" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; padding: 4px 8px; border-radius: 6px; margin-top: 0.2rem;">
+                                        <a href="https://www.google.com/maps?q=${clientLat},${clientLng}" target="_blank" class="call-btn" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; padding: 3px 7px; border-radius: 6px; margin-top: 0.2rem; text-decoration: none;">
                                             🗺️ Voir GPS Client
                                         </a>
                                     </p>
@@ -593,11 +776,19 @@ function renderDashboardTabContent(r) {
                             </div>
                             <div>
                                 <p style="margin: 0.2rem 0; font-size: 0.88rem;"><strong style="color:var(--text-secondary)">🛵 Mode :</strong> <span class="badge ${o.mode === 'Livraison' ? 'badge-primary' : 'badge-info'}" style="font-weight:700;">${o.mode}</span></p>
-                                <p style="margin: 0.2rem 0; font-size: 0.88rem;"><strong style="color:var(--text-secondary)">💰 Total :</strong> <span style="font-size: 1.05rem; color: var(--primary); font-weight: 800;">${o.total} FCFA</span></p>
+                                <p style="margin: 0.2rem 0; font-size: 0.88rem;"><strong style="color:var(--text-secondary)">💰 Total :</strong> <span style="font-size: 1.05rem; color: var(--primary); font-weight: 800;">${Number(o.total || 0).toLocaleString()} FCFA</span></p>
+                                ${(o.paymentMethod || o.payment_method) ? `<p style="margin: 0.2rem 0; font-size: 0.88rem;"><strong style="color:var(--text-secondary)">💳 Paiement :</strong> <span style="font-weight: 600;">${o.paymentMethod || o.payment_method}</span></p>` : ''}
                                 ${o.note ? `<p style="margin: 0.2rem 0; font-size: 0.88rem;"><strong style="color:var(--text-secondary)">📝 Note :</strong> <span style="font-style: italic; color:var(--text-secondary);">"${o.note}"</span></p>` : ''}
+                                ${o.mode === 'Livraison' ? `
+                                    <div style="margin-top: 0.4rem;">
+                                        <a href="https://wa.me/221784799882?text=${encodeURIComponent(`Bonjour Assistance THIES Resto,\nJe suis le restaurant *${r.name}*.\nJ'ai besoin d'un livreur pour la commande N°${o.id} :\n- Client : ${o.customerName || 'Client'}\n- Téléphone : ${o.customerPhone || 'N/A'}\n- Adresse : ${o.address || 'Thiès'}\n- Total à encaisser : ${Number(o.total || 0).toLocaleString()} FCFA`)}" target="_blank" class="btn btn-sm" style="background: rgba(37, 211, 102, 0.12); color: #15803d; border: 1px solid #22c55e; font-weight: 700; font-size: 0.76rem; border-radius: 8px; padding: 0.25rem 0.55rem; display: inline-flex; align-items: center; gap: 0.3rem; text-decoration: none;">
+                                            🛵 Demander un livreur (Assistance)
+                                        </a>
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
-                        <div style="background: var(--bg-secondary); padding: 0.65rem 0.85rem; border-radius: 8px; border: 1px solid var(--border);">
+                        <div style="background: var(--bg-secondary); padding: 0.65rem 0.85rem; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 0.75rem;">
                             <strong style="display: block; font-size: 0.72rem; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.3rem;">🍳 Plats commandés :</strong>
                             <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
                                 ${itemsStr}
@@ -611,20 +802,27 @@ function renderDashboardTabContent(r) {
             });
         }
 
-        const filterTypes = ['Tous'];
+        const filterTypes = [
+            { id: 'Tous', label: '📋 Tous', count: orders.length },
+            { id: 'En attente', label: '⏳ En attente', count: pendingOrders.length },
+            { id: 'En cuisine', label: '👨‍🍳 En cuisine', count: kitchenOrders.length },
+            { id: 'Prêt pour livraison', label: '📦 Prêt', count: readyOrders.length },
+            { id: 'En livraison', label: '🛵 En livraison', count: deliveryOrders.length },
+            { id: 'Livrées', label: '✅ Livrées', count: deliveredOrders.length }
+        ];
+
         if (delayed10mOrders.length > 0) {
-            filterTypes.push('Retard (>10 min)');
+            filterTypes.splice(1, 0, { id: 'Retard (>10 min)', label: `🚨 Retard >10min`, count: delayed10mOrders.length, isUrgent: true });
         }
-        filterTypes.push('En attente', 'En cuisine', 'Prêt pour livraison', 'En livraison', 'Livrées');
 
         const filterBtnsHtml = filterTypes.map(f => {
-            const isActive = currentOrderStatusFilter === f;
-            const isDelayedBtn = f === 'Retard (>10 min)';
+            const isActive = currentOrderStatusFilter === f.id;
+            const isDelayedBtn = f.isUrgent;
             const btnClass = isActive ? (isDelayedBtn ? 'btn-danger pulse-red-alert' : 'btn-primary') : (isDelayedBtn ? 'btn-danger' : 'btn-secondary');
             const style = isDelayedBtn && !isActive ? 'background: rgba(220, 38, 38, 0.15); color: #dc2626; border: 1px solid #dc2626; font-weight: 800;' : '';
             return `
-                <button class="btn ${btnClass}" style="padding: 0.4rem 0.85rem; font-size: 0.82rem; font-weight: 700; border-radius: 20px; min-height: 36px; ${style}" onclick="filterOrdersDashboard('${f}')">
-                    ${f === 'Retard (>10 min)' ? `🚨 Retard >10min (${delayed10mOrders.length})` : f === 'En attente' ? '⏳ En attente' : f === 'En cuisine' ? '👨‍🍳 En cuisine' : f === 'Prêt pour livraison' ? '📦 Prêt' : f === 'En livraison' ? '🛵 En livraison' : f === 'Livrées' ? '✅ Livrées' : '📋 Tous'}
+                <button class="btn ${btnClass}" style="padding: 0.4rem 0.85rem; font-size: 0.82rem; font-weight: 700; border-radius: 20px; min-height: 36px; ${style}" onclick="filterOrdersDashboard('${f.id}')">
+                    ${f.label} (${f.count})
                 </button>
             `;
         }).join(' ');
@@ -632,7 +830,7 @@ function renderDashboardTabContent(r) {
         let ordersPageBanner = '';
         if (delayed10mOrders.length > 0 && currentOrderStatusFilter !== 'Retard (>10 min)') {
             ordersPageBanner = `
-                <div class="delayed-order-banner">
+                <div class="delayed-order-banner" style="background: rgba(220, 38, 38, 0.08); border: 1px solid #dc2626; border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                     <div style="display: flex; align-items: center; gap: 0.75rem;">
                         <span style="font-size: 1.5rem;">🚨</span>
                         <div>
@@ -649,13 +847,43 @@ function renderDashboardTabContent(r) {
 
         panel.innerHTML = `
             ${getDashboardSubNavHtml('orders')}
+            
+            <!-- Real-time header & controls -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
-                <h2 style="font-size: 1.25rem; margin: 0; color: var(--text-primary);">Gestion des Commandes</h2>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <h2 style="font-size: 1.25rem; margin: 0; color: var(--text-primary);">Tableau de Bord des Commandes</h2>
+                        <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #059669; border: 1px solid #10b981; font-weight: 700; font-size: 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block; animation: pulse 2s infinite;"></span>
+                            Temps réel actif
+                        </span>
+                    </div>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Gérez l'état de chaque commande et consultez les fiches clients en 1 clic.</p>
+                </div>
                 <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
-                    ${filterBtnsHtml}
-                    <button class="btn btn-secondary" onclick="exportOrdersToCSV()" style="padding: 0.4rem 0.75rem; font-size: 0.82rem; font-weight: 700; border-radius: 20px; min-height: 36px;">
+                    <button class="btn btn-secondary" onclick="refreshDashboardOrdersNow()" title="Actualiser instantanément les commandes" style="padding: 0.4rem 0.75rem; font-size: 0.82rem; font-weight: 700; border-radius: 20px; min-height: 36px; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        🔄 Actualiser
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportOrdersToCSV()" style="padding: 0.4rem 0.75rem; font-size: 0.82rem; font-weight: 700; border-radius: 20px; min-height: 36px; display: inline-flex; align-items: center; gap: 0.35rem;">
                         📥 Exporter CSV
                     </button>
+                </div>
+            </div>
+
+            <!-- Search & Filters -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 0.85rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.75rem;">
+                    <div style="flex: 1; min-width: 220px; position: relative;">
+                        <input type="text" id="dashboard-orders-search" class="form-control" placeholder="🔍 Rechercher par client, téléphone, n° commande, plat..." value="${window.dashboardOrdersSearchQuery || ''}" oninput="searchOrdersDashboard(this.value)" style="padding-left: 0.85rem; font-size: 0.85rem; height: 38px; border-radius: 10px; margin: 0;">
+                    </div>
+                    ${window.dashboardOrdersSearchQuery ? `
+                        <button class="btn btn-sm btn-secondary" onclick="clearOrdersDashboardSearch()" style="height: 38px; font-weight: 600;">
+                            ✖ Effacer recherche
+                        </button>
+                    ` : ''}
+                </div>
+                <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
+                    ${filterBtnsHtml}
                 </div>
             </div>
             
@@ -1091,165 +1319,15 @@ function renderDashboardTabContent(r) {
             </div>
         `;
     }
-    else if (dashboardActiveTab === 'accounting') {
-        let orders = store.getOrdersByRestaurant(r.id);
-        const todayStr = new Date().toISOString().split('T')[0];
-        
-        if (currentAccountingFilter === 'today') {
-            orders = orders.filter(o => o.date === todayStr);
-        } else if (currentAccountingFilter === 'week') {
-            const today = new Date();
-            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-            orders = orders.filter(o => o.date >= weekAgo && o.date <= todayStr);
-        } else if (currentAccountingFilter === 'month') {
-            const today = new Date();
-            const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-            orders = orders.filter(o => o.date >= monthAgo && o.date <= todayStr);
-        }
-
-        const completedOrders = orders.filter(o => o.status === 'Livrée');
-        const totalRevenue = completedOrders.reduce((sum, o) => sum + o.total, 0);
-        const totalOrdersCount = orders.length;
-        const completedOrdersCount = completedOrders.length;
-        const avgCart = completedOrdersCount > 0 ? Math.round(totalRevenue / completedOrdersCount) : 0;
-        
-        // Breakdown by mode
-        const deliveryOrders = completedOrders.filter(o => o.mode === 'Livraison');
-        const takeawayOrders = completedOrders.filter(o => o.mode === 'A emporter' || o.mode === 'Emporter' || o.mode === 'À emporter');
-        const dineInOrders = completedOrders.filter(o => o.mode === 'Sur place');
-        
-        const deliveryRev = deliveryOrders.reduce((sum, o) => sum + o.total, 0);
-        const takeawayRev = takeawayOrders.reduce((sum, o) => sum + o.total, 0);
-        const dineInRev = dineInOrders.reduce((sum, o) => sum + o.total, 0);
-
-        // Build list of completed or all orders
-        let rowsHtml = '';
-        if (orders.length === 0) {
-            rowsHtml = `
-                <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
-                        Aucune commande enregistrée pour la période sélectionnée.
-                    </td>
-                </tr>
-            `;
-        } else {
-            orders.forEach(o => {
-                const statusBadge = o.status === 'Livrée' 
-                    ? `<span class="badge badge-success" style="background: rgba(16, 185, 129, 0.15); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3);">Livrée (Payée)</span>`
-                    : o.status === 'Reçue'
-                    ? `<span class="badge badge-warning" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">En attente</span>`
-                    : `<span class="badge badge-info" style="background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.3);">${o.status}</span>`;
-
-                rowsHtml += `
-                    <tr class="accounting-row" data-client="${(o.customerName || '').toLowerCase()}" data-id="${o.id.toLowerCase()}">
-                        <td><strong>${o.date} ${o.time || ''}</strong></td>
-                        <td>${o.customerName || 'Client anonyme'}</td>
-                        <td><a href="tel:${o.customerPhone}" style="color: var(--success); font-weight: bold;">📞 ${o.customerPhone}</a></td>
-                        <td>${o.mode}</td>
-                        <td style="color: var(--primary); font-weight: bold;">${o.total.toLocaleString()} FCFA</td>
-                        <td>${statusBadge}</td>
-                    </tr>
-                `;
-            });
-        }
-
-        panel.innerHTML = `
-            ${getDashboardSubNavHtml('accounting')}
-            <div class="accounting-dashboard">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <h2 style="font-family: var(--font-serif); font-size: 1.6rem; color: var(--text-primary);">📊 Journal de Comptabilité</h2>
-                        <p style="color: var(--text-secondary); font-size: 0.85rem;">Suivi des chiffres d'affaires et historique complet des commandes clients.</p>
-                    </div>
-                    <div style="display: flex; gap: 0.5rem; align-items: center;">
-                        <select class="form-control" style="width: auto; margin: 0; padding: 0.25rem 0.5rem; font-size: 0.85rem;" onchange="currentAccountingFilter = this.value; renderDashboardTabContent(store.getRestaurantById('${r.id}'))">
-                            <option value="all" ${currentAccountingFilter === 'all' ? 'selected' : ''}>Toutes les dates</option>
-                            <option value="today" ${currentAccountingFilter === 'today' ? 'selected' : ''}>Aujourd'hui</option>
-                            <option value="week" ${currentAccountingFilter === 'week' ? 'selected' : ''}>7 derniers jours</option>
-                            <option value="month" ${currentAccountingFilter === 'month' ? 'selected' : ''}>30 derniers jours</option>
-                        </select>
-                        <button class="btn btn-primary btn-sm" onclick="exportOrdersCSV('${r.id}')">💾 Exporter CSV</button>
-                        <button class="btn btn-secondary btn-sm" onclick="window.print()">🖨️ Imprimer</button>
-                    </div>
-                </div>
-
-                <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 16px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 1rem; position: relative; height: 250px;">
-                    <canvas id="revenueChart"></canvas>
-                </div>
-
-                <div class="accounting-stats-grid">
-                    <div class="accounting-card">
-                        <div class="accounting-card-title">Chiffre d'Affaires Total</div>
-                        <div class="accounting-card-value" style="color: var(--success);">${totalRevenue.toLocaleString()} FCFA</div>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Commandes validées & livrées</small>
-                    </div>
-                    <div class="accounting-card">
-                        <div class="accounting-card-title">Commandes traitées</div>
-                        <div class="accounting-card-value">${completedOrdersCount} / ${totalOrdersCount}</div>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Commandes livrées sur le total</small>
-                    </div>
-                    <div class="accounting-card">
-                        <div class="accounting-card-title">Panier Moyen</div>
-                        <div class="accounting-card-value" style="color: var(--primary);">${avgCart.toLocaleString()} FCFA</div>
-                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Par commande encaissée</small>
-                    </div>
-                </div>
-
-                <div class="accounting-stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 2rem;">
-                    <div class="accounting-card" style="padding: 1rem 1.25rem;">
-                        <div class="accounting-card-title" style="font-size: 0.7rem;">🛵 Livraison</div>
-                        <div class="accounting-card-value" style="font-size: 1.2rem;">${deliveryRev.toLocaleString()} F</div>
-                        <small style="color: var(--text-secondary); font-size: 0.7rem;">${deliveryOrders.length} commande(s)</small>
-                    </div>
-                    <div class="accounting-card" style="padding: 1rem 1.25rem;">
-                        <div class="accounting-card-title" style="font-size: 0.7rem;">🛍️ À Emporter</div>
-                        <div class="accounting-card-value" style="font-size: 1.2rem;">${takeawayRev.toLocaleString()} F</div>
-                        <small style="color: var(--text-secondary); font-size: 0.7rem;">${takeawayOrders.length} commande(s)</small>
-                    </div>
-                    <div class="accounting-card" style="padding: 1rem 1.25rem;">
-                        <div class="accounting-card-title" style="font-size: 0.7rem;">🍽️ Sur Place</div>
-                        <div class="accounting-card-value" style="font-size: 1.2rem;">${dineInRev.toLocaleString()} F</div>
-                        <small style="color: var(--text-secondary); font-size: 0.7rem;">${dineInOrders.length} commande(s)</small>
-                    </div>
-                </div>
-
-                <div class="accounting-table-container">
-                    <div class="accounting-header-actions">
-                        <h3 style="font-size: 1.1rem; color: var(--text-primary); font-family: var(--font-serif);">Historique Général des Commandes</h3>
-                        <input type="text" placeholder="Rechercher par client ou N°..." class="accounting-search" oninput="filterAccountingTable(this.value)">
-                    </div>
-
-                    <div class="table-responsive-accounting">
-                        <table class="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>Date & Heure</th>
-                                    <th>Client (Prénom & Nom)</th>
-                                    <th>Téléphone</th>
-                                    <th>Mode</th>
-                                    <th>Montant Total</th>
-                                    <th>Statut</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rowsHtml}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        `;
-        
-        setTimeout(() => renderRevenueChart(orders), 100);
-    }
     else if (dashboardActiveTab === 'account' || dashboardActiveTab === 'settings') {
         const clientLink = `${window.location.origin}${window.location.pathname}#/r/${r.slug}`;
         const qrCodeUrl = `https://quickchart.io/qr?size=200&text=${encodeURIComponent(clientLink)}`;
 
         // Days checklist
         let daysHtml = '';
+        const closedDays = Array.isArray(r.closedDays) ? r.closedDays : [];
         for (let i = 1; i <= 7; i++) {
-            const isChecked = r.closedDays.includes(i);
+            const isChecked = closedDays.includes(i);
             daysHtml += `
                 <label style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; cursor: pointer; font-size: 0.85rem; color: var(--text-primary);">
                     <input type="checkbox" name="closed-day-check" value="${i}" ${isChecked ? 'checked' : ''} style="accent-color: var(--primary);">
@@ -1459,7 +1537,14 @@ function renderDashboardTabContent(r) {
                             <li style="margin-bottom: 0.5rem;">✅ QR Code de table pour votre établissement</li>
                             <li style="margin-bottom: 0.5rem;">✅ Historique des ventes & Suivi client</li>
                         </ul>
-                        <a href="${buildWhatsAppLink('Pack Standard', '5 000')}" target="_blank" class="btn btn-outline" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; font-weight: 700;">💬 Choisir Pack Standard (5 000 F)</a>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: auto;">
+                            <button onclick="window.paySubscriptionWithPaytech('${r.id}', 'Pack Standard', 5000)" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-weight: 700; font-size: 0.92rem; background: linear-gradient(135deg, #0284c7, #2563eb); border: none;">
+                                <span>🌊</span> Payer 5 000 F via PayTech
+                            </button>
+                            <a href="${buildWhatsAppLink('Pack Standard', '5 000')}" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; font-weight: 600; font-size: 0.82rem;">
+                                <span>💬</span> Demander par WhatsApp
+                            </a>
+                        </div>
                     </div>
 
                     <!-- 2. Pack Entreprise -->
@@ -1478,7 +1563,14 @@ function renderDashboardTabContent(r) {
                             <li style="margin-bottom: 0.5rem;">👥 <strong>Accompagnement mensuel dédié</strong> de l'équipe</li>
                             <li style="margin-bottom: 0.5rem;">📊 <strong>Rapport mensuel détaillé</strong> d'activité & ventes</li>
                         </ul>
-                        <a href="${buildWhatsAppLink('Pack Entreprise', '15 000')}" target="_blank" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; font-weight: 700;">💬 Choisir Pack Entreprise (15 000 F)</a>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: auto;">
+                            <button onclick="window.paySubscriptionWithPaytech('${r.id}', 'Pack Entreprise', 15000)" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-weight: 700; font-size: 0.92rem; background: linear-gradient(135deg, #0284c7, #2563eb); border: none; box-shadow: 0 4px 14px rgba(37,99,235,0.3);">
+                                <span>🌊</span> Payer 15 000 F via PayTech
+                            </button>
+                            <a href="${buildWhatsAppLink('Pack Entreprise', '15 000')}" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; font-weight: 600; font-size: 0.82rem;">
+                                <span>💬</span> Demander par WhatsApp
+                            </a>
+                        </div>
                     </div>
 
                     <!-- 3. Pack Annuel VIP -->
@@ -1497,15 +1589,79 @@ function renderDashboardTabContent(r) {
                             <li style="margin-bottom: 0.5rem;">🎁 <strong>Bonus exclusifs</strong> : Campagnes sponsorisées dédiées</li>
                             <li style="margin-bottom: 0.5rem;">⚡ <strong>Support technique & commercial 7j/7 dédié</strong></li>
                         </ul>
-                        <a href="${buildWhatsAppLink('Pack Annuel VIP', '100 000', 'an')}" target="_blank" class="btn btn-outline" style="width: 100%; border-color: #8b5cf6; color: #8b5cf6; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; font-weight: 700;">👑 Souscrire Pack Annuel (100 000 F)</a>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: auto;">
+                            <button onclick="window.paySubscriptionWithPaytech('${r.id}', 'Pack Annuel VIP', 100000)" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; font-weight: 700; font-size: 0.92rem; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; box-shadow: 0 4px 14px rgba(124,58,237,0.3);">
+                                <span>👑</span> Payer 100 000 F via PayTech
+                            </button>
+                            <a href="${buildWhatsAppLink('Pack Annuel VIP', '100 000', 'an')}" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; border-color: #8b5cf6; color: #8b5cf6; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; font-weight: 600; font-size: 0.82rem;">
+                                <span>💬</span> Demander par WhatsApp
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         `;
     }
+}
+
+/**
+ * PayTech integration for Restaurant Subscriptions
+ */
+window.paySubscriptionWithPaytech = async function(restaurantId, packName, amount) {
+    const r = store.getRestaurantById(restaurantId);
+    if (!r) {
+        if (typeof showToast === 'function') showToast('Établissement non trouvé.', 'danger');
+        return;
     }
 
-}
+    const subRef = `SUB-${r.slug || r.id}-${Date.now()}`;
+    const btn = event?.target?.closest('button');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-ring" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:4px;"></span> Connexion PayTech...';
+    }
+
+    try {
+        const response = await fetch('/api/paytech/request-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                orderId: subRef,
+                amount: amount,
+                itemName: `Abonnement ${packName} - ${r.name}`,
+                customerName: r.name,
+                customerPhone: r.phone || '',
+                restaurantName: r.name,
+                returnHash: `/dashboard?tab=subscription&payment=success&pack=${encodeURIComponent(packName)}`
+            })
+        });
+
+        const data = await response.json();
+        if (data && data.success && data.redirectUrl) {
+            if (btn) btn.innerHTML = '<span>Redirection PayTech ➔</span>';
+            window.location.href = data.redirectUrl;
+        } else {
+            console.error("PayTech subscription error:", data);
+            if (typeof showToast === 'function') {
+                showToast(data.message || "Erreur d'accès à la passerelle PayTech.", "danger");
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    } catch (err) {
+        console.error("Subscription payment exception:", err);
+        if (typeof showToast === 'function') {
+            showToast("Impossible de contacter le serveur de paiement.", "danger");
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+};
 
 // Global helper for accounting search filtering
 window.filterAccountingTable = function(val) {
@@ -1757,7 +1913,7 @@ function changeOrderStatus(orderId, nextStatus) {
     
     // Build notification message for the client
     let pushText = '';
-    const restoName = currentRestaurantSession ? currentRestaurantSession.name || '' : '';
+    const restoName = currentRestaurantSession ? (currentRestaurantSession.name || '') : (o.restaurantName || '');
     
     if (nextStatus === 'Reçue') {
         pushText = `Bonjour ${o.customerName} 👋\n\nVotre commande n°${o.id} chez *${restoName}* a bien été *REÇUE & ACCEPTÉE* par le restaurant ! 📥\n\nProchaine étape : Mise en cuisine par le chef.`;
@@ -1773,10 +1929,21 @@ function changeOrderStatus(orderId, nextStatus) {
         pushText = `Bonjour ${o.customerName} 👋\n\nNous sommes désolés, votre commande n°${o.id} chez *${restoName}* a été *annulée* par le restaurant. ❌\n\nVeuillez nous excuser pour ce désagrément. N'hésitez pas à passer une nouvelle commande.`;
     }
     
-    showToast(`Commande mise à jour vers : ${nextStatus}. Client notifié automatiquement 📲`, nextStatus === 'Annulée' ? 'warning' : 'success');
+    // Déclencher Push OneSignal
+    if (typeof OneSignalManager !== 'undefined' && OneSignalManager.sendOrderStatusPushNotification) {
+        OneSignalManager.sendOrderStatusPushNotification(o, nextStatus, restoName);
+    }
     
-    // Les notifications sont désormais envoyées automatiquement en arrière-plan via Database Webhooks.
-    // Plus besoin d'ouvrir intrusivement la fenêtre WhatsApp.
+    // Déclencher proxy backend pour notification Push / SMS automatique
+    try {
+        fetch('/api/onesignal/notify-order-status', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order: o, status: nextStatus, restaurantName: restoName })
+        }).catch(() => {});
+    } catch(e) {}
+
+    showToast(`Commande mise à jour vers : ${nextStatus}. Client notifié automatiquement (Push & WhatsApp) 📲`, nextStatus === 'Annulée' ? 'warning' : 'success');
     
     // Reload dashboard list
     switchDashboardTab('orders');
@@ -1863,6 +2030,179 @@ function filterOrdersDashboard(status) {
     const r = store.getRestaurantById(currentRestaurantSession.id);
     renderDashboardTabContent(r);
 }
+
+window.searchOrdersDashboard = function(query) {
+    window.dashboardOrdersSearchQuery = query;
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    if (r) {
+        renderDashboardTabContent(r);
+        // Maintain focus on search input after re-render
+        const input = document.getElementById('dashboard-orders-search');
+        if (input) {
+            input.focus();
+            input.setSelectionRange(input.value.length, input.value.length);
+        }
+    }
+};
+
+window.clearOrdersDashboardSearch = function() {
+    window.dashboardOrdersSearchQuery = '';
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    if (r) renderDashboardTabContent(r);
+};
+
+window.refreshDashboardOrdersNow = async function() {
+    showToast("🔄 Actualisation en cours...", "info");
+    if (typeof store.load === 'function') {
+        await store.load();
+    }
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    if (r) renderDashboardTabContent(r);
+    showToast("✅ Commandes actualisées en temps réel !", "success");
+};
+
+// 1-Click Customer Details Modal for restaurant & superadmin
+window.openCustomerDetailsModal = function(orderId) {
+    const o = (store.data.orders || []).find(ord => ord.id === orderId);
+    if (!o) {
+        showToast("Commande introuvable", "warning");
+        return;
+    }
+
+    const cleanPhone = cleanPhoneNumber(o.customerPhone || '');
+    const formattedPhone = cleanPhone.startsWith('221') ? cleanPhone : '221' + cleanPhone;
+    const clientLat = o.deliveryLat || o.delivery_lat || o.client_lat;
+    const clientLng = o.deliveryLng || o.delivery_lng || o.client_lng;
+
+    // Calculate customer order history in store
+    const customerOrders = (store.data.orders || []).filter(ord => cleanPhoneNumber(ord.customerPhone || '') === cleanPhone);
+    const completedOrders = customerOrders.filter(ord => ord.status === 'Livrée' || ord.status === 'Livré');
+    const totalSpent = completedOrders.reduce((sum, ord) => sum + (Number(ord.total) || 0), 0);
+
+    const existingModal = document.getElementById('customer-details-modal');
+    if (existingModal) existingModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'customer-details-modal';
+    modal.className = 'modal-backdrop';
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.65)';
+    modal.style.backdropFilter = 'blur(4px)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+    modal.style.padding = '1rem';
+
+    modal.innerHTML = `
+        <div class="modal-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.3); padding: 1.5rem; position: relative;">
+            <!-- Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(var(--primary-rgb), 0.15); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800;">
+                        👤
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); font-weight: 800;">${o.customerName || 'Client Inconnu'}</h3>
+                        <span style="font-size: 0.82rem; color: var(--text-secondary);">Fiche Client • Commande N° <strong style="font-family: monospace; color: var(--primary);">${o.id}</strong></span>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('customer-details-modal').remove()" style="background: var(--bg-secondary); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; color: var(--text-secondary);">
+                    ✖
+                </button>
+            </div>
+
+            <!-- Contact & Quick Actions -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 14px; padding: 1rem; margin-bottom: 1.25rem;">
+                <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.6rem;">📞 Coordonnées Directes</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <span style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">${o.customerPhone || 'Non renseigné'}</span>
+                    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                        <a href="tel:${o.customerPhone}" class="btn btn-sm btn-primary" style="font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.75rem; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            📞 Appeler
+                        </a>
+                        <a href="https://wa.me/${formattedPhone}" target="_blank" class="btn btn-sm" style="background: #25D366; color: white; font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.75rem; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            💬 WhatsApp
+                        </a>
+                    </div>
+                </div>
+                ${o.customerEmail ? `<div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.3rem;">📧 Email : <strong style="color: var(--text-primary);">${o.customerEmail}</strong></div>` : ''}
+            </div>
+
+            <!-- Address & Location -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 14px; padding: 1rem; margin-bottom: 1.25rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.4rem;">
+                    <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-secondary);">📍 Adresse & Livraison</span>
+                    ${o.mode === 'Livraison' ? `
+                        <a href="https://wa.me/221784799882?text=${encodeURIComponent(`Bonjour Assistance THIES Resto,\nJe suis un restaurant partenaire.\nJ'ai besoin d'un livreur pour la commande N°${o.id} :\n- Client : ${o.customerName || 'Client'}\n- Téléphone : ${o.customerPhone || 'N/A'}\n- Adresse : ${o.address || 'Thiès'}\n- Total à encaisser : ${Number(o.total || 0).toLocaleString()} FCFA`)}" target="_blank" class="btn btn-sm" style="background: #25D366; color: white; font-weight: 700; font-size: 0.76rem; border-radius: 6px; padding: 0.25rem 0.55rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            🛵 Demander un livreur (Assistance)
+                        </a>
+                    ` : ''}
+                </div>
+                <div style="font-size: 0.92rem; font-weight: 600; color: var(--text-primary); line-height: 1.4;">
+                    ${o.address || o.customerAddress || 'Adresse non indiquée (Retrait sur place)'}
+                </div>
+                ${(clientLat && clientLng) ? `
+                    <div style="margin-top: 0.75rem;">
+                        <a href="https://www.google.com/maps?q=${clientLat},${clientLng}" target="_blank" class="btn btn-sm" style="background: #0284c7; color: white; font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.85rem; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;">
+                            🗺️ Ouvrir Position GPS Directe (Google Maps)
+                        </a>
+                    </div>
+                ` : `
+                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.4rem; font-style: italic;">
+                        ℹ️ Coordonnées GPS non fournies pour cette commande.
+                    </div>
+                `}
+                ${o.note ? `
+                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.85rem; color: #d97706; font-style: italic;">
+                        <strong>📝 Note client :</strong> "${o.note}"
+                    </div>
+                ` : ''}
+            </div>
+
+            <!-- Customer Loyalty & History Stats -->
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1.25rem; text-align: center;">
+                <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.4rem;">
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Commandes</div>
+                    <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-top: 0.2rem;">${customerOrders.length}</div>
+                </div>
+                <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.4rem;">
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Livrées</div>
+                    <div style="font-size: 1.15rem; font-weight: 800; color: #059669; margin-top: 0.2rem;">${completedOrders.length}</div>
+                </div>
+                <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.4rem;">
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700;">Dépense Totale</div>
+                    <div style="font-size: 0.95rem; font-weight: 800; color: var(--primary); margin-top: 0.3rem;">${totalSpent.toLocaleString()} F</div>
+                </div>
+            </div>
+
+            <!-- Active Order Status Controls -->
+            <div style="border-top: 1px solid var(--border); padding-top: 1rem;">
+                <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.5rem;">⚡ Changer le statut de la commande</div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <select class="form-control" onchange="changeOrderStatus('${o.id}', this.value); document.getElementById('customer-details-modal').remove();" style="flex: 1; min-width: 180px; padding: 0.4rem 0.75rem; font-size: 0.85rem; font-weight: 700; border-radius: 10px; background: var(--bg-secondary); color: var(--text-primary); cursor: pointer;">
+                        <option value="En attente" ${o.status === 'En attente' ? 'selected' : ''}>⏳ En attente</option>
+                        <option value="Reçue" ${o.status === 'Reçue' ? 'selected' : ''}>📥 Reçue / Acceptée</option>
+                        <option value="En cuisine" ${(o.status === 'En cuisine' || o.status === 'Confirmée' || o.status === 'En préparation') ? 'selected' : ''}>👨‍🍳 En cuisine</option>
+                        <option value="Prêt pour livraison" ${(o.status === 'Prêt pour livraison' || o.status === 'Prête') ? 'selected' : ''}>📦 Prêt pour livraison</option>
+                        <option value="En cours de livraison" ${(o.status === 'En cours de livraison' || o.status === 'En livraison' || o.status === 'Partie en livraison') ? 'selected' : ''}>🛵 En livraison</option>
+                        <option value="Livrée" ${(o.status === 'Livrée' || o.status === 'Livré') ? 'selected' : ''}>✅ Livrée</option>
+                        <option value="Annulée" ${o.status === 'Annulée' ? 'selected' : ''}>❌ Annulée</option>
+                    </select>
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('customer-details-modal').remove()" style="font-weight: 700; border-radius: 10px; padding: 0.4rem 1rem;">
+                        Fermer
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+};
 
 function deleteDish(dishId) {
     if (confirm("Voulez-vous vraiment supprimer ce plat ?")) {
@@ -2434,56 +2774,226 @@ router.add('#/admin', () => {
     renderAdminView();
 });
 
+// ----------------------------------------------------
+// SUPER-ADMIN PLATFORM CUSTOMERS & USERS ENGINE
+// ----------------------------------------------------
+window.getSuperAdminCustomersList = function() {
+    const orders = (typeof store !== 'undefined' && store.data && store.data.orders) ? store.data.orders : [];
+    const reservations = (typeof store !== 'undefined' && store.data && store.data.reservations) ? store.data.reservations : [];
+    const customerMap = new Map();
+
+    // 1. Process orders
+    orders.forEach(o => {
+        const phone = (o.customerPhone || '').trim();
+        const name = (o.customerName || '').trim();
+        const key = phone || name || o.id;
+        if (!key) return;
+
+        if (!customerMap.has(key)) {
+            customerMap.set(key, {
+                id: key,
+                phone: phone || 'Non renseigné',
+                name: name || 'Client Gourmet',
+                address: o.customerAddress || o.deliveryAddress || 'Thiès',
+                ordersCount: 0,
+                completedOrdersCount: 0,
+                cancelledOrdersCount: 0,
+                totalSpent: 0,
+                reservationsCount: 0,
+                firstActivity: o.date || '',
+                lastActivity: o.date || '',
+                lastRestaurantId: o.restaurantId || '',
+                lastRestaurantName: o.restaurantName || '',
+                preferredMode: o.mode || 'Livraison'
+            });
+        }
+
+        const c = customerMap.get(key);
+        c.ordersCount += 1;
+        if (o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered') {
+            c.completedOrdersCount += 1;
+            c.totalSpent += (Number(o.total) || 0);
+        } else if (o.status === 'Annulée' || o.status === 'cancelled') {
+            c.cancelledOrdersCount += 1;
+        }
+
+        if (o.customerAddress && (!c.address || c.address === 'Thiès')) c.address = o.customerAddress;
+        if (o.customerName && (c.name === 'Client Gourmet' || !c.name)) c.name = o.customerName;
+        if (o.date) {
+            if (!c.firstActivity || o.date < c.firstActivity) c.firstActivity = o.date;
+            if (!c.lastActivity || o.date >= c.lastActivity) {
+                c.lastActivity = o.date;
+                c.lastRestaurantId = o.restaurantId || c.lastRestaurantId;
+                c.lastRestaurantName = o.restaurantName || c.lastRestaurantName;
+            }
+        }
+    });
+
+    // 2. Process reservations
+    reservations.forEach(r => {
+        const phone = (r.customerPhone || '').trim();
+        const name = (r.customerName || '').trim();
+        const key = phone || name || r.id;
+        if (!key) return;
+
+        if (!customerMap.has(key)) {
+            customerMap.set(key, {
+                id: key,
+                phone: phone || 'Non renseigné',
+                name: name || 'Client Gourmet',
+                address: 'Thiès',
+                ordersCount: 0,
+                completedOrdersCount: 0,
+                cancelledOrdersCount: 0,
+                totalSpent: 0,
+                reservationsCount: 0,
+                firstActivity: r.date || '',
+                lastActivity: r.date || '',
+                lastRestaurantId: r.restaurantId || '',
+                lastRestaurantName: '',
+                preferredMode: 'Sur place'
+            });
+        }
+
+        const c = customerMap.get(key);
+        c.reservationsCount += 1;
+        if (r.customerName && (c.name === 'Client Gourmet' || !c.name)) c.name = r.customerName;
+        if (r.date) {
+            if (!c.firstActivity || r.date < c.firstActivity) c.firstActivity = r.date;
+            if (!c.lastActivity || r.date >= c.lastActivity) c.lastActivity = r.date;
+        }
+    });
+
+    // 3. Process current authenticated customer session
+    if (typeof customerAuth !== 'undefined' && customerAuth.isAuthenticated()) {
+        const u = customerAuth.getUser();
+        const key = (u.phone || u.name || '').trim();
+        if (key && !customerMap.has(key)) {
+            customerMap.set(key, {
+                id: key,
+                phone: u.phone || 'Non renseigné',
+                name: u.name || 'Client Connecté',
+                address: u.address || 'Thiès',
+                ordersCount: 0,
+                completedOrdersCount: 0,
+                cancelledOrdersCount: 0,
+                totalSpent: 0,
+                reservationsCount: 0,
+                firstActivity: new Date().toISOString().split('T')[0],
+                lastActivity: new Date().toISOString().split('T')[0],
+                lastRestaurantId: '',
+                lastRestaurantName: '',
+                preferredMode: 'Livraison'
+            });
+        }
+    }
+
+    return Array.from(customerMap.values()).sort((a, b) => {
+        if (b.totalSpent !== a.totalSpent) return b.totalSpent - a.totalSpent;
+        return b.ordersCount - a.ordersCount;
+    });
+};
+
+window.exportCustomersCSV = function() {
+    const customers = window.getSuperAdminCustomersList();
+    if (customers.length === 0) {
+        showToast("Aucun client répertorié à exporter", "warning");
+        return;
+    }
+
+    let csvContent = "\ufeff"; // BOM for Excel UTF-8
+    csvContent += "Nom Client;Telephone;Adresse;Nombre Total Commandes;Commandes Livrees;Commandes Annulees;Reservations;Depenses Totales (FCFA);Derniere Activite;Mode Prefere\n";
+
+    customers.forEach(c => {
+        const row = [
+            `"${(c.name || '').replace(/"/g, '""')}"`,
+            `"${(c.phone || '').replace(/"/g, '""')}"`,
+            `"${(c.address || '').replace(/"/g, '""')}"`,
+            c.ordersCount,
+            c.completedOrdersCount,
+            c.cancelledOrdersCount,
+            c.reservationsCount,
+            c.totalSpent,
+            c.lastActivity || '',
+            `"${c.preferredMode || 'Livraison'}"`
+        ].join(';');
+        csvContent += row + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const encodedUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUrl);
+    link.setAttribute("download", `base_clients_thies_resto_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("👥 Répertoire clients exporté en format CSV !", "success");
+};
+
 function renderAdminView() {
     const container = document.getElementById('main-content');
     
-    // Calculate network figures
+    // 1. Calculate Network Figures
     const restos = store.getRestaurants();
     const activeRestos = restos.filter(r => r.status === 'active');
+    const suspendedRestos = restos.filter(r => r.status === 'suspended');
     const pendingRestos = restos.filter(r => r.status === 'pending');
     const pendingCount = pendingRestos.length;
     
+    // 2. Orders & Reservations Metrics
     const orders = store.data.orders || [];
     const reservations = store.data.reservations || [];
     
-    // Estimated Gross Merchandise Volume (Chiffre d'Affaires global)
-    // Somme exacte des chiffres d'affaires de toutes les commandes livrées / validées
     const completedOrders = orders.filter(o => o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered');
     const pendingOrders = orders.filter(o => o.status === 'En attente' || o.status === 'Reçue' || o.status === 'Confirmée' || o.status === 'En cuisine' || o.status === 'Prêt pour livraison' || o.status === 'En livraison');
     const cancelledOrders = orders.filter(o => o.status === 'Annulée' || o.status === 'cancelled');
     const totalGmv = completedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
 
-    // Calculate Platform SaaS subscriptions income
-    let totalPlatformRevenue = 0;
+    // 3. Customers Metrics (Utilisateurs Clients de la plateforme)
+    const customersList = window.getSuperAdminCustomersList();
+    const totalCustomersCount = customersList.length;
+    const customersWithOrders = customersList.filter(c => c.ordersCount > 0);
+    const recurringCustomers = customersList.filter(c => c.ordersCount >= 2);
+
+    // 4. SaaS MRR (Monthly Recurring Revenue) & ARR (Annual Recurring Revenue) Calculation
+    let totalMRR = 0;
     const subscriptionRows = restos.filter(r => r.status !== 'pending').map(r => {
         const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
         const diffTime = Math.abs(new Date() - createdAt);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        let daysLeft = 90 - diffDays;
+        let daysLeft = Math.max(0, 90 - diffDays);
         let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
-        let revenue = 0;
+        let monthlyRevenue = 0;
         
-        if (packSubscribed === 'Pack Standard' || packSubscribed === 'Pack Simple') revenue = 5000;
-        else if (packSubscribed === 'Pack Entreprise' || packSubscribed === 'Pack Startup') revenue = 15000;
-        else if (packSubscribed === 'Pack Annuel VIP' || packSubscribed === 'Pack Annuel') revenue = Math.round(100000 / 12);
+        if (packSubscribed === 'Pack Standard' || packSubscribed === 'Pack Simple') monthlyRevenue = 5000;
+        else if (packSubscribed === 'Pack Entreprise' || packSubscribed === 'Pack Startup') monthlyRevenue = 15000;
+        else if (packSubscribed === 'Pack Annuel VIP' || packSubscribed === 'Pack Annuel') monthlyRevenue = Math.round(100000 / 12);
         
         if (r.status === 'active' || r.status === 'suspended') {
-            totalPlatformRevenue += revenue;
+            totalMRR += monthlyRevenue;
         }
         
-        let statusBadge = daysLeft > 0 
-            ? `<span class="badge badge-success" style="font-size:0.75rem;">Essai offert (${daysLeft}j)</span>` 
-            : `<span class="badge badge-danger" style="font-size:0.75rem;">Période expirée</span>`;
+        let statusBadge = r.status === 'suspended'
+            ? `<span class="badge badge-danger" style="font-size:0.75rem;">🔒 Suspendu</span>`
+            : (daysLeft > 0 
+                ? `<span class="badge badge-success" style="font-size:0.75rem;">Essai offert (${daysLeft}j)</span>` 
+                : `<span class="badge badge-warning" style="font-size:0.75rem;">Période standard</span>`);
         
         return `
             <tr>
-                <td><strong>${r.name}</strong><div style="font-size:0.75rem; color:var(--text-secondary);">${r.category || 'Restaurant'}</div></td>
+                <td>
+                    <strong>${r.name}</strong>
+                    <div style="font-size:0.75rem; color:var(--text-secondary);">${r.category || 'Restaurant'} • ${r.address || 'Thiès'}</div>
+                </td>
                 <td>${statusBadge}</td>
                 <td><span class="badge" style="background: ${packSubscribed === 'Aucun (Gratuit)' ? 'rgba(148,163,184,0.15)' : 'rgba(242,107,33,0.12)'}; color: ${packSubscribed === 'Aucun (Gratuit)' ? 'var(--text-secondary)' : 'var(--primary)'}; font-weight:700;">${packSubscribed}</span></td>
-                <td style="font-weight: 800; color: var(--text-primary);">${revenue > 0 ? revenue.toLocaleString() + ' FCFA / mois' : '0 FCFA'}</td>
+                <td style="font-weight: 800; color: var(--text-primary);">${monthlyRevenue > 0 ? monthlyRevenue.toLocaleString() + ' FCFA / mois' : '0 FCFA'}</td>
             </tr>
         `;
     }).join('');
+
+    const totalARR = totalMRR * 12;
 
     container.innerHTML = `
         <div class="admin-shell">
@@ -2491,12 +3001,12 @@ function renderAdminView() {
             <div class="admin-header-box">
                 <div>
                     <div style="display:inline-flex; align-items:center; gap:0.4rem; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--primary); margin-bottom:0.35rem;">
-                        <span>🇸🇳 Thiès Resto</span> • <span>Supervision Centrale</span>
+                        <span>🇸🇳 Thiès Resto</span> • <span>Supervision Centrale & Chiffres Clés</span>
                     </div>
                     <h1 class="admin-header-title">
                         <span>🛡️ Console Super-Admin</span>
                     </h1>
-                    <p class="admin-header-subtitle">Supervision en direct du réseau de restauration, des flux de commandes et de la comptabilité globale de Thiès.</p>
+                    <p class="admin-header-subtitle">Supervision en direct des utilisateurs (clients & restaurateurs), flux de commandes, MRR / ARR et chiffre d'affaires global.</p>
                 </div>
                 <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                     <div class="admin-live-badge">
@@ -2512,59 +3022,89 @@ function renderAdminView() {
                 </div>
             </div>
 
-            <!-- Bento Key Metrics Grid -->
+            <!-- Bento Executive 6-KPIs Grid -->
             <div class="admin-kpi-grid">
-                <div class="admin-kpi-card kpi-success">
+                <!-- 1. TOTAL CLIENTS -->
+                <div class="admin-kpi-card kpi-info">
                     <div>
                         <div class="admin-kpi-header">
-                            <span class="admin-kpi-label">Chiffre d'Affaires Global</span>
-                            <span class="admin-kpi-icon">💰</span>
+                            <span class="admin-kpi-label">Clients Plateforme</span>
+                            <span class="admin-kpi-icon">👥</span>
                         </div>
-                        <div class="admin-kpi-value" style="color: #10b981;">${totalGmv.toLocaleString()} <span style="font-size: 0.95rem; font-weight: 700;">FCFA</span></div>
+                        <div class="admin-kpi-value" style="color: #0284c7;">${totalCustomersCount} <span style="font-size:0.95rem; font-weight:700; color:var(--text-secondary);">utilisateurs</span></div>
                     </div>
                     <div class="admin-kpi-sub">
-                        <span style="font-weight:700; color: #10b981;">${completedOrders.length}</span> commandes livrées avec succès
+                        <span style="font-weight:700; color: #0284c7;">${customersWithOrders.length}</span> acheteurs • <span style="font-weight:700; color: #10b981;">${recurringCustomers.length}</span> réguliers (≥2 cmd)
                     </div>
                 </div>
 
+                <!-- 2. TOTAL RESTAURANTS & STATUS BREAKDOWN -->
+                <div class="admin-kpi-card ${pendingCount > 0 ? 'kpi-warning' : 'kpi-primary'}">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">Réseau Restaurants</span>
+                            <span class="admin-kpi-icon">🏪</span>
+                        </div>
+                        <div class="admin-kpi-value">${restos.length} <span style="font-size:0.95rem; font-weight:700; color:var(--text-secondary);">total</span></div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        <span style="color: #10b981; font-weight:800;">${activeRestos.length} actifs</span> • <span style="color: #ef4444; font-weight:800;">${suspendedRestos.length} suspendus</span> • <span style="color: #f59e0b; font-weight:800;">${pendingCount} en attente</span>
+                    </div>
+                </div>
+
+                <!-- 3. TOTAUX DE COMMANDES -->
                 <div class="admin-kpi-card kpi-primary">
                     <div>
                         <div class="admin-kpi-header">
-                            <span class="admin-kpi-label">Total Commandes Réseau</span>
+                            <span class="admin-kpi-label">Totaux Commandes</span>
                             <span class="admin-kpi-icon">📦</span>
                         </div>
-                        <div class="admin-kpi-value">${orders.length}</div>
+                        <div class="admin-kpi-value">${orders.length} <span style="font-size:0.95rem; font-weight:700; color:var(--text-secondary);">passées</span></div>
                     </div>
                     <div class="admin-kpi-sub">
-                        <span>${reservations.length} réservation(s) de table</span>
+                        <span style="color: #10b981; font-weight:700;">${completedOrders.length} livrées</span> • <span style="color: #f59e0b; font-weight:700;">${pendingOrders.length} en cours</span> • <span style="color: #64748b;">${cancelledOrders.length} annulées</span>
                     </div>
                 </div>
 
-                <div class="admin-kpi-card kpi-warning">
+                <!-- 4. MRR (Monthly Recurring Revenue) -->
+                <div class="admin-kpi-card kpi-success">
                     <div>
                         <div class="admin-kpi-header">
-                            <span class="admin-kpi-label">En Cours / En Cuisine</span>
-                            <span class="admin-kpi-icon">⏳</span>
+                            <span class="admin-kpi-label">MRR (Revenu Récurrent Mensuel)</span>
+                            <span class="admin-kpi-icon">📈</span>
                         </div>
-                        <div class="admin-kpi-value" style="color: #f59e0b;">${pendingOrders.length}</div>
+                        <div class="admin-kpi-value" style="color: #10b981;">${totalMRR.toLocaleString()} <span style="font-size: 0.95rem; font-weight: 700;">F / mois</span></div>
                     </div>
                     <div class="admin-kpi-sub">
-                        <span style="color: var(--text-secondary);">${cancelledOrders.length} commande(s) annulée(s)</span>
+                        <span style="font-weight:700; color: #10b981;">${activeRestos.length}</span> partenaires abonnés actifs
                     </div>
                 </div>
 
-                <div class="admin-kpi-card ${pendingCount > 0 ? 'kpi-danger' : 'kpi-info'}">
+                <!-- 5. ARR (Annual Recurring Revenue) -->
+                <div class="admin-kpi-card kpi-success">
                     <div>
                         <div class="admin-kpi-header">
-                            <span class="admin-kpi-label">Réseau Établissements</span>
-                            <span class="admin-kpi-icon">🏪</span>
+                            <span class="admin-kpi-label">ARR (Revenu Récurrent Annuel)</span>
+                            <span class="admin-kpi-icon">🚀</span>
                         </div>
-                        <div class="admin-kpi-value">${activeRestos.length} <span style="font-size:0.9rem; color:var(--text-secondary); font-weight:600;">actifs</span></div>
+                        <div class="admin-kpi-value" style="color: #059669;">${totalARR.toLocaleString()} <span style="font-size: 0.95rem; font-weight: 700;">F / an</span></div>
                     </div>
                     <div class="admin-kpi-sub">
-                        ${pendingCount > 0 
-                            ? `<span style="color: #ef4444; font-weight:800;">🚨 ${pendingCount} demande(s) en attente de validation</span>`
-                            : `<span style="color: #10b981; font-weight:700;">✅ Toutes les demandes sont traitées</span>`}
+                        <span>Projection annualisée (MRR × 12 mois)</span>
+                    </div>
+                </div>
+
+                <!-- 6. GLOBAL GMV (Chiffre d'Affaires Global Réseau) -->
+                <div class="admin-kpi-card kpi-primary">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">Volume Ventes Réseau (GMV)</span>
+                            <span class="admin-kpi-icon">💰</span>
+                        </div>
+                        <div class="admin-kpi-value" style="color: var(--primary);">${totalGmv.toLocaleString()} <span style="font-size: 0.95rem; font-weight: 700;">FCFA</span></div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        <span>${reservations.length} réservation(s) de table enregistrée(s)</span>
                     </div>
                 </div>
             </div>
@@ -2574,12 +3114,17 @@ function renderAdminView() {
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.75rem; border-bottom:1px solid var(--border); padding-bottom:0.75rem;">
                     <div>
                         <h3 style="margin:0; font-size:1.15rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
-                            <span>💳 Abonnements Partenaires (Pack Standard 5k • Entreprise 15k • Annuel 100k)</span>
+                            <span>💳 Abonnements SaaS Partenaires (MRR & ARR)</span>
                         </h3>
-                        <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">Offre de lancement : 3 mois gratuits, puis abonnement récurrent selon la formule choisie.</p>
+                        <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">Tarifs SaaS : Pack Standard (5 000 F/m) • Pack Entreprise (15 000 F/m) • Pack Annuel VIP (100 000 F/an).</p>
                     </div>
-                    <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; padding: 0.4rem 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.95rem;">
-                        Revenus SaaS Récurrents : ${totalPlatformRevenue.toLocaleString()} FCFA / mois
+                    <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25); color: #10b981; padding: 0.4rem 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.9rem;">
+                            MRR : ${totalMRR.toLocaleString()} FCFA / mois
+                        </div>
+                        <div style="background: rgba(14, 165, 233, 0.1); border: 1px solid rgba(14, 165, 233, 0.25); color: #0284c7; padding: 0.4rem 0.85rem; border-radius: 12px; font-weight: 800; font-size: 0.9rem;">
+                            ARR : ${totalARR.toLocaleString()} FCFA / an
+                        </div>
                     </div>
                 </div>
 
@@ -2588,9 +3133,9 @@ function renderAdminView() {
                         <thead>
                             <tr>
                                 <th>Restaurant</th>
-                                <th>Période Gratuite (3 Mois)</th>
+                                <th>Statut & Période</th>
                                 <th>Formule Souscrite</th>
-                                <th>Revenu Plateforme</th>
+                                <th>Revenu SaaS Mensuel</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2603,25 +3148,29 @@ function renderAdminView() {
             <!-- Tab Selection Pill Bar -->
             <div class="admin-nav-tabs">
                 <button class="admin-nav-tab-btn ${adminActiveTab === 'orders' ? 'active' : ''}" onclick="switchAdminTab('orders')">
-                    <span>🚨 Commandes en Direct</span>
+                    <span>🚨 Commandes Direct</span>
                     <span class="admin-tab-count">${orders.length}</span>
                 </button>
+                <button class="admin-nav-tab-btn ${adminActiveTab === 'customers' ? 'active' : ''}" onclick="switchAdminTab('customers')">
+                    <span>👥 Répertoire Clients</span>
+                    <span class="admin-tab-count">${totalCustomersCount}</span>
+                </button>
                 <button class="admin-nav-tab-btn ${adminActiveTab === 'pending' ? 'active' : ''}" onclick="switchAdminTab('pending')">
-                    <span>⏳ Demandes d'inscription</span>
+                    <span>⏳ Inscriptions</span>
                     <span class="admin-tab-count">${pendingCount}</span>
                 </button>
                 <button class="admin-nav-tab-btn ${adminActiveTab === 'active' ? 'active' : ''}" onclick="switchAdminTab('active')">
                     <span>🏪 Réseau Partenaires</span>
-                    <span class="admin-tab-count">${activeRestos.length}</span>
+                    <span class="admin-tab-count">${restos.length}</span>
                 </button>
                 <button class="admin-nav-tab-btn ${adminActiveTab === 'create' ? 'active' : ''}" onclick="switchAdminTab('create')">
                     <span>➕ Nouveau Restaurant</span>
                 </button>
                 <button class="admin-nav-tab-btn ${adminActiveTab === 'accounting' ? 'active' : ''}" onclick="switchAdminTab('accounting')">
-                    <span>📊 Comptabilité & C.A.</span>
+                    <span>📊 Rapports & Finances</span>
                 </button>
                 <button class="admin-nav-tab-btn ${adminActiveTab === 'security' ? 'active' : ''}" onclick="switchAdminTab('security')">
-                    <span>🔐 Sécurité & Accès</span>
+                    <span>🔐 Sécurité</span>
                 </button>
             </div>
 
@@ -2786,7 +3335,14 @@ function renderAdminTabTable() {
                         <!-- Customer Info -->
                         <div>
                             <div style="font-size:0.72rem; text-transform:uppercase; font-weight:800; color:var(--text-secondary); margin-bottom:0.25rem;">👤 Client & Contact</div>
-                            <div style="font-weight:800; font-size:0.92rem; color:var(--text-primary);">${o.customerName || 'Client'}</div>
+                            <div style="font-weight:800; font-size:0.92rem; color:var(--text-primary); display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;">
+                                <button type="button" onclick="openCustomerDetailsModal('${o.id}')" style="background:none; border:none; padding:0; font-weight:800; color:var(--primary); text-decoration:underline; cursor:pointer; font-size:0.92rem;" title="Ouvrir la fiche client complète">
+                                    ${o.customerName || 'Client'}
+                                </button>
+                                <button type="button" onclick="openCustomerDetailsModal('${o.id}')" class="btn btn-sm" style="padding:1px 6px; font-size:0.7rem; font-weight:700; border-radius:6px; background:rgba(var(--primary-rgb),0.12); color:var(--primary); border:1px solid rgba(var(--primary-rgb),0.25); cursor:pointer;">
+                                    Fiche 👤
+                                </button>
+                            </div>
                             <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.2rem; flex-wrap:wrap;">
                                 <a href="tel:${customerPhoneDisplay}" style="font-size:0.75rem; color:var(--primary); font-weight:700; text-decoration:none;">📞 ${customerPhoneDisplay}</a>
                                 ${cleanPhone ? `<a href="https://wa.me/${cleanPhone.startsWith('221') ? cleanPhone : '221'+cleanPhone}" target="_blank" style="font-size:0.75rem; color:#25D366; font-weight:700; text-decoration:none;">💬 WhatsApp</a>` : ''}
@@ -2919,159 +3475,204 @@ function renderAdminTabTable() {
             </div>
         `;
     }
-    else if (adminActiveTab === 'pending') {
-        const pending = restos.filter(r => r.status === 'pending');
-        
-        if (pending.length === 0) {
-            tableContainer.innerHTML = `
-                <div class="admin-card-section" style="text-align: center; padding: 3.5rem 1.5rem;">
-                    <div style="font-size: 3rem; margin-bottom: 0.75rem;">🎉</div>
-                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; color: var(--text-primary);">Aucune demande en attente</h3>
-                    <p style="color: var(--text-secondary); font-size: 0.88rem; max-width: 450px; margin: 0 auto;">Toutes les candidatures de restaurants ont été traitées. Les nouveaux établissements apparaîtront ici dès leur inscription.</p>
-                </div>
-            `;
-            return;
+    else if (adminActiveTab === 'customers') {
+        const customers = window.getSuperAdminCustomersList();
+        window.adminCustomerFilter = window.adminCustomerFilter || 'all'; // 'all', 'buyers', 'recurring', 'reservations'
+        window.adminCustomerSearch = window.adminCustomerSearch || '';
+
+        const buyersList = customers.filter(c => c.ordersCount > 0);
+        const recurringList = customers.filter(c => c.ordersCount >= 2);
+        const reservationsList = customers.filter(c => c.reservationsCount > 0);
+
+        // Apply filter
+        let filteredCustomers = [...customers];
+        if (window.adminCustomerFilter === 'buyers') filteredCustomers = buyersList;
+        else if (window.adminCustomerFilter === 'recurring') filteredCustomers = recurringList;
+        else if (window.adminCustomerFilter === 'reservations') filteredCustomers = reservationsList;
+
+        // Apply search query
+        if (window.adminCustomerSearch.trim()) {
+            const q = window.adminCustomerSearch.toLowerCase().trim();
+            filteredCustomers = filteredCustomers.filter(c => {
+                const name = (c.name || '').toLowerCase();
+                const phone = (c.phone || '').toLowerCase();
+                const address = (c.address || '').toLowerCase();
+                const resto = (c.lastRestaurantName || '').toLowerCase();
+                return name.includes(q) || phone.includes(q) || address.includes(q) || resto.includes(q);
+            });
         }
 
+        const totalSpentAll = customers.reduce((sum, c) => sum + (Number(c.totalSpent) || 0), 0);
+        const avgSpentPerBuyer = buyersList.length > 0 ? Math.round(totalSpentAll / buyersList.length) : 0;
+
         let rowsHtml = '';
-        pending.forEach(r => {
-            rowsHtml += `
+        if (filteredCustomers.length === 0) {
+            rowsHtml = `
                 <tr>
-                    <td>
-                        <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary);">${r.name}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Identifiant : @${r.username || r.slug}</div>
-                    </td>
-                    <td><span class="badge badge-info" style="font-size: 0.75rem;">${r.category || 'Traditionnel'}</span></td>
-                    <td style="font-size: 0.85rem;">📍 ${r.address || 'Thiès'}</td>
-                    <td>
-                        <a href="https://wa.me/${(r.whatsapp || '').replace(/\D/g, '')}" target="_blank" class="admin-action-btn" style="background: rgba(37, 211, 102, 0.12); color: #25d366; border-color: rgba(37, 211, 102, 0.25); text-decoration: none;">
-                            💬 ${(r.whatsapp || 'Non renseigné')}
-                        </a>
-                    </td>
-                    <td style="font-size: 0.85rem; color: var(--text-secondary);">🕒 ${r.openHours || '12:00 - 23:00'}</td>
-                    <td>
-                        <div class="admin-action-btn-group">
-                            <button class="admin-action-btn btn-activate" onclick="approveRestaurant('${r.id}')" title="Valider et notifier par WhatsApp">
-                                ✅ Activer Partenaire
-                            </button>
-                            <button class="admin-action-btn btn-suspend" onclick="rejectRestaurant('${r.id}')" title="Refuser la demande">
-                                ❌ Refuser
-                            </button>
-                        </div>
+                    <td colspan="8" style="text-align: center; padding: 3rem 1.5rem; color: var(--text-secondary);">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔍</div>
+                        <div style="font-weight: 700; color: var(--text-primary);">Aucun client ne correspond aux critères de recherche</div>
+                        <div style="font-size: 0.85rem; margin-top: 0.25rem;">Modifiez vos filtres ou le texte recherché.</div>
                     </td>
                 </tr>
             `;
-        });
+        } else {
+            filteredCustomers.forEach(c => {
+                let badgeType = `<span class="badge" style="background: rgba(148,163,184,0.15); color: var(--text-secondary); font-size:0.75rem;">👤 Inscrit</span>`;
+                if (c.ordersCount >= 4 || c.totalSpent >= 25000) {
+                    badgeType = `<span class="badge" style="background: rgba(245, 158, 11, 0.15); color: #d97706; font-weight:800; font-size:0.75rem;">👑 Client VIP</span>`;
+                } else if (c.ordersCount >= 2) {
+                    badgeType = `<span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #059669; font-weight:700; font-size:0.75rem;">🛍️ Habitué (${c.ordersCount} cmd)</span>`;
+                } else if (c.ordersCount === 1) {
+                    badgeType = `<span class="badge badge-info" style="font-size:0.75rem;">🌟 Nouveau Client</span>`;
+                }
+
+                const cleanPhone = (c.phone || '').replace(/\D/g, '');
+                const waLink = cleanPhone ? `https://wa.me/${cleanPhone.startsWith('221') ? cleanPhone : '221' + cleanPhone}` : null;
+
+                rowsHtml += `
+                    <tr>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:0.75rem;">
+                                <div style="width:38px; height:38px; border-radius:12px; background:linear-gradient(135deg, var(--primary), #ea580c); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.95rem; flex-shrink:0;">
+                                    ${(c.name || 'C').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">${c.name || 'Client Gourmet'}</div>
+                                    <div style="margin-top: 0.2rem;">${badgeType}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display:flex; align-items:center; gap:0.4rem;">
+                                <a href="tel:${c.phone}" style="font-weight:700; color:var(--text-primary); text-decoration:none; font-size:0.88rem;">
+                                    📞 ${c.phone}
+                                </a>
+                                ${waLink ? `
+                                    <a href="${waLink}" target="_blank" title="Envoyer un message WhatsApp" style="display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; border-radius:6px; background:rgba(37, 211, 102, 0.15); color:#16a34a; text-decoration:none; font-size:0.8rem; font-weight:bold;">
+                                        💬
+                                    </a>
+                                ` : ''}
+                            </div>
+                        </td>
+                        <td style="font-size: 0.85rem; color: var(--text-secondary); max-width: 180px;">
+                            📍 ${c.address || 'Thiès'}
+                        </td>
+                        <td>
+                            <div style="font-weight: 800; color: var(--text-primary); font-size: 0.95rem;">
+                                ${c.ordersCount} <span style="font-size: 0.75rem; color: var(--text-secondary); font-weight: 600;">cmd(s)</span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: #10b981;">
+                                ${c.completedOrdersCount} livrée(s)
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 800; color: #10b981; font-size: 0.95rem;">
+                                ${c.totalSpent.toLocaleString()} FCFA
+                            </div>
+                            <div style="font-size: 0.72rem; color: var(--text-secondary);">
+                                ${c.ordersCount > 0 ? Math.round(c.totalSpent / c.ordersCount).toLocaleString() + ' F / cmd' : '0 F'}
+                            </div>
+                        </td>
+                        <td style="font-size: 0.82rem; color: var(--text-secondary);">
+                            ${c.lastRestaurantName ? `<strong>${c.lastRestaurantName}</strong>` : (c.preferredMode || 'Livraison')}
+                        </td>
+                        <td style="font-size: 0.82rem; color: var(--text-secondary); white-space: nowrap;">
+                            ${c.lastActivity ? `🕒 ${c.lastActivity}` : '—'}
+                        </td>
+                        <td>
+                            <div class="admin-action-btn-group">
+                                ${waLink ? `
+                                    <a href="${waLink}" target="_blank" class="admin-action-btn" style="background: rgba(37, 211, 102, 0.12); color: #16a34a; border-color: rgba(37, 211, 102, 0.25); text-decoration:none;">
+                                        💬 Contacter
+                                    </a>
+                                ` : `
+                                    <span style="font-size:0.8rem; color:var(--text-secondary);">—</span>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
 
         tableContainer.innerHTML = `
             <div class="admin-card-section" style="padding: 0; overflow: hidden;">
-                <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                <!-- Header & Controls -->
+                <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
                     <div>
-                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">⏳ Demandes d'inscription en attente de validation</h3>
-                        <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Validez les comptes des restaurateurs pour leur ouvrir l'accès à leur espace de gestion.</p>
+                        <h3 style="margin: 0; font-size: 1.2rem; font-weight: 800; color: var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+                            <span>👥 Répertoire & Base des Clients de la Plateforme</span>
+                        </h3>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">
+                            Suivi complet des consommateurs ayant commandé ou réservé sur le réseau de Thiès.
+                        </p>
                     </div>
-                    <span class="badge badge-warning" style="font-weight: 800;">${pending.length} en attente</span>
+                    <div style="display:flex; gap:0.6rem; flex-wrap:wrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="window.exportCustomersCSV()" style="font-weight:700; border-radius:10px; display:inline-flex; align-items:center; gap:0.4rem;">
+                            📥 Exporter Base Clients (CSV)
+                        </button>
+                    </div>
                 </div>
+
+                <!-- Mini Stats Bar for Customers -->
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; padding:1.25rem 1.5rem; background:var(--bg-secondary); border-bottom:1px solid var(--border);">
+                    <div style="background:var(--bg-card); padding:0.85rem 1rem; border-radius:12px; border:1px solid var(--border);">
+                        <div style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Total Clients Identifiés</div>
+                        <div style="font-size:1.4rem; font-weight:800; color:#0284c7; margin-top:0.2rem;">${customers.length}</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">${buyersList.length} ont validé au moins 1 commande</div>
+                    </div>
+                    <div style="background:var(--bg-card); padding:0.85rem 1rem; border-radius:12px; border:1px solid var(--border);">
+                        <div style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Clients Fidèles (≥2 cmd)</div>
+                        <div style="font-size:1.4rem; font-weight:800; color:#10b981; margin-top:0.2rem;">${recurringList.length}</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">${customers.length > 0 ? Math.round((recurringList.length / customers.length) * 100) : 0}% de récurrence globale</div>
+                    </div>
+                    <div style="background:var(--bg-card); padding:0.85rem 1rem; border-radius:12px; border:1px solid var(--border);">
+                        <div style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Panier Moyen Client</div>
+                        <div style="font-size:1.4rem; font-weight:800; color:var(--primary); margin-top:0.2rem;">${avgSpentPerBuyer.toLocaleString()} FCFA</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">Dépense moyenne cumulée par acheteur</div>
+                    </div>
+                    <div style="background:var(--bg-card); padding:0.85rem 1rem; border-radius:12px; border:1px solid var(--border);">
+                        <div style="font-size:0.75rem; font-weight:700; color:var(--text-secondary); text-transform:uppercase;">Volume Dépensé Total</div>
+                        <div style="font-size:1.4rem; font-weight:800; color:#059669; margin-top:0.2rem;">${totalSpentAll.toLocaleString()} FCFA</div>
+                        <div style="font-size:0.75rem; color:var(--text-secondary);">Chiffre d'affaires global généré par les clients</div>
+                    </div>
+                </div>
+
+                <!-- Filter Pills and Search bar -->
+                <div style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.75rem;">
+                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                        <button class="btn btn-sm ${window.adminCustomerFilter === 'all' ? 'btn-primary' : 'btn-secondary'}" onclick="window.adminCustomerFilter='all'; renderAdminTabTable();" style="border-radius:20px; font-weight:700;">
+                            Tous (${customers.length})
+                        </button>
+                        <button class="btn btn-sm ${window.adminCustomerFilter === 'buyers' ? 'btn-primary' : 'btn-secondary'}" onclick="window.adminCustomerFilter='buyers'; renderAdminTabTable();" style="border-radius:20px; font-weight:700;">
+                            🛍️ Acheteurs Actifs (${buyersList.length})
+                        </button>
+                        <button class="btn btn-sm ${window.adminCustomerFilter === 'recurring' ? 'btn-primary' : 'btn-secondary'}" onclick="window.adminCustomerFilter='recurring'; renderAdminTabTable();" style="border-radius:20px; font-weight:700;">
+                            👑 Clients Fidèles (≥2 cmd) (${recurringList.length})
+                        </button>
+                        <button class="btn btn-sm ${window.adminCustomerFilter === 'reservations' ? 'btn-primary' : 'btn-secondary'}" onclick="window.adminCustomerFilter='reservations'; renderAdminTabTable();" style="border-radius:20px; font-weight:700;">
+                            🪑 Réservations Table (${reservationsList.length})
+                        </button>
+                    </div>
+                    <div style="flex:1; max-width:320px; min-width:200px;">
+                        <input type="text" class="form-control" placeholder="🔍 Rechercher client, tél, quartier..." value="${window.adminCustomerSearch}" oninput="window.adminCustomerSearch=this.value; renderAdminTabTable();" style="font-size:0.85rem; padding:0.45rem 0.85rem; border-radius:10px;">
+                    </div>
+                </div>
+
+                <!-- Customers Table -->
                 <div style="overflow-x: auto;">
                     <table class="admin-table-modern">
                         <thead>
                             <tr>
-                                <th>Restaurant & Slug</th>
-                                <th>Catégorie</th>
-                                <th>Adresse</th>
-                                <th>WhatsApp</th>
-                                <th>Horaires</th>
-                                <th>Action Super-Admin</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${rowsHtml}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        `;
-    } 
-    else if (adminActiveTab === 'active') {
-        const activeOrSuspended = restos.filter(r => r.status === 'active' || r.status === 'suspended');
-        
-        if (activeOrSuspended.length === 0) {
-            tableContainer.innerHTML = `
-                <div class="admin-card-section" style="text-align: center; padding: 3rem 1.5rem;">
-                    <p style="color: var(--text-secondary); margin: 0;">Aucun restaurant configuré dans le réseau.</p>
-                </div>
-            `;
-            return;
-        }
-
-        let rowsHtml = '';
-        activeOrSuspended.forEach(r => {
-            const rOrdersList = store.getOrdersByRestaurant(r.id);
-            const rCompletedOrders = rOrdersList.filter(o => o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered');
-            const rRevenue = rCompletedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
-            
-            const statusLabel = r.status === 'active' 
-                ? `<span class="badge badge-success" style="font-weight:700;">✅ Actif</span>` 
-                : `<span class="badge badge-danger" style="font-weight:700;">🔒 Suspendu</span>`;
-                
-            const actionBtn = r.status === 'active'
-                ? `<button class="admin-action-btn btn-suspend" onclick="suspendRestaurant('${r.id}')" title="Suspendre temporairement l'accès">🔒 Suspendre</button>`
-                : `<button class="admin-action-btn btn-activate" onclick="reactivateRestaurant('${r.id}')" title="Réactiver le restaurant">🔓 Réactiver</button>`;
-
-            let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
-            let selectPackHtml = `
-                <select onchange="updateRestaurantPack('${r.id}', this.value)" style="padding: 0.35rem 0.6rem; font-size: 0.8rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-weight: 600;">
-                    <option value="Aucun (Gratuit)" ${packSubscribed === 'Aucun (Gratuit)' ? 'selected' : ''}>Gratuit (0 FCFA)</option>
-                    <option value="Pack Standard" ${packSubscribed === 'Pack Standard' || packSubscribed === 'Pack Simple' ? 'selected' : ''}>Standard (5k FCFA/m)</option>
-                    <option value="Pack Entreprise" ${packSubscribed === 'Pack Entreprise' || packSubscribed === 'Pack Startup' ? 'selected' : ''}>Entreprise (15k FCFA/m)</option>
-                    <option value="Pack Annuel VIP" ${packSubscribed === 'Pack Annuel VIP' || packSubscribed === 'Pack Annuel' ? 'selected' : ''}>Annuel VIP (100k FCFA/an)</option>
-                </select>
-            `;
-
-            rowsHtml += `
-                <tr>
-                    <td>
-                        <div style="font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">${r.name}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary);">${r.category || 'Général'} • ID: ${r.id}</div>
-                    </td>
-                    <td>${statusLabel}</td>
-                    <td>${selectPackHtml}</td>
-                    <td style="font-weight: 700; color: var(--text-primary);">${rOrdersList.length} Cmd(s)</td>
-                    <td style="font-weight: 800; color: #10b981;">${rRevenue.toLocaleString()} FCFA</td>
-                    <td>
-                        <div class="admin-action-btn-group">
-                            <button class="admin-action-btn btn-manage" onclick="impersonateRestaurant('${r.id}')" title="Se connecter au tableau de bord de ce restaurant">
-                                ⚙️ Gérer
-                            </button>
-                            ${actionBtn}
-                            <button class="admin-action-btn" style="background: var(--bg-secondary); color: var(--text-primary);" onclick="router.navigate('/r/${r.slug}')" title="Voir la carte publique">
-                                🌐 Visiter
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-
-        tableContainer.innerHTML = `
-            <div class="admin-card-section" style="padding: 0; overflow: hidden;">
-                <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem;">
-                    <div>
-                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">🏪 Réseau des Restaurants Actifs</h3>
-                        <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Contrôle des accès, formules d'abonnements et supervision par établissement.</p>
-                    </div>
-                    <span class="badge badge-info" style="font-weight: 800;">${activeOrSuspended.length} restaurants</span>
-                </div>
-                <div style="overflow-x: auto;">
-                    <table class="admin-table-modern">
-                        <thead>
-                            <tr>
-                                <th>Établissement</th>
-                                <th>Statut</th>
-                                <th>Formule d'Abonnement</th>
-                                <th>Volume Commandes</th>
-                                <th>Chiffre d'Affaires</th>
-                                <th>Actions Super-Admin</th>
+                                <th>Client & Profil</th>
+                                <th>Téléphone & Contact</th>
+                                <th>Adresse Principale</th>
+                                <th>Commandes</th>
+                                <th>Dépenses Totales</th>
+                                <th>Dernier Établissement</th>
+                                <th>Dernière Activité</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -3149,42 +3750,156 @@ function renderAdminTabTable() {
     }
     else if (adminActiveTab === 'accounting') {
         const allOrders = store.data.orders || [];
-        const completedOrders = allOrders.filter(o => o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered');
-        const cancelledOrders = allOrders.filter(o => o.status === 'Annulée' || o.status === 'cancelled');
-        const pendingOrders = allOrders.filter(o => o.status === 'En attente' || o.status === 'Reçue' || o.status === 'Confirmée' || o.status === 'En cuisine' || o.status === 'Prêt pour livraison' || o.status === 'En livraison');
-        const totalRevenue = completedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
         
-        // Detailed metrics per restaurant
+        // Active Filter States
+        window.adminFinPeriod = window.adminFinPeriod || 'all';
+        window.adminFinSubTab = window.adminFinSubTab || 'overview'; // 'overview', 'paytech', 'orders', 'transactions'
+        window.adminFinSearch = window.adminFinSearch || '';
+        window.adminFinPackFilter = window.adminFinPackFilter || 'all';
+
+        // Filter orders by date period
+        const now = new Date();
+        const todayStr = now.toISOString().split('T')[0];
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+
+        let filteredOrders = allOrders;
+        if (window.adminFinPeriod === 'today') {
+            filteredOrders = allOrders.filter(o => o.date === todayStr);
+        } else if (window.adminFinPeriod === 'week') {
+            filteredOrders = allOrders.filter(o => o.date >= sevenDaysAgo);
+        } else if (window.adminFinPeriod === 'month') {
+            filteredOrders = allOrders.filter(o => o.date >= thirtyDaysAgo);
+        } else if (window.adminFinPeriod === 'cur_month') {
+            filteredOrders = allOrders.filter(o => o.date >= startOfMonth);
+        }
+
+        const completedOrders = filteredOrders.filter(o => o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered');
+        const cancelledOrders = filteredOrders.filter(o => o.status === 'Annulée' || o.status === 'cancelled');
+        const pendingOrders = filteredOrders.filter(o => o.status === 'En attente' || o.status === 'Reçue' || o.status === 'Confirmée' || o.status === 'En cuisine' || o.status === 'Prêt pour livraison' || o.status === 'En livraison');
+        const totalRevenue = completedOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        const avgCartValue = completedOrders.length > 0 ? Math.round(totalRevenue / completedOrders.length) : 0;
+        const deliverySuccessRate = filteredOrders.length > 0 ? Math.round((completedOrders.length / filteredOrders.length) * 100) : 100;
+
+        // PayTech Transactions calculation
+        const paytechTxs = window.getPaytechTransactionsList();
+        const confirmedPaytechTxs = paytechTxs.filter(t => t.status === 'PAID');
+        const totalPaytechCollected = confirmedPaytechTxs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+        // SaaS MRR & ARR calculation
+        let mrrTotal = 0;
+        let activeSubscribersCount = 0;
+        let trialRestaurantsCount = 0;
+        let expiredTrialCount = 0;
+
+        restos.forEach(r => {
+            if (r.status === 'active') {
+                const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+                const diffDays = Math.ceil(Math.abs(new Date() - createdAt) / (1000 * 60 * 60 * 24));
+                const daysLeft = 90 - diffDays;
+                
+                const pack = r.subscriptionPack || 'Pack Standard';
+                let monthlyFee = 0;
+                if (pack === 'Pack Standard' || pack === 'Pack Simple') monthlyFee = 5000;
+                else if (pack === 'Pack Entreprise' || pack === 'Pack Startup') monthlyFee = 15000;
+                else if (pack === 'Pack Annuel VIP' || pack === 'Pack Annuel') monthlyFee = Math.round(100000 / 12);
+
+                if (daysLeft > 0 && (!r.subscriptionPaidAt && !r.hasPaidSubscription)) {
+                    trialRestaurantsCount++;
+                } else {
+                    activeSubscribersCount++;
+                    mrrTotal += monthlyFee;
+                }
+
+                if (daysLeft <= 0 && !r.subscriptionPaidAt && !r.hasPaidSubscription) {
+                    expiredTrialCount++;
+                }
+            }
+        });
+
+        const arrProjected = mrrTotal * 12;
+
+        // Detailed stats per restaurant
         let restoStats = {};
         restos.forEach(r => {
+            const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+            const diffDays = Math.ceil(Math.abs(new Date() - createdAt) / (1000 * 60 * 60 * 24));
+            const daysLeft = Math.max(0, 90 - diffDays);
+
+            let monthlyFee = 0;
+            const pack = r.subscriptionPack || 'Pack Standard';
+            if (pack === 'Pack Standard' || pack === 'Pack Simple') monthlyFee = 5000;
+            else if (pack === 'Pack Entreprise' || pack === 'Pack Startup') monthlyFee = 15000;
+            else if (pack === 'Pack Annuel VIP' || pack === 'Pack Annuel') monthlyFee = Math.round(100000 / 12);
+
+            const restoTxs = confirmedPaytechTxs.filter(t => 
+                (t.restaurantName && r.name && t.restaurantName.toLowerCase() === r.name.toLowerCase()) || 
+                (t.orderId && r.slug && t.orderId.toLowerCase().includes(r.slug.toLowerCase()))
+            );
+            const totalPaidPaytech = restoTxs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
             restoStats[r.id] = {
+                id: r.id,
+                slug: r.slug,
                 name: r.name,
                 category: r.category || 'Général',
+                address: r.address || 'Thiès',
+                whatsapp: r.whatsapp || '',
                 status: r.status,
+                subscriptionPack: pack,
+                monthlyFee: monthlyFee,
+                trialDaysLeft: daysLeft,
+                isTrial: daysLeft > 0 && !r.subscriptionPaidAt && !r.hasPaidSubscription,
+                hasPaid: totalPaidPaytech > 0 || !!r.subscriptionPaidAt,
+                totalPaidPaytech: totalPaidPaytech,
                 totalOrders: 0,
                 completedOrders: 0,
                 pendingOrders: 0,
                 cancelledOrders: 0,
+                deliveryOrders: 0,
+                takeawayOrders: 0,
+                dineInOrders: 0,
                 revenue: 0
             };
         });
 
-        allOrders.forEach(o => {
+        filteredOrders.forEach(o => {
             if (!restoStats[o.restaurantId]) {
                 const r = restos.find(item => item.id === o.restaurantId);
                 restoStats[o.restaurantId] = {
+                    id: o.restaurantId,
+                    slug: r ? r.slug : o.restaurantId,
                     name: r ? r.name : (o.restaurantName || o.restaurantId),
                     category: r ? r.category : 'Partenaire',
+                    address: r ? r.address : 'Thiès',
+                    whatsapp: r ? r.whatsapp : '',
                     status: r ? r.status : 'active',
+                    subscriptionPack: 'Pack Standard',
+                    monthlyFee: 5000,
+                    trialDaysLeft: 0,
+                    isTrial: false,
+                    hasPaid: false,
+                    totalPaidPaytech: 0,
                     totalOrders: 0,
                     completedOrders: 0,
                     pendingOrders: 0,
                     cancelledOrders: 0,
+                    deliveryOrders: 0,
+                    takeawayOrders: 0,
+                    dineInOrders: 0,
                     revenue: 0
                 };
             }
             const stat = restoStats[o.restaurantId];
             stat.totalOrders++;
+            
+            const mode = String(o.mode || '').toLowerCase();
+            if (mode.includes('livraison') || mode.includes('delivery')) stat.deliveryOrders++;
+            else if (mode.includes('emporter') || mode.includes('takeaway')) stat.takeawayOrders++;
+            else if (mode.includes('place') || mode.includes('dine')) stat.dineInOrders++;
+            else stat.deliveryOrders++;
+
             if (o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered') {
                 stat.completedOrders++;
                 stat.revenue += (Number(o.total) || 0);
@@ -3194,153 +3909,390 @@ function renderAdminTabTable() {
                 stat.pendingOrders++;
             }
         });
-        
-        let revenueRowsHtml = '';
-        Object.values(restoStats)
-            .filter(st => st.totalOrders > 0 || st.status === 'active')
-            .sort((a, b) => b.revenue - a.revenue)
-            .forEach(st => {
-                const statusBadge = st.status === 'active' 
-                    ? `<span class="badge badge-success" style="font-size:0.75rem;">Actif</span>` 
-                    : st.status === 'pending' 
-                        ? `<span class="badge badge-warning" style="font-size:0.75rem;">En attente</span>` 
-                        : `<span class="badge badge-danger" style="font-size:0.75rem;">Suspendu</span>`;
 
-                revenueRowsHtml += `
-                    <tr>
-                        <td>
-                            <strong style="color: var(--text-primary);">${st.name}</strong>
-                            <div style="font-size: 0.75rem; color: var(--text-secondary);">${st.category}</div>
-                        </td>
-                        <td>${statusBadge}</td>
-                        <td style="font-weight: 700;">${st.totalOrders}</td>
-                        <td style="color: #10b981; font-weight: 800;">${st.completedOrders}</td>
-                        <td style="color: #f59e0b; font-weight: 700;">${st.pendingOrders}</td>
-                        <td style="color: #ef4444;">${st.cancelledOrders}</td>
-                        <td style="font-weight: 800; color: #10b981; font-size:0.95rem;">${st.revenue.toLocaleString()} FCFA</td>
-                    </tr>
-                `;
-            });
-        
-        if (!revenueRowsHtml) {
-            revenueRowsHtml = '<tr><td colspan="7" style="padding: 2rem; text-align: center; color: var(--text-secondary);">Aucune commande enregistrée pour le moment.</td></tr>';
+        // Filter and search stats
+        let displayedRestos = Object.values(restoStats);
+        if (window.adminFinSearch) {
+            const q = window.adminFinSearch.toLowerCase();
+            displayedRestos = displayedRestos.filter(st => 
+                (st.name || '').toLowerCase().includes(q) || 
+                (st.category || '').toLowerCase().includes(q) || 
+                (st.address || '').toLowerCase().includes(q)
+            );
+        }
+        if (window.adminFinPackFilter !== 'all') {
+            if (window.adminFinPackFilter === 'trial') {
+                displayedRestos = displayedRestos.filter(st => st.isTrial);
+            } else if (window.adminFinPackFilter === 'paid') {
+                displayedRestos = displayedRestos.filter(st => st.hasPaid);
+            } else {
+                displayedRestos = displayedRestos.filter(st => st.subscriptionPack === window.adminFinPackFilter);
+            }
         }
 
-        // All platform orders list with sequential IDs per restaurant
-        let allOrdersHtml = '';
-        const sortedOrders = [...allOrders].sort((a, b) => {
-            const tA = a.timestamp || (a.date && a.time ? new Date(`${a.date}T${a.time}`).getTime() : 0);
-            const tB = b.timestamp || (b.date && b.time ? new Date(`${b.date}T${b.time}`).getTime() : 0);
-            return tB - tA;
+        // Generate Order Volume rows
+        let ordersRowsHtml = '';
+        displayedRestos.sort((a, b) => b.revenue - a.revenue).forEach(st => {
+            const successRate = st.totalOrders > 0 ? Math.round((st.completedOrders / st.totalOrders) * 100) : 0;
+            const avgRestoCart = st.completedOrders > 0 ? Math.round(st.revenue / st.completedOrders) : 0;
+            
+            const deliveryPct = st.totalOrders > 0 ? Math.round((st.deliveryOrders / st.totalOrders) * 100) : 0;
+            const takeawayPct = st.totalOrders > 0 ? Math.round((st.takeawayOrders / st.totalOrders) * 100) : 0;
+
+            ordersRowsHtml += `
+                <tr>
+                    <td>
+                        <div style="font-weight: 800; color: var(--text-primary); font-size: 0.95rem;">${st.name}</div>
+                        <div style="font-size: 0.76rem; color: var(--text-secondary);">${st.category} • ${st.address}</div>
+                    </td>
+                    <td style="font-weight: 800; font-size: 1rem; color: var(--text-primary); text-align: center;">${st.totalOrders}</td>
+                    <td style="text-align: center;">
+                        <span style="color: #10b981; font-weight: 800;">${st.completedOrders}</span>
+                        <div style="font-size: 0.72rem; color: var(--text-secondary);">${successRate}% succès</div>
+                    </td>
+                    <td style="text-align: center; color: #f59e0b; font-weight: 700;">${st.pendingOrders}</td>
+                    <td style="text-align: center; color: #ef4444; font-weight: 700;">${st.cancelledOrders}</td>
+                    <td>
+                        <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+                            <span>🛵 ${deliveryPct}%</span>
+                            <span style="color: var(--border);">|</span>
+                            <span>🛍️ ${takeawayPct}%</span>
+                        </div>
+                    </td>
+                    <td style="font-weight: 800; color: var(--primary); font-size: 0.88rem;">${avgRestoCart.toLocaleString()} F</td>
+                    <td style="font-weight: 900; color: #10b981; font-size: 1.05rem;">${st.revenue.toLocaleString()} FCFA</td>
+                </tr>
+            `;
         });
 
-        sortedOrders.forEach(o => {
-            const resto = restos.find(r => r.id === o.restaurantId);
-            const restoName = resto ? resto.name : (o.restaurantName || o.restaurantId);
-            const statusBadge = o.status === 'Livrée' ? '<span class="badge badge-success">✅ Livrée</span>' : 
-                                o.status === 'Annulée' ? '<span class="badge badge-danger">❌ Annulée</span>' : 
-                                o.status === 'En cuisine' ? '<span class="badge" style="background:#e0f2fe; color:#0284c7; font-weight:700;">👨‍🍳 En cuisine</span>' :
-                                o.status === 'Prêt pour livraison' ? '<span class="badge" style="background:#fef3c7; color:#d97706; font-weight:700;">📦 Prêt</span>' :
-                                o.status === 'En livraison' ? '<span class="badge" style="background:#dbeafe; color:#1d4ed8; font-weight:700;">🛵 En livraison</span>' :
-                                '<span class="badge badge-warning">⏳ En attente</span>';
+        if (!ordersRowsHtml) {
+            ordersRowsHtml = '<tr><td colspan="8" style="padding: 2.5rem; text-align: center; color: var(--text-secondary);">Aucun restaurant correspondant aux critères de recherche.</td></tr>';
+        }
 
-            const orderDisplayNum = o.orderNumber ? `Commande #${o.orderNumber}` : (o.id || 'CMD');
+        // Generate PayTech Subscriptions rows
+        let paytechRowsHtml = '';
+        displayedRestos.sort((a, b) => b.totalPaidPaytech - a.totalPaidPaytech).forEach(st => {
+            const packBadge = st.subscriptionPack === 'Pack Annuel VIP'
+                ? `<span class="badge" style="background: rgba(168, 85, 247, 0.15); color: #9333ea; font-weight: 800; border: 1px solid rgba(168, 85, 247, 0.3);">💎 Annuel VIP (100k/an)</span>`
+                : st.subscriptionPack === 'Pack Entreprise'
+                ? `<span class="badge" style="background: rgba(59, 130, 246, 0.15); color: #2563eb; font-weight: 800; border: 1px solid rgba(59, 130, 246, 0.3);">🏢 Entreprise (15k/mois)</span>`
+                : `<span class="badge" style="background: rgba(242, 107, 33, 0.15); color: var(--primary); font-weight: 800; border: 1px solid rgba(242, 107, 33, 0.3);">⭐ Standard (5k/mois)</span>`;
 
-            allOrdersHtml += `
+            const statusBadge = st.hasPaid
+                ? `<span class="badge badge-success" style="font-weight: 800;"><i class="ri-checkbox-circle-fill"></i> Abonné PayTech</span>`
+                : st.isTrial
+                ? `<span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #059669; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.25);">🎁 Essai (${st.trialDaysLeft}j restants)</span>`
+                : `<span class="badge badge-danger" style="font-weight: 700;">⚠️ Essai expiré</span>`;
+
+            paytechRowsHtml += `
                 <tr>
-                    <td style="font-weight: 800; color: var(--primary); font-family: monospace;">${orderDisplayNum}</td>
                     <td>
-                        <strong style="color: var(--text-primary);">${restoName}</strong>
+                        <div style="font-weight: 800; color: var(--text-primary); font-size: 0.95rem;">${st.name}</div>
+                        <div style="font-size: 0.76rem; color: var(--text-secondary);">${st.category}</div>
                     </td>
-                    <td>
-                        <div style="font-weight: 600;">${o.customerName || 'Client'}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-secondary);">${o.customerPhone || ''}</div>
-                    </td>
-                    <td style="font-size: 0.85rem;">${o.date || ''} <span style="color:var(--text-secondary); font-size:0.78rem;">${o.time || ''}</span></td>
                     <td>${statusBadge}</td>
-                    <td style="font-weight: 800; color: var(--text-primary);">${(Number(o.total) || 0).toLocaleString()} FCFA</td>
+                    <td>${packBadge}</td>
+                    <td style="font-weight: 800; color: var(--text-primary);">${st.monthlyFee.toLocaleString()} FCFA / mois</td>
+                    <td style="font-weight: 900; color: #10b981; font-size: 0.95rem;">${st.totalPaidPaytech > 0 ? st.totalPaidPaytech.toLocaleString() + ' FCFA' : '<span style="color:var(--text-secondary); font-weight:500;">0 FCFA</span>'}</td>
                     <td>
-                        <select onchange="adminUpdateOrderStatus('${o.id}', this.value)" style="padding: 0.35rem 0.6rem; border-radius: 8px; font-size: 0.78rem; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); font-weight: 600;">
-                            <option value="" disabled selected>Changer statut</option>
-                            <option value="En attente">⏳ En attente</option>
-                            <option value="En cuisine">👨‍🍳 En cuisine</option>
-                            <option value="Prêt pour livraison">📦 Prêt</option>
-                            <option value="En livraison">🛵 En livraison</option>
-                            <option value="Livrée">✅ Livrée</option>
-                            <option value="Annulée">❌ Annulée</option>
-                        </select>
+                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                            <button class="btn btn-sm btn-primary" onclick="window.openRecordPaytechModal('${st.id}')" style="font-size: 0.74rem; font-weight: 700; padding: 0.25rem 0.55rem; border-radius: 6px;">
+                                💳 Encaisser PayTech
+                            </button>
+                            <select onchange="window.updateRestaurantPack('${st.id}', this.value)" style="padding: 0.25rem 0.4rem; border-radius: 6px; font-size: 0.74rem; font-weight: 600; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary);">
+                                <option value="" disabled selected>Changer Pack</option>
+                                <option value="Pack Standard">Pack Standard (5k)</option>
+                                <option value="Pack Entreprise">Pack Entreprise (15k)</option>
+                                <option value="Pack Annuel VIP">Pack Annuel VIP (100k)</option>
+                                <option value="Aucun (Gratuit)">Gratuit</option>
+                            </select>
+                        </div>
                     </td>
                 </tr>
             `;
         });
-        
-        if (!allOrdersHtml) {
-            allOrdersHtml = '<tr><td colspan="7" style="padding: 2.5rem; text-align: center; color: var(--text-secondary);">Aucune commande enregistrée sur la plateforme.</td></tr>';
+
+        // Generate PayTech Transactions Table
+        let txRowsHtml = '';
+        paytechTxs.forEach(tx => {
+            const dateDisplay = tx.date ? new Date(tx.date).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) : 'N/A';
+            const statusBadge = tx.status === 'PAID'
+                ? `<span class="badge badge-success" style="font-weight: 800;">✅ Encaissé</span>`
+                : `<span class="badge badge-warning" style="font-weight: 700;">⏳ En attente</span>`;
+
+            txRowsHtml += `
+                <tr>
+                    <td style="font-family: monospace; font-weight: 800; color: var(--primary); font-size: 0.85rem;">${tx.orderId || 'SUB-REF'}</td>
+                    <td><strong>${tx.restaurantName || tx.customerName || 'Restaurant'}</strong></td>
+                    <td style="font-size: 0.85rem;">${tx.itemName || 'Abonnement Restaurant'}</td>
+                    <td style="font-weight: 800; color: #10b981; font-size: 0.95rem;">${(Number(tx.amount) || 0).toLocaleString()} FCFA</td>
+                    <td style="font-size: 0.82rem; color: var(--text-secondary);">${tx.paymentMethod || 'PayTech'}</td>
+                    <td style="font-size: 0.82rem;">${dateDisplay}</td>
+                    <td>${statusBadge}</td>
+                </tr>
+            `;
+        });
+
+        if (!txRowsHtml) {
+            txRowsHtml = '<tr><td colspan="7" style="padding: 2.5rem; text-align: center; color: var(--text-secondary);">Aucune transaction PayTech enregistrée.</td></tr>';
         }
 
         tableContainer.innerHTML = `
-            <!-- Revenue by Restaurant -->
-            <div class="admin-card-section" style="padding: 0; overflow: hidden; margin-bottom: 2.5rem;">
-                <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <!-- Sub Navigation & Period Filters -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 2rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
                     <div>
-                        <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-primary);">📊 Ventilation des Revenus par Établissement</h3>
-                        <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Chiffre d'affaires cumulé et taux d'exécution des commandes par restaurant.</p>
+                        <h2 style="font-size: 1.35rem; font-weight: 900; color: var(--text-primary); margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <span>📊 Rapports &amp; Statistiques Financières de Thiès</span>
+                        </h2>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">
+                            Supervision des abonnements SaaS encaissés via PayTech et des volumes de commandes par restaurant.
+                        </p>
                     </div>
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <button class="btn btn-secondary btn-sm" onclick="store.resequenceOrders(); renderAdminTabTable(); showToast('Numéros de commande recalculés de 1 à N.', 'success');" style="font-size: 0.78rem; font-weight: 700; border-radius: 10px;">
-                            🔢 Réindexer (1 à N)
+                    
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                        <!-- Period Selector -->
+                        <div style="display: flex; align-items: center; gap: 0.4rem; background: var(--bg-secondary); padding: 0.3rem 0.6rem; border-radius: 10px; border: 1px solid var(--border);">
+                            <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">Période :</span>
+                            <select class="form-control" style="width: auto; margin: 0; padding: 0.2rem 0.5rem; font-size: 0.82rem; font-weight: 700; background: transparent; border: none; color: var(--text-primary);" onchange="window.adminFinPeriod = this.value; renderAdminTabTable();">
+                                <option value="all" ${window.adminFinPeriod === 'all' ? 'selected' : ''}>Tout l'historique</option>
+                                <option value="today" ${window.adminFinPeriod === 'today' ? 'selected' : ''}>Aujourd'hui</option>
+                                <option value="week" ${window.adminFinPeriod === 'week' ? 'selected' : ''}>7 derniers jours</option>
+                                <option value="month" ${window.adminFinPeriod === 'month' ? 'selected' : ''}>30 derniers jours</option>
+                                <option value="cur_month" ${window.adminFinPeriod === 'cur_month' ? 'selected' : ''}>Mois en cours</option>
+                            </select>
+                        </div>
+
+                        <!-- CSV Export -->
+                        <button class="btn btn-secondary btn-sm" onclick="window.exportPlatformFinancialReportCSV()" style="font-size: 0.82rem; font-weight: 700; border-radius: 10px;">
+                            💾 Exporter CSV
                         </button>
-                        <button class="btn btn-outline btn-sm" onclick="if(confirm('Voulez-vous remettre à zéro l\\'historique des commandes pour démarrer une nouvelle séquence ?')) { store.resetAllOrdersToZero(); renderAdminView(); }" style="color: var(--danger); border-color: var(--danger); font-size: 0.78rem; font-weight: 700; border-radius: 10px;">
-                            🔄 Remise à zéro
+                        
+                        <!-- Print -->
+                        <button class="btn btn-outline btn-sm" onclick="window.print()" style="font-size: 0.82rem; font-weight: 700; border-radius: 10px;">
+                            🖨️ Imprimer Rapport
                         </button>
                     </div>
+                </div>
+
+                <!-- Internal Sub-Tabs Navigation -->
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <button class="btn btn-sm ${window.adminFinSubTab === 'overview' ? 'btn-primary' : 'btn-secondary'}" onclick="window.adminFinSubTab = 'overview'; renderAdminTabTable();" style="font-weight: 700; border-radius: 10px;">
+                        📊 Vue Consolidée &amp; Synthèse
+                    </button>
+                    <button class="btn btn-sm ${window.adminFinSubTab === 'paytech' ? 'btn-primary' : 'btn-secondary'}" onclick="window.adminFinSubTab = 'paytech'; renderAdminTabTable();" style="font-weight: 700; border-radius: 10px;">
+                        💳 Abonnements PayTech (${confirmedPaytechTxs.length})
+                    </button>
+                    <button class="btn btn-sm ${window.adminFinSubTab === 'orders' ? 'btn-primary' : 'btn-secondary'}" onclick="window.adminFinSubTab = 'orders'; renderAdminTabTable();" style="font-weight: 700; border-radius: 10px;">
+                        🛍️ Volumes Commandes par Restaurant (${restos.length})
+                    </button>
+                    <button class="btn btn-sm ${window.adminFinSubTab === 'transactions' ? 'btn-primary' : 'btn-secondary'}" onclick="window.adminFinSubTab = 'transactions'; renderAdminTabTable();" style="font-weight: 700; border-radius: 10px;">
+                        📜 Journal PayTech
+                    </button>
+                </div>
+            </div>
+
+            <!-- Bento Financial Executive KPI Grid -->
+            <div class="admin-kpi-grid" style="margin-bottom: 2rem;">
+                <div class="admin-kpi-card kpi-success">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">Abonnements PayTech Encaissés</span>
+                            <span class="admin-kpi-icon">💳</span>
+                        </div>
+                        <div class="admin-kpi-value" style="color: #10b981;">
+                            ${totalPaytechCollected.toLocaleString()} <span style="font-size: 0.95rem; font-weight: 700;">FCFA</span>
+                        </div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        <span style="font-weight: 700; color: #10b981;">${confirmedPaytechTxs.length} paiements</span> via Wave / Orange Money
+                    </div>
+                </div>
+
+                <div class="admin-kpi-card kpi-primary">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">Revenu Récurrent Mensuel (MRR)</span>
+                            <span class="admin-kpi-icon">📈</span>
+                        </div>
+                        <div class="admin-kpi-value" style="color: var(--primary);">
+                            ${mrrTotal.toLocaleString()} <span style="font-size: 0.95rem; font-weight: 700;">FCFA</span>
+                        </div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        <span>ARR Prévisionnel : <strong>${arrProjected.toLocaleString()} FCFA</strong> / an</span>
+                    </div>
+                </div>
+
+                <div class="admin-kpi-card kpi-warning">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">Volume Ventes Réseau (GMV Thiès)</span>
+                            <span class="admin-kpi-icon">🛍️</span>
+                        </div>
+                        <div class="admin-kpi-value" style="color: #f59e0b;">
+                            ${totalRevenue.toLocaleString()} <span style="font-size: 0.95rem; font-weight: 700;">FCFA</span>
+                        </div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        <span style="font-weight: 700; color: #f59e0b;">${completedOrders.length}</span> commandes livrées avec succès
+                    </div>
+                </div>
+
+                <div class="admin-kpi-card kpi-info">
+                    <div>
+                        <div class="admin-kpi-header">
+                            <span class="admin-kpi-label">Taux d'Exécution &amp; Panier Moyen</span>
+                            <span class="admin-kpi-icon">🎯</span>
+                        </div>
+                        <div class="admin-kpi-value" style="color: #0284c7;">
+                            ${deliverySuccessRate}% <span style="font-size: 0.9rem; font-weight: 600; color: var(--text-secondary);">(${avgCartValue.toLocaleString()} F / cmd)</span>
+                        </div>
+                    </div>
+                    <div class="admin-kpi-sub">
+                        <span>${trialRestaurantsCount} en essai gratuit • ${activeSubscribersCount} abonnés actifs</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search & Filters Toolbar for Tables -->
+            <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 0.85rem 1.25rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex: 1; min-width: 250px;">
+                    <span style="font-size: 1rem;">🔍</span>
+                    <input type="text" placeholder="Rechercher un restaurant à Thiès par nom, quartier ou catégorie..." class="form-control" style="margin: 0; padding: 0.35rem 0.75rem; font-size: 0.85rem; border-radius: 8px;" value="${window.adminFinSearch}" oninput="window.adminFinSearch = this.value; renderAdminTabTable();">
                 </div>
                 
-                <div style="overflow-x: auto;">
-                    <table class="admin-table-modern">
-                        <thead>
-                            <tr>
-                                <th>Restaurant</th>
-                                <th>Statut</th>
-                                <th>Total Commandes</th>
-                                <th>Livrées</th>
-                                <th>En Cours</th>
-                                <th>Annulées</th>
-                                <th>C.A. Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>${revenueRowsHtml}</tbody>
-                    </table>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">Filtre Pack :</span>
+                    <select class="form-control" style="width: auto; margin: 0; padding: 0.3rem 0.6rem; font-size: 0.82rem; font-weight: 600; border-radius: 8px;" onchange="window.adminFinPackFilter = this.value; renderAdminTabTable();">
+                        <option value="all" ${window.adminFinPackFilter === 'all' ? 'selected' : ''}>Tous les packs</option>
+                        <option value="Pack Standard" ${window.adminFinPackFilter === 'Pack Standard' ? 'selected' : ''}>Pack Standard (5 000 F)</option>
+                        <option value="Pack Entreprise" ${window.adminFinPackFilter === 'Pack Entreprise' ? 'selected' : ''}>Pack Entreprise (15 000 F)</option>
+                        <option value="Pack Annuel VIP" ${window.adminFinPackFilter === 'Pack Annuel VIP' ? 'selected' : ''}>Pack Annuel VIP (100 000 F)</option>
+                        <option value="trial" ${window.adminFinPackFilter === 'trial' ? 'selected' : ''}>Période d'essai gratuit (3 mois)</option>
+                        <option value="paid" ${window.adminFinPackFilter === 'paid' ? 'selected' : ''}>Abonnés PayTech payants</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- Global Live Orders Stream -->
-            <div class="admin-card-section" style="padding: 0; overflow: hidden;">
-                <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-primary);">📋 Journal de Toutes les Commandes du Réseau</h3>
-                        <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">Supervision en direct de l'état d'avancement des commandes et intervention immédiate.</p>
+            <!-- TAB CONTENT 1: PAYTECH SUBSCRIPTIONS & OVERVIEW -->
+            ${(window.adminFinSubTab === 'overview' || window.adminFinSubTab === 'paytech') ? `
+                <div class="admin-card-section" style="padding: 0; overflow: hidden; margin-bottom: 2.5rem;">
+                    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; background: rgba(var(--primary-rgb), 0.02);">
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                                <span>💳 Suivi des Abonnements SaaS Encaissés via PayTech</span>
+                            </h3>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">
+                                Formules d'abonnement, échéances de la période d'essai de 3 mois et cumul des paiements reçus.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-primary btn-sm" onclick="window.openRecordPaytechModal()" style="font-size: 0.78rem; font-weight: 700; border-radius: 8px;">
+                                ➕ Enregistrer un Encaissement PayTech
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="window.exportPaytechSubscriptionsCSV()" style="font-size: 0.78rem; font-weight: 700; border-radius: 8px;">
+                                💾 Export Abonnements
+                            </button>
+                        </div>
                     </div>
-                    <span class="badge badge-info" style="font-weight: 800;">${allOrders.length} commande(s)</span>
-                </div>
 
-                <div style="overflow-x: auto;">
-                    <table class="admin-table-modern">
-                        <thead>
-                            <tr>
-                                <th>N° Séquence</th>
-                                <th>Restaurant</th>
-                                <th>Client & Contact</th>
-                                <th>Date & Heure</th>
-                                <th>Statut Actuel</th>
-                                <th>Montant Total</th>
-                                <th>Ajuster Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody>${allOrdersHtml}</tbody>
-                    </table>
+                    <div style="overflow-x: auto;">
+                        <table class="admin-table-modern">
+                            <thead>
+                                <tr>
+                                    <th>Établissement</th>
+                                    <th>Statut PayTech</th>
+                                    <th>Formule Souscrite</th>
+                                    <th>Tarif SaaS</th>
+                                    <th>Total Encaissé PayTech</th>
+                                    <th>Actions Super-Admin</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${paytechRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            ` : ''}
+
+            <!-- TAB CONTENT 2: RESTAURANT ORDER VOLUMES & PERFORMANCE -->
+            ${(window.adminFinSubTab === 'overview' || window.adminFinSubTab === 'orders') ? `
+                <div class="admin-card-section" style="padding: 0; overflow: hidden; margin-bottom: 2.5rem;">
+                    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                                <span>🛍️ Volumes de Commandes &amp; Chiffre d'Affaires par Restaurant à Thiès</span>
+                            </h3>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">
+                                Performance commerciale, taux de livraison réussie et panier moyen par restaurant partenaire.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <button class="btn btn-secondary btn-sm" onclick="store.resequenceOrders(); renderAdminTabTable(); showToast('Indexation synchronisée', 'success');" style="font-size: 0.78rem; font-weight: 700; border-radius: 8px;">
+                                🔢 Réindexer Commandes
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="admin-table-modern">
+                            <thead>
+                                <tr>
+                                    <th>Restaurant &amp; Quartier</th>
+                                    <th style="text-align: center;">Total Cmds</th>
+                                    <th style="text-align: center;">Livrées</th>
+                                    <th style="text-align: center;">En Cuisine</th>
+                                    <th style="text-align: center;">Annulées</th>
+                                    <th>Modes (Livraison / Emporter)</th>
+                                    <th>Panier Moyen</th>
+                                    <th>C.A. Total Généré</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ordersRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ` : ''}
+
+            <!-- TAB CONTENT 3: PAYTECH TRANSACTIONS AUDIT JOURNAL -->
+            ${(window.adminFinSubTab === 'transactions') ? `
+                <div class="admin-card-section" style="padding: 0; overflow: hidden;">
+                    <div style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                        <div>
+                            <h3 style="font-size: 1.15rem; font-weight: 800; margin: 0; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                                <span>📜 Journal d'Audit des Transactions PayTech</span>
+                            </h3>
+                            <p style="margin: 0.25rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">
+                                Relevé en direct des flux de paiement SaaS validés par Wave, Orange Money et Cartes Bancaires.
+                            </p>
+                        </div>
+                        <span class="badge badge-info" style="font-weight: 800;">${paytechTxs.length} transaction(s)</span>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="admin-table-modern">
+                            <thead>
+                                <tr>
+                                    <th>Réf. Commande</th>
+                                    <th>Restaurant / Client</th>
+                                    <th>Prestation / Pack</th>
+                                    <th>Montant Encaissé</th>
+                                    <th>Moyen de Paiement</th>
+                                    <th>Date &amp; Heure</th>
+                                    <th>Statut IPN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${txRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ` : ''}
         `;
     }
     else if (adminActiveTab === 'security') {
@@ -3730,4 +4682,286 @@ window.togglePassVisibility = function(inputId, btn) {
         btn.textContent = '👁️';
     }
 };
+
+// ==========================================
+// PAYTECH & FINANCIAL REPORTING SYSTEM
+// ==========================================
+
+window.getPaytechTransactionsList = function() {
+    let localTxs = [];
+    try {
+        localTxs = JSON.parse(localStorage.getItem('thies_paytech_transactions') || '[]');
+    } catch (e) {
+        localTxs = [];
+    }
+
+    // Async background sync with server
+    if (!window._paytechSyncInProgress) {
+        window._paytechSyncInProgress = true;
+        fetch('/api/paytech/transactions')
+            .then(res => res.json())
+            .then(data => {
+                window._paytechSyncInProgress = false;
+                if (data && data.success && Array.isArray(data.transactions)) {
+                    localStorage.setItem('thies_paytech_transactions', JSON.stringify(data.transactions));
+                    if (adminActiveTab === 'accounting') {
+                        // Re-render if accounting tab is visible
+                        renderAdminTabTable();
+                    }
+                }
+            })
+            .catch(err => {
+                window._paytechSyncInProgress = false;
+            });
+    }
+
+    return localTxs;
+};
+
+window.openRecordPaytechModal = function(defaultRestoId = '') {
+    const existingModal = document.getElementById('record-paytech-modal');
+    if (existingModal) existingModal.remove();
+
+    const restos = store.getRestaurants();
+    let restoOptions = restos.map(r => `
+        <option value="${r.id}" ${r.id === defaultRestoId ? 'selected' : ''}>
+            ${r.name} (${r.category || 'Restaurant'} - ${r.address || 'Thiès'})
+        </option>
+    `).join('');
+
+    const modal = document.createElement('div');
+    modal.id = 'record-paytech-modal';
+    modal.className = 'modal-backdrop';
+    modal.style.position = 'fixed';
+    modal.style.inset = '0';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.65)';
+    modal.style.backdropFilter = 'blur(4px)';
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+    modal.style.zIndex = '9999';
+    modal.style.padding = '1rem';
+
+    modal.innerHTML = `
+        <div class="modal-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.3); padding: 1.75rem; position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.85rem;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <span style="font-size: 1.5rem;">💳</span>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.2rem; color: var(--text-primary); font-weight: 800;">Encaisser un Abonnement PayTech</h3>
+                        <p style="margin: 0.15rem 0 0 0; font-size: 0.78rem; color: var(--text-secondary);">Enregistrement manuel ou déclenchement direct PayTech</p>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('record-paytech-modal').remove()" style="background: var(--bg-secondary); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; color: var(--text-secondary);">
+                    ✖
+                </button>
+            </div>
+
+            <form onsubmit="window.submitManualPaytechRecord(event)">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Restaurant Bénéficiaire <span class="required">*</span></label>
+                    <select id="modal-paytech-resto" class="form-control" required style="font-weight: 600;" onchange="window.updatePaytechModalAmount()">
+                        <option value="" disabled ${!defaultRestoId ? 'selected' : ''}>Sélectionnez un restaurant à Thiès...</option>
+                        ${restoOptions}
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Formule SaaS Souscrite <span class="required">*</span></label>
+                    <select id="modal-paytech-pack" class="form-control" required style="font-weight: 600;" onchange="window.updatePaytechModalAmount()">
+                        <option value="Pack Standard">Pack Standard (5 000 FCFA / mois)</option>
+                        <option value="Pack Entreprise">Pack Entreprise (15 000 FCFA / mois)</option>
+                        <option value="Pack Annuel VIP">Pack Annuel VIP (100 000 FCFA / an)</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Montant Encaissé (FCFA) <span class="required">*</span></label>
+                    <input type="number" id="modal-paytech-amount" class="form-control" value="5000" required min="1000" step="500" style="font-weight: 800; font-size: 1.1rem; color: #10b981;">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Canal de Paiement</label>
+                    <select id="modal-paytech-channel" class="form-control" style="font-weight: 600;">
+                        <option value="Wave (via PayTech)">🌊 Wave (via PayTech)</option>
+                        <option value="Orange Money (via PayTech)">🟠 Orange Money (via PayTech)</option>
+                        <option value="Free Money (via PayTech)">🔴 Free Money (via PayTech)</option>
+                        <option value="Carte Bancaire (via PayTech)">💳 Carte Bancaire Visa / Mastercard</option>
+                    </select>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('record-paytech-modal').remove()" style="font-weight: 700; border-radius: 10px;">
+                        Annuler
+                    </button>
+                    <button type="submit" class="btn btn-primary" style="font-weight: 800; border-radius: 10px; padding: 0.6rem 1.25rem;">
+                        ✅ Valider et Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    window.updatePaytechModalAmount();
+};
+
+window.updatePaytechModalAmount = function() {
+    const pack = document.getElementById('modal-paytech-pack');
+    const amountInput = document.getElementById('modal-paytech-amount');
+    if (!pack || !amountInput) return;
+
+    if (pack.value === 'Pack Standard') amountInput.value = '5000';
+    else if (pack.value === 'Pack Entreprise') amountInput.value = '15000';
+    else if (pack.value === 'Pack Annuel VIP') amountInput.value = '100000';
+};
+
+window.submitManualPaytechRecord = async function(event) {
+    if (event && event.preventDefault) event.preventDefault();
+
+    const restoId = document.getElementById('modal-paytech-resto').value;
+    const pack = document.getElementById('modal-paytech-pack').value;
+    const amount = Number(document.getElementById('modal-paytech-amount').value) || 5000;
+    const channel = document.getElementById('modal-paytech-channel').value;
+
+    const resto = store.getRestaurantById(restoId);
+    if (!resto) {
+        showToast("Veuillez sélectionner un restaurant valide", "danger");
+        return;
+    }
+
+    const payload = {
+        orderId: `SUB-${resto.slug.toUpperCase()}-${Date.now().toString().slice(-6)}`,
+        restaurantName: resto.name,
+        restaurantPhone: resto.whatsapp || '',
+        customerName: resto.name,
+        customerPhone: resto.whatsapp || '',
+        itemName: `Abonnement SaaS ${pack}`,
+        amount: amount,
+        paymentMethod: channel
+    };
+
+    try {
+        // Post to backend
+        await fetch('/api/paytech/record-subscription-success', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        // Also update local list
+        let currentTxs = window.getPaytechTransactionsList();
+        currentTxs.unshift({
+            ...payload,
+            date: new Date().toISOString(),
+            status: 'PAID'
+        });
+        localStorage.setItem('thies_paytech_transactions', JSON.stringify(currentTxs));
+
+        // Update restaurant pack in store
+        store.updateRestaurant(resto.id, {
+            subscriptionPack: pack,
+            subscriptionPaidAt: new Date().toISOString(),
+            hasPaidSubscription: true,
+            status: 'active'
+        });
+
+        showToast(`✅ Paiement de ${amount.toLocaleString()} FCFA enregistré pour ${resto.name} !`, "success");
+        const modal = document.getElementById('record-paytech-modal');
+        if (modal) modal.remove();
+
+        renderAdminView();
+    } catch (e) {
+        console.error("Error recording paytech payment:", e);
+        showToast("Erreur lors de l'enregistrement", "danger");
+    }
+};
+
+window.exportPlatformFinancialReportCSV = function() {
+    const allOrders = store.data.orders || [];
+    const completedOrders = allOrders.filter(o => o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered');
+    const paytechTxs = window.getPaytechTransactionsList().filter(t => t.status === 'PAID');
+    const restos = store.getRestaurants();
+
+    let csvContent = "\ufeff"; // BOM for Excel UTF-8
+    csvContent += "ID;Restaurant;Categorie;Adresse;Statut;Pack SaaS;SaaS PayTech Encaisse (FCFA);Total Commandes;Commandes Livrees;Commandes Annulees;Taux Reussite;Panier Moyen (FCFA);Chiffre Affaires Brut (FCFA)\n";
+
+    restos.forEach(r => {
+        const restoOrders = allOrders.filter(o => o.restaurantId === r.id);
+        const restoCompleted = restoOrders.filter(o => o.status === 'Livrée' || o.status === 'completed' || o.status === 'delivered');
+        const restoCancelled = restoOrders.filter(o => o.status === 'Annulée' || o.status === 'cancelled');
+        const revenue = restoCompleted.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+        const avgCart = restoCompleted.length > 0 ? Math.round(revenue / restoCompleted.length) : 0;
+        const successRate = restoOrders.length > 0 ? Math.round((restoCompleted.length / restoOrders.length) * 100) : 0;
+
+        const restoTxs = paytechTxs.filter(t => 
+            (t.restaurantName && r.name && t.restaurantName.toLowerCase() === r.name.toLowerCase()) || 
+            (t.orderId && r.slug && t.orderId.toLowerCase().includes(r.slug.toLowerCase()))
+        );
+        const paytechTotal = restoTxs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+
+        const row = [
+            r.id,
+            `"${(r.name || '').replace(/"/g, '""')}"`,
+            `"${(r.category || '').replace(/"/g, '""')}"`,
+            `"${(r.address || 'Thiès').replace(/"/g, '""')}"`,
+            r.status,
+            `"${r.subscriptionPack || 'Pack Standard'}"`,
+            paytechTotal,
+            restoOrders.length,
+            restoCompleted.length,
+            restoCancelled.length,
+            `${successRate}%`,
+            avgCart,
+            revenue
+        ].join(';');
+
+        csvContent += row + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const encodedUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUrl);
+    link.setAttribute("download", `rapport_financier_thies_resto_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("📊 Rapport Financier Global de Thiès exporté avec succès !", "success");
+};
+
+window.exportPaytechSubscriptionsCSV = function() {
+    const paytechTxs = window.getPaytechTransactionsList();
+    if (paytechTxs.length === 0) {
+        showToast("Aucune transaction PayTech à exporter", "warning");
+        return;
+    }
+
+    let csvContent = "\ufeff"; // BOM for Excel UTF-8
+    csvContent += "Reference;Restaurant;Pack Souscrit;Montant (FCFA);Moyen de Paiement;Date;Statut\n";
+
+    paytechTxs.forEach(t => {
+        const row = [
+            t.orderId || '',
+            `"${(t.restaurantName || t.customerName || '').replace(/"/g, '""')}"`,
+            `"${(t.itemName || 'Abonnement').replace(/"/g, '""')}"`,
+            t.amount || 0,
+            `"${t.paymentMethod || 'PayTech'}"`,
+            t.date || '',
+            t.status || 'PAID'
+        ].join(';');
+        csvContent += row + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const encodedUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUrl);
+    link.setAttribute("download", `abonnements_paytech_thies_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("💳 Journal des abonnements PayTech exporté en CSV !", "success");
+};
+
 

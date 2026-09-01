@@ -27,16 +27,6 @@ router.add('#/auth', () => {
     // Check if URL hash indicates partner tab
     const hash = window.location.hash || '';
     const shouldOpenPartner = hash.includes('partner') || hash.includes('resto') || hash.includes('tab=partner');
-    
-    // Get all available restaurants for quick selection
-    const allRestos = (typeof store !== 'undefined' && store.getRestaurants && store.getRestaurants().length > 0)
-        ? store.getRestaurants()
-        : (typeof SEED_RESTAURANTS !== 'undefined' ? SEED_RESTAURANTS : []);
-
-    const restoOptionsHtml = allRestos.map(r => {
-        const val = r.slug || r.id || r.username;
-        return `<option value="${val}">${r.name} (${val})</option>`;
-    }).join('');
 
     container.innerHTML = `
         <div class="auth-container" style="max-width: 500px; margin: 2rem auto; padding: 2rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
@@ -153,51 +143,22 @@ router.add('#/auth', () => {
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">Gérez vos menus, commandes et livraisons en temps réel.</p>
                 </div>
 
-                <!-- QUICK RESTO SELECTOR (Aide à la sélection rapide) -->
-                <div style="background: rgba(var(--primary-rgb), 0.07); border: 1.5px dashed var(--primary); border-radius: 16px; padding: 1rem; margin-bottom: 1.5rem;">
-                    <label style="font-size: 0.82rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                        <span>✨ Remplissage rapide (Choisir un restaurant)</span>
-                        <span style="font-size: 0.75rem; font-weight: 600; background: rgba(var(--primary-rgb), 0.15); padding: 2px 8px; border-radius: 10px;">${allRestos.length} partenaires</span>
-                    </label>
-                    <select id="quick-demo-resto-select" class="form-control" onchange="fillDemoRestoCredentials(this.value)" style="height: 44px; font-size: 0.88rem; font-weight: 600; border-radius: 12px; background: var(--bg-card);">
-                        <option value="">-- Sélectionnez un restaurant partenaire --</option>
-                        ${restoOptionsHtml}
-                    </select>
-
-                    <!-- Popular Quick Chips -->
-                    <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.6rem;">
-                        <button type="button" class="btn btn-sm" onclick="fillDemoRestoCredentials('id_restaurantmadiba')" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); cursor: pointer;">
-                            🍽️ Resto Madiba
-                        </button>
-                        <button type="button" class="btn btn-sm" onclick="fillDemoRestoCredentials('le-jardin-des-saveurs')" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); cursor: pointer;">
-                            🌿 Jardin Saveurs
-                        </button>
-                        <button type="button" class="btn btn-sm" onclick="fillDemoRestoCredentials('id_lalicorne')" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); cursor: pointer;">
-                            🦄 La Licorne
-                        </button>
-                        <button type="button" class="btn btn-sm" onclick="fillDemoRestoCredentials('id_croissantmagique')" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary); cursor: pointer;">
-                            🥐 Croissant Magique
-                        </button>
-                    </div>
-                </div>
-
                 <!-- LOGIN FORM -->
                 <form id="login-form" onsubmit="handleRestaurantLogin(event)">
                     <div class="form-group" style="margin-bottom: 1.25rem;">
-                        <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Identifiant unique (slug, nom ou username)</label>
-                        <input type="text" id="login-username" class="form-control" placeholder="ex: id_restaurantmadiba ou le-jardin-des-saveurs" required style="height: 48px; border-radius: 14px; font-size: 0.95rem;">
+                        <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Identifiant (ID)</label>
+                        <input type="text" id="login-id" name="id" class="form-control" placeholder="Entrez votre identifiant" required autocomplete="off" value="" style="height: 48px; border-radius: 14px; font-size: 0.95rem;">
                     </div>
                     <div class="form-group" style="margin-bottom: 0.5rem;">
-                        <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Mot de passe / Code PIN</label>
+                        <label class="form-label" style="font-size: 0.85rem; font-weight: 700;">Mot de passe</label>
                         <div style="position: relative;">
-                            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required style="height: 48px; border-radius: 14px; font-size: 0.95rem; padding-right: 2.75rem;">
+                            <input type="password" id="login-password" name="password" class="form-control" placeholder="Entrez votre mot de passe" required autocomplete="off" value="" style="height: 48px; border-radius: 14px; font-size: 0.95rem; padding-right: 2.75rem;">
                             <button type="button" onclick="toggleAuthPassword('login-password', this)" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.15rem; cursor: pointer; opacity: 0.7; padding: 4px;" title="Afficher/Masquer le mot de passe">
                                 👁️
                             </button>
                         </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; font-size: 0.8rem;">
-                        <span style="color: var(--text-secondary);">Format par défaut : <code>nom221</code></span>
+                    <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1.25rem; font-size: 0.8rem;">
                         <button type="button" onclick="handleForgotPassword()" style="background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; font-weight: 600;">🔑 Mot de passe oublié ?</button>
                     </div>
                     <button type="submit" id="btn-resto-login-submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%; padding: 0.85rem; border-radius: 14px; font-size: 1rem; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);">
@@ -506,50 +467,15 @@ window.handleRegImageUpload = async function(event) {
     }
 }
 
-
-
-// Helper to auto-fill demo credentials in the login form
-window.fillDemoRestoCredentials = function(restoKey) {
-    if (!restoKey) return;
-    const userInput = document.getElementById('login-username');
-    const passInput = document.getElementById('login-password');
-    if (!userInput || !passInput) return;
-
-    const allRestos = (typeof store !== 'undefined' && store.getRestaurants && store.getRestaurants().length > 0) 
-        ? store.getRestaurants() 
-        : (typeof SEED_RESTAURANTS !== 'undefined' ? SEED_RESTAURANTS : []);
-
-    const cleanTarget = String(restoKey).toLowerCase().replace(/^id_/, '').replace(/[^a-z0-9]/g, '');
-
-    const found = allRestos.find(r => {
-        const rSlug = String(r.slug || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const rId = String(r.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const rUser = String(r.username || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        const rName = String(r.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        return rSlug === cleanTarget || rId === cleanTarget || rUser === cleanTarget || rName.includes(cleanTarget) || cleanTarget.includes(rSlug);
-    });
-
-    if (found) {
-        const cleanBaseName = String(found.name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-        userInput.value = found.slug || found.username || found.id || ('id_' + cleanBaseName);
-        passInput.value = found.password || (cleanBaseName + '221');
-        if (typeof showToast === 'function') {
-            showToast(`Identifiants chargés pour ${found.name} ✓`, "info");
-        }
-    } else {
-        userInput.value = restoKey;
-        const cleanKey = restoKey.replace(/^id_/, '').replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
-        passInput.value = cleanKey + '221';
-    }
-};
-
 async function handleRestaurantLogin(e) {
     e.preventDefault();
-    const rawUsername = (document.getElementById('login-username') ? document.getElementById('login-username').value : '').trim();
-    const rawPassword = (document.getElementById('login-password') ? document.getElementById('login-password').value : '').trim();
+    const idInput = document.getElementById('login-id') || document.getElementById('login-username');
+    const passInput = document.getElementById('login-password');
+    const rawUsername = (idInput ? idInput.value : '').trim();
+    const rawPassword = (passInput ? passInput.value : '').trim();
     
-    if (!rawUsername && !rawPassword) {
-        if (typeof showToast === 'function') showToast("Veuillez saisir votre identifiant ou sélectionner un restaurant.", "warning");
+    if (!rawUsername || !rawPassword) {
+        if (typeof showToast === 'function') showToast("Veuillez saisir votre identifiant et votre mot de passe.", "warning");
         return;
     }
 
@@ -567,12 +493,12 @@ async function handleRestaurantLogin(e) {
     const cleanInputUser = cleanNormalize(username).replace(/^id_?/, '');
     const cleanInputPass = cleanNormalize(password);
 
-    // 1. Super Admin Detection (par identifiant ou par mot de passe admin)
+    // 1. Super Admin Detection (par identifiant et mot de passe admin)
     const customAdminPass = localStorage.getItem('thies_super_admin_password') || 'thiesresto221';
     const isAdminUser = username === 'thiesresto' || username === 'admin' || username === 'superadmin' || username === 'super-admin' || username === 'root';
     const isSuperPassMatch = (password === customAdminPass) || (password === 'thiesresto221') || (password === 'admin221') || (password === 'admin123');
 
-    if ((isAdminUser && isSuperPassMatch) || (isAdminUser && !password) || (isSuperPassMatch && !username)) {
+    if (isAdminUser && isSuperPassMatch) {
         // Authentification via Proxy API sécurisé (sans logging de payload)
         try {
             await fetch('/api/auth/admin-login', {
@@ -658,8 +584,8 @@ async function handleRestaurantLogin(e) {
         return;
     }
 
-    // Password verification (if password exists on restaurant record)
-    if (matchedResto.password && password && matchedResto.password !== password && password !== 'resto221' && password !== 'admin' && password !== 'thiesresto221') {
+    // Password verification
+    if (matchedResto.password && matchedResto.password !== password && password !== 'thiesresto221') {
         showToast("Mot de passe incorrect pour cet espace restaurant.", "danger");
         return;
     }
@@ -669,7 +595,7 @@ async function handleRestaurantLogin(e) {
         name: matchedResto.name,
         slug: matchedResto.slug,
         status: 'active',
-        password: matchedResto.password || password || 'resto221'
+        password: matchedResto.password || password
     };
     
     currentRestaurantSession = { id: r.id, name: r.name, slug: r.slug, password: r.password };
@@ -761,7 +687,7 @@ function handleRestaurantRegister(e) {
 }
 
 window.handleForgotPassword = function() {
-    const usernameEl = document.getElementById('login-username');
+    const usernameEl = document.getElementById('login-id') || document.getElementById('login-username');
     const username = usernameEl ? usernameEl.value.trim() : '';
     const msg = username
         ? `Bonjour, j'ai oublié mon mot de passe pour mon espace restaurant THIES Resto. Mon identifiant est : *${username}*. Pouvez-vous m'aider à le récupérer ?`

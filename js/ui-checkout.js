@@ -182,6 +182,29 @@ function renderCheckoutTab(r) {
                 <textarea id="order-notes" class="form-control" placeholder="Sans piment, sauce à part..."></textarea>
             </div>
             
+            <div class="form-group" style="margin-top: 1.25rem;">
+                <label class="form-label" style="font-weight: 700;">Mode de Règlement direct <span class="required">*</span></label>
+                <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+                    <label class="delivery-radio-card" style="padding: 0.85rem 1rem; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; border: 1.5px solid var(--primary); background: rgba(var(--primary-rgb), 0.04);">
+                        <input type="radio" name="order-payment" value="Espèces à la livraison" checked style="accent-color: var(--primary);">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem;">
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">💵 Espèces à la livraison (Cash on Delivery)</strong>
+                                <span class="badge" style="background: #10B981; color: white; font-size: 0.7rem; padding: 2px 7px; border-radius: 6px; font-weight: 700;">Recommandé</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Règlement en liquide de la totalité (repas + livraison) directement en main propre au livreur à l'arrivée</div>
+                        </div>
+                    </label>
+                    <label class="delivery-radio-card" style="padding: 0.85rem 1rem; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; border: 1px solid var(--border); background: var(--bg-card);">
+                        <input type="radio" name="order-payment" value="Transfert Wave restaurant" style="accent-color: var(--primary);">
+                        <div style="flex: 1;">
+                            <strong style="color: var(--text-primary); font-size: 0.95rem;">🌊 Paiement Wave d'avance (Direct au restaurant)</strong>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Transfert Wave direct sur le numéro WhatsApp officiel du restaurateur pour lancer la commande</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <div class="form-group" style="margin-top: 1rem;">
                 <label style="display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer;">
                     <input type="checkbox" id="order-gdpr" required style="margin-top: 0.2rem;" checked>
@@ -392,8 +415,17 @@ function submitSimpleOrder(e, restaurantId) {
     const lastname = document.getElementById('order-lastname').value.trim();
     const phone = validation.clean || cleanPhoneNumber(rawPhone);
     const mode = document.querySelector('input[name="order-mode"]:checked').value;
+    const paymentChoice = document.querySelector('input[name="order-payment"]:checked')?.value || 'PayTech';
     const address = document.getElementById('order-address') ? document.getElementById('order-address').value.trim() : '';
     const notes = document.getElementById('order-notes') ? document.getElementById('order-notes').value.trim() : '';
+
+    // Format payment labels (direct customer <-> restaurant)
+    let paymentMethod = 'Espèces à la livraison (Cash on Delivery)';
+    let paymentStatus = 'À régler au livreur à la réception';
+    if (paymentChoice === 'Transfert Wave restaurant') {
+        paymentMethod = 'Paiement Wave direct au restaurant';
+        paymentStatus = 'À transférer sur le compte Wave du restaurant';
+    }
 
     // Remember customer details for future orders
     localStorage.setItem('customerPhone', phone);
@@ -420,6 +452,8 @@ function submitSimpleOrder(e, restaurantId) {
         customerPhone: phone,
         mode,
         address,
+        paymentMethod,
+        paymentStatus,
         items: cart.items.map(item => ({ name: item.name, price: item.price, qty: item.qty })),
         total: cart.total,
         note: finalNotes,
@@ -570,6 +604,7 @@ window.executePendingOrder = async function() {
                         <div style="display: flex; flex-direction: column; gap: 0.35rem; color: var(--text-secondary); font-size: 0.88rem;">
                             <div>👤 <strong>Client :</strong> ${firstname} ${lastname} (${phone})</div>
                             <div>🍽️ <strong>Articles :</strong> ${itemsText}</div>
+                            <div>💳 <strong>Paiement :</strong> <span style="color: var(--text-primary); font-weight: 600;">${order.paymentMethod || 'Non spécifié'}</span></div>
                             ${order.address ? `<div>📍 <strong>Adresse :</strong> ${order.address}</div>` : ''}
                             <div style="margin-top: 0.4rem; font-size: 1rem; color: var(--text-primary); font-weight: 700; border-top: 1px dashed var(--border); padding-top: 0.5rem; display: flex; justify-content: space-between;">
                                 <span>Total certifié :</span>
@@ -577,7 +612,7 @@ window.executePendingOrder = async function() {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div style="background: rgba(37, 211, 102, 0.08); padding: 1.25rem; border-radius: 18px; margin-bottom: 1.25rem; border: 1px solid rgba(37, 211, 102, 0.25); text-align: center;">
                         <p style="color: #047857; font-weight: 600; font-size: 0.92rem; margin-bottom: 0.9rem; line-height: 1.4;">
                             📲 Envoyez le récapitulatif officiel sur le WhatsApp du restaurant pour notifier le gérant :
@@ -612,3 +647,78 @@ window.executePendingOrder = async function() {
         }
     }
 };
+
+/**
+ * Global Helper to launch PayTech checkout flow from any UI screen
+ */
+window.initiatePaytechPayment = async function(orderId) {
+    const btn = document.getElementById('btn-paytech-now') || document.querySelector(`[data-paytech-order-id="${orderId}"]`);
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-ring" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Connexion PayTech...';
+    }
+
+    try {
+        let order = null;
+        if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
+            order = store.data.orders.find(o => String(o.id) === String(orderId));
+        }
+        if (!order) {
+            const history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+            order = history.find(o => String(o.id) === String(orderId));
+        }
+
+        const total = order ? (order.total || order.certifiedTotal || 0) : (window.cart?.total || 0);
+        const customerName = order?.customerName || localStorage.getItem('customerName') || 'Client';
+        const customerPhone = order?.customerPhone || localStorage.getItem('customerPhone') || '';
+        
+        let restaurantName = 'THIES Resto';
+        if (order && order.restaurantId && store?.getRestaurantById) {
+            const r = store.getRestaurantById(order.restaurantId);
+            if (r) restaurantName = r.name;
+        }
+
+        const response = await fetch('/api/paytech/request-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                orderId: orderId,
+                amount: total,
+                customerName: customerName,
+                customerPhone: customerPhone,
+                restaurantName: restaurantName,
+                returnHash: `/tracking?orderId=${encodeURIComponent(orderId)}&payment=success`
+            })
+        });
+
+        const data = await response.json();
+
+        if (data && data.success && data.redirectUrl) {
+            if (btn) {
+                btn.innerHTML = '<span>Redirection PayTech ➔</span>';
+            }
+            // Navigate client to PayTech payment page
+            window.location.href = data.redirectUrl;
+        } else {
+            console.error("PayTech API Error:", data);
+            if (typeof showToast === 'function') {
+                showToast(data.message || "Erreur lors de l'ouverture de PayTech.", "danger");
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+    } catch (err) {
+        console.error("PayTech payment exception:", err);
+        if (typeof showToast === 'function') {
+            showToast("Impossible de contacter la passerelle PayTech.", "danger");
+        }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+};
+

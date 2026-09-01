@@ -758,18 +758,21 @@ window.switchDashboardSection = function(sectionName) {
         return;
     }
 
-    if (sectionName === 'menu' || sectionName === 'add-menu') {
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'menu';
-        if (typeof router !== 'undefined') router.navigate('/dashboard-menu');
-    } else if (sectionName === 'daily-menu') {
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'daily-menu';
-        if (typeof router !== 'undefined') router.navigate('/dashboard-daily-menu');
-    } else if (sectionName === 'account' || sectionName === 'settings') {
+    if (sectionName === 'accounting' || sectionName === 'summary') {
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'accounting';
+        if (typeof router !== 'undefined') router.navigate('/dashboard');
+    } else if (sectionName === 'orders' || sectionName === 'reservations') {
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'orders';
+        if (typeof router !== 'undefined') router.navigate('/dashboard-orders');
+    } else if (sectionName === 'dishes' || sectionName === 'menu' || sectionName === 'add-menu' || sectionName === 'daily-menu') {
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'dishes';
+        if (typeof router !== 'undefined') router.navigate('/dashboard-dishes');
+    } else if (sectionName === 'account' || sectionName === 'settings' || sectionName === 'subscription' || sectionName === 'reviews') {
         if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'account';
         if (typeof router !== 'undefined') router.navigate('/dashboard-account');
     } else {
-        // default: orders / live dashboard
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'orders';
+        // default: accounting (premiere page)
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'accounting';
         if (typeof router !== 'undefined') router.navigate('/dashboard');
     }
 
@@ -781,26 +784,26 @@ window.renderMobileBottomNav = function() {
     const nav = document.getElementById('mobile-bottom-nav');
     if (!nav) return;
 
-    // 1. Logged in Restaurant (Restaurant Only Navigation - 4 Clean Tabs)
+    // 1. Logged in Restaurant (Restaurant Only Navigation - 4 Clean Pages: Comptabilité, Commandes, Plats, Compte)
     if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
-        const active = typeof dashboardActiveTab !== 'undefined' ? dashboardActiveTab : 'orders';
-        const isOrders = active === 'orders' || active === 'summary';
-        const isMenu = active === 'menu' || active === 'add-menu';
-        const isDaily = active === 'daily-menu';
-        const isAccount = active === 'account' || active === 'settings' || active === 'subscription' || active === 'accounting' || active === 'reservations' || active === 'reviews';
+        const active = typeof dashboardActiveTab !== 'undefined' ? dashboardActiveTab : 'accounting';
+        const isAccounting = active === 'accounting' || active === 'summary';
+        const isOrders = active === 'orders' || active === 'reservations';
+        const isDishes = active === 'dishes' || active === 'menu' || active === 'add-menu' || active === 'daily-menu';
+        const isAccount = active === 'account' || active === 'settings' || active === 'subscription' || active === 'reviews';
 
         nav.innerHTML = `
+            <a href="#" id="bottom-nav-resto-accounting" class="nav-item ${isAccounting ? 'active' : ''}" onclick="switchDashboardSection('accounting'); return false;">
+                <div class="nav-icon"><i class="ri-bar-chart-2-line"></i></div>
+                <span>Comptabilité</span>
+            </a>
             <a href="#" id="bottom-nav-resto-orders" class="nav-item ${isOrders ? 'active' : ''}" onclick="switchDashboardSection('orders'); return false;">
                 <div class="nav-icon"><i class="ri-file-list-3-line"></i></div>
                 <span>Commandes</span>
             </a>
-            <a href="#" id="bottom-nav-resto-menu" class="nav-item ${isMenu ? 'active' : ''}" onclick="switchDashboardSection('menu'); return false;">
+            <a href="#" id="bottom-nav-resto-dishes" class="nav-item ${isDishes ? 'active' : ''}" onclick="switchDashboardSection('dishes'); return false;">
                 <div class="nav-icon"><i class="ri-restaurant-line"></i></div>
-                <span>Menu</span>
-            </a>
-            <a href="#" id="bottom-nav-resto-daily-menu" class="nav-item ${isDaily ? 'active' : ''}" onclick="switchDashboardSection('daily-menu'); return false;">
-                <div class="nav-icon"><i class="ri-calendar-event-line"></i></div>
-                <span>Plat du jour</span>
+                <span>Plats</span>
             </a>
             <a href="#" id="bottom-nav-resto-account" class="nav-item ${isAccount ? 'active' : ''}" onclick="switchDashboardSection('account'); return false;">
                 <div class="nav-icon"><i class="ri-user-settings-line"></i></div>
@@ -868,13 +871,13 @@ window.updateBottomNavFromRoute = function(hash) {
 
     // Check Restaurant routes
     if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
-        if (!hash || hash === '#/dashboard' || hash.startsWith('#/dashboard-orders')) {
+        if (!hash || hash === '#/dashboard' || hash.startsWith('#/dashboard-accounting')) {
+            window.updateBottomNavActive('resto-accounting');
+        } else if (hash.startsWith('#/dashboard-orders') || hash.startsWith('#/dashboard-reservations')) {
             window.updateBottomNavActive('resto-orders');
-        } else if (hash.startsWith('#/dashboard-add-menu') || hash.startsWith('#/dashboard-menu')) {
-            window.updateBottomNavActive('resto-menu');
-        } else if (hash.startsWith('#/dashboard-daily-menu') || hash.startsWith('#/dashboard-daily')) {
-            window.updateBottomNavActive('resto-daily-menu');
-        } else if (hash.startsWith('#/dashboard-account') || hash.startsWith('#/dashboard-settings')) {
+        } else if (hash.startsWith('#/dashboard-dishes') || hash.startsWith('#/dashboard-menu') || hash.startsWith('#/dashboard-add-menu') || hash.startsWith('#/dashboard-daily-menu')) {
+            window.updateBottomNavActive('resto-dishes');
+        } else if (hash.startsWith('#/dashboard-account') || hash.startsWith('#/dashboard-settings') || hash.startsWith('#/dashboard-subscription') || hash.startsWith('#/dashboard-reviews')) {
             window.updateBottomNavActive('resto-account');
         }
         return;
@@ -1655,10 +1658,10 @@ function updateNavbar() {
                 <span style="color: var(--success); font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Espace Restaurant</span>
                 <span style="font-size: 0.85rem; color: var(--text-primary); font-weight: 700;">${currentRestaurantSession.name}</span>
             </div>
-            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('orders'); return false;"><i class="ri-file-list-3-line"></i> Commandes en direct</a>
-            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('menu'); return false;"><i class="ri-restaurant-line"></i> Menu &amp; Plats</a>
-            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('daily-menu'); return false;"><i class="ri-calendar-event-line"></i> Plats du jour</a>
-            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('account'); return false;"><i class="ri-user-settings-line"></i> Compte &amp; Paramètres</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('accounting'); return false;"><i class="ri-bar-chart-2-line"></i> Comptabilité</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('orders'); return false;"><i class="ri-file-list-3-line"></i> Commandes</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('dishes'); return false;"><i class="ri-restaurant-line"></i> Plats</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('account'); return false;"><i class="ri-user-settings-line"></i> Compte</a>
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.75rem 0;">
             <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);"><i class="ri-file-text-line"></i> Charte &amp; Conditions</a>
             <a href="#" onclick="toggleMobileMenu(); logoutRestaurant(); return false;" style="color: var(--danger); font-weight: 600; margin-top: 0.5rem;"><i class="ri-logout-box-r-line"></i> Déconnexion</a>
@@ -1683,6 +1686,7 @@ function updateNavbar() {
             <a href="#" onclick="toggleMobileMenu(); router.navigate('/profile'); return false;"><i class="ri-user-3-line"></i> Mon profil</a>
             <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;"><i class="ri-information-line"></i> Comment ça marche</a>
             <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;"><i class="ri-hand-heart-line"></i> Devenir partenaire</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/livreurs'); return false;" style="display: flex; align-items: center; justify-content: space-between;"><span style="display: inline-flex; align-items: center; gap: 0.5rem;"><i class="ri-EBike-2-line"></i> Espace Livreurs</span> <span class="badge" style="background: #FEF3C7; color: #92400E; font-size: 0.68rem; padding: 2px 6px; border-radius: 6px; font-weight: 700;">Bientôt disponible</span></a>
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.75rem 0;">
             <a href="#" onclick="toggleMobileMenu(); router.navigate('/cgv'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);"><i class="ri-file-shield-line"></i> Conditions Générales (CGV)</a>
             <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-client'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);"><i class="ri-lock-line"></i> Confidentialité Client</a>
@@ -2774,29 +2778,32 @@ function filterRestaurantsList() {
 // Restaurant Open Hours Logic
 // ----------------------------------------------------
 function isRestaurantOpenNow(restaurant) {
+    if (!restaurant) return false;
     if (restaurant.isOpenManual === false) return false;
-    if (restaurant.isOpenManual === true) {
+    if (restaurant.isOpenManual === true || restaurant.isOpenManual === undefined) {
         // Double check closed days
         const now = new Date();
         // JavaScript day is 0=Sunday, 1=Monday... 7 is not used, so let's map it.
         let day = now.getDay();
         if (day === 0) day = 7; // Map Sunday to 7
-        if (restaurant.closedDays.includes(day)) {
+        const closedDays = Array.isArray(restaurant.closedDays) ? restaurant.closedDays : [];
+        if (closedDays.includes(day)) {
             return false;
         }
         
         // Hours check
         try {
             const hoursStr = restaurant.openHours; // e.g. "12:00 - 23:00"
+            if (!hoursStr) return true;
             const parts = hoursStr.split('-');
             if (parts.length === 2) {
                 const openParts = parts[0].trim().split(':');
                 const closeParts = parts[1].trim().split(':');
                 
-                const openHour = parseInt(openParts[0]);
-                const openMin = parseInt(openParts[1]);
-                const closeHour = parseInt(closeParts[0]);
-                const closeMin = parseInt(closeParts[1]);
+                const openHour = parseInt(openParts[0], 10);
+                const openMin = parseInt(openParts[1], 10);
+                const closeHour = parseInt(closeParts[0], 10);
+                const closeMin = parseInt(closeParts[1], 10);
                 
                 const currentHour = now.getHours();
                 const currentMin = now.getMinutes();
@@ -2819,12 +2826,15 @@ function isRestaurantOpenNow(restaurant) {
     }
     return false;
 }
+window.isRestaurantOpenNow = isRestaurantOpenNow;
+window.isRestaurantOpen = isRestaurantOpenNow;
 
 // Get string name for day
 function getDayName(dayNum) {
     const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
     return days[dayNum - 1] || "";
 }
+window.getDayName = getDayName;
 
 // ----------------------------------------------------
 // Page: RESTAURANT PAGE (client view with tabs)
@@ -2925,8 +2935,9 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
 
     // Closed days description
     let closedDaysText = '';
-    if (r.closedDays.length > 0) {
-        closedDaysText = ` (Fermé : ${r.closedDays.map(d => getDayName(d)).join(', ')})`;
+    const closedDaysList = Array.isArray(r.closedDays) ? r.closedDays : [];
+    if (closedDaysList.length > 0) {
+        closedDaysText = ` (Fermé : ${closedDaysList.map(d => getDayName(d)).join(', ')})`;
     }
 
     // Render Base Page Structure with ← Back Button above header
@@ -3860,8 +3871,10 @@ function validateBookingDate(restaurantId) {
     if (day === 0) day = 7; // Map Sunday to 7
     
     const r = store.getRestaurantById(restaurantId);
+    if (!r) return;
     
-    if (r.closedDays.includes(day)) {
+    const closedDaysList = Array.isArray(r.closedDays) ? r.closedDays : [];
+    if (closedDaysList.includes(day)) {
         showToast(`Désolé, le restaurant est fermé le ${getDayName(day)}. Veuillez choisir une autre date.`, "danger");
         input.value = '';
     }
@@ -4334,6 +4347,55 @@ router.add('#/politique-admin', () => {
 });
 
 // ----------------------------------------------------
+// Page: LIVREUR (Bientôt disponible)
+// ----------------------------------------------------
+router.add('#/livreurs', () => {
+    document.getElementById('floating-cart-bar').style.display = 'none';
+    stopOrderPolling();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    document.getElementById('main-content').innerHTML = `
+        <div style="max-width: 650px; margin: 3rem auto; padding: 2.5rem 1.5rem; text-align: center; animation: fadeIn 0.3s ease;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 3rem 2rem; box-shadow: var(--shadow);">
+                <div style="width: 80px; height: 80px; background: rgba(var(--primary-rgb), 0.12); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;">
+                    🛵
+                </div>
+                
+                <span class="badge" style="background: #FEF3C7; color: #92400E; font-size: 0.85rem; font-weight: 800; padding: 0.4rem 1rem; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; margin-bottom: 1rem; border: 1px solid rgba(245, 158, 11, 0.3);">
+                    ⏳ Bientôt disponible
+                </span>
+
+                <h1 style="font-family: var(--font-serif); font-size: 1.85rem; color: var(--text-primary); margin: 0 0 0.75rem; font-weight: 800;">
+                    Espace Coursiers &amp; Livreurs Thiès
+                </h1>
+                
+                <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.6; max-width: 480px; margin: 0 auto 1.75rem;">
+                    L'application dédiée aux livreurs indépendants et flottes de livraison de la ville de Thiès est actuellement en cours de finalisation.
+                </p>
+
+                <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; text-align: left; margin-bottom: 2rem;">
+                    <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <span>📋</span> <span>Vous souhaitez rejoindre notre réseau de livreurs ?</span>
+                    </div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
+                        Contactez directement la coordination logistique pour enregistrer votre moto / scooter et être prioritaire dès le lancement officiel de l'interface livreur.
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+                    <a href="https://wa.me/221784799882?text=${encodeURIComponent("Bonjour THIES Resto, je souhaite postuler comme livreur partenaire à Thiès.")}" target="_blank" class="btn btn-primary" style="font-weight: 700; border-radius: 12px; padding: 0.75rem 1.5rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                        💬 Rejoindre la flotte sur WhatsApp
+                    </a>
+                    <button class="btn btn-secondary" onclick="router.navigate('/')" style="font-weight: 600; border-radius: 12px; padding: 0.75rem 1.25rem;">
+                        Retour à l'accueil
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+});
+
+// ----------------------------------------------------
 // Order Tracking View
 // ----------------------------------------------------
 router.add('#/tracking', () => {
@@ -4533,11 +4595,11 @@ window.fetchOrderTracking = async function() {
         });
 
         // =========================================================================
-        // REGLE : Le client ne suit en direct QUE sa DERNIÈRE commande (la plus récente)
-        // Les autres commandes sont consultables dans l'historique ci-dessous
+        // RÈGLE : Suivi en direct strict de la DERNIÈRE commande active
+        // Lorsque la commande est terminée (Livrée ou Annulée), un résumé clair et épuré est affiché.
+        // On n'affiche plus l'historique complet pour ne pas alourdir la page.
         // =========================================================================
         const latestOrder = allOrders[0];
-        const previousOrders = allOrders.slice(1);
 
         // Sauvegarder l'ID de la commande suivie
         if (latestOrder && latestOrder.id) {
@@ -4676,6 +4738,12 @@ window.fetchOrderTracking = async function() {
                             <span style="color: var(--primary); font-size: 1.05rem;">${totalFormatted} FCFA</span>
                         </div>
                     ` : ''}
+                    ${latestOrder.paymentMethod ? `
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px dashed var(--border);">
+                            <span>💳 Règlement direct :</span>
+                            <span style="font-weight: 700; color: var(--text-primary);">${latestOrder.paymentMethod}</span>
+                        </div>
+                    ` : ''}
                 </div>
 
                 <!-- Step explanation banner -->
@@ -4746,71 +4814,7 @@ window.fetchOrderTracking = async function() {
             </div>
         `;
 
-        // =========================================================================
-        // 2. SECTION HISTORIQUE : TOUTES LES COMMANDES PASSÉES DU CLIENT
-        // =========================================================================
-        html += `
-            <div class="history-track-section" id="customer-orders-history-section">
-                <div class="history-track-header">
-                    <h3 class="history-track-title">
-                        <span>📋</span> <span>Historique de vos commandes (${allOrders.length})</span>
-                    </h3>
-                    <a href="#/profile" class="btn btn-outline btn-sm" style="font-size: 0.78rem; padding: 0.35rem 0.75rem; border-radius: 10px; font-weight: 600;">
-                        👤 Voir mon compte
-                    </a>
-                </div>
-        `;
-
-        if (previousOrders.length > 0) {
-            html += `<div style="display: flex; flex-direction: column; gap: 0.75rem;">`;
-            previousOrders.forEach(pOrder => {
-                const pR = store.getRestaurantById(pOrder.restaurant_id || pOrder.restaurantId);
-                const pRName = pR ? pR.name : (pOrder.restaurantName || 'Restaurant de Thiès');
-                const pTotal = Number(pOrder.total || pOrder.certifiedTotal || 0).toLocaleString();
-                const isPLivree = pOrder.status === 'Livrée' || pOrder.status === 'Livré';
-                const isPAnnulee = pOrder.status === 'Annulée';
-                const pBadgeColor = isPLivree ? '#059669' : (isPAnnulee ? 'var(--danger)' : '#f59e0b');
-                const pBadgeBg = isPLivree ? 'rgba(16, 185, 129, 0.1)' : (isPAnnulee ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)');
-                const pDate = pOrder.date || (pOrder.created_at ? new Date(pOrder.created_at).toLocaleDateString('fr-FR') : 'Date antérieure');
-
-                html += `
-                    <div class="history-track-item">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.4rem;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                    <span style="font-weight: 800; font-size: 0.95rem; color: var(--text-primary);">${pRName}</span>
-                                    <span style="font-size: 0.75rem; color: var(--text-secondary); font-family: monospace;">#${pOrder.id}</span>
-                                </div>
-                                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">
-                                    📅 ${pDate} ${pOrder.time ? `• ⏰ ${pOrder.time}` : ''}
-                                </div>
-                            </div>
-                            <span style="background: ${pBadgeBg}; color: ${pBadgeColor}; border: 1px solid ${pBadgeColor}; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px;">
-                                ${pOrder.status || 'Terminée'}
-                            </span>
-                        </div>
-                        <div style="font-size: 0.82rem; color: var(--text-secondary);">
-                            ${pOrder.items ? (Array.isArray(pOrder.items) ? pOrder.items.map(i => `${i.qty}x ${i.name}`).join(', ') : 'Détail') : 'Commande'}
-                            ${pOrder.cancelReason ? `<div style="color: var(--danger); font-size: 0.76rem; margin-top: 3px; font-style: italic;">⚠️ ${pOrder.cancelReason}</div>` : ''}
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px dashed var(--border); font-size: 0.85rem;">
-                            <span style="color: var(--text-secondary);">Montant réglé :</span>
-                            <strong style="color: var(--text-primary); font-size: 0.95rem;">${pTotal} FCFA</strong>
-                        </div>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-        } else {
-            html += `
-                <div style="text-align: center; padding: 1.25rem; background: var(--bg-card); border-radius: 14px; border: 1px dashed var(--border); color: var(--text-secondary); font-size: 0.85rem;">
-                    <span>✨</span> C'est votre première commande enregistrée ! Dès vos prochains repas, l'historique complet de toutes vos commandes apparaîtra ici.
-                </div>
-            `;
-        }
-
-        html += `</div>`; // Close history section
-
+        // Afficher uniquement la carte de suivi de la dernière commande active
         container.innerHTML = html;
 
         // Setup Realtime Listener specifically for the active latest order
@@ -5194,31 +5198,29 @@ window.toggleProfileEditForm = function() {
 };
 
 window.showPaymentMethodsModal = function() {
-    alertModal("Moyens de Paiement Disponibles", `
+    alertModal("Moyens de Paiement & Modalités", `
         <div style="text-align: left; padding: 0.5rem 0;">
-            <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.95rem;">
-                Sur THIES Resto, vous payez directement auprès du restaurateur ou du livreur lors de la réception :
+            <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.5;">
+                Deux modalités transparentes et pratiques sont disponibles pour régler vos commandes sur <strong>THIES Resto</strong> :
             </p>
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="font-size: 1.5rem;">🌊</span>
+                <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
+                    <span style="font-size: 1.5rem; margin-top: 2px;">💵</span>
                     <div>
-                        <strong style="color: var(--text-primary);">Wave Sénégal</strong>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Paiement instantané sans frais</div>
+                        <strong style="color: var(--text-primary); font-size: 0.95rem;">1. Espèces à la Livraison (Cash on Delivery)</strong>
+                        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem; line-height: 1.4;">
+                            Règlement en liquide de la totalité (plats + livraison) remis en main propre au livreur ou au comptoir lors du retrait.
+                        </div>
                     </div>
                 </div>
-                <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="font-size: 1.5rem;">🍊</span>
+                <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
+                    <span style="font-size: 1.5rem; margin-top: 2px;">🌊</span>
                     <div>
-                        <strong style="color: var(--text-primary);">Orange Money</strong>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Transfert sécurisé vers le numéro du restaurant</div>
-                    </div>
-                </div>
-                <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: center; gap: 0.75rem;">
-                    <span style="font-size: 1.5rem;">💵</span>
-                    <div>
-                        <strong style="color: var(--text-primary);">Espèces à la Livraison</strong>
-                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Règlement direct auprès du livreur</div>
+                        <strong style="color: var(--text-primary); font-size: 0.95rem;">2. Paiement d'Avance ou à Réception (Wave / Orange Money)</strong>
+                        <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem; line-height: 1.4;">
+                            • <strong>Paiement d'avance :</strong> Effectuez votre transfert Wave direct vers le numéro WhatsApp officiel du restaurant pour lancer la commande sans manipulation d'argent liquide.<br>
+                            • <strong>À réception :</strong> Scannez le QR Code Wave du livreur lors de la remise du repas.
+                        </div>
                     </div>
                 </div>
             </div>
