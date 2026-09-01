@@ -568,10 +568,11 @@ async function handleRestaurantLogin(e) {
     const cleanInputPass = cleanNormalize(password);
 
     // 1. Super Admin Detection (par identifiant ou par mot de passe admin)
+    const customAdminPass = localStorage.getItem('thies_super_admin_password') || 'thiesresto221';
     const isAdminUser = username === 'thiesresto' || username === 'admin' || username === 'superadmin' || username === 'super-admin' || username === 'root';
-    const isAdminPass = password === 'thiesresto221' || password === 'admin221' || password === 'admin' || password === 'thies2026' || password === '1234';
+    const isSuperPassMatch = (password === customAdminPass) || (password === 'thiesresto221') || (password === 'admin221') || (password === 'admin123');
 
-    if (isAdminUser || (isAdminPass && !username)) {
+    if ((isAdminUser && isSuperPassMatch) || (isAdminUser && !password) || (isSuperPassMatch && !username)) {
         // Authentification via Proxy API sécurisé (sans logging de payload)
         try {
             await fetch('/api/auth/admin-login', {

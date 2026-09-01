@@ -256,6 +256,117 @@ class OneSignalManager {
             return { success: true, fallback: true };
         }
     }
+
+    /**
+     * Envoie une notification Push au client lors d'un changement de statut de sa commande
+     * (ex: En cuisine, Prêt pour livraison, En livraison, Livrée, Annulée)
+     * @param {Object} order - Objet commande
+     * @param {string} newStatus - Nouveau statut de la commande
+     * @param {string} restaurantName - Nom de l'établissement
+     */
+    static async sendOrderStatusPushNotification(order, newStatus, restaurantName = '') {
+        if (!order) return;
+        const orderId = order.id || `CMD-${order.orderNumber || ''}`;
+        const cleanPhone = (order.customerPhone || '').replace(/[\s\-\(\)\+]/g, '');
+        const resto = restaurantName || order.restaurantName || 'Votre restaurant';
+        const total = (Number(order.total) || 0).toLocaleString('fr-FR');
+
+        let title = `🔔 Suivi Commande #${orderId}`;
+        let body = `Votre commande chez ${resto} est passée au statut : ${newStatus}`;
+
+        if (newStatus === 'Reçue') {
+            title = `📥 Commande #${orderId} Reçue & Validée !`;
+            body = `Le restaurant ${resto} a confirmé la réception de votre commande.`;
+        } else if (newStatus === 'Confirmée' || newStatus === 'En préparation' || newStatus === 'En cuisine') {
+            title = `👨‍🍳 Commande #${orderId} En Cuisine !`;
+            body = `Excellente nouvelle ! Vos plats chez ${resto} sont en cours de préparation en cuisine.`;
+        } else if (newStatus === 'Prêt pour livraison' || newStatus === 'Prête') {
+            title = `📦 Commande #${orderId} Prête !`;
+            body = `Vos plats chez ${resto} sont soigneusement emballés et prêts pour la livraison.`;
+        } else if (newStatus === 'En cours de livraison' || newStatus === 'En livraison' || newStatus === 'Partie en livraison') {
+            title = `🛵 Commande #${orderId} en Route !`;
+            body = `Le livreur est en route vers votre adresse (${order.address || 'Thiès'}).`;
+        } else if (newStatus === 'Livrée' || newStatus === 'Livré') {
+            title = `✅ Commande #${orderId} Livrée !`;
+            body = `Votre commande de ${total} FCFA chez ${resto} a été livrée. Bon appétit ! 🍽️`;
+        } else if (newStatus === 'Annulée') {
+            title = `❌ Commande #${orderId} Annulée`;
+            body = `Votre commande chez ${resto} a été annulée. ${order.cancelReason ? `Raison : ${order.cancelReason}` : ''}`;
+        }
+
+        console.log(`[OneSignal Push] Notification statut client: #${orderId} ➔ ${newStatus} (${cleanPhone})`);
+
+        // 1. Notification locale via le navigateur si disponible
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            try {
+                const browserNotif = new Notification(title, {
+                    body: body,
+                    icon: '/favicon.ico',
+                    badge: '/favicon.ico',
+                    tag: `order-status-${orderId}-${Date.now()}`,
+                    requireInteraction: false
+                });
+                browserNotif.onclick = function() {
+                    window.focus();
+                    if (typeof router !== 'undefined' && router.navigate) {
+                        router.navigate('/tracking');
+                    }
+                };
+            } catch (err) {
+                console.warn("[OneSignal] Notification API native erreur:", err);
+            }
+        }
+
+        // 2. Diffuser l'événement localement pour réactivité instantanée du client
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('thies:order-status-changed', {
+                detail: { orderId, newStatus, restaurantName: resto, order, title, body }
+            }));
+        }
+
+        // 3. Envoi via l'API REST OneSignal pour joindre l'appareil du client
+        const appId = "1475ba26-4ce8-4e66-8631-5cbdb9a0b3fe";
+        const apiKey = "1475ba26-4ce8-4e66-8631-5cbdb9a0b3fe";
+
+        try {
+            const payload = {
+                app_id: appId,
+                target_channel: "push",
+                headings: { "fr": title },
+                contents: { "fr": body },
+                data: {
+                    type: "order_status_update",
+                    orderId: orderId,
+                    status: newStatus,
+                    restaurantName: resto
+                }
+            };
+
+            // Si un numéro de téléphone client est présent, cibler l'alias
+            if (cleanPhone) {
+                payload.include_aliases = {
+                    external_id: [cleanPhone, `221${cleanPhone.replace(/^221/, '')}`]
+                };
+            } else {
+                payload.included_segments = ["All"];
+            }
+
+            const response = await fetch('https://onesignal.com/api/v1/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=utf-8',
+                    'Authorization': `Basic ${apiKey}`
+                },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            console.log("[OneSignal] Push client envoyé avec succès:", result);
+            return { success: true, data: result };
+        } catch (error) {
+            console.warn("[OneSignal] Envoi push distant:", error);
+            return { success: true, fallback: true };
+        }
+    }
 }
 
 // Lancement automatique sécurisé

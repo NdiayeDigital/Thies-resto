@@ -114,6 +114,16 @@ class Store {
         } else {
             this.syncPromise = Promise.resolve();
         }
+
+        // Auto-check and cancel stale/unacknowledged orders
+        this.checkAndAutoCancelStaleOrders();
+        if (typeof window !== 'undefined') {
+            setInterval(() => {
+                try {
+                    this.checkAndAutoCancelStaleOrders();
+                } catch(e) {}
+            }, 30000);
+        }
     }
 
     // Persist all state (restaurant overrides, orders, reservations, custom partners)
@@ -311,13 +321,19 @@ class Store {
                             const ts = o.created_at ? new Date(o.created_at).getTime() : (o.date && o.time ? new Date(`${o.date}T${o.time}`).getTime() : Date.now());
                             return {
                                 id: o.id,
+                                orderNumber: o.order_number || o.orderNumber || null,
                                 restaurantId: o.restaurant_id,
                                 customerName: o.customer_name,
                                 customerPhone: o.customer_phone,
                                 mode: o.mode,
-                                address: o.address,
-                                items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                                address: o.address || o.delivery_address || '',
+                                deliveryLat: o.client_lat || o.deliveryLat || o.delivery_lat || null,
+                                deliveryLng: o.client_lng || o.deliveryLng || o.delivery_lng || null,
+                                items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []),
                                 total: Number(o.total),
+                                deliveryFee: Number(o.delivery_fee || o.deliveryFee || 0),
+                                loyaltyApplied: Boolean(o.loyalty_applied || o.loyaltyApplied),
+                                otpVerified: Boolean(o.otp_verified !== false),
                                 note: o.note,
                                 status: o.status,
                                 date: o.date,
@@ -354,13 +370,19 @@ class Store {
                         const ts = o.created_at ? new Date(o.created_at).getTime() : (o.date && o.time ? new Date(`${o.date}T${o.time}`).getTime() : Date.now());
                         return {
                             id: o.id,
+                            orderNumber: o.order_number || o.orderNumber || null,
                             restaurantId: o.restaurant_id,
                             customerName: o.customer_name,
                             customerPhone: o.customer_phone,
                             mode: o.mode,
-                            address: o.address,
-                            items: typeof o.items === 'string' ? JSON.parse(o.items) : o.items,
+                            address: o.address || o.delivery_address || '',
+                            deliveryLat: o.client_lat || o.deliveryLat || o.delivery_lat || null,
+                            deliveryLng: o.client_lng || o.deliveryLng || o.delivery_lng || null,
+                            items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []),
                             total: Number(o.total),
+                            deliveryFee: Number(o.delivery_fee || o.deliveryFee || 0),
+                            loyaltyApplied: Boolean(o.loyalty_applied || o.loyaltyApplied),
+                            otpVerified: Boolean(o.otp_verified !== false),
                             note: o.note,
                             status: o.status,
                             date: o.date,
@@ -614,11 +636,15 @@ class Store {
                 console.warn("RPC place_secure_order notice, using direct table fallback:", error.message || error);
                 const { error: insertError } = await supabaseClient.from('orders').upsert({
                     id: order.id,
+                    order_number: order.orderNumber || null,
                     restaurant_id: order.restaurantId,
                     customer_name: order.customerName,
                     customer_phone: order.customerPhone,
                     mode: order.mode,
+                    address: order.address,
                     delivery_address: order.address,
+                    client_lat: order.deliveryLat || order.delivery_lat || null,
+                    client_lng: order.deliveryLng || order.delivery_lng || null,
                     note: order.note,
                     items: order.items,
                     total: order.total,
@@ -626,6 +652,8 @@ class Store {
                     loyalty_applied: order.loyaltyApplied || false,
                     otp_verified: isOtp,
                     otp_verified_via: order.otpVerifiedVia || 'WhatsApp / Direct Vérifié',
+                    date: order.date,
+                    time: order.time,
                     status: order.status || 'En attente'
                 });
                 if (insertError) {
@@ -931,11 +959,98 @@ class Store {
         this.pushCustomerToSupabase(order.customerPhone, order.customerName, usedRewards);
     }
 
-    async updateOrderStatus(orderId, status) {
+    getOrderAgeMinutes(order) {
+        if (!order) return 0;
+        let orderTime = null;
+        if (order.timestamp && !isNaN(Number(order.timestamp))) {
+            orderTime = Number(order.timestamp);
+        } else if (order.created_at) {
+            orderTime = new Date(order.created_at).getTime();
+        } else if (order.createdAt) {
+            orderTime = new Date(order.createdAt).getTime();
+        } else if (order.date) {
+            if (order.time) {
+                const parts = String(order.date).split('/');
+                if (parts.length === 3) {
+                    orderTime = new Date(`${parts[2]}-${parts[1]}-${parts[0]}T${order.time}:00`).getTime();
+                } else {
+                    orderTime = new Date(`${order.date} ${order.time}`).getTime();
+                }
+            } else {
+                orderTime = new Date(order.date).getTime();
+            }
+        }
+        if (!orderTime || isNaN(orderTime)) return 0;
+        const diffMs = Date.now() - orderTime;
+        return Math.max(0, Math.floor(diffMs / 60000));
+    }
+
+    checkAndAutoCancelStaleOrders() {
+        if (!this.data || !Array.isArray(this.data.orders)) return;
+        let hasChanges = false;
+        
+        this.data.orders.forEach(order => {
+            if (!order || order.status === 'Livrée' || order.status === 'Livré' || order.status === 'Annulée') {
+                return;
+            }
+            const ageMinutes = this.getOrderAgeMinutes(order);
+            
+            // Condition 1 : Si le restaurant ne marque pas comme reçu (reste "En attente" sans confirmation pendant > 20 min)
+            if (order.status === 'En attente' && ageMinutes >= 20) {
+                order.status = 'Annulée';
+                order.cancelReason = "Délai expiré : Le restaurant n'a pas confirmé la réception de la commande.";
+                order.cancelledAt = new Date().toISOString();
+                hasChanges = true;
+                this.pushOrderToSupabase(order);
+            }
+            // Condition 2 : Si la commande est reçue/acceptée mais sans réaction ni progression après 1h30 (90 min)
+            else if (ageMinutes >= 90) {
+                order.status = 'Annulée';
+                order.cancelReason = "Délai expiré : Commande automatiquement annulée après 1h30 sans réaction ou finalisation par le restaurant.";
+                order.cancelledAt = new Date().toISOString();
+                hasChanges = true;
+                this.pushOrderToSupabase(order);
+            }
+        });
+
+        if (hasChanges) {
+            this.save();
+        }
+    }
+
+    async updateOrderStatus(orderId, status, cancelReason = null) {
         const order = this.data.orders.find(o => o.id === orderId);
         if (order) {
             order.status = status;
+            if (status === 'Annulée' && cancelReason) {
+                order.cancelReason = cancelReason;
+                order.cancelledAt = new Date().toISOString();
+            }
             this.save();
+
+            // Synchroniser l'historique client si disponible sur l'appareil
+            try {
+                let history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+                let historyUpdated = false;
+                history.forEach(item => {
+                    if (String(item.id) === String(orderId)) {
+                        item.status = status;
+                        if (status === 'Annulée' && cancelReason) item.cancelReason = cancelReason;
+                        historyUpdated = true;
+                    }
+                });
+                if (historyUpdated) {
+                    localStorage.setItem('THIES_ORDER_HISTORY', JSON.stringify(history));
+                }
+            } catch (e) {}
+
+            // Déclencher la notification Push vers le client
+            const resto = this.getRestaurantById(order.restaurantId);
+            const restoName = resto ? resto.name : (order.restaurantName || '');
+            if (typeof OneSignalManager !== 'undefined' && OneSignalManager.sendOrderStatusPushNotification) {
+                OneSignalManager.sendOrderStatusPushNotification(order, status, restoName);
+            }
+
             if (supabaseClient && isSuperAdminSession) {
                 // Super Admin utilise la RPC admin sécurisée
                 const adminPass = sessionStorage.getItem('admin_password') || '';

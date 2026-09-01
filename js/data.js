@@ -2500,7 +2500,7 @@ const SEED_RESTAURANTS = [
         "reviews_count":  19,
         "category":  "Gastronomique",
         "address":  "Quartier Som, Thiès",
-        "whatsapp":  "+221781056721",
+        "whatsapp":  "+221784799882",
         "open_hours":  "12:00 - 23:00",
         "closed_days":  [
                             1

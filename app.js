@@ -758,59 +758,66 @@ window.switchDashboardSection = function(sectionName) {
         return;
     }
 
-    if (sectionName === 'add-menu') {
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'add-menu';
-        if (typeof router !== 'undefined') router.navigate('/dashboard-add-menu');
+    if (sectionName === 'menu' || sectionName === 'add-menu') {
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'menu';
+        if (typeof router !== 'undefined') router.navigate('/dashboard-menu');
     } else if (sectionName === 'daily-menu') {
         if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'daily-menu';
         if (typeof router !== 'undefined') router.navigate('/dashboard-daily-menu');
-    } else if (sectionName === 'account') {
+    } else if (sectionName === 'account' || sectionName === 'settings') {
         if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'account';
         if (typeof router !== 'undefined') router.navigate('/dashboard-account');
     } else {
-        // default: dashboard overview
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'summary';
+        // default: orders / live dashboard
+        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'orders';
         if (typeof router !== 'undefined') router.navigate('/dashboard');
     }
 
     if (typeof updateNavbar === 'function') updateNavbar();
+    if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
 };
 
 window.renderMobileBottomNav = function() {
     const nav = document.getElementById('mobile-bottom-nav');
     if (!nav) return;
 
-    // 1. Logged in Restaurant (Restaurant Only Navigation)
+    // 1. Logged in Restaurant (Restaurant Only Navigation - 4 Clean Tabs)
     if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
+        const active = typeof dashboardActiveTab !== 'undefined' ? dashboardActiveTab : 'orders';
+        const isOrders = active === 'orders' || active === 'summary';
+        const isMenu = active === 'menu' || active === 'add-menu';
+        const isDaily = active === 'daily-menu';
+        const isAccount = active === 'account' || active === 'settings' || active === 'subscription' || active === 'accounting' || active === 'reservations' || active === 'reviews';
+
         nav.innerHTML = `
-            <a href="#" id="bottom-nav-resto-dashboard" class="nav-item" onclick="switchDashboardSection('dashboard'); return false;">
-                <div class="nav-icon"><i class="ri-dashboard-3-line"></i></div>
-                <span>Dashboard</span>
+            <a href="#" id="bottom-nav-resto-orders" class="nav-item ${isOrders ? 'active' : ''}" onclick="switchDashboardSection('orders'); return false;">
+                <div class="nav-icon"><i class="ri-file-list-3-line"></i></div>
+                <span>Commandes</span>
             </a>
-            <a href="#" id="bottom-nav-resto-add-menu" class="nav-item" onclick="switchDashboardSection('add-menu'); return false;">
-                <div class="nav-icon"><i class="ri-add-circle-line"></i></div>
-                <span>Ajouter Plat</span>
+            <a href="#" id="bottom-nav-resto-menu" class="nav-item ${isMenu ? 'active' : ''}" onclick="switchDashboardSection('menu'); return false;">
+                <div class="nav-icon"><i class="ri-restaurant-line"></i></div>
+                <span>Menu</span>
             </a>
-            <a href="#" id="bottom-nav-resto-daily-menu" class="nav-item" onclick="switchDashboardSection('daily-menu'); return false;">
-                <div class="nav-icon"><i class="ri-restaurant-2-line"></i></div>
-                <span>Menu du jour</span>
+            <a href="#" id="bottom-nav-resto-daily-menu" class="nav-item ${isDaily ? 'active' : ''}" onclick="switchDashboardSection('daily-menu'); return false;">
+                <div class="nav-icon"><i class="ri-calendar-event-line"></i></div>
+                <span>Plat du jour</span>
             </a>
-            <a href="#" id="bottom-nav-resto-account" class="nav-item" onclick="switchDashboardSection('account'); return false;">
-                <div class="nav-icon"><i class="ri-store-2-line"></i></div>
-                <span>Compte Resto</span>
+            <a href="#" id="bottom-nav-resto-account" class="nav-item ${isAccount ? 'active' : ''}" onclick="switchDashboardSection('account'); return false;">
+                <div class="nav-icon"><i class="ri-user-settings-line"></i></div>
+                <span>Compte</span>
             </a>
         `;
     } 
-    // 2. Super Admin Session
+    // 2. Super Admin Session (Central Administration Navigation)
     else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
         nav.innerHTML = `
             <a href="#" id="bottom-nav-admin-console" class="nav-item active" onclick="router.navigate('/admin'); return false;">
-                <div class="nav-icon"><i class="ri-shield-user-line"></i></div>
-                <span>Console Admin</span>
+                <div class="nav-icon"><i class="ri-dashboard-3-line"></i></div>
+                <span>Supervision</span>
             </a>
             <a href="#" id="bottom-nav-admin-chart" class="nav-item" onclick="router.navigate('/politique-admin'); return false;">
                 <div class="nav-icon"><i class="ri-file-text-line"></i></div>
-                <span>Charte Resto</span>
+                <span>Charte</span>
             </a>
             <a href="#" id="bottom-nav-admin-logout" class="nav-item" onclick="logoutAdmin(); return false;" style="color: var(--danger);">
                 <div class="nav-icon"><i class="ri-logout-box-r-line"></i></div>
@@ -818,7 +825,7 @@ window.renderMobileBottomNav = function() {
             </a>
         `;
     }
-    // 3. Public Client Mode
+    // 3. Public Client Mode (5 Essential Customer Tabs)
     else {
         nav.innerHTML = `
             <a href="#" id="bottom-nav-home" class="nav-item active" onclick="router.navigate('/'); updateBottomNavActive('home'); return false;">
@@ -862,9 +869,9 @@ window.updateBottomNavFromRoute = function(hash) {
     // Check Restaurant routes
     if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
         if (!hash || hash === '#/dashboard' || hash.startsWith('#/dashboard-orders')) {
-            window.updateBottomNavActive('resto-dashboard');
+            window.updateBottomNavActive('resto-orders');
         } else if (hash.startsWith('#/dashboard-add-menu') || hash.startsWith('#/dashboard-menu')) {
-            window.updateBottomNavActive('resto-add-menu');
+            window.updateBottomNavActive('resto-menu');
         } else if (hash.startsWith('#/dashboard-daily-menu') || hash.startsWith('#/dashboard-daily')) {
             window.updateBottomNavActive('resto-daily-menu');
         } else if (hash.startsWith('#/dashboard-account') || hash.startsWith('#/dashboard-settings')) {
@@ -1587,101 +1594,99 @@ function updateNavbar() {
     let html = '';
     let drawerHtml = '';
     
-    // 1. SUPER ADMIN MODE (Only Super-Admin tools, no client navigation)
+    // 1. SUPER ADMIN MODE (Clean executive navbar, no bloated buttons)
     if (isSuperAdminSession) {
         if (currentRestaurantSession) {
             html = `
-                <span class="badge badge-danger">👑 Admin (${currentRestaurantSession.name})</span>
-                <button class="btn btn-primary btn-sm" onclick="router.navigate('/dashboard')">Tableau de Bord 📊</button>
-                <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()">Console Admin 🔐</button>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                    <span class="badge badge-danger" style="font-weight: 600; font-size: 0.8rem; padding: 0.35rem 0.65rem;">
+                        <i class="ri-shield-user-line" style="margin-right: 0.25rem;"></i> Mode Admin (${currentRestaurantSession.name})
+                    </span>
+                    <button class="btn btn-secondary btn-sm" onclick="exitImpersonation()" style="font-weight: 600; font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+                        <i class="ri-arrow-go-back-line"></i> Console
+                    </button>
+                </div>
             `;
             drawerHtml = `
-                <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2);">
-                    <span style="color: var(--danger); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Mode Super-Admin</span>
-                    <span style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">Gère : ${currentRestaurantSession.name}</span>
+                <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.08); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2);">
+                    <span style="color: var(--danger); font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Mode Super-Admin</span>
+                    <span style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">Établissement : ${currentRestaurantSession.name}</span>
                 </div>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;">📊 Tableau de Bord (${currentRestaurantSession.name})</a>
-                <a href="#" onclick="toggleMobileMenu(); exitImpersonation(); return false;" style="color: var(--danger); font-weight: 600;">🔐 Retour Console Globale</a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;">📜 Charte &amp; Politique Restaurant</a>
-                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: bold; margin-top: 1rem;">🚪 Déconnexion Super-Admin</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;"><i class="ri-dashboard-3-line"></i> Tableau de bord</a>
+                <a href="#" onclick="toggleMobileMenu(); exitImpersonation(); return false;" style="color: var(--danger); font-weight: 600;"><i class="ri-arrow-go-back-line"></i> Retour Console Globale</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;"><i class="ri-file-text-line"></i> Charte &amp; Politique Restaurant</a>
+                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: 600; margin-top: 1rem;"><i class="ri-logout-box-r-line"></i> Déconnexion Super-Admin</a>
             `;
         } else {
             html = `
-                <span class="badge badge-danger">👑 Super-Admin</span>
-                <button class="btn btn-primary btn-sm" onclick="router.navigate('/admin')">Console Admin 📊</button>
-                <button class="btn btn-secondary btn-sm" onclick="logoutAdmin()">Déconnexion 🚪</button>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <button class="btn btn-secondary btn-sm" onclick="router.navigate('/politique-admin')" style="font-weight: 600; font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+                        <i class="ri-file-text-line"></i> Charte
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="logoutAdmin()" style="color: var(--danger); border-color: var(--danger); font-weight: 600; font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+                        <i class="ri-logout-box-r-line"></i> Déconnexion
+                    </button>
+                </div>
             `;
             drawerHtml = `
-                <div style="padding: 0.75rem; background: rgba(239, 68, 68, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(239, 68, 68, 0.2); text-align: center;">
-                    <span style="color: var(--danger); font-weight: bold; font-size: 0.9rem;">👑 CONSOLE SUPER-ADMINISTRATEUR</span>
+                <div style="padding: 0.75rem; background: rgba(var(--primary-rgb), 0.08); border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border); text-align: center;">
+                    <span style="color: var(--text-primary); font-weight: 700; font-size: 0.9rem;">Supervision Plateforme</span>
                 </div>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;" style="color: var(--primary); font-weight: bold;">📊 Tableau de Bord Central</a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;">🏪 Gestion des 20 Restaurants</a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;">🤝 Demandes de Partenariat</a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;">📜 Charte &amp; Politique Restaurant</a>
-                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: bold; margin-top: 1rem;">🚪 Déconnexion Super-Admin</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;" style="color: var(--primary); font-weight: 600;"><i class="ri-dashboard-3-line"></i> Console Principale</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;"><i class="ri-file-text-line"></i> Charte Restaurant</a>
+                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: 600; margin-top: 1rem;"><i class="ri-logout-box-r-line"></i> Déconnexion</a>
             `;
         }
     } 
-    // 2. RESTAURANT PARTNER MODE (Only Restaurant dashboard tools, no client navigation)
+    // 2. RESTAURANT PARTNER MODE (Clean header: badge + quick preview; all navigation is in bottom nav & sidebar)
     else if (currentRestaurantSession) {
-        const currentHash = window.location.hash || '#/dashboard';
-        const isDashboard = currentHash === '#/dashboard' || currentHash.startsWith('#/dashboard-orders');
-        const isAddMenu = currentHash.startsWith('#/dashboard-add-menu') || currentHash.startsWith('#/dashboard-menu');
-        const isDailyMenu = currentHash.startsWith('#/dashboard-daily-menu') || currentHash.startsWith('#/dashboard-daily');
-        const isAccount = currentHash.startsWith('#/dashboard-account') || currentHash.startsWith('#/dashboard-settings');
-
         html = `
-            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
-                <span class="badge badge-success" style="font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.65rem;">🏪 ${currentRestaurantSession.name}</span>
-                <button class="btn btn-sm ${isDashboard ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardSection('dashboard')" style="font-size: 0.82rem; padding: 0.35rem 0.7rem;">📊 Dashboard</button>
-                <button class="btn btn-sm ${isAddMenu ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardSection('add-menu')" style="font-size: 0.82rem; padding: 0.35rem 0.7rem;">➕ Ajouter un menu</button>
-                <button class="btn btn-sm ${isDailyMenu ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardSection('daily-menu')" style="font-size: 0.82rem; padding: 0.35rem 0.7rem;">⭐ Menu du jour</button>
-                <button class="btn btn-sm ${isAccount ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardSection('account')" style="font-size: 0.82rem; padding: 0.35rem 0.7rem;">⚙️ Compte</button>
-                <button class="btn btn-secondary btn-sm" onclick="logoutRestaurant()" style="color: var(--danger); font-weight: 600; font-size: 0.82rem; padding: 0.35rem 0.7rem;">🚪 Déconnexion</button>
+            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                <span class="badge badge-success" style="font-weight: 600; font-size: 0.82rem; padding: 0.35rem 0.75rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <i class="ri-store-2-fill"></i> ${currentRestaurantSession.name}
+                </span>
+                <button class="btn btn-outline btn-sm" onclick="router.navigate('/r/${currentRestaurantSession.slug}')" title="Voir ma fiche publique" style="font-size: 0.8rem; padding: 0.35rem 0.7rem; border-radius: 10px;">
+                    <i class="ri-external-link-line"></i> Aperçu
+                </button>
             </div>
         `;
         drawerHtml = `
-            <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(16, 185, 129, 0.2);">
-                <span style="color: var(--success); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Espace Partenaire Restaurant</span>
+            <div style="padding: 0.75rem; background: rgba(16, 185, 129, 0.08); border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(16, 185, 129, 0.2);">
+                <span style="color: var(--success); font-weight: 600; font-size: 0.85rem; display: block; margin-bottom: 0.25rem;">Espace Restaurant</span>
                 <span style="font-size: 0.85rem; color: var(--text-primary); font-weight: 700;">${currentRestaurantSession.name}</span>
             </div>
-            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('dashboard'); return false;" style="font-weight: 600; ${isDashboard ? 'color: var(--primary); font-weight: 700;' : ''}">📊 1. Dashboard &amp; Commandes</a>
-            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('add-menu'); return false;" style="font-weight: 600; ${isAddMenu ? 'color: var(--primary); font-weight: 700;' : ''}">➕ 2. Ajouter un menu</a>
-            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('daily-menu'); return false;" style="font-weight: 600; ${isDailyMenu ? 'color: var(--primary); font-weight: 700;' : ''}">⭐ 3. Menu du jour</a>
-            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('account'); return false;" style="font-weight: 600; ${isAccount ? 'color: var(--primary); font-weight: 700;' : ''}">⚙️ 4. Compte Restaurant</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('orders'); return false;"><i class="ri-file-list-3-line"></i> Commandes en direct</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('menu'); return false;"><i class="ri-restaurant-line"></i> Menu &amp; Plats</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('daily-menu'); return false;"><i class="ri-calendar-event-line"></i> Plats du jour</a>
+            <a href="#" onclick="toggleMobileMenu(); switchDashboardSection('account'); return false;"><i class="ri-user-settings-line"></i> Compte &amp; Paramètres</a>
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.75rem 0;">
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);">📜 Charte &amp; Politique Restaurant</a>
-            <a href="#" onclick="toggleMobileMenu(); logoutRestaurant(); return false;" style="color: var(--danger); font-weight: bold; margin-top: 0.5rem;">🚪 Déconnexion Restaurant</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);"><i class="ri-file-text-line"></i> Charte &amp; Conditions</a>
+            <a href="#" onclick="toggleMobileMenu(); logoutRestaurant(); return false;" style="color: var(--danger); font-weight: 600; margin-top: 0.5rem;"><i class="ri-logout-box-r-line"></i> Déconnexion</a>
         `;
     } 
-    // 3. PUBLIC CLIENT / GUEST MODE (Clean customer navigation, no super-admin button)
+    // 3. PUBLIC CLIENT / GUEST MODE (Clean navigation with 'Espace' button, no emojis, no clutter)
     else {
         html = `
-            <button class="btn btn-outline btn-sm" onclick="router.navigate('/map')" title="Carte Interactive Google Maps" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.85rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;">
-                <span>🗺️ Carte</span>
-            </button>
-            <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')" title="Espace Resto / Connexion Restaurateur" aria-label="Espace Resto" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.9rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;">
-                <span style="font-size: 1.05rem; line-height: 1;">🏪</span>
-                <span>Espace Resto</span>
+            <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')" title="Espace Restaurant / Partenaire" aria-label="Espace Restaurant" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.9rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;">
+                <i class="ri-store-2-line"></i>
+                <span>Espace</span>
             </button>
         `;
         drawerHtml = `
             <div style="padding: 0.75rem; background: rgba(var(--primary-rgb), 0.08); border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border);">
-                <span style="color: var(--primary); font-weight: bold; font-size: 0.85rem; display: block;">Thiès Resto</span>
+                <span style="color: var(--primary); font-weight: 700; font-size: 0.85rem; display: block;">Thiès Resto</span>
                 <span style="font-size: 0.75rem; color: var(--text-secondary);">Commandes en direct &amp; Réservations</span>
             </div>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;">🏠 Accueil</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/map'); return false;">🗺️ Carte Interactive (Google Maps)</a>
-            <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;">🍽️ Nos Restaurants Partenaires</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--primary); font-weight: 600;">📍 Suivi de Commande</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/profile'); return false;" style="font-weight: 600;">👤 Mon Profil &amp; Fidélité</a>
-            <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;">💡 Comment ça marche ?</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;">🤝 Devenir Partenaire</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/'); return false;"><i class="ri-home-5-line"></i> Accueil</a>
+            <a href="#" onclick="toggleMobileMenu(); scrollToCatalog(); return false;"><i class="ri-restaurant-2-line"></i> Restaurants partenaires</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/tracking'); return false;" style="color: var(--primary); font-weight: 600;"><i class="ri-file-list-3-line"></i> Suivi de commande</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/profile'); return false;"><i class="ri-user-3-line"></i> Mon profil</a>
+            <a href="#" onclick="toggleMobileMenu(); scrollToHowItWorks(); return false;"><i class="ri-information-line"></i> Comment ça marche</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/partnership'); return false;"><i class="ri-hand-heart-line"></i> Devenir partenaire</a>
             <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.75rem 0;">
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/cgv'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);">📄 Conditions Générales (CGV)</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-client'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);">🔒 Confidentialité Client</a>
-            <a href="#" onclick="toggleMobileMenu(); router.navigate('/auth'); return false;" style="font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem;">🏪 Connexion Restaurateur</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/cgv'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);"><i class="ri-file-shield-line"></i> Conditions Générales (CGV)</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-client'); return false;" style="font-size: 0.85rem; color: var(--text-secondary);"><i class="ri-lock-line"></i> Confidentialité Client</a>
+            <a href="#" onclick="toggleMobileMenu(); router.navigate('/auth'); return false;" style="font-size: 0.85rem; color: var(--primary); font-weight: 600; margin-top: 0.5rem;"><i class="ri-store-2-line"></i> Espace Restaurant</a>
         `;
     }
     
@@ -1978,9 +1983,10 @@ router.add('#/', () => {
                     </div>
 
                     <div class="hero-actions-container" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 0.5rem; width: 100%;">
-                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); min-height: 48px; padding: 0.95rem 1.8rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem;">Explorer nos Menus 🍽️</button>
-                        <button class="btn btn-secondary ripple hover-3d" id="hero-geo-btn" onclick="geolocateRestaurants()" style="background: var(--bg-card); color: var(--text-primary); border: 1.5px solid var(--border); min-height: 48px; padding: 0.95rem 1.6rem; border-radius: 14px; font-weight: 600; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">📍 Autour de moi</button>
-                        <button class="btn btn-outline ripple hover-3d" onclick="window.openGoogleMapsExplorer()" style="border: 1.5px solid var(--primary); color: var(--primary); min-height: 48px; padding: 0.95rem 1.6rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">🗺️ Carte Google Maps</button>
+                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); min-height: 48px; padding: 0.9rem 2.2rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <i class="ri-restaurant-2-line"></i>
+                            <span>Explorer nos Menus 🍽️</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -2703,127 +2709,17 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 // ----------------------------------------------------
 // ----------------------------------------------------
-// Google Maps Platform - Explorer & Modal Logic
+// Geolocation & Distance Sorting (No Maps)
 // ----------------------------------------------------
-window.openGoogleMapsExplorer = function(userLat = 14.7928, userLng = -16.9260) {
-    const allRestos = store && store.getRestaurants ? store.getRestaurants().filter(r => r.status === 'active') : [];
-    showMapModal(userLat, userLng, allRestos);
+window.openGoogleMapsExplorer = function() {
+    // No maps - scroll directly to catalog with GPS filter
+    if (typeof geolocateRestaurants === 'function') geolocateRestaurants();
+    if (typeof scrollToCatalog === 'function') scrollToCatalog();
 };
 
-function showMapModal(userLat, userLng, restaurants) {
-    let mapModal = document.getElementById('map-modal');
-    if (!mapModal) {
-        mapModal = document.createElement('div');
-        mapModal.id = 'map-modal';
-        mapModal.style.position = 'fixed';
-        mapModal.style.top = '0';
-        mapModal.style.left = '0';
-        mapModal.style.width = '100vw';
-        mapModal.style.height = '100vh';
-        mapModal.style.backgroundColor = 'rgba(0,0,0,0.85)';
-        mapModal.style.zIndex = '99999';
-        mapModal.style.display = 'flex';
-        mapModal.style.flexDirection = 'column';
-        mapModal.style.backdropFilter = 'blur(8px)';
-        
-        mapModal.innerHTML = `
-            <div style="background: var(--bg-card, #ffffff); width: 100%; height: 100%; max-width: 1020px; max-height: 94vh; margin: auto; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; position: relative; border: 1.5px solid var(--border, #e5e7eb); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-                <!-- Header -->
-                <div style="padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--border, #e5e7eb); display: flex; justify-content: space-between; align-items: center; background: var(--bg-page, #f9fafb); flex-wrap: wrap; gap: 0.75rem;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <span style="font-size: 1.6rem;">🗺️</span>
-                        <div>
-                            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">Restaurants à Thiès sur Google Maps</h3>
-                            <p style="margin: 0; font-size: 0.8rem; color: var(--text-secondary);">Explorez les meilleures adresses culinaires en direct</p>
-                        </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                        <button type="button" id="map-modal-gps-btn" class="btn btn-outline btn-sm" onclick="geolocateRestaurants()" style="border-radius: 20px; font-size: 0.8rem; padding: 0.4rem 0.85rem; display: inline-flex; align-items: center; gap: 0.35rem;">
-                            📍 Me localiser
-                        </button>
-                        <button id="close-map-btn" style="background: transparent; border: none; font-size: 1.8rem; cursor: pointer; color: var(--text-primary); line-height: 1; padding: 0 0.5rem;" aria-label="Fermer la carte">&times;</button>
-                    </div>
-                </div>
-                <!-- Google Maps Container -->
-                <div id="google-maps-explorer-canvas" style="flex: 1; width: 100%; min-height: 380px; position: relative;"></div>
-            </div>
-        `;
-        document.body.appendChild(mapModal);
-        
-        document.getElementById('close-map-btn').addEventListener('click', () => {
-            mapModal.style.display = 'none';
-        });
-    }
-    
-    mapModal.style.display = 'flex';
-
-    const targetList = (restaurants && restaurants.length > 0)
-        ? restaurants
-        : (store && store.getRestaurants ? store.getRestaurants().filter(r => r.status === 'active') : []);
-
-    if (window.googleMapsService) {
-        window.googleMapsService.renderExplorerMap('google-maps-explorer-canvas', targetList, {
-            userLat: userLat || window.userLat,
-            userLng: userLng || window.userLng,
-            onMarkerClick: (resto) => {
-                // If user clicks info window button, close modal
-                const modal = document.getElementById('map-modal');
-                if (modal) modal.style.display = 'none';
-            }
-        });
-    }
-}
-
-window.geolocateRestaurants = async function(shouldOpenModal = false) {
-    // Show UI loading state on GPS buttons
+window.geolocateRestaurants = async function() {
     const heroBtn = document.getElementById('hero-geo-btn');
-    const modalBtn = document.getElementById('map-modal-gps-btn');
-    if (heroBtn) heroBtn.innerHTML = `<span>⏳</span> <span>Localisation GPS...</span>`;
-    if (modalBtn) modalBtn.innerHTML = `<span>⏳</span> <span>Localisation GPS...</span>`;
-
-    if (window.googleMapsService) {
-        try {
-            const coords = await window.googleMapsService.locateAndPan();
-            const userLat = coords.lat;
-            const userLng = coords.lng;
-            window.userLat = userLat;
-            window.userLng = userLng;
-
-            let restosWithDist = 0;
-            if (typeof store !== 'undefined' && store.data && store.data.restaurants) {
-                store.data.restaurants.forEach(r => {
-                    if (r.lat && r.lng) {
-                        const dist = calculateDistance(userLat, userLng, Number(r.lat), Number(r.lng));
-                        r._tempDistance = parseFloat(dist.toFixed(1));
-                        restosWithDist++;
-                    }
-                });
-            }
-
-            if (heroBtn) {
-                heroBtn.innerHTML = `<span>🟢</span> <span>Position en direct (${coords.isDefault ? 'Thiès' : 'GPS'})</span>`;
-                setTimeout(() => {
-                    heroBtn.innerHTML = `<span>📍</span> <span>Autour de moi</span>`;
-                }, 4000);
-            }
-            if (modalBtn) {
-                modalBtn.innerHTML = `<span>🟢</span> <span>GPS synchronisé</span>`;
-                setTimeout(() => {
-                    modalBtn.innerHTML = `<span>📍</span> <span>Me localiser</span>`;
-                }, 4000);
-            }
-
-            if (typeof applyFilters === 'function') applyFilters();
-
-            const mapModal = document.getElementById('map-modal');
-            if (shouldOpenModal || (mapModal && mapModal.style.display === 'flex')) {
-                showMapModal(userLat, userLng, store.data ? store.data.restaurants : []);
-            }
-            return coords;
-        } catch (err) {
-            console.warn("[Google Maps Geolocation] Fallback to standard GPS:", err);
-        }
-    }
+    if (heroBtn) heroBtn.innerHTML = `<i class="ri-loader-4-line spin"></i> <span>Recherche GPS...</span>`;
 
     if ("geolocation" in navigator) {
         if (typeof showToast === 'function') showToast("Recherche de votre position à Thiès...", "info");
@@ -2844,61 +2740,28 @@ window.geolocateRestaurants = async function(shouldOpenModal = false) {
                 });
             }
             
-            if (typeof showToast === 'function') showToast(`Position trouvée ! Tri de ${restosWithDist} restaurants...`, "success");
-            if (heroBtn) heroBtn.innerHTML = `<span>🟢</span> <span>GPS en direct</span>`;
-            if (modalBtn) modalBtn.innerHTML = `<span>🟢</span> <span>GPS synchronisé</span>`;
+            if (typeof showToast === 'function') showToast(`Position trouvée ! ${restosWithDist} restaurants triés par proximité.`, "success");
+            if (heroBtn) {
+                heroBtn.innerHTML = `<i class="ri-check-line"></i> <span>Position active (${userLat.toFixed(2)}, ${userLng.toFixed(2)})</span>`;
+                setTimeout(() => {
+                    heroBtn.innerHTML = `<i class="ri-crosshair-2-line"></i> <span>Autour de moi (GPS)</span>`;
+                }, 4000);
+            }
             if (typeof applyFilters === 'function') applyFilters();
-            if (shouldOpenModal) showMapModal(userLat, userLng, store.data ? store.data.restaurants : []);
         }, (error) => {
             console.warn("Notice: Geolocation unavailable or timed out, default center used.");
-            if (heroBtn) heroBtn.innerHTML = `<span>📍</span> <span>Autour de moi</span>`;
-            if (modalBtn) modalBtn.innerHTML = `<span>📍</span> <span>Me localiser</span>`;
+            if (heroBtn) heroBtn.innerHTML = `<i class="ri-crosshair-2-line"></i> <span>Autour de moi (GPS)</span>`;
             if (typeof applyFilters === 'function') applyFilters();
             if (typeof showToast === 'function') showToast("Position par défaut : Thiès Centre", "info");
-            if (shouldOpenModal) showMapModal(14.7928, -16.9260, store.data ? store.data.restaurants : []);
         }, { timeout: 8000, maximumAge: 0, enableHighAccuracy: true });
     } else {
         if (typeof showToast === 'function') showToast("La géolocalisation n'est pas supportée sur ce navigateur.", "info");
-        if (shouldOpenModal) showMapModal(14.7928, -16.9260, store.data ? store.data.restaurants : []);
     }
 };
 
-// Route: #/map for Dedicated Full-Page Google Maps View
+// Route: #/map redirects to catalog view
 router.add('#/map', () => {
-    updateSEO('home');
-    const container = document.getElementById('main-content');
-    const cartBar = document.getElementById('floating-cart-bar');
-    if (cartBar) cartBar.style.display = 'none';
-
-    container.innerHTML = `
-        <div class="map-page-container page-transition" style="max-width: 1200px; margin: 0 auto; padding: 1.5rem 1rem 3rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
-                <div>
-                    <h1 style="font-family: var(--font-serif); font-size: 1.85rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem;">Carte Interactive des Restaurants 🗺️</h1>
-                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">Retrouvez toutes les adresses gourmandes de Thiès en direct avec Google Maps Platform.</p>
-                </div>
-                <div style="display: flex; gap: 0.75rem; align-items: center;">
-                    <button class="btn btn-secondary btn-sm" onclick="geolocateRestaurants()" style="border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem;">
-                        📍 Me Localiser
-                    </button>
-                    <button class="btn btn-primary btn-sm" onclick="router.navigate('/')" style="border-radius: 20px;">
-                        🍽️ Vue Catalogue
-                    </button>
-                </div>
-            </div>
-
-            <!-- Google Maps Embedded Explorer -->
-            <div id="google-maps-page-canvas" style="height: 600px; width: 100%; border-radius: 24px; border: 1.5px solid var(--border); box-shadow: var(--shadow); overflow: hidden; margin-bottom: 2rem;"></div>
-        </div>
-    `;
-
-    const allRestos = store && store.getRestaurants ? store.getRestaurants().filter(r => r.status === 'active') : [];
-    if (window.googleMapsService) {
-        window.googleMapsService.renderExplorerMap('google-maps-page-canvas', allRestos, {
-            userLat: window.userLat || 14.7928,
-            userLng: window.userLng || -16.9260
-        });
-    }
+    router.navigate('/');
 });
 
 
@@ -3060,10 +2923,6 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
         ? `<span class="badge badge-success">Ouvert</span>` 
         : `<span class="badge badge-danger">Fermé</span>`;
 
-    // Map URL
-    const mapQuery = encodeURIComponent(`${r.name}, Thiès, Sénégal`);
-    const googleMapsLink = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
-
     // Closed days description
     let closedDaysText = '';
     if (r.closedDays.length > 0) {
@@ -3093,13 +2952,10 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
             </p>
             
             <div class="restaurant-meta-actions">
-                <a href="${googleMapsLink}" target="_blank" class="btn btn-secondary btn-sm">
-                    🗺️ S'y rendre (Google Maps)
-                </a>
-                <a href="https://wa.me/${r.whatsapp.replace(/\+/g, '')}" target="_blank" class="btn btn-outline btn-sm">
+                <a href="https://wa.me/${r.whatsapp.replace(/\+/g, '')}" target="_blank" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
                     💬 Contacter WhatsApp
                 </a>
-                <button class="btn btn-primary btn-sm" onclick="shareRestaurant('${r.name}', '${r.slug}')">
+                <button class="btn btn-primary btn-sm" onclick="shareRestaurant('${r.name}', '${r.slug}')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
                     📤 Partager à un ami
                 </button>
             </div>
@@ -3108,7 +2964,6 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
         <nav class="tabs-nav">
             <button class="tab-btn ${activeTab === 'menu' ? 'active' : ''}" onclick="switchRestoTab('menu')">Menu du Jour 🍕</button>
             <button class="tab-btn ${activeTab === 'checkout' ? 'active' : ''}" id="tab-checkout-btn" onclick="switchRestoTab('checkout')">Commander 🛒</button>
-            <button class="tab-btn ${activeTab === 'map' ? 'active' : ''}" onclick="switchRestoTab('map')">Plan & Accès 📍</button>
             <button class="tab-btn ${activeTab === 'group' ? 'active' : ''}" onclick="switchRestoTab('group')">Commande de Groupe 👥</button>
             <button class="tab-btn ${activeTab === 'booking' ? 'active' : ''}" onclick="switchRestoTab('booking')">Réserver une Table 📅</button>
             <button class="tab-btn ${activeTab === 'reviews' ? 'active' : ''}" onclick="switchRestoTab('reviews')">Avis Clients (${r.reviews ? r.reviews.length : 0}) 💬</button>
@@ -3123,22 +2978,6 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
             <!-- PANEL: CHECKOUT -->
             <div class="tab-panel ${activeTab === 'checkout' ? 'active' : ''}" id="panel-checkout">
                 <div id="checkout-content-container"></div>
-            </div>
-
-            <!-- PANEL: GOOGLE MAPS PLAN & ACCESS -->
-            <div class="tab-panel ${activeTab === 'map' ? 'active' : ''}" id="panel-map">
-                <div style="background: var(--bg-card); border-radius: 18px; padding: 1.5rem; border: 1.5px solid var(--border); margin-top: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
-                        <div>
-                            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 0.25rem;">📍 Localisation : ${r.name}</h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">${r.address || 'Thiès, Sénégal'} • Horaires : ${r.openHours || '11h00 - 23h00'}</p>
-                        </div>
-                        <a href="${googleMapsLink}" target="_blank" class="btn btn-primary btn-sm" style="border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem;">
-                            🗺️ Ouvrir Itinéraire Google Maps
-                        </a>
-                    </div>
-                    <div id="resto-detail-gmap" style="height: 420px; width: 100%; border-radius: 16px; border: 1.5px solid var(--border); overflow: hidden;"></div>
-                </div>
             </div>
 
             <!-- PANEL: GROUP ORDER -->
@@ -3165,10 +3004,6 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
     renderBookingTab(r);
     renderReviewsTab(r);
     
-    if (activeTab === 'map' && window.googleMapsService) {
-        setTimeout(() => window.googleMapsService.renderRestaurantDetailMap('resto-detail-gmap', r), 150);
-    }
-    
     // Update floating cart visibility
     updateFloatingCartBar(r);
 }
@@ -3179,7 +3014,7 @@ function switchRestoTab(tabName) {
     
     btns.forEach(btn => {
         btn.classList.remove('active');
-        if (btn.innerText.toLowerCase().includes(tabName === 'checkout' ? 'commander' : tabName === 'booking' ? 'réserver' : tabName === 'group' ? 'groupe' : tabName === 'reviews' ? 'avis' : tabName === 'map' ? 'plan' : 'menu')) {
+        if (btn.innerText.toLowerCase().includes(tabName === 'checkout' ? 'commander' : tabName === 'booking' ? 'réserver' : tabName === 'group' ? 'groupe' : tabName === 'reviews' ? 'avis' : 'menu')) {
             btn.classList.add('active');
         }
     });
@@ -3192,9 +3027,6 @@ function switchRestoTab(tabName) {
     if (r) {
         updateFloatingCartBar(r);
         if (tabName === 'checkout') renderCheckoutTab(r);
-        if (tabName === 'map' && window.googleMapsService) {
-            setTimeout(() => window.googleMapsService.renderRestaurantDetailMap('resto-detail-gmap', r), 100);
-        }
     }
     
     // Window scroll to top of tabs smoothly
@@ -4715,6 +4547,32 @@ window.fetchOrderTracking = async function() {
             } catch (e) {}
         }
 
+        // Vérification automatique des délais d'expiration (1h30 sans réaction ou non réceptionnée)
+        if (store && typeof store.checkAndAutoCancelStaleOrders === 'function') {
+            store.checkAndAutoCancelStaleOrders();
+        }
+
+        const ageMinutes = (store && typeof store.getOrderAgeMinutes === 'function')
+            ? store.getOrderAgeMinutes(latestOrder)
+            : 0;
+        
+        // Règle 1 : Si le restaurant ne marque pas comme reçu (reste "En attente" sans confirmation > 20 min)
+        if (latestOrder.status === 'En attente' && ageMinutes >= 20) {
+            latestOrder.status = 'Annulée';
+            latestOrder.cancelReason = "Délai expiré : Le restaurant n'a pas confirmé la réception de la commande dans le délai imparti.";
+            if (store && typeof store.updateOrderStatus === 'function') {
+                store.updateOrderStatus(latestOrder.id, 'Annulée', latestOrder.cancelReason);
+            }
+        }
+        // Règle 2 : Si la commande est reçue/acceptée mais reste bloquée sans progression après 1h30 (90 min)
+        else if (latestOrder.status !== 'Livrée' && latestOrder.status !== 'Livré' && latestOrder.status !== 'Annulée' && ageMinutes >= 90) {
+            latestOrder.status = 'Annulée';
+            latestOrder.cancelReason = "Délai expiré : Commande automatiquement annulée après 1h30 sans réaction ou finalisation de livraison par le restaurant.";
+            if (store && typeof store.updateOrderStatus === 'function') {
+                store.updateOrderStatus(latestOrder.id, 'Annulée', latestOrder.cancelReason);
+            }
+        }
+
         const r = store.getRestaurantById(latestOrder.restaurant_id || latestOrder.restaurantId);
         const rName = r ? r.name : (latestOrder.restaurantName || 'Restaurant de Thiès');
         const rWhatsapp = r ? (r.whatsapp || r.phone) : null;
@@ -4774,7 +4632,7 @@ window.fetchOrderTracking = async function() {
             statusIcon = '❌';
             stepPercent = 100;
             statusLabel = 'Commande annulée';
-            stepDescription = 'Cette commande a été annulée ou refusée par le restaurant.';
+            stepDescription = latestOrder.cancelReason || 'Cette commande a été automatiquement annulée.';
         }
         
         const isOtpVerified = latestOrder.otpVerified !== false;
@@ -4933,6 +4791,7 @@ window.fetchOrderTracking = async function() {
                         </div>
                         <div style="font-size: 0.82rem; color: var(--text-secondary);">
                             ${pOrder.items ? (Array.isArray(pOrder.items) ? pOrder.items.map(i => `${i.qty}x ${i.name}`).join(', ') : 'Détail') : 'Commande'}
+                            ${pOrder.cancelReason ? `<div style="color: var(--danger); font-size: 0.76rem; margin-top: 3px; font-style: italic;">⚠️ ${pOrder.cancelReason}</div>` : ''}
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px dashed var(--border); font-size: 0.85rem;">
                             <span style="color: var(--text-secondary);">Montant réglé :</span>
@@ -6376,6 +6235,68 @@ window.setupRealtime = function() {
         console.warn("[Supabase Realtime] Setup error:", e);
     }
 };
+
+// Global Listener for local and push order status changes to notify client
+window.addEventListener('thies:order-status-changed', (e) => {
+    try {
+        const detail = e.detail || {};
+        const order = detail.order || {};
+        const orderId = String(detail.orderId || order.id || '');
+        const newStatus = detail.newStatus || order.status || '';
+        const restoName = detail.restaurantName || order.restaurantName || 'votre restaurant';
+
+        // Check if this device is related to this order
+        const trackingOrderId = String(localStorage.getItem('trackingOrderId') || '');
+        const storedCustomerPhone = String(localStorage.getItem('customerPhone') || '');
+        let myHistory = [];
+        try {
+            myHistory = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+        } catch (err) { myHistory = []; }
+
+        const isInHistory = myHistory.some(o => String(o.id) === orderId);
+        const isTracking = trackingOrderId && (trackingOrderId === orderId);
+        const orderPhone = String(order.customerPhone || order.customer_phone || '');
+        const isMatchingPhone = storedCustomerPhone && orderPhone && (storedCustomerPhone.slice(-9) === orderPhone.slice(-9));
+
+        if (isInHistory || isTracking || isMatchingPhone) {
+            // Jouer le son et retour haptique
+            if (typeof window.playNotificationSound === 'function') {
+                window.playNotificationSound();
+            }
+            if (navigator.vibrate) {
+                try { navigator.vibrate([120, 60, 120]); } catch (err) {}
+            }
+
+            let toastTitle = detail.title || '🔔 Suivi de Commande';
+            let toastMessage = detail.body || `Votre commande n°${orderId} chez ${restoName} est : ${newStatus}`;
+            let toastType = (newStatus === 'Livrée' || newStatus === 'Livré' || newStatus === 'Prêt pour livraison') ? 'success' : (newStatus === 'Annulée' ? 'danger' : 'info');
+
+            if (typeof showToast === 'function') {
+                showToast(toastMessage, toastType, {
+                    title: toastTitle,
+                    duration: 7500,
+                    actionText: 'Suivre',
+                    onAction: () => {
+                        if (orderId) localStorage.setItem('trackingOrderId', orderId);
+                        if (typeof router !== 'undefined' && router.navigate) {
+                            router.navigate('/tracking');
+                            setTimeout(() => {
+                                if (typeof window.fetchOrderTracking === 'function') window.fetchOrderTracking();
+                            }, 200);
+                        }
+                    }
+                });
+            }
+
+            // Rafraîchir l'écran de suivi si le client est actuellement dessus
+            if (window.location.hash === '#/tracking' && typeof window.fetchOrderTracking === 'function') {
+                window.fetchOrderTracking();
+            }
+        }
+    } catch (listenerErr) {
+        console.warn("thies:order-status-changed listener error:", listenerErr);
+    }
+});
 
 window.playNotificationSound = function() {
     try {
