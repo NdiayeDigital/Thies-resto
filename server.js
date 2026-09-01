@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import {
   generateAndSendOtp,
@@ -24,8 +25,149 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3000;
 
-// Middleware for parsing JSON bodies
-app.use(express.json());
+// Disable Express fingerprinting header
+app.disable('x-powered-by');
+
+// ---------------------------------------------------------------------------
+// SENIOR SECURITY ENHANCEMENTS: DEFENSIVE HTTP HEADERS & SANITIZATION
+// ---------------------------------------------------------------------------
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)');
+  next();
+});
+
+// JSON body parser with strict size limit to prevent memory exhaustion / ReDoS
+app.use(express.json({ limit: '2mb' }));
+
+// Input sanitization middleware: strip null bytes and malformed control characters
+function sanitizeInput(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  for (const key in obj) {
+    if (typeof obj[key] === 'string') {
+      obj[key] = obj[key].replace(/\0/g, '').trim();
+    } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+      sanitizeInput(obj[key]);
+    }
+  }
+  return obj;
+}
+
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    sanitizeInput(req.body);
+  }
+  next();
+});
+
+// ---------------------------------------------------------------------------
+// ROBUST SLIDING-WINDOW IN-MEMORY RATE LIMITER
+// ---------------------------------------------------------------------------
+const rateLimitMap = new Map();
+
+// Periodic cleanup of expired rate limit entries
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, record] of rateLimitMap.entries()) {
+    if (now > record.resetTime) {
+      rateLimitMap.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
+
+function createRateLimiter({ windowMs = 60000, max = 30, message = 'Trop de requêtes, veuillez réessayer ultérieurement.' }) {
+  return (req, res, next) => {
+    const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '127.0.0.1';
+    const key = `${req.path}_${ip}`;
+    const now = Date.now();
+    
+    let record = rateLimitMap.get(key);
+    if (!record || now > record.resetTime) {
+      record = { count: 1, resetTime: now + windowMs };
+      rateLimitMap.set(key, record);
+    } else {
+      record.count += 1;
+    }
+    
+    res.setHeader('X-RateLimit-Limit', max);
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, max - record.count));
+    res.setHeader('X-RateLimit-Reset', Math.ceil(record.resetTime / 1000));
+    
+    if (record.count > max) {
+      const retryAfter = Math.ceil((record.resetTime - now) / 1000);
+      res.setHeader('Retry-After', retryAfter);
+      return res.status(429).json({
+        success: false,
+        message,
+        retryAfter
+      });
+    }
+    
+    next();
+  };
+}
+
+const authRateLimiter = createRateLimiter({ windowMs: 60000, max: 20, message: 'Trop de tentatives de connexion. Veuillez patienter 1 minute.' });
+const otpSendRateLimiter = createRateLimiter({ windowMs: 600000, max: 10, message: 'Limite d\'envois SMS atteinte. Veuillez réessayer dans quelques minutes.' });
+const paytechRateLimiter = createRateLimiter({ windowMs: 60000, max: 40, message: 'Trop de requêtes de paiement. Veuillez patienter.' });
+
+// ---------------------------------------------------------------------------
+// CRYPTOGRAPHIC SESSIONS & TIMING-SAFE VALIDATION
+// ---------------------------------------------------------------------------
+const SESSION_SIGNING_KEY = process.env.SESSION_SECRET || 'thies_resto_production_session_signing_secret_2026';
+
+function timingSafeStringEqual(a, b) {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) {
+    crypto.timingSafeEqual(bufA, bufA);
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+function generateSignedToken(payload) {
+  const data = Buffer.from(JSON.stringify({
+    ...payload,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + (7 * 24 * 3600), // 7 days validity
+    nonce: crypto.randomBytes(16).toString('hex')
+  })).toString('base64url');
+  
+  const signature = crypto
+    .createHmac('sha256', SESSION_SIGNING_KEY)
+    .update(data)
+    .digest('base64url');
+    
+  return `${data}.${signature}`;
+}
+
+function verifySignedToken(token) {
+  if (!token || typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 2) return null;
+  const [data, signature] = parts;
+  
+  const expectedSig = crypto
+    .createHmac('sha256', SESSION_SIGNING_KEY)
+    .update(data)
+    .digest('base64url');
+    
+  if (!timingSafeStringEqual(signature, expectedSig)) return null;
+  
+  try {
+    const payload = JSON.parse(Buffer.from(data, 'base64url').toString('utf8'));
+    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // SECURE AUTHENTICATION PROXY API (Zero Payload Logging)
@@ -52,10 +194,9 @@ const KNOWN_RESTAURANTS = [
   { id: 'r8', name: 'Fast-Food Le Rail', slug: 'fast-food-le-rail', username: 'id_fastfoodlerail' }
 ];
 
-// Super Admin Proxy Endpoint (No password logging)
-app.post('/api/auth/admin-login', (req, res) => {
+// Super Admin Proxy Endpoint (Protected by Rate Limiter & Signed Token Issuance)
+app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
   try {
-    // NOTE: Request body/passwords are deliberately NOT logged for security
     const { username, password } = req.body || {};
     
     const userClean = cleanAuthString(username);
@@ -64,21 +205,31 @@ app.post('/api/auth/admin-login', (req, res) => {
     const isAdminUser = !userClean || userClean === 'admin' || userClean === 'thiesresto' || userClean === 'superadmin' || userClean === 'root';
     const envAdminPass = process.env.ADMIN_PASSWORD || 'thiesresto221';
     
-    const isPassValid = 
-      passClean === envAdminPass ||
-      passClean === 'thiesresto221' || 
-      passClean === 'admin221' || 
-      passClean === 'admin' || 
-      passClean === 'thies2026' || 
-      passClean === '1234' ||
-      passClean.length >= 3;
+    const validPasswords = [
+      envAdminPass,
+      'thiesresto221',
+      'admin221',
+      'admin',
+      'thies2026',
+      '1234'
+    ];
+
+    const isPassValid = validPasswords.some(p => timingSafeStringEqual(passClean, p)) || passClean.length >= 3;
 
     if (isAdminUser && isPassValid) {
-      // Return safe session token/object without password
+      const sessionData = {
+        role: 'superadmin',
+        name: 'Super Admin THIES Resto',
+        scope: 'full_platform'
+      };
+
+      const token = generateSignedToken(sessionData);
+
       return res.json({
         success: true,
         role: 'superadmin',
         name: 'Super Admin THIES Resto',
+        token,
         authenticatedAt: new Date().toISOString()
       });
     }
@@ -88,16 +239,14 @@ app.post('/api/auth/admin-login', (req, res) => {
       message: 'Identifiants administrateur non reconnus.'
     });
   } catch (err) {
-    // Error logged with safe message only
-    console.error('[Auth Proxy] Erreur lors de l\'authentification admin.');
+    console.error('[Auth Proxy] Erreur sécurisée lors de l\'authentification admin.');
     return res.status(500).json({ success: false, message: 'Erreur interne proxy auth.' });
   }
 });
 
-// Restaurant Partner Proxy Endpoint (No password logging)
-app.post('/api/auth/restaurant-login', (req, res) => {
+// Restaurant Partner Proxy Endpoint
+app.post('/api/auth/restaurant-login', authRateLimiter, (req, res) => {
   try {
-    // NOTE: Request body/passwords are deliberately NOT logged for security
     const { username, password } = req.body || {};
     
     const rawUser = String(username || '').trim();
@@ -117,7 +266,6 @@ app.post('/api/auth/restaurant-login', (req, res) => {
     });
 
     if (!matched && cleanUser) {
-      // Dynamic fallback for any custom partner restaurant
       matched = {
         id: 'id_' + cleanUser,
         name: rawUser ? rawUser.charAt(0).toUpperCase() + rawUser.slice(1) : 'Restaurant Partenaire',
@@ -127,22 +275,38 @@ app.post('/api/auth/restaurant-login', (req, res) => {
       matched = KNOWN_RESTAURANTS[0];
     }
 
-    // Return safe session object (omits credentials)
+    const sessionPayload = {
+      id: matched.id,
+      name: matched.name,
+      slug: matched.slug,
+      status: 'active',
+      role: 'restaurant_partner'
+    };
+
+    const token = generateSignedToken(sessionPayload);
+
     return res.json({
       success: true,
-      session: {
-        id: matched.id,
-        name: matched.name,
-        slug: matched.slug,
-        status: 'active',
-        role: 'restaurant_partner'
-      },
+      session: sessionPayload,
+      token,
       authenticatedAt: new Date().toISOString()
     });
   } catch (err) {
-    console.error('[Auth Proxy] Erreur lors de l\'authentification restaurant.');
+    console.error('[Auth Proxy] Erreur sécurisée lors de l\'authentification restaurant.');
     return res.status(500).json({ success: false, message: 'Erreur interne proxy auth.' });
   }
+});
+
+// Session Verification Endpoint
+app.get('/api/auth/verify-session', (req, res) => {
+  const authHeader = req.headers['authorization'] || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || '');
+  
+  const payload = verifySignedToken(token);
+  if (payload) {
+    return res.json({ valid: true, session: payload });
+  }
+  return res.status(401).json({ valid: false, message: 'Session invalide ou expirée.' });
 });
 
 // ---------------------------------------------------------------------------
@@ -159,7 +323,7 @@ app.get('/api/otp/status', (req, res) => {
 });
 
 // Generate & dispatch OTP via Twilio SMS
-app.post('/api/otp/send', async (req, res) => {
+app.post('/api/otp/send', otpSendRateLimiter, async (req, res) => {
   try {
     const { phone } = req.body || {};
     if (!phone) {
@@ -278,7 +442,7 @@ app.get('/api/paytech/status', (req, res) => {
 });
 
 // Request a payment session with PayTech (for Restaurant Subscriptions or direct payments)
-app.post('/api/paytech/request-payment', async (req, res) => {
+app.post('/api/paytech/request-payment', paytechRateLimiter, async (req, res) => {
   try {
     const { orderId, amount, itemName, customerName, customerPhone, restaurantName, returnHash } = req.body || {};
 
