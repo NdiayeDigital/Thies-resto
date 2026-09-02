@@ -813,18 +813,27 @@ window.renderMobileBottomNav = function() {
     } 
     // 2. Super Admin Session (Central Administration Navigation)
     else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
+        const active = typeof adminActiveTab !== 'undefined' ? adminActiveTab : 'orders';
         nav.innerHTML = `
-            <a href="#" id="bottom-nav-admin-console" class="nav-item active" onclick="router.navigate('/admin'); return false;">
+            <a href="#" id="bottom-nav-admin-console" class="nav-item ${active === 'orders' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('orders'); return false;">
                 <div class="nav-icon"><i class="ri-dashboard-3-line"></i></div>
-                <span>Supervision</span>
+                <span>Console</span>
             </a>
-            <a href="#" id="bottom-nav-admin-chart" class="nav-item" onclick="router.navigate('/politique-admin'); return false;">
-                <div class="nav-icon"><i class="ri-file-text-line"></i></div>
-                <span>Charte</span>
+            <a href="#" id="bottom-nav-admin-restos" class="nav-item ${active === 'active' || active === 'pending' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('active'); return false;">
+                <div class="nav-icon"><i class="ri-store-2-line"></i></div>
+                <span>Restaurants</span>
             </a>
-            <a href="#" id="bottom-nav-admin-logout" class="nav-item" onclick="logoutAdmin(); return false;" style="color: var(--danger);">
-                <div class="nav-icon"><i class="ri-logout-box-r-line"></i></div>
-                <span>Déconnexion</span>
+            <a href="#" id="bottom-nav-admin-create" class="nav-item ${active === 'create' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('create'); return false;">
+                <div class="nav-icon"><i class="ri-add-circle-line"></i></div>
+                <span>Nouveau +</span>
+            </a>
+            <a href="#" id="bottom-nav-admin-customers" class="nav-item ${active === 'customers' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('customers'); return false;">
+                <div class="nav-icon"><i class="ri-user-star-line"></i></div>
+                <span>Clients</span>
+            </a>
+            <a href="#" id="bottom-nav-admin-security" class="nav-item ${active === 'security' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('security'); return false;">
+                <div class="nav-icon"><i class="ri-lock-password-line"></i></div>
+                <span>Sécurité</span>
             </a>
         `;
     }
@@ -1597,8 +1606,12 @@ function updateNavbar() {
     let html = '';
     let drawerHtml = '';
     
-    // 1. SUPER ADMIN MODE (Clean executive navbar, no bloated buttons)
+    // 1. SUPER ADMIN MODE (Direct executive menu requested: Console super admin, Voir restaurant partenaire, Nouveau restaurant +, Répertoire client, Sécurité)
     if (isSuperAdminSession) {
+        const pendingCount = (typeof store !== 'undefined' && store.getRestaurants) 
+            ? store.getRestaurants().filter(r => r.status === 'pending').length 
+            : 0;
+            
         if (currentRestaurantSession) {
             html = `
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
@@ -1617,27 +1630,45 @@ function updateNavbar() {
                 </div>
                 <a href="#" onclick="toggleMobileMenu(); router.navigate('/dashboard'); return false;"><i class="ri-dashboard-3-line"></i> Tableau de bord</a>
                 <a href="#" onclick="toggleMobileMenu(); exitImpersonation(); return false;" style="color: var(--danger); font-weight: 600;"><i class="ri-arrow-go-back-line"></i> Retour Console Globale</a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;"><i class="ri-file-text-line"></i> Charte &amp; Politique Restaurant</a>
                 <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: 600; margin-top: 1rem;"><i class="ri-logout-box-r-line"></i> Déconnexion Super-Admin</a>
             `;
         } else {
             html = `
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <button class="btn btn-secondary btn-sm" onclick="router.navigate('/politique-admin')" style="font-weight: 600; font-size: 0.82rem; padding: 0.35rem 0.75rem;">
-                        <i class="ri-file-text-line"></i> Charte
+                <div class="super-admin-header-nav" style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('orders');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem;">
+                        <i class="ri-dashboard-3-line" style="color: var(--primary);"></i> Console super admin
                     </button>
-                    <button class="btn btn-outline btn-sm" onclick="logoutAdmin()" style="color: var(--danger); border-color: var(--danger); font-weight: 600; font-size: 0.82rem; padding: 0.35rem 0.75rem;">
+                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('active');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem; position: relative;">
+                        <i class="ri-store-2-line" style="color: var(--primary);"></i> Voir restaurant partenaire
+                        ${pendingCount > 0 ? `<span style="background: var(--danger); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 10px; margin-left: 0.35rem;">${pendingCount}</span>` : ''}
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('create');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem;">
+                        <i class="ri-add-circle-line" style="color: var(--success);"></i> Nouveau restaurant +
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('customers');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem;">
+                        <i class="ri-user-star-line" style="color: var(--primary);"></i> Répertoire client
+                    </button>
+                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('security');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem;">
+                        <i class="ri-lock-password-line" style="color: var(--text-secondary);"></i> Sécurité
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="logoutAdmin()" style="color: var(--danger); border-color: var(--danger); font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.65rem; margin-left: 0.25rem;">
                         <i class="ri-logout-box-r-line"></i> Déconnexion
                     </button>
                 </div>
             `;
             drawerHtml = `
                 <div style="padding: 0.75rem; background: rgba(var(--primary-rgb), 0.08); border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border); text-align: center;">
-                    <span style="color: var(--text-primary); font-weight: 700; font-size: 0.9rem;">Supervision Plateforme</span>
+                    <span style="color: var(--text-primary); font-weight: 800; font-size: 0.95rem;">Console Super-Admin</span>
                 </div>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); return false;" style="color: var(--primary); font-weight: 600;"><i class="ri-dashboard-3-line"></i> Console Principale</a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/politique-admin'); return false;"><i class="ri-file-text-line"></i> Charte Restaurant</a>
-                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: 600; margin-top: 1rem;"><i class="ri-logout-box-r-line"></i> Déconnexion</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('orders'); return false;" style="font-weight: 700;"><i class="ri-dashboard-3-line" style="color: var(--primary);"></i> Console super admin</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('active'); return false;" style="font-weight: 700; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="ri-store-2-line" style="color: var(--primary);"></i> Voir restaurant partenaire</span>
+                    ${pendingCount > 0 ? `<span class="badge badge-danger" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">${pendingCount} en attente</span>` : ''}
+                </a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('create'); return false;" style="font-weight: 700;"><i class="ri-add-circle-line" style="color: var(--success);"></i> Nouveau restaurant +</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('customers'); return false;" style="font-weight: 700;"><i class="ri-user-star-line" style="color: var(--primary);"></i> Répertoire client</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('security'); return false;" style="font-weight: 700;"><i class="ri-lock-password-line" style="color: var(--text-secondary);"></i> Sécurité</a>
+                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: 700; margin-top: 1rem;"><i class="ri-logout-box-r-line"></i> Déconnexion</a>
             `;
         }
     } 

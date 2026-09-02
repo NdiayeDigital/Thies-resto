@@ -131,25 +131,37 @@ class Store {
         try {
             const overrides = {};
             const customRestos = [];
+            const seedIds = (typeof SEED_RESTAURANTS !== 'undefined' && Array.isArray(SEED_RESTAURANTS))
+                ? SEED_RESTAURANTS.map(sr => sr.id)
+                : [];
+
             this.data.restaurants.forEach(r => {
-                if (r.menu && r.menu.length > 0) {
-                    overrides[r.id] = {
-                        menu: r.menu,
-                        name: r.name,
-                        coverImage: r.coverImage,
-                        isOpenManual: r.isOpenManual,
-                        address: r.address,
-                        whatsapp: r.whatsapp,
-                        openHours: r.openHours,
-                        status: r.status,
-                        subscriptionPack: r.subscriptionPack
-                    };
-                }
-                // If it's a dynamic or newly added restaurant
-                if (r.id.startsWith('r') && parseInt(r.id.slice(1), 10) > 10 || r.id.startsWith('id_')) {
+                overrides[r.id] = {
+                    menu: r.menu || [],
+                    name: r.name,
+                    coverImage: r.coverImage || r.image,
+                    image: r.image,
+                    isOpenManual: r.isOpenManual,
+                    address: r.address,
+                    whatsapp: r.whatsapp,
+                    openHours: r.openHours,
+                    status: r.status,
+                    subscriptionPack: r.subscriptionPack,
+                    username: r.username,
+                    password: r.password,
+                    category: r.category,
+                    rating: r.rating,
+                    reviewsCount: r.reviewsCount,
+                    createdAt: r.createdAt || new Date().toISOString()
+                };
+                
+                // If it's a pending application, custom restaurant, or non-seed restaurant
+                const isSeed = seedIds.includes(r.id);
+                if (!isSeed || r.status === 'pending' || r.isCustom) {
                     customRestos.push(r);
                 }
             });
+
             localStorage.setItem('thies_restaurant_overrides', JSON.stringify(overrides));
             localStorage.setItem('thies_custom_restaurants', JSON.stringify(customRestos));
             localStorage.setItem('thies_platform_orders', JSON.stringify(this.data.orders));
@@ -281,6 +293,30 @@ class Store {
                             createdAt: (localR && localR.createdAt) ? localR.createdAt : '2026-06-25T00:00:00Z',
                             coverImage: dbR.coverImage || fallbackCover
                         };
+                    });
+
+                    // Retain any pending applications and custom restaurants not present in remote DB
+                    let savedCustoms = [];
+                    try {
+                        savedCustoms = JSON.parse(localStorage.getItem('thies_custom_restaurants') || '[]');
+                    } catch(e) {}
+                    
+                    const localUnsynced = this.data.restaurants.filter(r => 
+                        r.status === 'pending' || 
+                        r.isCustom || 
+                        savedCustoms.some(sc => sc.id === r.id || sc.slug === r.slug)
+                    );
+
+                    localUnsynced.forEach(lu => {
+                        if (!mergedRestos.some(mr => mr.id === lu.id || mr.slug === lu.slug)) {
+                            mergedRestos.push(lu);
+                        }
+                    });
+
+                    savedCustoms.forEach(sc => {
+                        if (!mergedRestos.some(mr => mr.id === sc.id || mr.slug === sc.slug)) {
+                            mergedRestos.push(sc);
+                        }
                     });
 
                     this.data.restaurants = mergedRestos;

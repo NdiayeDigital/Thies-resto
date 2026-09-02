@@ -1025,26 +1025,37 @@ textarea.form-control {
     font-size: 1.25rem;
 }
 
-/* Floating Cart Bar */
+/* Top Floating Cart Button / Pill */
 .floating-cart-bar {
     position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 400px;
-    background: var(--glass-bg);
+    top: 76px;
+    right: 18px;
+    bottom: auto;
+    left: auto;
+    transform: none;
+    width: auto;
+    min-width: 260px;
+    max-width: calc(100vw - 36px);
+    background: var(--bg-card);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--primary);
+    border: 1.5px solid var(--primary);
     border-radius: 50px;
-    padding: 0.75rem 1.25rem;
-    display: flex;
+    padding: 0.55rem 1.15rem;
+    display: none;
     justify-content: space-between;
     align-items: center;
-    z-index: 99;
-    box-shadow: 0 10px 30px rgba(242,107,33,0.3);
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    gap: 0.85rem;
+    z-index: 999;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25), 0 2px 10px rgba(242, 107, 33, 0.2);
+    animation: slideDown 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.floating-cart-bar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.3), 0 4px 15px rgba(242, 107, 33, 0.3);
 }
 
 .floating-cart-info {
@@ -4141,9 +4152,12 @@ footer { padding: 2.5rem 1.5rem 2rem; }
         padding-bottom: 70px;
     }
 
-    /* Move floating cart up to not overlap bottom nav */
+    /* Position top floating cart pill */
     .floating-cart-bar {
-        bottom: 80px !important;
+        top: 70px !important;
+        right: 12px !important;
+        bottom: auto !important;
+        left: auto !important;
     }
     
     /* Move whatsapp floating support button up */
@@ -5202,7 +5216,10 @@ footer { padding: 2.5rem 1.5rem 2rem; }
         padding-bottom: 80px; /* space for bottom nav */
     }
     .floating-cart-bar {
-        bottom: 80px; /* move cart bar above bottom nav */
+        top: 70px !important;
+        right: 12px !important;
+        bottom: auto !important;
+        left: auto !important;
     }
 }
 
@@ -5875,33 +5892,35 @@ footer { padding: 2.5rem 1.5rem 2rem; }
     }
 }
 
-/* Floating Cart Bar Responsiveness (0% Overlap with WhatsApp) */
+/* Floating Cart Bar Responsiveness (Top Floating Pill) */
 .floating-cart-bar {
     position: fixed;
-    bottom: calc(72px + env(safe-area-inset-bottom, 0px));
-    left: 10px;
-    width: calc(100% - 74px);
-    max-width: 380px;
+    top: 74px;
+    right: 16px;
+    bottom: auto;
+    left: auto;
     transform: none;
+    max-width: calc(100vw - 32px);
     background: var(--bg-card);
-    border: 1px solid var(--primary);
-    padding: 0.6rem 0.85rem;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-    display: flex;
+    border: 1.5px solid var(--primary);
+    padding: 0.5rem 0.95rem;
+    border-radius: 40px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    display: none;
     align-items: center;
     justify-content: space-between;
-    z-index: 997;
-    animation: slideUp 0.3s ease;
+    z-index: 999;
 }
 
 @media (min-width: 769px) {
     .floating-cart-bar {
-        bottom: 24px !important;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        width: 90% !important;
-        max-width: 460px !important;
+        top: 78px !important;
+        right: 24px !important;
+        bottom: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: auto !important;
+        max-width: 360px !important;
     }
 }
 
@@ -6622,7 +6641,10 @@ html[data-theme="dark"] .mobile-bottom-nav {
         padding-bottom: 70px !important;
     }
     .floating-cart-bar {
-        bottom: 74px !important;
+        top: 70px !important;
+        right: 12px !important;
+        bottom: auto !important;
+        left: auto !important;
     }
 }
 

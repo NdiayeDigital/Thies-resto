@@ -3145,26 +3145,23 @@ function renderAdminView() {
                 </div>
             </div>
 
-            <!-- Tab Selection Pill Bar -->
+            <!-- Tab Selection Pill Bar (Super Admin Navigation) -->
             <div class="admin-nav-tabs">
                 <button class="admin-nav-tab-btn ${adminActiveTab === 'orders' ? 'active' : ''}" onclick="switchAdminTab('orders')">
-                    <span>🚨 Commandes Direct</span>
+                    <span>🚨 Console Direct</span>
                     <span class="admin-tab-count">${orders.length}</span>
+                </button>
+                <button class="admin-nav-tab-btn ${adminActiveTab === 'active' || adminActiveTab === 'pending' ? 'active' : ''}" onclick="switchAdminTab('active')">
+                    <span>🏪 Voir Restaurant Partenaire</span>
+                    <span class="admin-tab-count">${restos.length}</span>
+                    ${pendingCount > 0 ? `<span class="badge badge-danger" style="font-size: 0.7rem; padding: 0.15rem 0.45rem; margin-left: 0.35rem;">${pendingCount} en attente</span>` : ''}
+                </button>
+                <button class="admin-nav-tab-btn ${adminActiveTab === 'create' ? 'active' : ''}" onclick="switchAdminTab('create')">
+                    <span>➕ Nouveau Restaurant</span>
                 </button>
                 <button class="admin-nav-tab-btn ${adminActiveTab === 'customers' ? 'active' : ''}" onclick="switchAdminTab('customers')">
                     <span>👥 Répertoire Clients</span>
                     <span class="admin-tab-count">${totalCustomersCount}</span>
-                </button>
-                <button class="admin-nav-tab-btn ${adminActiveTab === 'pending' ? 'active' : ''}" onclick="switchAdminTab('pending')">
-                    <span>⏳ Inscriptions</span>
-                    <span class="admin-tab-count">${pendingCount}</span>
-                </button>
-                <button class="admin-nav-tab-btn ${adminActiveTab === 'active' ? 'active' : ''}" onclick="switchAdminTab('active')">
-                    <span>🏪 Réseau Partenaires</span>
-                    <span class="admin-tab-count">${restos.length}</span>
-                </button>
-                <button class="admin-nav-tab-btn ${adminActiveTab === 'create' ? 'active' : ''}" onclick="switchAdminTab('create')">
-                    <span>➕ Nouveau Restaurant</span>
                 </button>
                 <button class="admin-nav-tab-btn ${adminActiveTab === 'accounting' ? 'active' : ''}" onclick="switchAdminTab('accounting')">
                     <span>📊 Rapports & Finances</span>
@@ -3745,6 +3742,248 @@ function renderAdminTabTable() {
                         🚀 Activer et Ajouter au Réseau
                     </button>
                 </form>
+            </div>
+        `;
+    }
+    else if (adminActiveTab === 'active' || adminActiveTab === 'pending') {
+        const allRestosList = store.getRestaurants();
+        window.adminRestoFilter = window.adminRestoFilter || (adminActiveTab === 'pending' ? 'pending' : 'all');
+        window.adminRestoSearch = window.adminRestoSearch || '';
+
+        const pendingList = allRestosList.filter(r => r.status === 'pending');
+        const activeList = allRestosList.filter(r => r.status === 'active' || !r.status);
+        const suspendedList = allRestosList.filter(r => r.status === 'suspended');
+
+        let filtered = allRestosList;
+        if (window.adminRestoFilter === 'pending') {
+            filtered = pendingList;
+        } else if (window.adminRestoFilter === 'active') {
+            filtered = activeList;
+        } else if (window.adminRestoFilter === 'suspended') {
+            filtered = suspendedList;
+        }
+
+        if (window.adminRestoSearch) {
+            const q = window.adminRestoSearch.toLowerCase();
+            filtered = filtered.filter(r => 
+                (r.name && r.name.toLowerCase().includes(q)) ||
+                (r.category && r.category.toLowerCase().includes(q)) ||
+                (r.address && r.address.toLowerCase().includes(q)) ||
+                (r.whatsapp && r.whatsapp.includes(q)) ||
+                (r.username && r.username.toLowerCase().includes(q))
+            );
+        }
+
+        const pendingBannerHtml = pendingList.length > 0 ? `
+            <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(239, 68, 68, 0.08)); border: 1.5px solid rgba(245, 158, 11, 0.4); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 2rem;">
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: center; gap: 0.6rem;">
+                        <span style="font-size: 1.6rem;">⏳</span>
+                        <div>
+                            <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">
+                                ${pendingList.length} Demande${pendingList.length > 1 ? 's' : ''} de Partenariat en attente de validation
+                            </h4>
+                            <p style="margin: 0.2rem 0 0 0; font-size: 0.82rem; color: var(--text-secondary);">
+                                Validez les dossiers pour permettre aux restaurateurs d'accéder immédiatement à leur tableau de bord.
+                            </p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="window.adminRestoFilter = 'pending'; renderAdminTabTable();" style="font-size: 0.8rem; font-weight: 700;">
+                        Voir uniquement les demandes (${pendingList.length})
+                    </button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem;">
+                    ${pendingList.map(r => {
+                        const cleanPhone = (r.whatsapp || '').replace(/[^0-9]/g, '');
+                        const waMsg = encodeURIComponent(`Bonjour ${r.name}, nous avons bien reçu votre demande de partenariat sur THIES Resto. Votre compte a été validé avec succès ! Vous pouvez vous connecter à votre espace gérant.`);
+                        return `
+                            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;">
+                                <div>
+                                    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.4rem;">
+                                        <h5 style="margin: 0; font-weight: 800; font-size: 0.98rem; color: var(--text-primary);">${r.name}</h5>
+                                        <span class="badge badge-warning" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">En attente</span>
+                                    </div>
+                                    <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.35rem;">
+                                        📍 ${r.address || 'Thiès'} &bull; 🏷️ ${r.category || 'Restaurant'}
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: var(--text-primary); font-weight: 600;">
+                                        📞 WhatsApp : <a href="https://wa.me/${cleanPhone}" target="_blank" style="color: var(--primary); text-decoration: underline;">${r.whatsapp}</a>
+                                    </div>
+                                    <div style="font-size: 0.78rem; color: var(--text-secondary); font-family: monospace; margin-top: 0.25rem;">
+                                        Identifiant: ${r.username || r.slug} | Horaires: ${r.openHours || 'Non spécifié'}
+                                    </div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; pt-2; border-top: 1px solid var(--border); padding-top: 0.6rem;">
+                                    <button class="btn btn-primary btn-sm" onclick="approveRestaurant('${r.id}')" style="flex: 1; font-weight: 800; font-size: 0.8rem; padding: 0.45rem 0.65rem;">
+                                        🚀 Valider &amp; Activer
+                                    </button>
+                                    <a href="https://wa.me/${cleanPhone}?text=${waMsg}" target="_blank" class="btn btn-outline btn-sm" style="font-size: 0.8rem; padding: 0.45rem 0.65rem;" title="Discuter sur WhatsApp">
+                                        💬
+                                    </a>
+                                    <button class="btn btn-outline btn-sm" onclick="rejectRestaurant('${r.id}')" style="color: var(--danger); border-color: var(--danger); font-size: 0.8rem; padding: 0.45rem 0.65rem;" title="Rejeter la demande">
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        ` : '';
+
+        const restoCardsHtml = filtered.length > 0 ? `
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 1.25rem;">
+                ${filtered.map(r => {
+                    const cleanPhone = (r.whatsapp || '').replace(/[^0-9]/g, '');
+                    const menuCount = (r.menu && Array.isArray(r.menu)) ? r.menu.length : 0;
+                    const isPending = r.status === 'pending';
+                    const isSuspended = r.status === 'suspended';
+                    const pack = r.subscriptionPack || 'Aucun (Gratuit)';
+
+                    let statusBadge = `<span class="badge badge-success" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;">🟢 Actif</span>`;
+                    if (isPending) {
+                        statusBadge = `<span class="badge badge-warning" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;">⏳ En attente</span>`;
+                    } else if (isSuspended) {
+                        statusBadge = `<span class="badge badge-danger" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;">🔴 Suspendu</span>`;
+                    }
+
+                    return `
+                        <div class="admin-card-section" style="padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between; border-radius: 16px; border: 1px solid var(--border); transition: transform 0.2s ease;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.85rem;">
+                                    <img src="${r.coverImage || r.image || 'icon.png'}" alt="${r.name}" style="width: 50px; height: 50px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border);">
+                                    <div style="flex: 1; min-width: 0;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;">
+                                            <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                                ${r.name}
+                                            </h4>
+                                            ${statusBadge}
+                                        </div>
+                                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                                            🏷️ ${r.category || 'Général'} &bull; ⭐ ${r.rating || '5.0'} (${r.reviewsCount || 0} avis)
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="background: var(--bg-secondary); border-radius: 10px; padding: 0.65rem 0.85rem; font-size: 0.8rem; margin-bottom: 0.85rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: var(--text-secondary);">📍 Adresse :</span>
+                                        <span style="font-weight: 600; color: var(--text-primary);">${r.address || 'Thiès'}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: var(--text-secondary);">📞 WhatsApp :</span>
+                                        <a href="https://wa.me/${cleanPhone}" target="_blank" style="font-weight: 600; color: var(--primary); text-decoration: underline;">${r.whatsapp}</a>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span style="color: var(--text-secondary);">🍽️ Plats au menu :</span>
+                                        <span style="font-weight: 700; color: var(--text-primary);">${menuCount} plat${menuCount > 1 ? 's' : ''}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <span style="color: var(--text-secondary);">📦 Formule SaaS :</span>
+                                        <select onchange="updateRestaurantPack('${r.id}', this.value)" style="font-size: 0.75rem; font-weight: 700; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; padding: 0.15rem 0.35rem;">
+                                            <option value="Aucun (Gratuit)" ${pack.includes('Gratuit') ? 'selected' : ''}>Aucun (Gratuit)</option>
+                                            <option value="Pack Standard (15 000 FCFA/mois)" ${pack.includes('Standard') ? 'selected' : ''}>Pack Standard</option>
+                                            <option value="Pack Entreprise (25 000 FCFA/mois)" ${pack.includes('Entreprise') ? 'selected' : ''}>Pack Entreprise</option>
+                                            <option value="Pack Annuel VIP (150 000 FCFA/an)" ${pack.includes('Annuel') ? 'selected' : ''}>Pack VIP Annuel</option>
+                                        </select>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--border); padding-top: 0.35rem; font-family: monospace; font-size: 0.75rem;">
+                                        <span style="color: var(--text-secondary);">Login / Pass :</span>
+                                        <span style="color: var(--text-primary); font-weight: 700;">${r.username || r.slug} / ${r.password ? r.password : '••••••'}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; pt-2; border-top: 1px solid var(--border); padding-top: 0.75rem;">
+                                ${isPending ? `
+                                    <button class="btn btn-primary btn-sm" onclick="approveRestaurant('${r.id}')" style="flex: 1; font-weight: 800; font-size: 0.8rem; padding: 0.45rem;">
+                                        🚀 Activer
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-primary btn-sm" onclick="impersonateRestaurant('${r.id}')" style="flex: 1; font-weight: 700; font-size: 0.78rem; padding: 0.45rem;" title="Gérer le menu et les commandes">
+                                        <i class="ri-dashboard-line"></i> Espace Gérant
+                                    </button>
+                                `}
+
+                                <button class="btn btn-outline btn-sm" onclick="router.navigate('/r/${r.slug}')" style="font-size: 0.78rem; padding: 0.45rem 0.65rem;" title="Voir la fiche publique">
+                                    <i class="ri-external-link-line"></i> Fiche
+                                </button>
+
+                                ${isSuspended ? `
+                                    <button class="btn btn-ghost btn-sm" onclick="reactivateRestaurant('${r.id}')" style="color: var(--success); font-size: 0.78rem; padding: 0.45rem 0.65rem;" title="Réactiver ce restaurant">
+                                        <i class="ri-play-circle-line"></i>
+                                    </button>
+                                ` : (r.status === 'active' ? `
+                                    <button class="btn btn-ghost btn-sm" onclick="suspendRestaurant('${r.id}')" style="color: var(--warning); font-size: 0.78rem; padding: 0.45rem 0.65rem;" title="Suspendre temporairement">
+                                        <i class="ri-pause-circle-line"></i>
+                                    </button>
+                                ` : '')}
+
+                                <button class="btn btn-ghost btn-sm" onclick="deleteRestaurantAdmin('${r.id}')" style="color: var(--danger); font-size: 0.78rem; padding: 0.45rem 0.65rem;" title="Supprimer définitivement">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        ` : `
+            <div style="text-align: center; padding: 3rem 1.5rem; background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border);">
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🔍</div>
+                <h4 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem 0;">Aucun restaurant trouvé</h4>
+                <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1.25rem 0;">Aucun établissement ne correspond à vos critères de recherche ou filtre actuel.</p>
+                <button class="btn btn-primary btn-sm" onclick="window.adminRestoFilter = 'all'; window.adminRestoSearch = ''; renderAdminTabTable();">
+                    Réinitialiser les filtres
+                </button>
+            </div>
+        `;
+
+        tableContainer.innerHTML = `
+            <div>
+                <!-- Header / Intro -->
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div>
+                        <h3 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem 0;">
+                            🏪 Réseau des Restaurants Partenaires
+                        </h3>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0;">
+                            Supervisez l'ensemble des ${allRestosList.length} établissements partenaires inscrits sur la plateforme THIES Resto.
+                        </p>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="switchAdminTab('create')" style="font-weight: 800; font-size: 0.85rem; padding: 0.5rem 1rem; border-radius: 10px;">
+                        ➕ Nouveau Restaurant
+                    </button>
+                </div>
+
+                <!-- Pending Applications Alert (if any) -->
+                ${pendingBannerHtml}
+
+                <!-- Search & Filters Control Bar -->
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.85rem; margin-bottom: 1.5rem; background: var(--bg-card); padding: 0.85rem 1.15rem; border-radius: 14px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                        <button class="btn btn-sm ${window.adminRestoFilter === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="window.adminRestoFilter = 'all'; renderAdminTabTable();" style="font-size: 0.8rem; font-weight: 700;">
+                            Tous (${allRestosList.length})
+                        </button>
+                        <button class="btn btn-sm ${window.adminRestoFilter === 'active' ? 'btn-primary' : 'btn-ghost'}" onclick="window.adminRestoFilter = 'active'; renderAdminTabTable();" style="font-size: 0.8rem; font-weight: 700;">
+                            🟢 Actifs (${activeList.length})
+                        </button>
+                        <button class="btn btn-sm ${window.adminRestoFilter === 'pending' ? 'btn-primary' : 'btn-ghost'}" onclick="window.adminRestoFilter = 'pending'; renderAdminTabTable();" style="font-size: 0.8rem; font-weight: 700; position: relative;">
+                            ⏳ En attente (${pendingList.length})
+                            ${pendingList.length > 0 ? `<span style="background: var(--danger); color: #fff; width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 0.35rem;"></span>` : ''}
+                        </button>
+                        <button class="btn btn-sm ${window.adminRestoFilter === 'suspended' ? 'btn-primary' : 'btn-ghost'}" onclick="window.adminRestoFilter = 'suspended'; renderAdminTabTable();" style="font-size: 0.8rem; font-weight: 700;">
+                            🔴 Suspendus (${suspendedList.length})
+                        </button>
+                    </div>
+
+                    <div style="position: relative; min-width: 260px;">
+                        <input type="text" class="form-control" placeholder="🔍 Rechercher restaurant, gérant, téléphone..." value="${window.adminRestoSearch}" oninput="window.adminRestoSearch = this.value; renderAdminTabTable();" style="font-size: 0.85rem; padding: 0.45rem 0.85rem; border-radius: 10px;">
+                    </div>
+                </div>
+
+                <!-- Restaurants List -->
+                ${restoCardsHtml}
             </div>
         `;
     }
@@ -4454,6 +4693,16 @@ window.updateRestaurantPack = function(id, packName) {
     renderAdminView();
 };
 
+window.deleteRestaurantAdmin = function(id) {
+    const r = store.getRestaurantById(id);
+    if (!r) return;
+    if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement le restaurant "${r.name}" du réseau THIES Resto ? Cette action est irréversible.`)) {
+        store.deleteRestaurant(id);
+        showToast(`Restaurant "${r.name}" supprimé avec succès`, "info");
+        renderAdminView();
+    }
+};
+
 function impersonateRestaurant(id) {
     const r = store.getRestaurantById(id);
     if (!r) return;
@@ -4470,6 +4719,14 @@ function exitImpersonation() {
     showToast("Retour à la console Super-Admin", "info");
     router.navigate('/admin');
 }
+
+window.approveRestaurant = approveRestaurant;
+window.rejectRestaurant = rejectRestaurant;
+window.suspendRestaurant = suspendRestaurant;
+window.reactivateRestaurant = reactivateRestaurant;
+window.impersonateRestaurant = impersonateRestaurant;
+window.exitImpersonation = exitImpersonation;
+
 
 function exportOrdersToCSV() {
     const r = store.getRestaurantById(currentRestaurantSession.id);
