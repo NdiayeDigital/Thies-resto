@@ -165,6 +165,7 @@ class Router {
         if (typeof updateNavbar === 'function') updateNavbar();
         if (typeof updateBottomNavFromRoute === 'function') updateBottomNavFromRoute(hash);
         if (typeof updateFaqVisibility === 'function') updateFaqVisibility(hash);
+        if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
 
         // Ensure top position after DOM render
         requestAnimationFrame(() => this.forceScrollTop());

@@ -3343,6 +3343,37 @@ function updateFloatingCartBar(r) {
 }
 window.updateFloatingCartBar = updateFloatingCartBar;
 
+function openCartTab() {
+    if (!cart || !cart.items || cart.items.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast("Votre panier est actuellement vide.", "info");
+        }
+        return;
+    }
+    
+    const restoId = cart.restaurantId;
+    if (restoId && typeof store !== 'undefined') {
+        const r = store.getRestaurantById(restoId);
+        if (r && r.slug) {
+            if (typeof router !== 'undefined' && router.navigate) {
+                router.navigate(`/r/${r.slug}`);
+                setTimeout(() => {
+                    if (typeof switchRestoTab === 'function') {
+                        switchRestoTab('checkout');
+                    }
+                }, 100);
+                return;
+            }
+        }
+    }
+    
+    // Fallback: if restaurant not found, navigate to home
+    if (typeof router !== 'undefined' && router.navigate) {
+        router.navigate('/');
+    }
+}
+window.openCartTab = openCartTab;
+
 // Checkout logic moved to js/ui-checkout.js
 
 
