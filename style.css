@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+/* Google Fonts imported directly via <link> in index.html <head> for zero-waterfall parallel loading */
 
 :root,
 [data-theme="light"],
@@ -3329,7 +3329,7 @@ footer { padding: 2.5rem 1.5rem 2rem; }
     }
     
     .hamburger-btn {
-        display: flex;
+        display: none !important;
     }
     
     .logo-container {
@@ -4468,12 +4468,6 @@ footer { padding: 2.5rem 1.5rem 2rem; }
     border-color: var(--border);
 }
 
-@media (max-width: 768px) {
-    #hamburger-btn {
-        display: none !important;
-    }
-}
-
 /* --- PREMIUM UI UPGRADES --- */
 .restaurant-card {
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease !important;
@@ -4612,50 +4606,6 @@ footer { padding: 2.5rem 1.5rem 2rem; }
     color: var(--primary);
     margin-bottom: 1rem;
 }
-
-/* Admin Datatable */
-.premium-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 0.5rem;
-}
-.premium-table th {
-    text-align: left;
-    padding: 1rem;
-    color: var(--text-secondary);
-    font-weight: 600;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-.premium-table td {
-    padding: 1rem;
-    background: var(--bg-card);
-    border-top: 1px solid transparent;
-    border-bottom: 1px solid transparent;
-}
-.premium-table tr td:first-child {
-    border-top-left-radius: 12px;
-    border-bottom-left-radius: 12px;
-    border-left: 1px solid transparent;
-}
-.premium-table tr td:last-child {
-    border-top-right-radius: 12px;
-    border-bottom-right-radius: 12px;
-    border-right: 1px solid transparent;
-}
-.premium-table tr:hover td {
-    background: rgba(255,255,255,0.03);
-    border-color: var(--border);
-}
-
-@media (max-width: 768px) {
-    #hamburger-btn {
-        display: none !important;
-    }
-}
-
-/* --- PREMIUM UI UPGRADES --- */
 .restaurant-card {
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease, border-color 0.3s ease !important;
     border: 1px solid var(--glass-border) !important;

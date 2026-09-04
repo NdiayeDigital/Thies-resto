@@ -108,9 +108,10 @@ const SAMPLE_REVIEWS = [
     { author: "Michel Dupont", rating: 5, comment: "Un trésor caché à Thiès. Le service Teranga est excellent.", date: "2026-06-14", reply: "Merci Michel ! Heureux de vous avoir accueilli." }
 ];
 
-// Celebration Animation Helper
+// Celebration Animation Helper (Lazy-loaded on demand)
 window.triggerCelebration = function() {
-    if (typeof confetti === 'function') {
+    const runAnimation = () => {
+        if (typeof confetti !== 'function') return;
         const duration = 3000;
         const end = Date.now() + duration;
 
@@ -134,6 +135,16 @@ window.triggerCelebration = function() {
                 requestAnimationFrame(frame);
             }
         }());
+    };
+
+    if (typeof confetti === 'function') {
+        runAnimation();
+    } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js';
+        script.async = true;
+        script.onload = runAnimation;
+        document.head.appendChild(script);
     }
 };
 
@@ -439,7 +450,7 @@ const SEED_RESTAURANTS = [
                             1
                         ],
         "is_open_manual":  true,
-        "status":  "pending",
+        "status":  "active",
         "username":  "le-jardin-des-saveurs",
         "cover_image":  "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600\u0026auto=format\u0026fit=crop\u0026q=60",
         "menu":  [

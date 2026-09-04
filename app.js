@@ -649,7 +649,16 @@ function saveOrderToHistory(order, restaurantName) {
 }
 function getOrderHistory() {
     try {
-        return JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+        const isAuth = typeof customerAuth !== 'undefined' && customerAuth.isAuthenticated();
+        if (!isAuth) return [];
+        const user = typeof customerAuth !== 'undefined' ? customerAuth.getUser() : null;
+        const currentPhone = user && user.phone ? cleanPhoneNumber(user.phone) : '';
+        const history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+        if (!currentPhone) return history;
+        return history.filter(h => {
+            const hPhone = cleanPhoneNumber(h.customerPhone || '');
+            return !hPhone || hPhone.endsWith(currentPhone.slice(-9)) || currentPhone.endsWith(hPhone.slice(-9));
+        });
     } catch(e) { return []; }
 }
 
@@ -813,25 +822,21 @@ window.renderMobileBottomNav = function() {
     } 
     // 2. Super Admin Session (Central Administration Navigation)
     else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
-        const active = typeof adminActiveTab !== 'undefined' ? adminActiveTab : 'orders';
+        const active = typeof adminActiveTab !== 'undefined' ? adminActiveTab : 'console';
         nav.innerHTML = `
-            <a href="#" id="bottom-nav-admin-console" class="nav-item ${active === 'orders' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('orders'); return false;">
+            <a href="#" id="bottom-nav-admin-console" class="nav-item ${active === 'console' || active === 'orders' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('console'); return false;">
                 <div class="nav-icon"><i class="ri-dashboard-3-line"></i></div>
                 <span>Console</span>
             </a>
-            <a href="#" id="bottom-nav-admin-restos" class="nav-item ${active === 'active' || active === 'pending' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('active'); return false;">
+            <a href="#" id="bottom-nav-admin-nouveau" class="nav-item ${active === 'nouveau' || active === 'restaurants' || active === 'active' || active === 'pending' || active === 'create' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('nouveau'); return false;">
                 <div class="nav-icon"><i class="ri-store-2-line"></i></div>
-                <span>Restaurants</span>
+                <span>Nouveau</span>
             </a>
-            <a href="#" id="bottom-nav-admin-create" class="nav-item ${active === 'create' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('create'); return false;">
-                <div class="nav-icon"><i class="ri-add-circle-line"></i></div>
-                <span>Nouveau +</span>
-            </a>
-            <a href="#" id="bottom-nav-admin-customers" class="nav-item ${active === 'customers' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('customers'); return false;">
+            <a href="#" id="bottom-nav-admin-customers" class="nav-item ${active === 'clients' || active === 'customers' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('clients'); return false;">
                 <div class="nav-icon"><i class="ri-user-star-line"></i></div>
                 <span>Clients</span>
             </a>
-            <a href="#" id="bottom-nav-admin-security" class="nav-item ${active === 'security' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('security'); return false;">
+            <a href="#" id="bottom-nav-admin-security" class="nav-item ${active === 'securite' || active === 'security' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('securite'); return false;">
                 <div class="nav-icon"><i class="ri-lock-password-line"></i></div>
                 <span>Sécurité</span>
             </a>
@@ -1634,41 +1639,24 @@ function updateNavbar() {
             `;
         } else {
             html = `
-                <div class="super-admin-header-nav" style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
-                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('orders');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem;">
-                        <i class="ri-dashboard-3-line" style="color: var(--primary);"></i> Console super admin
-                    </button>
-                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('active');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem; position: relative;">
-                        <i class="ri-store-2-line" style="color: var(--primary);"></i> Voir restaurant partenaire
-                        ${pendingCount > 0 ? `<span style="background: var(--danger); color: #fff; font-size: 0.65rem; font-weight: 800; padding: 0.1rem 0.4rem; border-radius: 10px; margin-left: 0.35rem;">${pendingCount}</span>` : ''}
-                    </button>
-                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('create');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem;">
-                        <i class="ri-add-circle-line" style="color: var(--success);"></i> Nouveau restaurant +
-                    </button>
-                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('customers');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem;">
-                        <i class="ri-user-star-line" style="color: var(--primary);"></i> Répertoire client
-                    </button>
-                    <button class="btn btn-ghost btn-sm" onclick="router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('security');" style="font-weight: 700; font-size: 0.82rem; padding: 0.4rem 0.65rem;">
-                        <i class="ri-lock-password-line" style="color: var(--text-secondary);"></i> Sécurité
-                    </button>
-                    <button class="btn btn-outline btn-sm" onclick="logoutAdmin()" style="color: var(--danger); border-color: var(--danger); font-weight: 700; font-size: 0.8rem; padding: 0.35rem 0.65rem; margin-left: 0.25rem;">
-                        <i class="ri-logout-box-r-line"></i> Déconnexion
-                    </button>
-                </div>
+                <button class="btn btn-outline btn-sm" onclick="logoutAdmin()" style="color: var(--danger); border-color: var(--danger); font-weight: 700; font-size: 0.85rem; padding: 0.45rem 0.85rem; border-radius: 10px; display: inline-flex; align-items: center; gap: 0.4rem;" title="Déconnexion Super-Admin">
+                    <i class="ri-logout-box-r-line"></i>
+                    <span>Déconnexion</span>
+                </button>
             `;
             drawerHtml = `
                 <div style="padding: 0.75rem; background: rgba(var(--primary-rgb), 0.08); border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border); text-align: center;">
                     <span style="color: var(--text-primary); font-weight: 800; font-size: 0.95rem;">Console Super-Admin</span>
                 </div>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('orders'); return false;" style="font-weight: 700;"><i class="ri-dashboard-3-line" style="color: var(--primary);"></i> Console super admin</a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('active'); return false;" style="font-weight: 700; display: flex; align-items: center; justify-content: space-between;">
-                    <span><i class="ri-store-2-line" style="color: var(--primary);"></i> Voir restaurant partenaire</span>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('console'); return false;" style="font-weight: 700;"><i class="ri-dashboard-3-line" style="color: var(--primary);"></i> Console</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('nouveau'); return false;" style="font-weight: 700; display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="ri-store-2-line" style="color: var(--primary);"></i> Nouveau (Restaurants & Ajout)</span>
                     ${pendingCount > 0 ? `<span class="badge badge-danger" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;">${pendingCount} en attente</span>` : ''}
                 </a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('create'); return false;" style="font-weight: 700;"><i class="ri-add-circle-line" style="color: var(--success);"></i> Nouveau restaurant +</a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('customers'); return false;" style="font-weight: 700;"><i class="ri-user-star-line" style="color: var(--primary);"></i> Répertoire client</a>
-                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('security'); return false;" style="font-weight: 700;"><i class="ri-lock-password-line" style="color: var(--text-secondary);"></i> Sécurité</a>
-                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: 700; margin-top: 1rem;"><i class="ri-logout-box-r-line"></i> Déconnexion</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('clients'); return false;" style="font-weight: 700;"><i class="ri-user-star-line" style="color: var(--primary);"></i> Clients</a>
+                <a href="#" onclick="toggleMobileMenu(); router.navigate('/admin'); if (typeof switchAdminTab === 'function') switchAdminTab('securite'); return false;" style="font-weight: 700;"><i class="ri-lock-password-line" style="color: var(--text-secondary);"></i> Sécurité</a>
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.75rem 0;">
+                <a href="#" onclick="toggleMobileMenu(); logoutAdmin(); return false;" style="color: var(--danger); font-weight: 700; margin-top: 0.5rem;"><i class="ri-logout-box-r-line"></i> Déconnexion</a>
             `;
         }
     } 
@@ -1954,10 +1942,11 @@ router.add('#/', () => {
     const totalOrders = store.data.orders ? store.data.orders.length : 0;
     const totalReservations = store.data.reservations ? store.data.reservations.length : 0;
 
-    // Load order history
-    const history = getOrderHistory();
+    // Load order history (Strictement réservé aux clients connectés)
+    const isCustomerLoggedIn = typeof customerAuth !== 'undefined' && customerAuth.isAuthenticated();
+    const history = isCustomerLoggedIn ? getOrderHistory() : [];
     let historyHtml = '';
-    if (history.length > 0) {
+    if (isCustomerLoggedIn && history.length > 0) {
         let itemsHtml = '';
         history.slice(0, 5).forEach(h => {
             itemsHtml += `
@@ -1968,7 +1957,7 @@ router.add('#/', () => {
                     </div>
                     <div style="text-align:right;">
                         <strong style="color:var(--primary)">${h.total} FCFA</strong>
-                        <div class="history-item-meta">${h.date}</div>
+                        <div class="history-item-meta">${h.date || ''}</div>
                     </div>
                 </div>
             `;
@@ -1976,7 +1965,7 @@ router.add('#/', () => {
         historyHtml = `
             <section class="history-mini">
                 <div class="section-header">
-                    <h2 class="section-title">Vos Dernières Commandes (Persistant)</h2>
+                    <h2 class="section-title">Vos Dernières Commandes</h2>
                 </div>
                 ${itemsHtml}
             </section>
@@ -2003,7 +1992,7 @@ router.add('#/', () => {
                     <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; max-width: 640px; margin-left: auto; margin-right: auto;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
                     <div class="search-container hover-3d" style="margin: 0 auto 1.25rem auto; width: 100%; max-width: 500px; position: relative;">
-                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.1rem 3rem 1.1rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth); font-size: 16px;">
+                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="debouncedApplyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.1rem 3rem 1.1rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth); font-size: 16px;">
                         <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher">🔍</button>
                     </div>
 
@@ -2594,6 +2583,16 @@ window.renderDishSkeletons = function renderDishSkeletons(count = 4) {
     return html;
 };
 
+let _applyFiltersDebounceTimer = null;
+window.debouncedApplyFilters = function() {
+    if (_applyFiltersDebounceTimer) clearTimeout(_applyFiltersDebounceTimer);
+    _applyFiltersDebounceTimer = setTimeout(() => {
+        if (typeof window.applyFilters === 'function') {
+            window.applyFilters();
+        }
+    }, 120);
+};
+
 window.applyFilters = function applyFilters() {
     const searchInput = document.getElementById('search-input-field');
     const query = searchInput ? searchInput.value.toLowerCase().trim() : '';
@@ -2703,7 +2702,7 @@ window.applyFilters = function applyFilters() {
                     ${isFav ? '❤️' : '🤍'}
                 </button>
                 <div class="restaurant-card-header">
-                    <img src="${coverUrl}" class="restaurant-card-img" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
+                    <img src="${coverUrl}" class="restaurant-card-img" alt="${r.name}" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
                     <div class="restaurant-card-gradient"></div>
                     <div class="restaurant-card-status">
                         ${statusBadge}
@@ -2999,6 +2998,9 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
                 </a>
                 <button class="btn btn-primary btn-sm" onclick="shareRestaurant('${r.name}', '${r.slug}')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
                     📤 Partager à un ami
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="window.showAffiliateProgramModal('${r.name}')" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; border-radius: 12px;">
+                    🤝 Devenir affilié
                 </button>
             </div>
         </div>
@@ -4922,7 +4924,7 @@ router.add('#/explore', () => {
 
             <!-- Search input -->
             <div class="search-container" style="margin-bottom: 1.25rem; width: 100%; position: relative;">
-                <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="applyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1rem 3rem 1rem 1.25rem; width: 100%; font-size: 16px;">
+                <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="debouncedApplyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1rem 3rem 1rem 1.25rem; width: 100%; font-size: 16px;">
                 <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher">🔍</button>
             </div>
 
@@ -5096,109 +5098,83 @@ router.add('#/profile', () => {
     if (cartBar) cartBar.style.display = 'none';
 
     // Load local customer data
-    const isCustomerAuth = typeof customerAuth !== 'undefined' && customerAuth.isAuthenticated();
     const customerUser = typeof customerAuth !== 'undefined' ? customerAuth.getUser() : {};
     
     const customerPhone = customerUser.phone || localStorage.getItem('customerPhone') || '';
     const customerName = customerUser.name || localStorage.getItem('customerName') || '';
     const customerAddress = customerUser.address || localStorage.getItem('customerAddress') || '';
 
-    // Compute initials
-    let initials = '👤';
-    if (customerName) {
-        const parts = customerName.trim().split(' ');
-        if (parts.length >= 2) {
-            initials = (parts[0][0] + parts[1][0]).toUpperCase();
-        } else if (parts[0]) {
-            initials = parts[0].substring(0, 2).toUpperCase();
-        }
-    }
+    const hasSavedCoords = !!(customerName || customerPhone || customerAddress);
 
     container.innerHTML = `
-        <div class="account-screen" style="max-width: 620px; margin: 0 auto; padding: 1.25rem 1rem 3rem;">
+        <div class="account-screen" style="max-width: 580px; margin: 0 auto; padding: 1.5rem 1rem 3.5rem; box-sizing: border-box;">
             
-            <!-- TOP PROFILE HEADER CARD (Comme les applications modernes) -->
-            <div class="account-header-card" style="background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
-                <div style="display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap;">
-                    <div class="account-avatar" style="width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, #F26B21, #F59E0B); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800; box-shadow: 0 4px 14px rgba(242, 107, 33, 0.35); flex-shrink: 0;">
-                        ${initials}
+            <!-- TOP COMPTE CLIENT HEADER CARD -->
+            <div class="account-header-card" style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); padding: 1.35rem 1.25rem; margin-bottom: 1.25rem; box-shadow: var(--shadow-sm); box-sizing: border-box;">
+                <div style="display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.15rem;">
+                    <!-- Icône de la personne -->
+                    <div class="account-avatar" style="width: 52px; height: 52px; border-radius: 50%; background: var(--primary); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; font-weight: 800; flex-shrink: 0; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);">
+                        <i class="ri-user-3-line"></i>
                     </div>
-                    <div class="account-info" style="flex: 1; min-width: 200px;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.25rem;">
-                            <h2 style="margin: 0; font-size: 1.35rem; font-weight: 800; color: var(--text-primary); font-family: var(--font-serif);">
-                                ${customerName || 'Gourmet de Thiès'}
-                            </h2>
-                            ${isCustomerAuth ? `
-                                <span style="font-size: 0.72rem; background: rgba(16, 185, 129, 0.15); color: #059669; padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 700; border: 1px solid rgba(16, 185, 129, 0.25); display: inline-flex; align-items: center; gap: 0.25rem;">
-                                    ✓ Vérifié
-                                </span>
-                            ` : `
-                                <span style="font-size: 0.72rem; background: rgba(242, 107, 33, 0.12); color: var(--primary); padding: 0.2rem 0.6rem; border-radius: 12px; font-weight: 700;">
-                                    ⭐ Compte Client
-                                </span>
-                            `}
-                        </div>
-                        
-                        <div style="display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.88rem; color: var(--text-secondary);">
-                            <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                <span>📱</span>
-                                <span style="color: var(--text-primary); font-weight: 600;">${customerPhone || 'Numéro WhatsApp non renseigné'}</span>
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 0.4rem;">
-                                <span>📍</span>
-                                <span>${customerAddress || 'Adresse de livraison à Thiès non renseignée'}</span>
-                            </div>
-                        </div>
+                    <!-- En haut à droite : Compte Client et sous-texte -->
+                    <div style="flex: 1; min-width: 0;">
+                        <h2 style="margin: 0 0 0.25rem 0; font-size: 1.18rem; font-weight: 800; color: var(--text-primary); word-break: break-word; line-height: 1.25;">
+                            ${customerName || 'Compte Client'}
+                        </h2>
+                        <p style="margin: 0; font-size: 0.84rem; color: var(--text-secondary); line-height: 1.4;">
+                            ${hasSavedCoords 
+                                ? `${customerPhone ? `<span style="display: inline-flex; align-items: center; gap: 0.35rem; color: var(--text-primary); font-weight: 600;"><i class="ri-phone-line" style="color: var(--primary);"></i> ${customerPhone}</span>` : ''}${customerAddress ? `<br><span style="display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.2rem;"><i class="ri-map-pin-line" style="color: var(--primary);"></i> ${customerAddress}</span>` : ''}` 
+                                : 'Enregistrez vos coordonnées pour commander facilement.'}
+                        </p>
                     </div>
                 </div>
 
-                <!-- Profile Action Bar -->
-                <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; pt-3; border-top: 1px solid var(--border); padding-top: 1rem; flex-wrap: wrap;">
-                    <button class="btn btn-primary btn-sm" onclick="toggleProfileEditForm()" style="border-radius: 12px; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 1rem; flex: 1;">
-                        ✏️ Modifier mes coordonnées
-                    </button>
-                    ${isCustomerAuth ? `
-                        <button class="btn btn-secondary btn-sm" onclick="if(typeof customerAuth !== 'undefined') customerAuth.logout(); else clearLocalCustomerData();" style="border-radius: 12px; font-weight: 600; font-size: 0.85rem; padding: 0.5rem 1rem; color: var(--danger);">
-                            🚪 Déconnexion
-                        </button>
-                    ` : `
-                        <button class="btn btn-secondary btn-sm" onclick="if(typeof customerAuth !== 'undefined') customerAuth.openModal(); else router.navigate('/auth');" style="border-radius: 12px; font-weight: 700; font-size: 0.85rem; padding: 0.5rem 1rem;">
-                            ⚡ Connexion
-                        </button>
-                    `}
-                </div>
+                <!-- Bouton Renseigner mes coordonnées (garanti sans débordement) -->
+                <button type="button" class="btn btn-primary" onclick="window.openProfileEditForm()" style="width: 100%; border-radius: 12px; font-weight: 700; font-size: 0.88rem; padding: 0.65rem 1rem; display: flex; align-items: center; justify-content: center; gap: 0.45rem; box-sizing: border-box; text-align: center; white-space: normal;">
+                    <i class="ri-edit-line"></i>
+                    <span>${hasSavedCoords ? 'Modifier mes coordonnées' : 'Renseigner mes coordonnées'}</span>
+                </button>
             </div>
 
-            <!-- MON PROFIL & COORDONNÉES FORM -->
-            <div class="account-group" id="profile-edit-card" style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
-                <div style="padding: 1.25rem 1.25rem 0.5rem;">
-                    <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0 0 0.25rem; color: var(--text-primary);">Mes Coordonnées de Livraison</h3>
-                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;">Ces informations sont utilisées pour pré-remplir automatiquement vos commandes à Thiès.</p>
+            <!-- FORMULAIRE COORDONNÉES CLIENT (Affiché au clic) -->
+            <div class="account-group" id="profile-edit-card" style="display: none; background: var(--bg-card); border-radius: 18px; border: 1.5px solid var(--primary); overflow: hidden; margin-bottom: 1.25rem; box-shadow: var(--shadow-sm); box-sizing: border-box;">
+                <div style="padding: 1rem 1.25rem 0.65rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border);">
+                    <div>
+                        <h3 style="font-size: 1rem; font-weight: 800; margin: 0 0 0.15rem; color: var(--text-primary);">Coordonnées &amp; Identifiants</h3>
+                        <p style="font-size: 0.78rem; color: var(--text-secondary); margin: 0;">Utilisées pour vos commandes à Thiès.</p>
+                    </div>
+                    <button type="button" onclick="window.closeProfileEditForm()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); padding: 0.25rem;" title="Fermer">✕</button>
                 </div>
 
                 <div style="padding: 1rem 1.25rem 1.25rem;">
-                    <form id="profile-form" onsubmit="saveProfile(event)">
+                    <form id="profile-form" onsubmit="window.saveProfile(event)">
                         <div class="form-group" style="margin-bottom: 0.85rem;">
-                            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Nom Complet <span style="color: var(--primary);">*</span></label>
-                            <input type="text" id="profile-name" class="form-control" value="${customerName}" placeholder="Ex: Awa Diop" required style="padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: 12px;">
+                            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Nom et prénom <span style="color: var(--primary);">*</span></label>
+                            <input type="text" id="profile-name" class="form-control" value="${customerName}" placeholder="Ex: Awa Diop" required style="padding: 0.7rem 0.9rem; font-size: 0.92rem; border-radius: 10px; width: 100%; box-sizing: border-box;">
                         </div>
                         <div class="form-group" style="margin-bottom: 0.85rem;">
-                            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Numéro de Téléphone WhatsApp <span style="color: var(--primary);">*</span></label>
-                            <input type="tel" id="profile-phone" class="form-control" value="${customerPhone}" placeholder="Ex: 77 123 45 67" required style="padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: 12px;">
+                            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Numéro WhatsApp <span style="color: var(--primary);">*</span></label>
+                            <input type="tel" id="profile-phone" class="form-control" value="${customerPhone}" placeholder="Ex: 77 123 45 67" required style="padding: 0.7rem 0.9rem; font-size: 0.92rem; border-radius: 10px; width: 100%; box-sizing: border-box;">
+                            <div id="profile-phone-hint" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">Format : 77, 78, 76, 70, 75</div>
                         </div>
-                        <div class="form-group" style="margin-bottom: 1rem;">
-                            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Adresse / Quartier par défaut (Thiès)</label>
-                            <input type="text" id="profile-address" class="form-control" value="${customerAddress}" placeholder="Ex: Cité Lamy, Grand Standing, Randène, Tivaouane..." style="padding: 0.75rem 1rem; font-size: 0.95rem; border-radius: 12px;">
+                        <div class="form-group" style="margin-bottom: 1.15rem;">
+                            <label style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); display: block; margin-bottom: 0.35rem;">Adresse / Quartier (Thiès)</label>
+                            <input type="text" id="profile-address" class="form-control" value="${customerAddress}" placeholder="Ex: Cité Lamy, Grand Standing, Randène..." style="padding: 0.7rem 0.9rem; font-size: 0.92rem; border-radius: 10px; width: 100%; box-sizing: border-box;">
                         </div>
-                        <button type="submit" class="btn btn-primary btn-block" style="border-radius: 14px; font-weight: 700; padding: 0.75rem; font-size: 0.95rem;">
-                            💾 Enregistrer mes coordonnées
-                        </button>
+                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                            <button type="submit" class="btn btn-primary" style="border-radius: 10px; font-weight: 700; padding: 0.7rem 1.25rem; font-size: 0.9rem; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                                <i class="ri-save-line"></i> Enregistrer
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="window.closeProfileEditForm()" style="border-radius: 10px; font-weight: 600; padding: 0.7rem 1rem; font-size: 0.9rem;">
+                                Annuler
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
 
-            <!-- RACCOURCIS & ACTIVITÉ -->
-            <div class="account-group" style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);">
+            <!-- RACCOURCIS & SERVICES -->
+            <div class="account-group" style="background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 1.25rem; box-shadow: var(--shadow-sm);">
                 <div class="account-group-title" style="font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); padding: 1rem 1.25rem 0.5rem;">Services &amp; Raccourcis</div>
                 
                 <div class="account-item-row" onclick="router.navigate('/favorites')">
@@ -5212,7 +5188,7 @@ router.add('#/profile', () => {
                 <div class="account-item-row" onclick="router.navigate('/tracking')">
                     <div class="account-item-left">
                         <span class="account-item-icon"><i class="ri-file-list-3-line"></i></span>
-                        <span>Suivi de commande en direct</span>
+                        <span>Suivi de commande</span>
                     </div>
                     <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
@@ -5220,7 +5196,7 @@ router.add('#/profile', () => {
                 <div class="account-item-row" onclick="showPaymentMethodsModal()">
                     <div class="account-item-left">
                         <span class="account-item-icon"><i class="ri-bank-card-line"></i></span>
-                        <span>Moyens de paiement acceptés (Wave, Orange Money)</span>
+                        <span>Moyens de paiement</span>
                     </div>
                     <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
@@ -5228,18 +5204,18 @@ router.add('#/profile', () => {
                 <div class="account-item-row" onclick="showPromoDiscountsModal()">
                     <div class="account-item-left">
                         <span class="account-item-icon"><i class="ri-coupon-3-line"></i></span>
-                        <span>Bons plans &amp; Réductions</span>
+                        <span>Offres et réductions</span>
                     </div>
                     <span class="account-item-arrow"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
             </div>
 
             <!-- EFFACER DONNÉES LOCALES -->
-            <div class="account-group" style="background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm);">
+            <div class="account-group" style="background: var(--bg-card); border-radius: 18px; border: 1px solid var(--border); overflow: hidden; box-shadow: var(--shadow-sm);">
                 <div class="account-item-row" onclick="clearLocalCustomerData()" style="color: var(--danger);">
                     <div class="account-item-left" style="color: var(--danger);">
                         <span class="account-item-icon" style="color: var(--danger);"><i class="ri-delete-bin-line"></i></span>
-                        <span style="font-weight: 700;">Effacer mes données locales</span>
+                        <span style="font-weight: 700;">Effacer mes coordonnées</span>
                     </div>
                     <span class="account-item-arrow" style="color: var(--danger);"><i class="ri-arrow-right-s-line"></i></span>
                 </div>
@@ -5248,15 +5224,102 @@ router.add('#/profile', () => {
     `;
 });
 
-window.toggleProfileEditForm = function() {
-    const card = document.getElementById('profile-edit-card');
+window.openProfileEditForm = function() {
+    const formCard = document.getElementById('profile-edit-card');
     const input = document.getElementById('profile-name');
-    if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (formCard) {
+        formCard.style.display = 'block';
+        formCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         if (input) {
-            setTimeout(() => input.focus(), 250);
+            setTimeout(() => input.focus(), 200);
+        }
+        if (typeof window.attachRealtimePhoneValidation === 'function') {
+            window.attachRealtimePhoneValidation('profile-phone', 'profile-phone-hint');
         }
     }
+};
+
+window.closeProfileEditForm = function() {
+    const formCard = document.getElementById('profile-edit-card');
+    if (formCard) formCard.style.display = 'none';
+};
+
+window.toggleProfileEditForm = function() {
+    window.openProfileEditForm();
+};
+
+window.showAffiliateProgramModal = function(source = 'general') {
+    const supportPhone = '221784799882';
+    const waText = encodeURIComponent(`Bonjour l'équipe THIES Resto 👋\n\nJe souhaite rejoindre le *Programme Affilié & Ambassadeur* de la plateforme à Thiès (Réf: ${source}).\n\n👤 Mon Nom : \n📱 Téléphone WhatsApp : \n📍 Quartier à Thiès : \n\nMerci de m'indiquer la démarche et mes liens de parrainage !`);
+    const waLink = `https://wa.me/${supportPhone}?text=${waText}`;
+
+    alertModal("Programme Affilié & Ambassadeur 🤝", `
+        <div style="text-align: left; padding: 0.25rem 0;">
+            <div style="background: linear-gradient(135deg, #F26B21, #F59E0B); color: white; padding: 1.25rem; border-radius: 18px; margin-bottom: 1.25rem; box-shadow: 0 4px 15px rgba(242,107,33,0.3);">
+                <div style="font-size: 0.78rem; font-weight: 800; background: rgba(255,255,255,0.25); color: white; display: inline-block; padding: 2px 10px; border-radius: 12px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Opportunité Partenaire à Thiès
+                </div>
+                <h3 style="margin: 0 0 0.35rem; font-size: 1.25rem; font-weight: 800; color: white;">Gagnez des revenus en recommandant la gastronomie thiessoise</h3>
+                <p style="margin: 0; font-size: 0.85rem; opacity: 0.95; line-height: 1.4;">
+                    Partagez votre amour pour les bons plats de Thiès et recevez des commissions directes sur chaque restaurant apporté et chaque commande parrainée.
+                </p>
+            </div>
+
+            <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.75rem 0;">
+                📋 Conditions &amp; Avantages du Programme
+            </h4>
+
+            <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.5rem;">
+                <div style="padding: 0.75rem 0.9rem; background: var(--bg-input); border-radius: 14px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
+                    <span style="font-size: 1.3rem; margin-top: 1px;">👥</span>
+                    <div>
+                        <strong style="color: var(--text-primary); font-size: 0.9rem;">1. Inscription Ouverte &amp; Gratuite</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; line-height: 1.35;">
+                            Accessible à tous : résidents de Thiès, créateurs de contenu, étudiants, coursiers et gourmets passionnés.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="padding: 0.75rem 0.9rem; background: var(--bg-input); border-radius: 14px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
+                    <span style="font-size: 1.3rem; margin-top: 1px;">💰</span>
+                    <div>
+                        <strong style="color: var(--text-primary); font-size: 0.9rem;">2. Commissions Transparentes &amp; Immédiates</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; line-height: 1.35;">
+                            Prime attractive sur chaque nouveau restaurant partenaire validé + pourcentages sur les volumes de commande affiliés.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="padding: 0.75rem 0.9rem; background: var(--bg-input); border-radius: 14px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
+                    <span style="font-size: 1.3rem; margin-top: 1px;">🌊</span>
+                    <div>
+                        <strong style="color: var(--text-primary); font-size: 0.9rem;">3. Paiement Direct Wave / Orange Money</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; line-height: 1.35;">
+                            Vos commissions sont versées directement sur votre numéro Mobile Money sans délai ni frais cachés.
+                        </div>
+                    </div>
+                </div>
+
+                <div style="padding: 0.75rem 0.9rem; background: var(--bg-input); border-radius: 14px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
+                    <span style="font-size: 1.3rem; margin-top: 1px;">🚀</span>
+                    <div>
+                        <strong style="color: var(--text-primary); font-size: 0.9rem;">4. Accompagnement &amp; Outils Promo</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; line-height: 1.35;">
+                            QR Codes personnalisés, liens de partage et support WhatsApp réactif dédié aux affiliés.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOUTON DE CONTACT SUPPORT WHATSAPP -->
+            <a href="${waLink}" target="_blank" class="btn btn-primary btn-block" style="background: #25D366; border-color: #25D366; color: white; font-weight: 800; font-size: 0.95rem; padding: 0.85rem 1.25rem; border-radius: 14px; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 15px rgba(37,211,102,0.35);">
+                <i class="ri-whatsapp-line" style="font-size: 1.2rem;"></i> Postuler &amp; Contacter le Support WhatsApp
+            </a>
+            <div style="text-align: center; margin-top: 0.5rem; font-size: 0.76rem; color: var(--text-secondary);">
+                Réponse rapide garantie par notre équipe locale à Thiès (+221 78 479 98 82)
+            </div>
+        </div>
+    `);
 };
 
 window.showPaymentMethodsModal = function() {
@@ -5267,7 +5330,9 @@ window.showPaymentMethodsModal = function() {
             </p>
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
-                    <span style="font-size: 1.5rem; margin-top: 2px;">💵</span>
+                    <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(16, 185, 129, 0.12); color: #059669; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0;">
+                        <i class="ri-money-dollar-circle-line"></i>
+                    </div>
                     <div>
                         <strong style="color: var(--text-primary); font-size: 0.95rem;">1. Espèces à la Livraison (Cash on Delivery)</strong>
                         <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem; line-height: 1.4;">
@@ -5276,7 +5341,22 @@ window.showPaymentMethodsModal = function() {
                     </div>
                 </div>
                 <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
-                    <span style="font-size: 1.5rem; margin-top: 2px;">🌊</span>
+                    <div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">
+                        <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style="border-radius:4px;" title="Wave Sénégal">
+                            <circle cx="24" cy="24" r="24" fill="#1DC3EC"/>
+                            <path d="M24 8C17.4 8 12 13.4 12 20C12 24.2 13.8 27.8 16.8 30.2V39C16.8 40.1 17.9 41 19 41H29C30.1 41 31.2 40.1 31.2 39V30.2C34.2 27.8 36 24.2 36 20C36 13.4 30.6 8 24 8Z" fill="#0F172A"/>
+                            <path d="M24 13C19.6 13 16 16.6 16 21C16 24.2 18 26.8 20.5 28V37.5H27.5V28C30 26.8 32 24.2 32 21C32 16.6 28.4 13 24 13Z" fill="#FFFFFF"/>
+                            <circle cx="20.5" cy="18.5" r="1.8" fill="#0F172A"/>
+                            <circle cx="27.5" cy="18.5" r="1.8" fill="#0F172A"/>
+                            <path d="M21.5 23C22.2 24.2 23 24.8 24 24.8C25 24.8 25.8 24.2 26.5 23" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/>
+                        </svg>
+                        <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style="border-radius:4px;" title="Orange Money">
+                            <rect width="48" height="48" rx="8" fill="#000000"/>
+                            <circle cx="24" cy="24" r="17" fill="#FF7900"/>
+                            <path d="M15 24C15 19 19 15 24 15C29 15 33 19 33 24C33 29 29 33 24 33" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
+                            <circle cx="24" cy="24" r="3.5" fill="#FFFFFF"/>
+                        </svg>
+                    </div>
                     <div>
                         <strong style="color: var(--text-primary); font-size: 0.95rem;">2. Paiement d'Avance ou à Réception (Wave / Orange Money)</strong>
                         <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem; line-height: 1.4;">
@@ -5330,10 +5410,14 @@ window.saveProfile = function(e) {
         if (name) localStorage.setItem('customerName', name);
         if (phone) localStorage.setItem('customerPhone', phone);
         if (address) localStorage.setItem('customerAddress', address);
-        showToast("Profil enregistré avec succès !", "success");
     }
     
-    router.navigate('/profile');
+    showToast("Coordonnées enregistrées avec succès !", "success");
+    
+    // Re-render the profile page so the edit form collapses back to the compact summary card
+    if (typeof router !== 'undefined' && router.routes && router.routes['#/profile']) {
+        router.routes['#/profile']();
+    }
 };
 
 // ----------------------------------------------------
@@ -5552,9 +5636,11 @@ window.renderRevenueChart = function(orders) {
     
     if (window.revenueChartInstance) {
         window.revenueChartInstance.destroy();
+        window.revenueChartInstance = null;
     }
-    
-    if(typeof Chart !== 'undefined') {
+
+    const buildChart = () => {
+        if (typeof Chart === 'undefined') return;
         window.revenueChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
@@ -5581,6 +5667,16 @@ window.renderRevenueChart = function(orders) {
                 }
             }
         });
+    };
+
+    if (typeof Chart !== 'undefined') {
+        buildChart();
+    } else {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+        script.async = true;
+        script.onload = buildChart;
+        document.head.appendChild(script);
     }
 };
 
@@ -6686,19 +6782,22 @@ window.toggleDishAvailability = function(dishId, currentStatus) {
     });
 };
 
-// Initialize app when data is ready
+// FAST FIRST RENDER: Render instant UI immediately from local store cache (0ms network delay)
+if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+router.start();
+
+// Background revalidation: smoothly refresh live data once server/Supabase sync resolves
 if (typeof store !== 'undefined' && store.syncPromise) {
     store.syncPromise.then(() => {
-        if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
-        router.start();
+        const hash = window.location.hash || '#/';
+        if (hash === '#/' || hash === '' || hash === '#/explore') {
+            if (typeof applyFilters === 'function') {
+                applyFilters();
+            }
+        }
     }).catch(err => {
-        console.error("Failed to load initial data:", err);
-        if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
-        router.start();
+        console.warn("Background initial sync notice:", err);
     });
-} else {
-    if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
-    router.start();
 }
 
 // ==================== PHASE 5: PWA INSTALLATION ====================

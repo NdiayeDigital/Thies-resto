@@ -43,14 +43,91 @@ try {
     console.warn("Session storage restore warning:", e);
 }
 
-// Supabase Configuration
-const SUPABASE_URL = 'https://eyrayquciqyswshiwtwb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cmF5cXVjaXF5c3dzaGl3dHdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDQyNjQsImV4cCI6MjA5NzQ4MDI2NH0.8_VJvm9xiwmqX3oLD9L1b9W7r7T-b9OfJ2WIyST3FoM';
+// Supabase Configuration & Dynamic Connection Management
+const DEFAULT_SUPABASE_URL = 'https://eyrayquciqyswshiwtwb.supabase.co';
+const DEFAULT_SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cmF5cXVjaXF5c3dzaGl3dHdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDQyNjQsImV4cCI6MjA5NzQ4MDI2NH0.8_VJvm9xiwmqX3oLD9L1b9W7r7T-b9OfJ2WIyST3FoM';
+
+let currentSupabaseUrl = (typeof localStorage !== 'undefined' && localStorage.getItem('thies_supabase_url')) || DEFAULT_SUPABASE_URL;
+let currentSupabaseKey = (typeof localStorage !== 'undefined' && localStorage.getItem('thies_supabase_key')) || DEFAULT_SUPABASE_ANON_KEY;
 let supabaseClient = null;
 
-if (typeof supabase !== 'undefined' && SUPABASE_ANON_KEY !== 'YOUR_SUPABASE_ANON_KEY') {
-    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+function initSupabaseClient(url = currentSupabaseUrl, key = currentSupabaseKey) {
+    if (typeof supabase !== 'undefined' && key && key !== 'YOUR_SUPABASE_ANON_KEY') {
+        try {
+            supabaseClient = supabase.createClient(url, key);
+            window.supabaseClient = supabaseClient;
+            return supabaseClient;
+        } catch (e) {
+            console.warn('[Supabase] Init error:', e);
+            return null;
+        }
+    }
+    return null;
 }
+
+initSupabaseClient();
+
+// Helper functions for UI configuration
+window.getSupabaseConfig = function() {
+    return {
+        url: (typeof localStorage !== 'undefined' && localStorage.getItem('thies_supabase_url')) || DEFAULT_SUPABASE_URL,
+        key: (typeof localStorage !== 'undefined' && localStorage.getItem('thies_supabase_key')) || DEFAULT_SUPABASE_ANON_KEY,
+        isCustom: !!(typeof localStorage !== 'undefined' && localStorage.getItem('thies_supabase_url'))
+    };
+};
+
+window.setSupabaseConfig = function(url, key) {
+    if (typeof localStorage !== 'undefined') {
+        if (url) localStorage.setItem('thies_supabase_url', url.trim());
+        if (key) localStorage.setItem('thies_supabase_key', key.trim());
+    }
+    currentSupabaseUrl = url ? url.trim() : DEFAULT_SUPABASE_URL;
+    currentSupabaseKey = key ? key.trim() : DEFAULT_SUPABASE_ANON_KEY;
+    const client = initSupabaseClient(currentSupabaseUrl, currentSupabaseKey);
+    if (typeof setupRealtime === 'function') {
+        setupRealtime();
+    }
+    return client;
+};
+
+window.resetSupabaseConfigToDefault = function() {
+    if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('thies_supabase_url');
+        localStorage.removeItem('thies_supabase_key');
+    }
+    currentSupabaseUrl = DEFAULT_SUPABASE_URL;
+    currentSupabaseKey = DEFAULT_SUPABASE_ANON_KEY;
+    return initSupabaseClient(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_ANON_KEY);
+};
+
+window.testSupabaseConnection = async function() {
+    if (!supabaseClient) {
+        initSupabaseClient();
+    }
+    if (!supabaseClient) {
+        return { success: false, message: "Client Supabase non initialisé (bibliothèque en cours de chargement)." };
+    }
+    try {
+        const start = performance.now();
+        const { data, error } = await supabaseClient.from('orders').select('id').limit(1);
+        const latency = Math.round(performance.now() - start);
+        if (error) {
+            // Even if table doesn't have open SELECT or is empty, we reached the Supabase API
+            return {
+                success: true,
+                latency,
+                message: `Connexion au serveur Supabase validée (${latency} ms).`
+            };
+        }
+        return {
+            success: true,
+            latency,
+            message: `Connexion active et synchronisée avec Supabase (${latency} ms).`
+        };
+    } catch (e) {
+        return { success: false, message: `Erreur de connexion Supabase : ${e.message}` };
+    }
+};
 
 // App Local Database state manager (with Supabase sync)
 class Store {
@@ -108,11 +185,16 @@ class Store {
         // Ensure order numbers are indexed 1..N per restaurant
         this.resequenceOrders();
 
-        // Background sync with Supabase
-        if (supabaseClient) {
-            this.syncPromise = this.syncFromSupabase();
-        } else {
-            this.syncPromise = Promise.resolve();
+        // Background sync with Supabase and Express Server API
+        this.syncPromise = this.syncFromSupabase();
+
+        // Continuous real-time live synchronization (every 5 seconds)
+        if (typeof window !== 'undefined') {
+            setInterval(() => {
+                try {
+                    this.syncLiveServerData();
+                } catch(e) {}
+            }, 5000);
         }
 
         // Auto-check and cancel stale/unacknowledged orders
@@ -219,7 +301,130 @@ class Store {
         }
     }
 
+    // High-frequency live synchronization (every 5 seconds) for real-time customer-restaurant orders and partner/subscription updates
+    async syncLiveServerData() {
+        if (this._isSyncingLive) return;
+        this._isSyncingLive = true;
+
+        try {
+            // 1. Synchronize Orders (Customer -> Restaurant)
+            const ordersResp = await fetch('/api/orders');
+            if (ordersResp.ok) {
+                const ordersData = await ordersResp.json();
+                if (ordersData && Array.isArray(ordersData.orders)) {
+                    let hasNewOrder = false;
+                    let hasStatusChange = false;
+                    const brandNewOrders = [];
+
+                    ordersData.orders.forEach(so => {
+                        const existingIdx = this.data.orders.findIndex(o => o.id === so.id);
+                        if (existingIdx === -1) {
+                            this.data.orders.unshift(so);
+                            hasNewOrder = true;
+                            brandNewOrders.push(so);
+                        } else {
+                            const cur = this.data.orders[existingIdx];
+                            if (cur.status !== so.status || cur.cancelReason !== so.cancelReason) {
+                                this.data.orders[existingIdx] = { ...cur, ...so };
+                                hasStatusChange = true;
+                            }
+                        }
+                    });
+
+                    if (hasNewOrder || hasStatusChange) {
+                        this.save();
+                        window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
+                            detail: { newOrders: brandNewOrders, hasStatusChange }
+                        }));
+                    }
+                }
+            }
+
+            // 2. Synchronize Restaurants & Subscriptions (Partner -> Super Admin)
+            const isAdm = typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession;
+            const restosResp = await fetch(`/api/restaurants?all=${isAdm ? 'true' : 'false'}`);
+            if (restosResp.ok) {
+                const restosData = await restosResp.json();
+                if (restosData && Array.isArray(restosData.restaurants)) {
+                    let restoUpdates = false;
+                    let pendingPartnersCount = 0;
+
+                    restosData.restaurants.forEach(sr => {
+                        const existing = this.data.restaurants.find(r => r.id === sr.id || r.slug === sr.slug);
+                        if (existing) {
+                            let changed = false;
+                            if (existing.status !== sr.status) { existing.status = sr.status; changed = true; }
+                            if (existing.subscriptionPack !== sr.subscriptionPack) { existing.subscriptionPack = sr.subscriptionPack; changed = true; }
+                            if (existing.subscriptionPaidAt !== sr.subscriptionPaidAt) { existing.subscriptionPaidAt = sr.subscriptionPaidAt; changed = true; }
+                            if (existing.subscriptionMethod !== sr.subscriptionMethod) { existing.subscriptionMethod = sr.subscriptionMethod; changed = true; }
+                            if (existing.hasPaidSubscription !== sr.hasPaidSubscription) { existing.hasPaidSubscription = sr.hasPaidSubscription; changed = true; }
+                            if (changed) restoUpdates = true;
+                        } else {
+                            this.data.restaurants.push(sr);
+                            restoUpdates = true;
+                        }
+                        if (sr.status === 'pending') pendingPartnersCount++;
+                    });
+
+                    if (restoUpdates) {
+                        this.save();
+                        window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
+                            detail: { pendingCount: pendingPartnersCount }
+                        }));
+                    }
+                }
+            }
+        } catch (e) {
+            // Non-critical network notice
+        } finally {
+            this._isSyncingLive = false;
+        }
+    }
+
     async syncFromSupabase() {
+        // Also fetch from server API to ensure no registrations or orders are missed
+        try {
+            const isAdm = typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession;
+            const srvResp = await fetch(`/api/restaurants?all=${isAdm ? 'true' : 'false'}`);
+            if (srvResp.ok) {
+                const srvData = await srvResp.json();
+                if (srvData && Array.isArray(srvData.restaurants)) {
+                    srvData.restaurants.forEach(sr => {
+                        const existing = this.data.restaurants.find(r => r.id === sr.id || r.slug === sr.slug);
+                        if (existing) {
+                            if (sr.status) existing.status = sr.status;
+                            if (sr.subscriptionPack) existing.subscriptionPack = sr.subscriptionPack;
+                            if (sr.subscriptionPaidAt) existing.subscriptionPaidAt = sr.subscriptionPaidAt;
+                            if (sr.subscriptionMethod) existing.subscriptionMethod = sr.subscriptionMethod;
+                            if (sr.hasPaidSubscription !== undefined) existing.hasPaidSubscription = sr.hasPaidSubscription;
+                        } else {
+                            this.data.restaurants.push(sr);
+                        }
+                    });
+                }
+            }
+
+            // Sync server orders
+            const ordersResp = await fetch('/api/orders');
+            if (ordersResp.ok) {
+                const ordersData = await ordersResp.json();
+                if (ordersData && Array.isArray(ordersData.orders)) {
+                    ordersData.orders.forEach(so => {
+                        const existingIdx = this.data.orders.findIndex(o => o.id === so.id);
+                        if (existingIdx === -1) {
+                            this.data.orders.unshift(so);
+                        } else {
+                            if (this.data.orders[existingIdx].status !== so.status) {
+                                this.data.orders[existingIdx].status = so.status;
+                            }
+                        }
+                    });
+                }
+            }
+        } catch (e) {
+            console.warn("Server sync background notice:", e.message);
+        }
+
         if (!supabaseClient) return;
         try {
             console.log("Syncing with Supabase...");
@@ -537,6 +742,17 @@ class Store {
     }
 
     async pushRestaurantToSupabase(resto) {
+        // Broadcast to central server for instant Super Admin and multi-device visibility
+        try {
+            await fetch('/api/restaurants/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(resto)
+            });
+        } catch (e) {
+            console.warn("Server restaurant sync notice:", e.message);
+        }
+
         if (!supabaseClient) return;
         try {
             if (isSuperAdminSession) {
@@ -649,6 +865,17 @@ class Store {
     }
 
     async pushOrderToSupabase(order) {
+        // Broadcast to central server for instant live order dispatch
+        try {
+            await fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(order)
+            });
+        } catch (e) {
+            console.warn("Server order sync notice:", e.message);
+        }
+
         if (!supabaseClient) return;
         try {
             const isOtp = order.otpVerified !== false;
@@ -761,14 +988,15 @@ class Store {
         let changed = false;
         
         this.data.restaurants.forEach(r => {
-            // Mock created date if not present. In a real DB, this is the registration date.
+            // Registration date
             const createdAt = new Date(r.createdAt || '2026-06-26T00:00:00Z');
             const diffTime = Math.abs(currentDate - createdAt);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             
-            // Suspend restaurant if 3 months (90 days) free trial has expired and no paid package is active
-            let packSubscribed = r.subscriptionPack || 'Aucun (Gratuit)';
-            if (diffDays > 90 && r.status === 'active' && packSubscribed === 'Aucun (Gratuit)') {
+            // Suspend restaurant if 7 days free trial has expired and no paid package is active
+            let packSubscribed = r.subscriptionPack || 'Essai 7 Jours (Gratuit)';
+            const isPaid = packSubscribed && !packSubscribed.includes('Gratuit') && !packSubscribed.includes('Essai') && !packSubscribed.includes('Aucun');
+            if (diffDays > 7 && r.status === 'active' && !isPaid) {
                 r.status = 'suspended';
                 changed = true;
                 this.pushRestaurantToSupabase(r);
@@ -966,6 +1194,13 @@ class Store {
         this.data.restaurants = this.data.restaurants.filter(r => r.id !== id);
         this.save();
         this.deleteRestaurantFromSupabase(id);
+        try {
+            fetch('/api/admin/restaurants/reject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ restaurantId: id })
+            }).catch(() => {});
+        } catch (e) {}
     }
 
     getOrdersByRestaurant(restaurantId) {
@@ -1405,6 +1640,124 @@ class Store {
         } catch(e) {}
 
         return { success: false, verified: false, message: "Code incorrect" };
+    }
+
+    // =========================================================================
+    // MULTI-TIER BACKUP, EXPORT & RESTORATION (Cloud & Local)
+    // =========================================================================
+    exportPlatformBackup() {
+        const backupData = {
+            platform: "THIES Resto",
+            version: "2.5.0-production",
+            exportedAt: new Date().toISOString(),
+            restaurants: this.data.restaurants || [],
+            orders: this.data.orders || [],
+            reservations: this.data.reservations || [],
+            usedRewards: this.data.usedRewards || {}
+        };
+
+        const jsonStr = JSON.stringify(backupData, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const filename = `thies_resto_backup_${new Date().toISOString().slice(0,10)}_${Date.now().toString().slice(-4)}.json`;
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        return backupData;
+    }
+
+    async importPlatformBackup(jsonData) {
+        try {
+            const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+            if (!data || typeof data !== 'object') {
+                throw new Error("Format JSON de sauvegarde invalide.");
+            }
+
+            // Safety snapshot of existing data in localStorage before restore
+            localStorage.setItem('thies_pre_restore_backup', JSON.stringify(this.data));
+
+            let restoredRestos = 0;
+            let restoredOrders = 0;
+
+            if (Array.isArray(data.restaurants) && data.restaurants.length > 0) {
+                data.restaurants.forEach(restoredR => {
+                    const idx = this.data.restaurants.findIndex(r => r.id === restoredR.id || r.slug === restoredR.slug);
+                    if (idx >= 0) {
+                        this.data.restaurants[idx] = { ...this.data.restaurants[idx], ...restoredR };
+                    } else {
+                        this.data.restaurants.push(restoredR);
+                    }
+                    restoredRestos++;
+                });
+            }
+
+            if (Array.isArray(data.orders) && data.orders.length > 0) {
+                data.orders.forEach(restoredO => {
+                    const idx = this.data.orders.findIndex(o => o.id === restoredO.id);
+                    if (idx >= 0) {
+                        this.data.orders[idx] = { ...this.data.orders[idx], ...restoredO };
+                    } else {
+                        this.data.orders.push(restoredO);
+                    }
+                    restoredOrders++;
+                });
+            }
+
+            if (Array.isArray(data.reservations)) {
+                this.data.reservations = data.reservations;
+            }
+
+            if (data.usedRewards) {
+                this.data.usedRewards = { ...(this.data.usedRewards || {}), ...data.usedRewards };
+            }
+
+            this.save();
+
+            // Asynchronously sync restored data to Supabase and backend
+            this.forceFullSync().catch(e => console.warn("Notice: background sync after restore:", e));
+
+            return {
+                success: true,
+                restoredRestos,
+                restoredOrders,
+                message: `Restauration réussie : ${restoredRestos} restaurants et ${restoredOrders} commandes chargés.`
+            };
+        } catch (e) {
+            console.error("Erreur lors de la restauration du fichier de sauvegarde:", e);
+            return {
+                success: false,
+                message: e.message || "Erreur lors de la lecture du fichier de sauvegarde."
+            };
+        }
+    }
+
+    async forceFullSync() {
+        console.log("Démarrage de la synchronisation complète vers Cloud/Supabase...");
+        let syncErrors = 0;
+        
+        // 1. Sync restaurants
+        for (const resto of (this.data.restaurants || [])) {
+            try {
+                await this.pushRestaurantToSupabase(resto);
+            } catch (e) {
+                syncErrors++;
+            }
+        }
+
+        // 2. Sync recent orders
+        for (const order of (this.data.orders || []).slice(0, 50)) {
+            try {
+                await this.pushOrderToSupabase(order);
+            } catch (e) {
+                syncErrors++;
+            }
+        }
+
+        return { success: syncErrors === 0, syncErrors };
     }
 }
 

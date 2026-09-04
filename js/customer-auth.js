@@ -73,19 +73,27 @@
                 return { success: false, message: "Numéro de téléphone requis" };
             }
 
-            const cleanPhone = cleanCustomerPhone(userData.phone);
-            const fullName = (userData.name || `${userData.firstname || ''} ${userData.lastname || ''}`).trim();
+            const cleanPhone = typeof cleanSenegalDigits === 'function' 
+                ? cleanSenegalDigits(userData.phone) 
+                : cleanCustomerPhone(userData.phone);
+                
+            // Input sanitization for name & address (anti-XSS & clean whitespace)
+            const rawFullName = (userData.name || `${userData.firstname || ''} ${userData.lastname || ''}`).trim();
+            const fullName = rawFullName.replace(/[<>]/g, '').trim();
             const parts = fullName.split(' ');
-            const firstname = userData.firstname || parts[0] || '';
-            const lastname = userData.lastname || parts.slice(1).join(' ') || '';
+            const firstname = (userData.firstname || parts[0] || '').replace(/[<>]/g, '').trim();
+            const lastname = (userData.lastname || parts.slice(1).join(' ') || '').replace(/[<>]/g, '').trim();
+            const cleanAddress = (userData.address || '').replace(/[<>]/g, '').trim();
+            const cleanEmail = (userData.email || '').replace(/[<>]/g, '').trim();
 
             const userProfile = {
                 phone: cleanPhone,
+                formattedPhone: typeof formatSenegalDisplay === 'function' ? formatSenegalDisplay(cleanPhone) : cleanPhone,
                 name: fullName,
                 firstname: firstname,
                 lastname: lastname,
-                address: userData.address || '',
-                email: userData.email || '',
+                address: cleanAddress,
+                email: cleanEmail,
                 verified: true,
                 authMethod: userData.authMethod || 'Native Direct / WhatsApp',
                 token: 'tok_' + Math.random().toString(36).substring(2, 12) + '_' + Date.now(),
@@ -96,8 +104,8 @@
                 localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userProfile));
                 localStorage.setItem('customerPhone', cleanPhone);
                 localStorage.setItem('customerName', fullName);
-                if (userData.address) localStorage.setItem('customerAddress', userData.address);
-                if (userData.email) localStorage.setItem('customerEmail', userData.email);
+                if (cleanAddress) localStorage.setItem('customerAddress', cleanAddress);
+                if (cleanEmail) localStorage.setItem('customerEmail', cleanEmail);
                 localStorage.setItem('phoneVerified_' + cleanPhone, 'true');
                 localStorage.setItem('user_phone', cleanPhone);
                 localStorage.setItem('user_name', fullName);
@@ -137,6 +145,9 @@
                 localStorage.removeItem('customerName');
                 localStorage.removeItem('customerAddress');
                 localStorage.removeItem('customerEmail');
+                localStorage.removeItem('trackingOrderId');
+                localStorage.removeItem('trackingPhone');
+                localStorage.removeItem('THIES_ORDER_HISTORY');
                 sessionStorage.removeItem('user_phone');
             } catch (e) {}
 
@@ -150,6 +161,8 @@
                     router.navigate('/profile');
                 } else if (window.location.hash.includes('/auth')) {
                     router.navigate('/auth');
+                } else if (window.location.hash === '#/' || window.location.hash === '') {
+                    router.navigate('/');
                 }
             }
         },
@@ -218,12 +231,15 @@
                         ` : `
                             <form id="modal-customer-auth-form" onsubmit="customerAuth.handleFormSubmit(event, ${onSuccessCallback ? 'true' : 'false'})">
                                 <div class="form-group" style="margin-bottom: 0.85rem;">
-                                    <label class="form-label" style="font-size: 0.82rem; font-weight: 700;">Numéro de téléphone <span style="color: var(--accent);">*</span></label>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                        <label class="form-label" style="font-size: 0.82rem; font-weight: 700; margin: 0;">Numéro de téléphone <span style="color: var(--accent);">*</span></label>
+                                        <span id="modal-phone-badge" style="display: none;"></span>
+                                    </div>
                                     <div style="position: relative;">
-                                        <input type="tel" id="modal-auth-phone" class="form-control" placeholder="77 123 45 67" required style="padding-left: 3rem; font-size: 0.95rem;">
+                                        <input type="tel" id="modal-auth-phone" class="form-control" placeholder="77 123 45 67" required style="padding-left: 3.2rem; font-size: 0.95rem;">
                                         <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); font-size: 0.85rem; font-weight: 700; color: var(--text-secondary);">+221</span>
                                     </div>
-                                    <small id="modal-phone-hint" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem; display: block;">Orange, Free, Wave, Expresso</small>
+                                    <small id="modal-phone-hint" style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem; display: block;">Orange (77/78), Free (76), Expresso (70), Promobile (75)</small>
                                 </div>
 
                                 <div class="form-group" style="margin-bottom: 0.85rem;">
@@ -246,6 +262,17 @@
             `;
 
             document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+            // Attacher validation et masque temps réel
+            setTimeout(() => {
+                if (typeof window.attachRealtimePhoneValidation === 'function') {
+                    window.attachRealtimePhoneValidation(
+                        'modal-auth-phone',
+                        'modal-phone-hint',
+                        'modal-phone-badge'
+                    );
+                }
+            }, 30);
         },
 
         /**

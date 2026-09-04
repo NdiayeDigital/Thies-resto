@@ -14,8 +14,8 @@
     <link rel="icon" type="image/png" href="/icon.png">
     <link rel="apple-touch-icon" href="/icon.png">
     
-    <!-- Global Logger & Security Shield (Loaded first) -->
-    <script src="js/logger.js?v=8"></script>
+    <!-- Global Logger & Security Shield (Loaded non-blocking with defer) -->
+    <script defer src="js/logger.js?v=8"></script>
     <script>
         // Global Error Tracking (Phase 5)
         window.thiesRestoErrors = [];
@@ -138,18 +138,19 @@
     <link rel="icon" type="image/x-icon" href="logo.jpg">
     <link rel="apple-touch-icon" href="icon.png">
 
-    <!-- Fonts -->
+    <!-- Preconnect CDN & Fonts for ultra-fast parallel TLS handshake -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     
+    <!-- Google Fonts loaded directly via link to eliminate CSS @import cascade waterfall -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap">
+
     <!-- Professional Icons (Remix Icon) -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
-    <!-- QR Code Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js" defer></script>
-
-    <link rel="stylesheet" href="style.css?v=7">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <!-- Core App Stylesheet -->
+    <link rel="stylesheet" href="style.css?v=8">
     <!-- Google tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-80CM404GD4"></script>
     <script>
@@ -411,13 +412,13 @@
                 <span id="floating-cart-total" class="floating-cart-total">0 FCFA</span>
             </div>
             <button class="btn btn-primary btn-sm" id="floating-cart-btn" aria-label="Ouvrir le panier">
-                Voir le Panier 🛒
+                <span>Voir le Panier</span> <i class="ri-shopping-cart-2-line"></i>
             </button>
         </div>
 
         <!-- ========== FLOATING WHATSAPP SUPPORT ========== -->
         <a href="https://wa.me/221784799882?text=Bonjour,%20j'ai%20besoin%20d'aide%20sur%20THIES%20Resto" target="_blank" rel="noopener noreferrer" class="floating-support-btn" aria-label="Support WhatsApp">
-            💬
+            <i class="ri-whatsapp-line"></i>
         </a>
 
         <!-- ========== TOAST NOTIFICATION SYSTEM ========== -->
@@ -461,7 +462,7 @@
                         </button>
                         <div class="footer-faq-answer" id="faq-ans-1">
                             <p>Nous assurons la livraison dans <strong>tous les quartiers de la ville de Thiès</strong> (Thiès-Est : <em>Cité Lamy, Mbour 1 à 4, Hersent</em> ; Thiès-Ouest &amp; Centre : <em>Grand Standing, Som, Randoulène, Diakhao, Fahu</em> ; Thiès-Nord : <em>Médina Fall, Nguinth, Takhikao, Silmang</em> ; ainsi que les campus universitaires <em>EPT &amp; UIDT</em>).</p>
-                            <p style="margin-top: 0.5rem;">⏱️ <strong>Délai moyen :</strong> Entre <strong>25 et 45 minutes</strong> (préparation en cuisine + acheminement sécurisé par nos livreurs partenaires). Tarif unique et clair de <strong>1 000 FCFA</strong>.</p>
+                            <p style="margin-top: 0.5rem;"><i class="ri-time-line"></i> <strong>Délai moyen :</strong> Entre <strong>25 et 45 minutes</strong> (préparation en cuisine + acheminement sécurisé par nos livreurs partenaires). Tarif unique et clair de <strong>1 000 FCFA</strong>.</p>
                         </div>
                     </div>
 
@@ -477,8 +478,8 @@
                         <div class="footer-faq-answer" id="faq-ans-2">
                             <p>Pour vous offrir une flexibilité totale, deux procédures claires et sécurisées sont disponibles :</p>
                             <ul style="margin: 0.5rem 0 0.5rem 1.25rem; padding: 0;">
-                                <li style="margin-bottom: 0.5rem;"><strong>💵 Espèces à la livraison (Cash on Delivery) :</strong> Vous réglez la totalité (repas + frais de livraison) en liquide directement en main propre au livreur ou au guichet lors du retrait. Prévoyez si possible l'appoint.</li>
-                                <li style="margin-bottom: 0.5rem;"><strong>🌊 Paiement par Wave / Orange Money :</strong> 
+                                <li style="margin-bottom: 0.5rem;"><strong><i class="ri-money-dollar-circle-line"></i> Espèces à la livraison (Cash on Delivery) :</strong> Vous réglez la totalité (repas + frais de livraison) en liquide directement en main propre au livreur ou au guichet lors du retrait. Prévoyez si possible l'appoint.</li>
+                                <li style="margin-bottom: 0.5rem;"><strong><i class="ri-smartphone-line"></i> Paiement par Wave / Orange Money :</strong> 
                                     <br>• <em>Soit à la livraison</em> : scannez le QR code Wave du livreur ou effectuez le transfert à son arrivée.
                                     <br>• <em>Soit d'avance</em> : effectuez le transfert Wave direct sur le numéro officiel du restaurant partenaire dès confirmation de la commande.</li>
                             </ul>
@@ -507,7 +508,7 @@
                 <!-- Help CTA Card -->
                 <div class="footer-faq-help-card">
                     <div class="footer-faq-help-info">
-                        <span class="footer-faq-help-icon">💬</span>
+                        <span class="footer-faq-help-icon"><i class="ri-customer-service-2-line"></i></span>
                         <div>
                             <strong>Une question sur une commande en cours ?</strong>
                             <p>Notre équipe et nos restaurants partenaires sont disponibles pour vous répondre.</p>
@@ -542,7 +543,7 @@
                 <!-- Client Legal Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Espace Client</h4>
-                    <a href="#footer-faq" onclick="scrollToFaq('faq-item-zones'); return false;">❓ FAQ &amp; Zones de Livraison</a>
+                    <a href="#footer-faq" onclick="scrollToFaq('faq-item-zones'); return false;"><i class="ri-question-line"></i> FAQ &amp; Zones de Livraison</a>
                     <a href="#" onclick="router.navigate('/cgv'); return false;">Conditions Générales de Vente (CGV)</a>
                     <a href="#" onclick="router.navigate('/politique-client'); return false;">Politique Client &amp; Confidentialité</a>
                     <a href="#" onclick="router.navigate('/tracking'); return false;">Suivi de commande</a>
@@ -553,32 +554,32 @@
                 <div class="footer-col">
                     <h4 class="footer-col-title">Espace Partenaire</h4>
                     <a href="#" onclick="router.navigate('/auth'); return false;">Connexion Restaurant</a>
-                    <a href="#" onclick="router.navigate('/partnership'); return false;">Devenir Partenaire 🤝</a>
+                    <a href="#" onclick="router.navigate('/partnership'); return false;">Devenir Partenaire</a>
                     <a href="#" onclick="router.navigate('/politique-admin'); return false;">Charte &amp; Politique Restaurant</a>
                 </div>
 
                 <!-- Contact Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Contact &amp; Réseaux</h4>
-                    <a href="https://wa.me/221784799882" target="_blank" rel="noopener noreferrer">💬 WhatsApp (+221 78 479 98 82)</a>
-                    <a href="https://www.facebook.com/profile.php?id=61591577033848" target="_blank" rel="noopener noreferrer">📘 Facebook</a>
-                    <a href="https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&amp;utm_source=qr" target="_blank" rel="noopener noreferrer">📸 Instagram</a>
-                    <a href="https://www.tiktok.com/@thiesresto?_r=1&amp;_t=ZS-97XIj47j1gS" target="_blank" rel="noopener noreferrer">🎵 TikTok</a>
-                    <a href="mailto:contact@thies-resto.com">✉️ contact@thies-resto.com</a>
+                    <a href="https://wa.me/221784799882" target="_blank" rel="noopener noreferrer"><i class="ri-whatsapp-line"></i> WhatsApp (+221 78 479 98 82)</a>
+                    <a href="https://www.facebook.com/profile.php?id=61591577033848" target="_blank" rel="noopener noreferrer"><i class="ri-facebook-circle-line"></i> Facebook</a>
+                    <a href="https://www.instagram.com/thies_resto?igsh=MXRsdW0yNmpnenVoZQ%3D%3D&amp;utm_source=qr" target="_blank" rel="noopener noreferrer"><i class="ri-instagram-line"></i> Instagram</a>
+                    <a href="https://www.tiktok.com/@thiesresto?_r=1&amp;_t=ZS-97XIj47j1gS" target="_blank" rel="noopener noreferrer"><i class="ri-tiktok-line"></i> TikTok</a>
+                    <a href="mailto:contact@thies-resto.com"><i class="ri-mail-line"></i> contact@thies-resto.com</a>
                 </div>
 
                 <!-- Theme Toggle Column -->
                 <div class="footer-col">
                     <h4 class="footer-col-title">Apparence</h4>
                     <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Changer le thème" onclick="toggleTheme()">
-                        <span id="theme-toggle-icon">☀️</span>
+                        <span id="theme-toggle-icon"><i class="ri-sun-line"></i></span>
                         <span id="theme-toggle-label">Mode Clair</span>
                     </button>
                 </div>
             </div>
 
             <div class="footer-bottom">
-                <p>&copy; 2026 THIES Resto. Fait avec ❤️ pour la Teranga Sénégalaise. Paiement en espèces uniquement. <span onclick="if(event.detail===3) router.navigate('/admin-login')" title="THIES Resto" style="cursor: default; opacity: 0.4;">•</span>
+                <p>&copy; 2026 THIES Resto. Développé pour la Teranga Sénégalaise. <span onclick="if(event.detail===3) router.navigate('/admin-login')" title="THIES Resto" style="cursor: default; opacity: 0.4;">•</span>
                 </p>
             </div>
         </footer>
@@ -651,10 +652,23 @@
     </nav>
     <!-- Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-    <!-- Confetti for Order Success -->
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js" defer></script>
+
+    <!-- Performance & DOM Diagnostic Monitor -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const domReadyTime = performance.now();
+            console.log(`⚡ [Performance DOM] DOMContentLoaded déclenché en ${Math.round(domReadyTime)}ms`);
+        });
+        window.addEventListener('load', () => {
+            const pageLoadedTime = performance.now();
+            const perfNav = performance.getEntriesByType('navigation')[0];
+            const domInteractive = perfNav ? Math.round(perfNav.domInteractive) : Math.round(pageLoadedTime);
+            console.log(`🚀 [Performance DOM] DOM Interactive: ${domInteractive}ms | Page Complète: ${Math.round(pageLoadedTime)}ms`);
+        });
+    </script>
 
     <!-- App Logic -->
+    <script defer src="js/phone-validator.js"></script>
     <script defer src="js/data.js?v=7"></script>
     <script defer src="js/store.js?v=7"></script>
     <script defer src="js/customer-auth.js"></script>

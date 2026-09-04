@@ -198,7 +198,10 @@ function renderCheckoutTab(r) {
                     <label class="delivery-radio-card" style="padding: 0.85rem 1rem; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; border: 1px solid var(--border); background: var(--bg-card);">
                         <input type="radio" name="order-payment" value="Transfert Wave restaurant" style="accent-color: var(--primary);">
                         <div style="flex: 1;">
-                            <strong style="color: var(--text-primary); font-size: 0.95rem;">🌊 Paiement Wave d'avance (Direct au restaurant)</strong>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <img src="/images/wave_senegal.png" alt="Wave Sénégal" style="width: 20px; height: 20px; border-radius: 4px; object-fit: contain;">
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">Paiement Wave d'avance (Direct au restaurant)</strong>
+                            </div>
                             <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Transfert Wave direct sur le numéro WhatsApp officiel du restaurateur pour lancer la commande</div>
                         </div>
                     </label>
@@ -357,29 +360,45 @@ function toggleAddressField(show) {
 }
 
 
-// Rate Limiter to prevent spam
+// Anti-Rebond & Rate Limiter to prevent spam/double-clicks
+let lastOrderSubmissionTime = 0;
 function checkOrderRateLimit() {
     const now = Date.now();
-    const oneHour = 60 * 60 * 1000;
+    
+    // Anti-double click protection (3 seconds debounce)
+    if (now - lastOrderSubmissionTime < 3000) {
+        if (typeof showToast === 'function') {
+            showToast("⏳ Votre commande est déjà en cours de transmission...", "info");
+        }
+        return false;
+    }
+
+    const tenMinutes = 10 * 60 * 1000;
     let timestamps = JSON.parse(localStorage.getItem('thies_order_timestamps') || '[]');
     
-    // Filter timestamps within the last hour
-    timestamps = timestamps.filter(ts => now - ts < oneHour);
+    // Filter timestamps within the last 10 minutes
+    timestamps = timestamps.filter(ts => now - ts < tenMinutes);
     
-    if (timestamps.length >= 3) {
-        if(typeof showToast === 'function') showToast("Limite anti-spam atteinte : maximum 3 envois par heure. Veuillez patienter.", "danger");
+    if (timestamps.length >= 5) {
+        if (typeof showToast === 'function') {
+            showToast("Sécurité : maximum 5 commandes par tranche de 10 minutes. Veuillez patienter un instant.", "warning");
+        }
         return false;
     }
     
+    lastOrderSubmissionTime = now;
     timestamps.push(now);
     localStorage.setItem('thies_order_timestamps', JSON.stringify(timestamps));
     return true;
 }
 
-// Submission of client order
+// Submission of client order with Cart Tamper-Proofing & Price Integrity
 function submitSimpleOrder(e, restaurantId) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     
+    const submitBtn = document.getElementById('btn-submit-order');
+    if (submitBtn && submitBtn.disabled) return;
+
     const r = store.getRestaurantById(restaurantId);
     if (!r) return;
 
@@ -389,14 +408,13 @@ function submitSimpleOrder(e, restaurantId) {
     // Strict Senegal Real-time Validation Check
     const validation = typeof validateSenegalPhoneNumber === 'function'
         ? validateSenegalPhoneNumber(rawPhone)
-        : { isValid: /^\+221(70|75|76|77|78)\d{7}$/.test(cleanPhoneNumber(rawPhone)) };
+        : { isValid: /^\+221(70|75|76|77|78)\d{7}$/.test(cleanPhoneNumber(rawPhone)), clean: rawPhone };
 
     if (!validation.isValid) {
         if (phoneInput) {
             phoneInput.focus();
             phoneInput.style.borderColor = '#ef4444';
             phoneInput.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.25)';
-            // Add a brief subtle shake
             phoneInput.style.transform = 'translateX(-4px)';
             setTimeout(() => { phoneInput.style.transform = 'translateX(4px)'; }, 80);
             setTimeout(() => { phoneInput.style.transform = 'translateX(-4px)'; }, 160);
@@ -411,13 +429,54 @@ function submitSimpleOrder(e, restaurantId) {
 
     if (!checkOrderRateLimit()) return;
     
-    const firstname = document.getElementById('order-firstname').value.trim();
-    const lastname = document.getElementById('order-lastname').value.trim();
+    // Lock submit button to prevent double execution
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⏳ Transmission sécurisée...</span>';
+    }
+
+    const firstname = (document.getElementById('order-firstname')?.value || '').trim();
+    const lastname = (document.getElementById('order-lastname')?.value || '').trim();
     const phone = validation.clean || cleanPhoneNumber(rawPhone);
-    const mode = document.querySelector('input[name="order-mode"]:checked').value;
-    const paymentChoice = document.querySelector('input[name="order-payment"]:checked')?.value || 'PayTech';
+    const mode = document.querySelector('input[name="order-mode"]:checked')?.value || 'A emporter';
+    const paymentChoice = document.querySelector('input[name="order-payment"]:checked')?.value || 'Espèces à la livraison';
     const address = document.getElementById('order-address') ? document.getElementById('order-address').value.trim() : '';
     const notes = document.getElementById('order-notes') ? document.getElementById('order-notes').value.trim() : '';
+
+    // =========================================================================
+    // PRICE INTEGRITY & CART TAMPER-PROOFING
+    // Recalculate directly from official restaurant catalog to prevent DOM tampering
+    // =========================================================================
+    let verifiedSubtotal = 0;
+    const verifiedItems = (cart.items || []).map(item => {
+        let officialPrice = Number(item.price) || 0;
+        if (Array.isArray(r.menu) && r.menu.length > 0) {
+            const officialDish = r.menu.find(d => d.id === item.id || d.name === item.name);
+            if (officialDish && Number(officialDish.price) > 0) {
+                officialPrice = Number(officialDish.price);
+            }
+        }
+        const qty = Math.max(1, Math.min(Number(item.qty) || 1, 100));
+        verifiedSubtotal += officialPrice * qty;
+        return {
+            id: item.id || null,
+            name: item.name,
+            price: officialPrice,
+            qty: qty
+        };
+    });
+
+    let verifiedDeliveryFee = 0;
+    if (mode === 'Livraison') {
+        verifiedDeliveryFee = Math.max(500, Math.min(Number(cart.deliveryFee) || 500, 2500));
+    }
+
+    let verifiedDiscount = 0;
+    if (cart.loyaltyApplied) {
+        verifiedDiscount = 2500;
+    }
+
+    const verifiedTotal = Math.max(0, verifiedSubtotal + verifiedDeliveryFee - verifiedDiscount);
 
     // Format payment labels (direct customer <-> restaurant)
     let paymentMethod = 'Espèces à la livraison (Cash on Delivery)';
@@ -454,18 +513,20 @@ function submitSimpleOrder(e, restaurantId) {
         address,
         paymentMethod,
         paymentStatus,
-        items: cart.items.map(item => ({ name: item.name, price: item.price, qty: item.qty })),
-        total: cart.total,
+        items: verifiedItems,
+        subtotal: verifiedSubtotal,
+        total: verifiedTotal,
         note: finalNotes,
         status: "En attente",
         date,
         time,
         timestamp: Date.now(),
         createdAt: new Date().toISOString(),
-        deliveryFee: cart.deliveryFee || 0,
+        deliveryFee: verifiedDeliveryFee,
         deliveryLat: cart.deliveryLat || null,
         deliveryLng: cart.deliveryLng || null,
         loyaltyApplied: cart.loyaltyApplied || false,
+        priceVerified: true,
         otpVerified: true,
         otpVerifiedVia: 'Authentification Native / WhatsApp',
         otpVerifiedAt: new Date().toISOString()
@@ -486,7 +547,6 @@ function submitSimpleOrder(e, restaurantId) {
     window.pendingOrderContext = { order, r, firstname, lastname, mode, phone };
     
     // Validation et Enregistrement direct et sécurisé de la commande
-    // (Plus de blocage par SMS manquant : validation de l'identité en temps réel via WhatsApp certifié)
     executePendingOrder();
     return;
 }
