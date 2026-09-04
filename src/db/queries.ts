@@ -233,3 +233,40 @@ export async function seedInitialThièsRestaurants(seedList: any[]) {
     return { count: 0, seeded: false, error };
   }
 }
+
+// --- CUSTOMERS QUERIES ---
+export async function getAllCustomers() {
+  try {
+    return await db.select().from(customers).orderBy(desc(customers.createdAt));
+  } catch (error) {
+    console.warn('Database query getAllCustomers notice:', error);
+    return [];
+  }
+}
+
+export async function upsertCustomer(cust: { id?: string; phone: string; name: string; email?: string; address?: string }) {
+  try {
+    const custId = cust.id || ('cust_' + String(cust.phone).replace(/\D/g, ''));
+    const result = await db.insert(customers)
+      .values({
+        id: custId,
+        phone: cust.phone,
+        name: cust.name,
+        email: cust.email || '',
+        address: cust.address || '',
+      })
+      .onConflictDoUpdate({
+        target: customers.phone,
+        set: {
+          name: cust.name,
+          email: cust.email || '',
+          address: cust.address || '',
+        }
+      })
+      .returning();
+    return result[0];
+  } catch (error) {
+    console.warn('Database query upsertCustomer notice:', error);
+    return null;
+  }
+}

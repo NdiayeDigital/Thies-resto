@@ -119,12 +119,29 @@
                     supabaseClient.from('customers').upsert({
                         phone: cleanPhone,
                         name: fullName,
-                        address: userData.address || null,
-                        email: userData.email || null,
+                        address: cleanAddress || null,
+                        email: cleanEmail || null,
                         last_login: new Date().toISOString()
                     }, { onConflict: 'phone' }).then(() => {}).catch(() => {});
                 } catch (e) {}
             }
+
+            // Sync immédiat avec le serveur central pour visibilité Super-Admin inter-appareils
+            try {
+                fetch('/api/customers', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userProfile)
+                }).then(res => res.json()).then(data => {
+                    if (data && data.success && typeof store !== 'undefined' && store.data) {
+                        store.data.customers = store.data.customers || [];
+                        const exIdx = store.data.customers.findIndex(c => c.phone === cleanPhone);
+                        if (exIdx === -1) store.data.customers.push(data.customer || userProfile);
+                        else store.data.customers[exIdx] = { ...store.data.customers[exIdx], ...(data.customer || userProfile) };
+                        store.save();
+                    }
+                }).catch(() => {});
+            } catch (e) {}
 
             if (typeof showToast === 'function') {
                 showToast(`Ravi de vous revoir, ${firstname || fullName || 'Gourmet'} !`, 'success');

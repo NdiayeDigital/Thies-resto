@@ -140,7 +140,8 @@ class Store {
             restaurants: initialRestos,
             orders: [],
             reservations: [],
-            groupOrders: []
+            groupOrders: [],
+            customers: []
         };
         
         // Restore local overrides (customized menus, real images, plats du jour)
@@ -179,6 +180,14 @@ class Store {
             const savedReservations = JSON.parse(localStorage.getItem('thies_platform_reservations') || '[]');
             if (Array.isArray(savedReservations)) {
                 this.data.reservations = savedReservations;
+            }
+        } catch(e) {}
+
+        // Restore locally stored customers
+        try {
+            const savedCustomers = JSON.parse(localStorage.getItem('thies_platform_customers') || '[]');
+            if (Array.isArray(savedCustomers)) {
+                this.data.customers = savedCustomers;
             }
         } catch(e) {}
 
@@ -248,6 +257,7 @@ class Store {
             localStorage.setItem('thies_custom_restaurants', JSON.stringify(customRestos));
             localStorage.setItem('thies_platform_orders', JSON.stringify(this.data.orders));
             localStorage.setItem('thies_platform_reservations', JSON.stringify(this.data.reservations));
+            localStorage.setItem('thies_platform_customers', JSON.stringify(this.data.customers || []));
         } catch(e) {
             console.warn("Could not save platform state to localStorage", e);
         }
@@ -374,6 +384,37 @@ class Store {
                     }
                 }
             }
+
+            // 3. Synchronize Customers (Client Accounts -> Super Admin)
+            try {
+                const custResp = await fetch('/api/customers');
+                if (custResp.ok) {
+                    const custData = await custResp.json();
+                    if (custData && Array.isArray(custData.customers)) {
+                        let newCustCount = 0;
+                        this.data.customers = this.data.customers || [];
+                        custData.customers.forEach(sc => {
+                            const pClean = String(sc.phone || '').replace(/\D/g, '');
+                            const existingIdx = this.data.customers.findIndex(c => {
+                                const ep = String(c.phone || '').replace(/\D/g, '');
+                                return (ep && ep === pClean) || c.id === sc.id;
+                            });
+                            if (existingIdx === -1) {
+                                this.data.customers.push(sc);
+                                newCustCount++;
+                            } else {
+                                this.data.customers[existingIdx] = { ...this.data.customers[existingIdx], ...sc };
+                            }
+                        });
+                        if (newCustCount > 0) {
+                            this.save();
+                            window.dispatchEvent(new CustomEvent('thies_customers_live_update', {
+                                detail: { count: this.data.customers.length }
+                            }));
+                        }
+                    }
+                }
+            } catch (ce) {}
         } catch (e) {
             // Non-critical network notice
         } finally {
@@ -421,6 +462,29 @@ class Store {
                     });
                 }
             }
+
+            // Sync server customers
+            try {
+                const custResp = await fetch('/api/customers');
+                if (custResp.ok) {
+                    const custData = await custResp.json();
+                    if (custData && Array.isArray(custData.customers)) {
+                        this.data.customers = this.data.customers || [];
+                        custData.customers.forEach(sc => {
+                            const pClean = String(sc.phone || '').replace(/\D/g, '');
+                            const existingIdx = this.data.customers.findIndex(c => {
+                                const ep = String(c.phone || '').replace(/\D/g, '');
+                                return (ep && ep === pClean) || c.id === sc.id;
+                            });
+                            if (existingIdx === -1) {
+                                this.data.customers.push(sc);
+                            } else {
+                                this.data.customers[existingIdx] = { ...this.data.customers[existingIdx], ...sc };
+                            }
+                        });
+                    }
+                }
+            } catch (ce) {}
         } catch (e) {
             console.warn("Server sync background notice:", e.message);
         }

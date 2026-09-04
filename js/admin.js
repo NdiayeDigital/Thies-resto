@@ -1852,7 +1852,7 @@ function renderDashboardTabContent(r) {
                                     <h4 style="margin: 0; font-size: 1.3rem; color: var(--text-primary);">Pack Standard</h4>
                                     <span class="badge" style="background: rgba(148,163,184,0.15); color: var(--text-primary); font-size: 0.75rem;">Essentiel</span>
                                 </div>
-                                <div style="font-size: 1.85rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">5 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
+                                <div style="font-size: 1.85rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">9 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
                                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">L'autonomie complète pour exister en ligne et recevoir des commandes.</p>
                                 
                                 <!-- Acceptation Mobile Money Sénégal -->
@@ -1879,27 +1879,27 @@ function renderDashboardTabContent(r) {
 
                                 <div style="display: flex; flex-direction: column; gap: 0.55rem; margin-top: auto;">
                                     <!-- Bouton Principal avec Vrais Logos Wave & Orange Money -->
-                                    <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Standard', 5000)" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: 800; font-size: 0.92rem; background: linear-gradient(135deg, #0284c7, #2563eb); border: none; padding: 0.8rem 1rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(37,99,235,0.25);">
+                                    <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Standard', 9000)" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: 800; font-size: 0.92rem; background: linear-gradient(135deg, #0284c7, #2563eb); border: none; padding: 0.8rem 1rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(37,99,235,0.25);">
                                         <span style="display: inline-flex; align-items: center; gap: 4px;">
                                             <img src="/images/wave_senegal.png" alt="Wave" style="width: 20px; height: 20px; border-radius: 4px; background: white; padding: 1px;">
                                             <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 20px; height: 20px; border-radius: 4px; background: white; padding: 1px;">
                                         </span>
-                                        <span>Payer 5 000 F (Wave / Orange Money)</span>
+                                        <span>Payer 9 000 F (Wave / Orange Money)</span>
                                     </button>
 
                                     <!-- Actions Directes Wave & Orange Money -->
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
-                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Standard', 5000, 'wave')" class="btn btn-sm" style="background: #E0F7FE; border: 1px solid #00B4D8; color: #0077B6; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Standard', 9000, 'wave')" class="btn btn-sm" style="background: #E0F7FE; border: 1px solid #00B4D8; color: #0077B6; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
                                             <img src="/images/wave_senegal.png" alt="Wave" style="width: 15px; height: 15px; border-radius: 3px;">
                                             <span>Wave</span>
                                         </button>
-                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Standard', 5000, 'orange')" class="btn btn-sm" style="background: #FFF4EB; border: 1px solid #FF7900; color: #D46000; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Standard', 9000, 'orange')" class="btn btn-sm" style="background: #FFF4EB; border: 1px solid #FF7900; color: #D46000; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
                                             <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 15px; height: 15px; border-radius: 3px;">
                                             <span>Orange Money</span>
                                         </button>
                                     </div>
 
-                                    <a href="${buildWhatsAppLink('Pack Standard', '5 000')}" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; font-weight: 600; font-size: 0.8rem; padding: 0.5rem; border-radius: 8px;">
+                                    <a href="${buildWhatsAppLink('Pack Standard', '9 000')}" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; font-weight: 600; font-size: 0.8rem; padding: 0.5rem; border-radius: 8px;">
                                         <span>💬</span> Demander par WhatsApp
                                     </a>
                                 </div>
@@ -3648,7 +3648,24 @@ router.add('#/admin', () => {
     }
     
     renderAdminView();
+
+    // Sync immédiat avec le serveur central pour récupérer les nouveaux clients et restaurants d'autres téléphones
+    if (typeof store !== 'undefined' && typeof store.syncLiveServerData === 'function') {
+        store.syncLiveServerData().then(() => {
+            if (window.location.hash.includes('/admin')) {
+                renderAdminView();
+            }
+        }).catch(() => {});
+    }
 });
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('thies_customers_live_update', () => {
+        if (window.location.hash.includes('/admin')) {
+            renderAdminView();
+        }
+    });
+}
 
 // ----------------------------------------------------
 // SUPER-ADMIN PLATFORM CUSTOMERS & USERS ENGINE
@@ -3762,6 +3779,42 @@ window.getSuperAdminCustomersList = function() {
                 preferredMode: 'Livraison'
             });
         }
+    }
+
+    // 4. Process all registered customers from store.data.customers (synced from central server / DB across devices)
+    if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.customers)) {
+        store.data.customers.forEach(sc => {
+            const phone = (sc.phone || '').trim();
+            const name = (sc.name || `${sc.firstname || ''} ${sc.lastname || ''}`).trim();
+            const key = phone || name || sc.id;
+            if (!key) return;
+
+            if (!customerMap.has(key)) {
+                customerMap.set(key, {
+                    id: sc.id || key,
+                    phone: phone || 'Non renseigné',
+                    name: name || 'Client Inscrit',
+                    address: sc.address || 'Thiès',
+                    email: sc.email || '',
+                    ordersCount: Number(sc.ordersCount) || 0,
+                    completedOrdersCount: Number(sc.completedOrdersCount) || 0,
+                    cancelledOrdersCount: Number(sc.cancelledOrdersCount) || 0,
+                    totalSpent: Number(sc.totalSpent) || 0,
+                    reservationsCount: Number(sc.reservationsCount) || 0,
+                    firstActivity: sc.createdAt ? sc.createdAt.split('T')[0] : (new Date().toISOString().split('T')[0]),
+                    lastActivity: sc.last_login ? sc.last_login.split('T')[0] : (new Date().toISOString().split('T')[0]),
+                    lastRestaurantId: sc.lastRestaurantId || '',
+                    lastRestaurantName: sc.lastRestaurantName || '',
+                    preferredMode: sc.preferredMode || 'Livraison',
+                    authMethod: sc.authMethod || 'Compte Client'
+                });
+            } else {
+                const c = customerMap.get(key);
+                if (name && (c.name === 'Client Gourmet' || c.name === 'Client Connecté' || !c.name)) c.name = name;
+                if (sc.address && (!c.address || c.address === 'Thiès')) c.address = sc.address;
+                if (sc.email && !c.email) c.email = sc.email;
+            }
+        });
     }
 
     return Array.from(customerMap.values()).sort((a, b) => {
@@ -3946,7 +3999,7 @@ function renderAdminTabTable() {
             const pack = r.subscriptionPack || 'Pack Standard';
 
             let monthlyRevenue = 0;
-            if (pack === 'Pack Standard' || pack === 'Pack Simple') monthlyRevenue = 5000;
+            if (pack === 'Pack Standard' || pack === 'Pack Simple') monthlyRevenue = 9000;
             else if (pack === 'Pack Entreprise' || pack === 'Pack Startup') monthlyRevenue = 15000;
             else if (pack === 'Pack Annuel VIP' || pack === 'Pack Annuel') monthlyRevenue = Math.round(100000 / 12);
 
@@ -4122,7 +4175,7 @@ function renderAdminTabTable() {
                                 const pack = r.subscriptionPack || 'Pack Standard';
 
                                 let monthlyFee = 0;
-                                if (pack === 'Pack Standard' || pack === 'Pack Simple') monthlyFee = 5000;
+                                if (pack === 'Pack Standard' || pack === 'Pack Simple') monthlyFee = 9000;
                                 else if (pack === 'Pack Entreprise' || pack === 'Pack Startup') monthlyFee = 15000;
                                 else if (pack === 'Pack Annuel VIP' || pack === 'Pack Annuel') monthlyFee = Math.round(100000 / 12);
 
@@ -4540,14 +4593,23 @@ function renderAdminTabTable() {
                                         <span style="color: var(--text-secondary);"><i class="ri-vip-crown-line"></i> Formule SaaS :</span>
                                         <select onchange="updateRestaurantPack('${r.id}', this.value)" style="font-size: 0.75rem; font-weight: 700; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; padding: 0.15rem 0.35rem;">
                                             <option value="Aucun (Gratuit)" ${pack.includes('Gratuit') ? 'selected' : ''}>Aucun (Gratuit)</option>
-                                            <option value="Pack Standard (15 000 FCFA/mois)" ${pack.includes('Standard') ? 'selected' : ''}>Pack Standard</option>
+                                            <option value="Pack Standard (9 000 FCFA/mois)" ${pack.includes('Standard') ? 'selected' : ''}>Pack Standard</option>
                                             <option value="Pack Entreprise (25 000 FCFA/mois)" ${pack.includes('Entreprise') ? 'selected' : ''}>Pack Entreprise</option>
                                             <option value="Pack Annuel VIP (150 000 FCFA/an)" ${pack.includes('Annuel') ? 'selected' : ''}>Pack VIP Annuel</option>
                                         </select>
                                     </div>
-                                    <div style="display: flex; justify-content: space-between; border-top: 1px dashed var(--border); padding-top: 0.35rem; font-family: monospace; font-size: 0.75rem;">
-                                        <span style="color: var(--text-secondary);">Login / Pass :</span>
-                                        <span style="color: var(--text-primary); font-weight: 700;">${r.username || r.slug} / ${r.password ? r.password : '••••••'}</span>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border); padding-top: 0.35rem; font-family: monospace; font-size: 0.75rem;">
+                                        <span style="color: var(--text-secondary);">Identifiant :</span>
+                                        <span style="color: var(--text-primary); font-weight: 700;">${r.username || r.slug}</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.2rem; font-family: monospace; font-size: 0.75rem;">
+                                        <span style="color: var(--text-secondary);">Mot de passe :</span>
+                                        <span style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                                            <span id="pwd-text-${r.id}" style="color: var(--text-primary); font-weight: 700; letter-spacing: 1px;">••••••••</span>
+                                            <button type="button" onclick="window.toggleAdminPasswordDisplay('${r.id}', '${(r.password || 'resto123').replace(/'/g, "\\'")}')" title="Afficher/Masquer le mot de passe" style="background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0 4px; font-size: 0.85rem;">
+                                                <i id="pwd-icon-${r.id}" class="ri-eye-off-line"></i>
+                                            </button>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -5593,6 +5655,19 @@ async function reactivateRestaurant(id) {
     renderAdminView();
 }
 
+window.toggleAdminPasswordDisplay = function(restoId, realPassword) {
+    const textEl = document.getElementById(`pwd-text-${restoId}`);
+    const iconEl = document.getElementById(`pwd-icon-${restoId}`);
+    if (!textEl || !iconEl) return;
+    if (textEl.textContent === '••••••••') {
+        textEl.textContent = realPassword;
+        iconEl.className = 'ri-eye-line';
+    } else {
+        textEl.textContent = '••••••••';
+        iconEl.className = 'ri-eye-off-line';
+    }
+};
+
 window.updateRestaurantPack = function(id, packName) {
     const r = store.getRestaurantById(id);
     if (!r) return;
@@ -6147,7 +6222,7 @@ window.openRecordPaytechModal = function(defaultRestoId = '') {
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Formule SaaS Souscrite <span class="required" style="color:var(--danger);">*</span></label>
                     <select id="modal-paytech-pack" class="form-control" required style="font-weight: 600; padding: 0.65rem 0.85rem;" onchange="window.updatePaytechModalAmount()">
-                        <option value="Pack Standard">Pack Standard (5 000 FCFA / mois)</option>
+                        <option value="Pack Standard">Pack Standard (9 000 FCFA / mois)</option>
                         <option value="Pack Entreprise">Pack Entreprise (15 000 FCFA / mois)</option>
                         <option value="Pack Annuel VIP">Pack Annuel VIP (100 000 FCFA / an)</option>
                     </select>
@@ -6155,7 +6230,7 @@ window.openRecordPaytechModal = function(defaultRestoId = '') {
 
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Montant Encaissé (FCFA) <span class="required" style="color:var(--danger);">*</span></label>
-                    <input type="number" id="modal-paytech-amount" class="form-control" value="5000" required min="1000" step="500" style="font-weight: 800; font-size: 1.1rem; color: #10b981; padding: 0.65rem 0.85rem;">
+                    <input type="number" id="modal-paytech-amount" class="form-control" value="9000" required min="1000" step="500" style="font-weight: 800; font-size: 1.1rem; color: #10b981; padding: 0.65rem 0.85rem;">
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1.25rem;">
@@ -6228,7 +6303,7 @@ window.updatePaytechModalAmount = function() {
     const amountInput = document.getElementById('modal-paytech-amount');
     if (!pack || !amountInput) return;
 
-    if (pack.value === 'Pack Standard') amountInput.value = '5000';
+    if (pack.value === 'Pack Standard') amountInput.value = '9000';
     else if (pack.value === 'Pack Entreprise') amountInput.value = '15000';
     else if (pack.value === 'Pack Annuel VIP') amountInput.value = '100000';
 };
@@ -6238,7 +6313,7 @@ window.submitManualPaytechRecord = async function(event) {
 
     const restoId = document.getElementById('modal-paytech-resto').value;
     const pack = document.getElementById('modal-paytech-pack').value;
-    const amount = Number(document.getElementById('modal-paytech-amount').value) || 5000;
+    const amount = Number(document.getElementById('modal-paytech-amount').value) || 9000;
     const channel = document.getElementById('modal-paytech-channel').value;
 
     const resto = store.getRestaurantById(restoId);

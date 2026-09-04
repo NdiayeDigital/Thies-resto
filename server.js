@@ -29,7 +29,9 @@ import {
   createOrder,
   updateOrderStatus,
   logActivity,
-  seedInitialThièsRestaurants
+  seedInitialThièsRestaurants,
+  getAllCustomers,
+  upsertCustomer
 } from './src/db/queries.ts';
 import { THIES_30_RESTAURANTS } from './src/data/seed30Restaurants.ts';
 
@@ -188,47 +190,84 @@ function recordActivityLog({ action, entity_type = 'system', entity_id = null, a
 }
 
 // ---------------------------------------------------------------------------
-// SERVER-SIDE PERSISTENCE (PostgreSQL Cloud SQL & In-Memory Fallback)
+// SERVER-SIDE PERSISTENCE (PostgreSQL Cloud SQL, JSON Storage & Memory)
 // ---------------------------------------------------------------------------
 let serverRestaurants = [];
 let serverOrders = [];
+let serverCustomers = [];
 
-// Initialize database connection and ensure 30 authentic restaurants are seeded
-(async () => {
+const adminDataPath = path.join(__dirname, 'admin_data.json');
+
+function saveServerData() {
   try {
-    const seedRes = await seedInitialThièsRestaurants(THIES_30_RESTAURANTS);
-    console.log('[PostgreSQL Cloud SQL] Seed status:', seedRes);
-    const dbRestos = await getAllRestaurants();
-    if (dbRestos && dbRestos.length > 0) {
-      serverRestaurants = dbRestos;
-      console.log(`[PostgreSQL Cloud SQL] ${dbRestos.length} restaurants chargés depuis la base de données.`);
-    }
-  } catch (e) {
-    console.warn('[PostgreSQL Cloud SQL] Notice initialisation:', e.message);
+    const payload = {
+      restaurants: serverRestaurants,
+      orders: serverOrders,
+      customers: serverCustomers,
+      savedAt: new Date().toISOString()
+    };
+    fs.writeFileSync(adminDataPath, JSON.stringify(payload, null, 2), 'utf8');
+  } catch (err) {
+    console.warn('[Server Storage] Notice saving admin_data.json:', err.message);
   }
-})();
+}
 
-// Load initial restaurants and orders from admin_data.json if needed
+// Load initial restaurants, orders, and customers from admin_data.json
 try {
-  const adminDataPath = path.join(__dirname, 'admin_data.json');
   if (fs.existsSync(adminDataPath)) {
     const raw = fs.readFileSync(adminDataPath, 'utf8');
     const parsed = JSON.parse(raw);
-    if (parsed && Array.isArray(parsed.restaurants) && serverRestaurants.length === 0) {
+    if (parsed && Array.isArray(parsed.restaurants) && parsed.restaurants.length > 0) {
       serverRestaurants = parsed.restaurants;
     }
     if (parsed && Array.isArray(parsed.orders)) {
       serverOrders = parsed.orders;
+    }
+    if (parsed && Array.isArray(parsed.customers)) {
+      serverCustomers = parsed.customers;
     }
   }
 } catch (e) {
   console.warn('[Server Storage] Notice loading admin_data.json:', e.message);
 }
 
-// Fallback if empty
-if (serverRestaurants.length === 0) {
-  serverRestaurants = THIES_30_RESTAURANTS;
-}
+// Initialize database connection, seed and merge
+(async () => {
+  try {
+    const seedRes = await seedInitialThièsRestaurants(THIES_30_RESTAURANTS);
+    console.log('[PostgreSQL Cloud SQL] Seed status:', seedRes);
+    const dbRestos = await getAllRestaurants();
+    if (dbRestos && dbRestos.length > 0) {
+      // Merge DB restos with any existing in-memory / admin_data restos (preserving pending registrations!)
+      dbRestos.forEach(dbr => {
+        const idx = serverRestaurants.findIndex(r => r.id === dbr.id || r.slug === dbr.slug);
+        if (idx === -1) {
+          serverRestaurants.push(dbr);
+        } else {
+          serverRestaurants[idx] = { ...dbr, ...serverRestaurants[idx] };
+        }
+      });
+      console.log(`[PostgreSQL Cloud SQL] ${serverRestaurants.length} restaurants synchronisés.`);
+    }
+
+    const dbCusts = await getAllCustomers();
+    if (dbCusts && dbCusts.length > 0) {
+      dbCusts.forEach(dbc => {
+        const idx = serverCustomers.findIndex(c => c.phone === dbc.phone || c.id === dbc.id);
+        if (idx === -1) {
+          serverCustomers.push(dbc);
+        }
+      });
+    }
+  } catch (e) {
+    console.warn('[PostgreSQL Cloud SQL] Notice initialisation:', e.message);
+  }
+  
+  if (serverRestaurants.length === 0) {
+    serverRestaurants = [...THIES_30_RESTAURANTS];
+  }
+  saveServerData();
+})();
 
 // ---------------------------------------------------------------------------
 // CRYPTOGRAPHIC SESSIONS & TIMING-SAFE VALIDATION
@@ -429,7 +468,7 @@ app.get('/api/auth/verify-session', (req, res) => {
 // RESTAURANT PARTNERSHIPS & REGISTRATION (No Registration Loss)
 // ---------------------------------------------------------------------------
 // Register a new restaurant (status: pending)
-app.post(['/api/restaurants/register', '/api/partnerships/register'], registerRateLimiter, (req, res) => {
+app.post(['/api/restaurants/register', '/api/partnerships/register'], registerRateLimiter, async (req, res) => {
   try {
     const resto = req.body || {};
     if (!resto.name || !resto.whatsapp) {
@@ -456,6 +495,31 @@ app.post(['/api/restaurants/register', '/api/partnerships/register'], registerRa
       serverRestaurants[existingIdx] = { ...serverRestaurants[existingIdx], ...newResto };
     } else {
       serverRestaurants.push(newResto);
+    }
+
+    saveServerData();
+
+    // Also persist in PostgreSQL Cloud SQL if available
+    try {
+      await upsertRestaurant({
+        id: newResto.id,
+        name: newResto.name,
+        category: newResto.category || 'Général',
+        rating: String(newResto.rating || 5.0),
+        deliveryTime: newResto.deliveryTime || '25-35 min',
+        minOrder: newResto.minOrder || 1000,
+        deliveryFee: newResto.deliveryFee || 500,
+        image: newResto.coverImage || newResto.image || '',
+        description: newResto.description || '',
+        address: newResto.address || 'Thiès',
+        whatsapp: newResto.whatsapp || '',
+        phone: newResto.whatsapp || '',
+        status: 'pending',
+        plan: newResto.subscriptionPack || 'Pack Standard',
+        popularTags: newResto.tags || []
+      });
+    } catch (dbErr) {
+      console.warn('[PostgreSQL Cloud SQL] Notice upsertRestaurant pending:', dbErr.message);
     }
 
     // Record Activity Log
@@ -490,8 +554,16 @@ app.get('/api/restaurants', async (req, res) => {
   try {
     const dbRestos = await getAllRestaurants();
     if (dbRestos && dbRestos.length > 0) {
-      list = dbRestos;
-      serverRestaurants = dbRestos;
+      // Merge DB restaurants with serverRestaurants (preserving in-memory pending registrations!)
+      dbRestos.forEach(dbr => {
+        const idx = serverRestaurants.findIndex(r => r.id === dbr.id || r.slug === dbr.slug);
+        if (idx === -1) {
+          serverRestaurants.push(dbr);
+        } else {
+          serverRestaurants[idx] = { ...dbr, ...serverRestaurants[idx] };
+        }
+      });
+      list = serverRestaurants;
     }
   } catch (e) {
     // Keep in-memory fallback
@@ -506,39 +578,54 @@ app.get('/api/restaurants', async (req, res) => {
   return res.json({ success: true, restaurants: activeRestos, total: activeRestos.length });
 });
 
-// Admin approves restaurant
-app.post('/api/admin/restaurants/approve', authRateLimiter, async (req, res) => {
+// Admin approves or reactivates restaurant
+app.post(['/api/admin/restaurants/approve', '/api/admin/restaurants/reactivate'], authRateLimiter, async (req, res) => {
   try {
     const { restaurantId } = req.body || {};
     if (!restaurantId) {
       return res.status(400).json({ success: false, message: 'Identifiant restaurant requis.' });
     }
 
-    const r = serverRestaurants.find(item => item.id === restaurantId);
+    let r = serverRestaurants.find(item => item.id === restaurantId || item.slug === restaurantId);
+    if (!r) {
+      try {
+        const dbR = await getRestaurantById(restaurantId);
+        if (dbR) {
+          serverRestaurants.push(dbR);
+          r = dbR;
+        }
+      } catch (e) {}
+    }
+
     if (!r) {
       return res.status(404).json({ success: false, message: 'Restaurant introuvable.' });
     }
 
     r.status = 'active';
     r.approvedAt = new Date().toISOString();
+    r.createdAt = new Date().toISOString(); // Reset trial date so trial expired lock is cleared
+    r.hasPaidSubscription = true;
+
+    saveServerData();
 
     try {
-      await updateRestaurantStatus(restaurantId, 'active');
+      await updateRestaurantStatus(r.id, 'active');
     } catch (dbErr) {
       console.warn('[Cloud SQL] Update restaurant status notice:', dbErr.message);
     }
 
     recordActivityLog({
-      action: 'Validation manuelle d\'un restaurant',
+      action: 'Validation/Réactivation manuelle d\'un restaurant',
       entity_type: 'restaurant',
       entity_id: r.id,
       actor: 'SuperAdmin',
-      details: `Validation et mise en ligne du restaurant "${r.name}" (${r.whatsapp}).`,
+      details: `Validation et réactivation immédiate du restaurant "${r.name}" (${r.whatsapp}). Statut: actif.`,
       req
     });
 
     return res.json({ success: true, message: `Restaurant "${r.name}" activé avec succès.`, restaurant: r });
   } catch (err) {
+    console.error('Erreur approve/reactivate:', err);
     return res.status(500).json({ success: false, message: 'Erreur lors de la validation.' });
   }
 });
@@ -547,7 +634,7 @@ app.post('/api/admin/restaurants/approve', authRateLimiter, async (req, res) => 
 app.post('/api/admin/restaurants/suspend', authRateLimiter, async (req, res) => {
   try {
     const { restaurantId, reason } = req.body || {};
-    const r = serverRestaurants.find(item => item.id === restaurantId);
+    const r = serverRestaurants.find(item => item.id === restaurantId || item.slug === restaurantId);
     if (!r) {
       return res.status(404).json({ success: false, message: 'Restaurant introuvable.' });
     }
@@ -556,8 +643,10 @@ app.post('/api/admin/restaurants/suspend', authRateLimiter, async (req, res) => 
     r.suspendedAt = new Date().toISOString();
     r.suspendReason = reason || 'Suspension manuelle SuperAdmin';
 
+    saveServerData();
+
     try {
-      await updateRestaurantStatus(restaurantId, 'suspended');
+      await updateRestaurantStatus(r.id, 'suspended');
     } catch (dbErr) {
       console.warn('[Cloud SQL] Update restaurant status notice:', dbErr.message);
     }
@@ -585,7 +674,7 @@ app.post('/api/admin/restaurants/reject', authRateLimiter, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Identifiant restaurant requis.' });
     }
 
-    const idx = serverRestaurants.findIndex(item => item.id === restaurantId);
+    const idx = serverRestaurants.findIndex(item => item.id === restaurantId || item.slug === restaurantId);
     let removedName = restaurantId;
     let removedPhone = '';
     if (idx !== -1) {
@@ -593,6 +682,8 @@ app.post('/api/admin/restaurants/reject', authRateLimiter, async (req, res) => {
       removedPhone = serverRestaurants[idx].whatsapp || '';
       serverRestaurants.splice(idx, 1);
     }
+
+    saveServerData();
 
     recordActivityLog({
       action: 'Rejet et suppression candidature restaurant',
@@ -606,6 +697,60 @@ app.post('/api/admin/restaurants/reject', authRateLimiter, async (req, res) => {
     return res.json({ success: true, message: `Demande de "${removedName}" rejetée et supprimée.`, restaurantId });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Erreur lors du rejet.' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// CUSTOMERS & CLIENTS ACCOUNTS API (Instant Cross-Device Sync)
+// ---------------------------------------------------------------------------
+// Register or update customer profile
+app.post('/api/customers', (req, res) => {
+  try {
+    const cust = req.body || {};
+    if (!cust.phone) {
+      return res.status(400).json({ success: false, message: 'Numéro de téléphone requis.' });
+    }
+
+    const cleanPhone = String(cust.phone).replace(/\D/g, '');
+    const customerObj = {
+      id: cust.id || ('cust_' + cleanPhone),
+      phone: cust.phone,
+      name: cust.name || `${cust.firstname || ''} ${cust.lastname || ''}`.trim() || 'Client Gourmet',
+      email: cust.email || '',
+      address: cust.address || '',
+      createdAt: cust.createdAt || new Date().toISOString(),
+      lastLogin: new Date().toISOString()
+    };
+
+    const idx = serverCustomers.findIndex(c => {
+      const p1 = String(c.phone || '').replace(/\D/g, '');
+      return p1 === cleanPhone || c.id === customerObj.id;
+    });
+
+    if (idx >= 0) {
+      serverCustomers[idx] = { ...serverCustomers[idx], ...customerObj };
+    } else {
+      serverCustomers.unshift(customerObj);
+    }
+
+    saveServerData();
+
+    try {
+      upsertCustomer(customerObj).catch(() => {});
+    } catch (e) {}
+
+    return res.json({ success: true, customer: customerObj });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: 'Erreur enregistrement client.' });
+  }
+});
+
+// Get all customers (Super-Admin)
+app.get('/api/customers', (req, res) => {
+  try {
+    return res.json({ success: true, customers: serverCustomers, total: serverCustomers.length });
+  } catch (e) {
+    return res.status(500).json({ success: false, message: 'Erreur lecture clients.' });
   }
 });
 
@@ -1429,7 +1574,7 @@ let paytechTransactions = [
   },
   {
     orderId: 'SUB-dibiterie-keur-1718000000002',
-    amount: 5000,
+    amount: 9000,
     itemName: 'Abonnement Pack Standard - Dibiterie Keur Mame',
     customerName: 'Dibiterie Keur Mame',
     restaurantName: 'Dibiterie Keur Mame',
