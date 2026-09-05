@@ -33,7 +33,6 @@ import {
   getAllCustomers,
   upsertCustomer
 } from './src/db/queries.ts';
-import { THIES_30_RESTAURANTS } from './src/data/seed30Restaurants.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,6 +42,10 @@ const PORT = 3000;
 
 // Disable Express fingerprinting header
 app.disable('x-powered-by');
+
+// Supabase REST endpoints for authoritative source of truth
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://eyrayquciqyswshiwtwb.supabase.co';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cmF5cXVjaXF5c3dzaGl3dHdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDQyNjQsImV4cCI6MjA5NzQ4MDI2NH0.8_VJvm9xiwmqX3oLD9L1b9W7r7T-b9OfJ2WIyST3FoM';
 
 // ---------------------------------------------------------------------------
 // SENIOR SECURITY ENHANCEMENTS: DEFENSIVE HTTP HEADERS & SANITIZATION
@@ -135,40 +138,9 @@ const registerRateLimiter = createRateLimiter({ windowMs: 60000, max: 10, messag
 const paytechRateLimiter = createRateLimiter({ windowMs: 60000, max: 40, message: 'Trop de requêtes de paiement. Veuillez patienter.' });
 
 // ---------------------------------------------------------------------------
-// ACTIVITY LOGS (Audit Trail for Critical Events)
+// ACTIVITY LOGS (Audit Trail for Real Events)
 // ---------------------------------------------------------------------------
-let activityLogs = [
-  {
-    id: 'log_seed_001',
-    timestamp: new Date(Date.now() - 3600000 * 24 * 2).toISOString(),
-    action: 'Démarrage du système de sécurité',
-    entity_type: 'security',
-    entity_id: 'system',
-    actor: 'System',
-    details: 'Initialisation des politiques RLS et surveillance des flux de commande à Thiès.',
-    ip_address: '127.0.0.1'
-  },
-  {
-    id: 'log_seed_002',
-    timestamp: new Date(Date.now() - 3600000 * 18).toISOString(),
-    action: 'Validation manuelle d\'un restaurant',
-    entity_type: 'restaurant',
-    entity_id: 'r3',
-    actor: 'SuperAdmin',
-    details: 'Validation et activation du restaurant "Restaurant Madiba" dans le réseau.',
-    ip_address: '197.234.219.12'
-  },
-  {
-    id: 'log_seed_003',
-    timestamp: new Date(Date.now() - 3600000 * 6).toISOString(),
-    action: 'Encaissement Abonnement PayTech',
-    entity_type: 'subscription',
-    entity_id: 'SUB-le-palais-1718000000001',
-    actor: 'PayTech IPN',
-    details: 'Paiement Wave de 15,000 FCFA confirmé pour Pack Entreprise (Le Palais des Délices).',
-    ip_address: '41.82.112.55'
-  }
-];
+let activityLogs = [];
 
 function recordActivityLog({ action, entity_type = 'system', entity_id = null, actor = 'System', details = '', req = null }) {
   const ip = req ? (req.headers['x-forwarded-for']?.split(',')[0].trim() || req.socket.remoteAddress || '127.0.0.1') : '127.0.0.1';
@@ -231,42 +203,103 @@ try {
   console.warn('[Server Storage] Notice loading admin_data.json:', e.message);
 }
 
-// Initialize database connection, seed and merge
-(async () => {
+// Synchronisation autoritaire avec Supabase (Base de données réelle de production)
+async function syncWithSupabase() {
   try {
-    const seedRes = await seedInitialThièsRestaurants(THIES_30_RESTAURANTS);
-    console.log('[PostgreSQL Cloud SQL] Seed status:', seedRes);
-    const dbRestos = await getAllRestaurants();
-    if (dbRestos && dbRestos.length > 0) {
-      // Merge DB restos with any existing in-memory / admin_data restos (preserving pending registrations!)
-      dbRestos.forEach(dbr => {
-        const idx = serverRestaurants.findIndex(r => r.id === dbr.id || r.slug === dbr.slug);
-        if (idx === -1) {
-          serverRestaurants.push(dbr);
-        } else {
-          serverRestaurants[idx] = { ...dbr, ...serverRestaurants[idx] };
-        }
-      });
-      console.log(`[PostgreSQL Cloud SQL] ${serverRestaurants.length} restaurants synchronisés.`);
+    const rRes = await fetch(`${SUPABASE_URL}/rest/v1/restaurants?select=*`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (rRes.ok) {
+      const rawRestos = await rRes.json();
+      if (Array.isArray(rawRestos) && rawRestos.length > 0) {
+        serverRestaurants = rawRestos.map(r => ({
+          id: r.id,
+          name: r.name,
+          slug: r.slug,
+          rating: Number(r.rating) || 4.5,
+          reviewsCount: Number(r.reviews_count) || 0,
+          category: r.category || 'Traditionnel',
+          address: r.address || 'Thiès, Sénégal',
+          whatsapp: r.whatsapp || '',
+          openHours: r.open_hours || '10:00 - 23:00',
+          closedDays: Array.isArray(r.closed_days) ? r.closed_days : [],
+          isOpenManual: r.is_open_manual !== undefined ? Boolean(r.is_open_manual) : true,
+          status: r.status || 'active',
+          username: r.username,
+          password: r.password,
+          coverImage: r.cover_image,
+          menu: Array.isArray(r.menu) ? r.menu : (typeof r.menu === 'string' ? JSON.parse(r.menu || '[]') : []),
+          reviews: Array.isArray(r.reviews) ? r.reviews : [],
+          subscriptionPack: r.subscription_pack || 'Aucun (Gratuit)',
+          createdAt: r.created_at || '2026-06-25T00:00:00Z',
+          lat: r.lat ? Number(r.lat) : 14.7928,
+          lng: r.lng ? Number(r.lng) : -16.926
+        }));
+      }
     }
 
-    const dbCusts = await getAllCustomers();
-    if (dbCusts && dbCusts.length > 0) {
-      dbCusts.forEach(dbc => {
-        const idx = serverCustomers.findIndex(c => c.phone === dbc.phone || c.id === dbc.id);
-        if (idx === -1) {
-          serverCustomers.push(dbc);
-        }
-      });
+    const oRes = await fetch(`${SUPABASE_URL}/rest/v1/orders?select=*`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+    if (oRes.ok) {
+      const rawOrders = await oRes.json();
+      if (Array.isArray(rawOrders)) {
+        serverOrders = rawOrders.map(o => ({
+          id: o.id,
+          orderNumber: o.id,
+          restaurantId: o.restaurant_id,
+          customerName: o.customer_name,
+          customerPhone: o.customer_phone,
+          mode: o.mode || 'Sur place',
+          address: o.address || '',
+          items: Array.isArray(o.items) ? o.items : [],
+          total: Number(o.total) || 0,
+          note: o.note || '',
+          status: o.status || 'Reçue',
+          date: o.date,
+          time: o.time,
+          createdAt: o.created_at
+        }));
+      }
     }
+
+    // Calculer les clients uniquement à partir des commandes réelles
+    const custMap = new Map();
+    serverOrders.forEach(o => {
+      const p = String(o.customerPhone || '').trim();
+      if (p) {
+        if (!custMap.has(p)) {
+          custMap.set(p, {
+            id: 'c_' + p.replace(/\D/g, ''),
+            name: o.customerName || 'Client Thiès',
+            phone: p,
+            address: o.address || '',
+            ordersCount: 1,
+            totalSpent: Number(o.total) || 0,
+            lastOrderDate: o.date || o.createdAt
+          });
+        } else {
+          const c = custMap.get(p);
+          c.ordersCount++;
+          c.totalSpent += Number(o.total) || 0;
+          if (o.customerName && c.name === 'Client Thiès') c.name = o.customerName;
+          if (o.address && !c.address) c.address = o.address;
+        }
+      }
+    });
+    serverCustomers = Array.from(custMap.values());
+
+    saveServerData();
+    console.log(`[Supabase Live Sync] ${serverRestaurants.length} restaurants, ${serverOrders.length} commandes réelles synchronisés.`);
   } catch (e) {
-    console.warn('[PostgreSQL Cloud SQL] Notice initialisation:', e.message);
+    console.warn('[Supabase Live Sync] Erreur:', e.message);
   }
-  
-  if (serverRestaurants.length === 0) {
-    serverRestaurants = [...THIES_30_RESTAURANTS];
-  }
-  saveServerData();
+}
+
+// Initialisation immédiate et rafraîchissement périodique
+(async () => {
+  await syncWithSupabase();
+  setInterval(syncWithSupabase, 20000);
 })();
 
 // ---------------------------------------------------------------------------
@@ -492,6 +525,8 @@ app.post(['/api/restaurants/register', '/api/partnerships/register'], registerRa
 
     const existingIdx = serverRestaurants.findIndex(r => r.id === id || r.slug === slug);
     if (existingIdx >= 0) {
+      newResto.id = serverRestaurants[existingIdx].id;
+      newResto.slug = serverRestaurants[existingIdx].slug || slug;
       serverRestaurants[existingIdx] = { ...serverRestaurants[existingIdx], ...newResto };
     } else {
       serverRestaurants.push(newResto);
@@ -504,19 +539,22 @@ app.post(['/api/restaurants/register', '/api/partnerships/register'], registerRa
       await upsertRestaurant({
         id: newResto.id,
         name: newResto.name,
+        slug: newResto.slug,
         category: newResto.category || 'Général',
         rating: String(newResto.rating || 5.0),
         deliveryTime: newResto.deliveryTime || '25-35 min',
-        minOrder: newResto.minOrder || 1000,
-        deliveryFee: newResto.deliveryFee || 500,
+        minOrder: Number(newResto.minOrder) || 1000,
+        deliveryFee: Number(newResto.deliveryFee) || 500,
         image: newResto.coverImage || newResto.image || '',
         description: newResto.description || '',
         address: newResto.address || 'Thiès',
         whatsapp: newResto.whatsapp || '',
-        phone: newResto.whatsapp || '',
+        phone: newResto.phone || newResto.whatsapp || '',
+        username: newResto.username || ('id_' + newResto.slug),
+        passwordHash: newResto.passwordHash || 'resto221',
         status: 'pending',
         plan: newResto.subscriptionPack || 'Pack Standard',
-        popularTags: newResto.tags || []
+        popularTags: Array.isArray(newResto.tags) ? newResto.tags.join(', ') : String(newResto.tags || '')
       });
     } catch (dbErr) {
       console.warn('[PostgreSQL Cloud SQL] Notice upsertRestaurant pending:', dbErr.message);
@@ -543,31 +581,14 @@ app.post(['/api/restaurants/register', '/api/partnerships/register'], registerRa
   }
 });
 
-// Get all restaurants (Public gets active, Admin gets all)
+// Get all restaurants (Public gets active, Admin gets all) - Pure Supabase data
 app.get('/api/restaurants', async (req, res) => {
   const authHeader = req.headers['authorization'] || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || '');
   const session = verifySignedToken(token);
   const isSuperAdmin = session && session.role === 'superadmin';
 
-  let list = serverRestaurants;
-  try {
-    const dbRestos = await getAllRestaurants();
-    if (dbRestos && dbRestos.length > 0) {
-      // Merge DB restaurants with serverRestaurants (preserving in-memory pending registrations!)
-      dbRestos.forEach(dbr => {
-        const idx = serverRestaurants.findIndex(r => r.id === dbr.id || r.slug === dbr.slug);
-        if (idx === -1) {
-          serverRestaurants.push(dbr);
-        } else {
-          serverRestaurants[idx] = { ...dbr, ...serverRestaurants[idx] };
-        }
-      });
-      list = serverRestaurants;
-    }
-  } catch (e) {
-    // Keep in-memory fallback
-  }
+  const list = serverRestaurants;
 
   if (isSuperAdmin || req.query.all === 'true') {
     return res.json({ success: true, restaurants: list, total: list.length });
@@ -582,36 +603,47 @@ app.get('/api/restaurants', async (req, res) => {
 app.post(['/api/admin/restaurants/approve', '/api/admin/restaurants/reactivate'], authRateLimiter, async (req, res) => {
   try {
     const { restaurantId } = req.body || {};
+    console.log(`[Database/Server] Reactivate request received for restaurant ID: "${restaurantId}"`);
     if (!restaurantId) {
+      console.warn('[Database/Server] Reactivate rejected: missing restaurantId in request body.');
       return res.status(400).json({ success: false, message: 'Identifiant restaurant requis.' });
     }
 
     let r = serverRestaurants.find(item => item.id === restaurantId || item.slug === restaurantId);
     if (!r) {
       try {
+        console.log(`[Database/Server] Restaurant not in memory cache, querying database for ID: "${restaurantId}"...`);
         const dbR = await getRestaurantById(restaurantId);
         if (dbR) {
           serverRestaurants.push(dbR);
           r = dbR;
         }
-      } catch (e) {}
+      } catch (e) {
+        console.warn('[Database/Server] DB lookup error during reactivate:', e.message);
+      }
     }
 
     if (!r) {
+      console.warn(`[Database/Server] Reactivate failed: restaurant "${restaurantId}" not found in database or memory.`);
       return res.status(404).json({ success: false, message: 'Restaurant introuvable.' });
     }
 
+    const previousStatus = r.status;
     r.status = 'active';
     r.approvedAt = new Date().toISOString();
     r.createdAt = new Date().toISOString(); // Reset trial date so trial expired lock is cleared
     r.hasPaidSubscription = true;
+    delete r.suspendReason;
+    delete r.suspendedAt;
 
     saveServerData();
+    console.log(`[Database/Server] Persisted to admin_data.json: "${r.name}" (${r.id}) status: "${previousStatus}" -> "active".`);
 
     try {
       await updateRestaurantStatus(r.id, 'active');
+      console.log(`[Database/Server] Updated Cloud SQL PostgreSQL: "${r.name}" (${r.id}) status set to "active".`);
     } catch (dbErr) {
-      console.warn('[Cloud SQL] Update restaurant status notice:', dbErr.message);
+      console.warn('[Database/Server] Cloud SQL update notice (using JSON persistence):', dbErr.message);
     }
 
     recordActivityLog({
@@ -623,10 +655,11 @@ app.post(['/api/admin/restaurants/approve', '/api/admin/restaurants/reactivate']
       req
     });
 
-    return res.json({ success: true, message: `Restaurant "${r.name}" activé avec succès.`, restaurant: r });
+    console.log(`[Database/Server] Reactivation complete for "${r.name}". Responding with success.`);
+    return res.json({ success: true, message: `Restaurant "${r.name}" réactivé avec succès.`, restaurant: r });
   } catch (err) {
-    console.error('Erreur approve/reactivate:', err);
-    return res.status(500).json({ success: false, message: 'Erreur lors de la validation.' });
+    console.error('[Database/Server] Erreur approve/reactivate:', err);
+    return res.status(500).json({ success: false, message: 'Erreur lors de la validation/réactivation.' });
   }
 });
 
@@ -1035,27 +1068,32 @@ app.post(['/api/orders', '/api/orders/create'], orderRateLimiter, async (req, re
       createdAt: order.createdAt || new Date().toISOString()
     };
 
-    // 1. Insert into PostgreSQL DB
+    // 1. Insert into Supabase DB
     try {
-      await createOrder({
-        id: orderId,
-        restaurantId: newOrder.restaurantId,
-        customerName: newOrder.customerName || 'Client Thiès',
-        customerPhone: newOrder.customerPhone,
-        customerAddress: newOrder.customerAddress || newOrder.address || 'Thiès',
-        customerCity: newOrder.customerCity || 'Thiès',
-        mode: newOrder.mode || 'Livraison',
-        paymentMethod: newOrder.paymentMethod || 'Espèces à la livraison',
-        paymentStatus: newOrder.paymentStatus || 'En attente',
-        total: Number(newOrder.total || 0),
-        items: newOrder.items || [],
-        status: newOrder.status,
-        note: newOrder.note || '',
-        date: newOrder.date || new Date().toISOString().split('T')[0],
-        time: newOrder.time || new Date().toLocaleTimeString('fr-FR'),
+      await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          id: orderId,
+          restaurant_id: newOrder.restaurantId,
+          customer_name: newOrder.customerName || 'Client Thiès',
+          customer_phone: newOrder.customerPhone,
+          mode: newOrder.mode || 'Livraison',
+          address: newOrder.customerAddress || newOrder.address || '',
+          items: newOrder.items || [],
+          total: Number(newOrder.total || 0),
+          note: newOrder.note || '',
+          status: newOrder.status,
+          date: newOrder.date || new Date().toISOString().split('T')[0],
+          time: newOrder.time || new Date().toLocaleTimeString('fr-FR')
+        })
       });
     } catch (dbErr) {
-      console.warn('[Cloud SQL] Order insert notice:', dbErr.message);
+      console.warn('[Supabase] Order insert notice:', dbErr.message);
     }
 
     // 2. Synchronize memory
@@ -1090,25 +1128,12 @@ app.post(['/api/orders', '/api/orders/create'], orderRateLimiter, async (req, re
   }
 });
 
-// Get orders (SuperAdmin gets all, Restaurant gets own)
+// Get orders (Strictly real Supabase orders)
 app.get('/api/orders', async (req, res) => {
-  const authHeader = req.headers['authorization'] || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || '');
-  const session = verifySignedToken(token);
-  
   let ordersList = serverOrders;
-  try {
-    if (req.query.restaurantId) {
-      ordersList = await getOrdersByRestaurant(req.query.restaurantId);
-    } else {
-      ordersList = await getAllOrders();
-    }
-  } catch (e) {
-    if (req.query.restaurantId) {
-      ordersList = serverOrders.filter(o => o.restaurantId === req.query.restaurantId);
-    }
+  if (req.query.restaurantId) {
+    ordersList = serverOrders.filter(o => o.restaurantId === req.query.restaurantId);
   }
-
   return res.json({ success: true, orders: ordersList });
 });
 
@@ -1560,41 +1585,7 @@ app.post('/api/paytech/request-payment', paytechRateLimiter, async (req, res) =>
   }
 });
 
-let paytechTransactions = [
-  {
-    orderId: 'SUB-le-palais-1718000000001',
-    amount: 15000,
-    itemName: 'Abonnement Pack Entreprise - Le Palais des Délices',
-    customerName: 'Le Palais des Délices',
-    restaurantName: 'Le Palais des Délices',
-    status: 'PAID',
-    paymentMethod: 'Wave Sénégal',
-    date: '2026-08-18T14:30:00Z',
-    token: 'pt_token_mock_001'
-  },
-  {
-    orderId: 'SUB-dibiterie-keur-1718000000002',
-    amount: 9000,
-    itemName: 'Abonnement Pack Standard - Dibiterie Keur Mame',
-    customerName: 'Dibiterie Keur Mame',
-    restaurantName: 'Dibiterie Keur Mame',
-    status: 'PAID',
-    paymentMethod: 'Orange Money Sénégal',
-    date: '2026-08-25T11:15:00Z',
-    token: 'pt_token_mock_002'
-  },
-  {
-    orderId: 'SUB-chez-bouba-1718000000003',
-    amount: 100000,
-    itemName: 'Abonnement Pack Annuel VIP - Chez Bouba Grillades',
-    customerName: 'Chez Bouba Grillades',
-    restaurantName: 'Chez Bouba Grillades',
-    status: 'PAID',
-    paymentMethod: 'Wave Sénégal',
-    date: '2026-08-28T09:40:00Z',
-    token: 'pt_token_mock_003'
-  }
-];
+let paytechTransactions = [];
 
 function recordPaytechTransaction(tx) {
   const existingIdx = paytechTransactions.findIndex(t => t.orderId === tx.orderId);

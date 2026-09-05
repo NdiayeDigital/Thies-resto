@@ -132,7 +132,7 @@ window.testSupabaseConnection = async function() {
 // App Local Database state manager (with Supabase sync)
 class Store {
     constructor() {
-        // Initialisation avec données de secours et synchronisation Supabase
+        // Initialisation avec les données autoritaires Supabase
         const initialRestos = (typeof SEED_RESTAURANTS !== 'undefined' && Array.isArray(SEED_RESTAURANTS))
             ? JSON.parse(JSON.stringify(SEED_RESTAURANTS))
             : [];
@@ -144,50 +144,14 @@ class Store {
             customers: []
         };
         
-        // Restore local overrides (customized menus, real images, plats du jour)
+        // Nettoyer le cache local de toutes anciennes données factices
         try {
-            const savedOverrides = JSON.parse(localStorage.getItem('thies_restaurant_overrides') || '{}');
-            this.data.restaurants.forEach(r => {
-                if (savedOverrides[r.id]) {
-                    Object.assign(r, savedOverrides[r.id]);
+            if (typeof localStorage !== 'undefined') {
+                const savedTxs = JSON.parse(localStorage.getItem('thies_paytech_transactions') || '[]');
+                if (Array.isArray(savedTxs)) {
+                    const realTxs = savedTxs.filter(t => t.orderId && !t.orderId.includes('171800000000'));
+                    localStorage.setItem('thies_paytech_transactions', JSON.stringify(realTxs));
                 }
-            });
-        } catch(e) {}
-
-        // Restore locally saved custom restaurants
-        try {
-            const savedCustomRestos = JSON.parse(localStorage.getItem('thies_custom_restaurants') || '[]');
-            if (Array.isArray(savedCustomRestos)) {
-                savedCustomRestos.forEach(customR => {
-                    const exists = this.data.restaurants.some(r => r.id === customR.id || r.slug === customR.slug);
-                    if (!exists) {
-                        this.data.restaurants.push(customR);
-                    }
-                });
-            }
-        } catch(e) {}
-
-        // Restore locally stored orders and ensure clean sequence per restaurant
-        try {
-            const savedOrders = JSON.parse(localStorage.getItem('thies_platform_orders') || '[]');
-            if (Array.isArray(savedOrders)) {
-                this.data.orders = savedOrders;
-            }
-        } catch(e) {}
-
-        // Restore locally stored reservations
-        try {
-            const savedReservations = JSON.parse(localStorage.getItem('thies_platform_reservations') || '[]');
-            if (Array.isArray(savedReservations)) {
-                this.data.reservations = savedReservations;
-            }
-        } catch(e) {}
-
-        // Restore locally stored customers
-        try {
-            const savedCustomers = JSON.parse(localStorage.getItem('thies_platform_customers') || '[]');
-            if (Array.isArray(savedCustomers)) {
-                this.data.customers = savedCustomers;
             }
         } catch(e) {}
 
@@ -277,28 +241,12 @@ class Store {
         return maxNum + 1;
     }
 
-    // Remise à zéro / réindexation propre de tous les numéros de commande de 1 à N par restaurant
+    // Préservation des numéros et identifiants authentiques de commande
     resequenceOrders() {
         if (!this.data.orders || this.data.orders.length === 0) return;
-        
-        const restoMap = {};
-        // Trier chronologiquement (plus ancienne à plus récente)
-        const sorted = [...this.data.orders].sort((a, b) => {
-            const tA = a.timestamp || (a.date && a.time ? new Date(`${a.date}T${a.time}`).getTime() : 0);
-            const tB = b.timestamp || (b.date && b.time ? new Date(`${b.date}T${b.time}`).getTime() : 0);
-            return tA - tB;
-        });
-
-        sorted.forEach(order => {
-            if (!restoMap[order.restaurantId]) restoMap[order.restaurantId] = [];
-            restoMap[order.restaurantId].push(order);
-        });
-
-        Object.keys(restoMap).forEach(restoId => {
-            restoMap[restoId].forEach((o, index) => {
-                o.orderNumber = index + 1;
-                o.id = `CMD-${o.orderNumber}`;
-            });
+        this.data.orders.forEach((o, index) => {
+            if (!o.orderNumber) o.orderNumber = index + 1;
+            if (!o.id) o.id = `ORD-${index + 1}`;
         });
     }
 
@@ -311,114 +259,103 @@ class Store {
         }
     }
 
-    // High-frequency live synchronization (every 5 seconds) for real-time customer-restaurant orders and partner/subscription updates
+    // High-frequency live synchronization strictly mirroring Supabase and central server
     async syncLiveServerData() {
         if (this._isSyncingLive) return;
         this._isSyncingLive = true;
 
         try {
-            // 1. Synchronize Orders (Customer -> Restaurant)
+            // 1. Synchronize Orders (Strictly mirror live server / Supabase)
             const ordersResp = await fetch('/api/orders');
             if (ordersResp.ok) {
                 const ordersData = await ordersResp.json();
                 if (ordersData && Array.isArray(ordersData.orders)) {
-                    let hasNewOrder = false;
-                    let hasStatusChange = false;
-                    const brandNewOrders = [];
-
-                    ordersData.orders.forEach(so => {
-                        const existingIdx = this.data.orders.findIndex(o => o.id === so.id);
-                        if (existingIdx === -1) {
-                            this.data.orders.unshift(so);
-                            hasNewOrder = true;
-                            brandNewOrders.push(so);
-                        } else {
-                            const cur = this.data.orders[existingIdx];
-                            if (cur.status !== so.status || cur.cancelReason !== so.cancelReason) {
-                                this.data.orders[existingIdx] = { ...cur, ...so };
-                                hasStatusChange = true;
+                    this.data.orders = ordersData.orders;
+                    
+                    // Derive customers strictly from real orders
+                    const custMap = new Map();
+                    this.data.orders.forEach(o => {
+                        const p = String(o.customerPhone || '').trim();
+                        if (p) {
+                            if (!custMap.has(p)) {
+                                custMap.set(p, {
+                                    id: 'c_' + p.replace(/\D/g, ''),
+                                    name: o.customerName || 'Client Thiès',
+                                    phone: p,
+                                    address: o.address || '',
+                                    ordersCount: 1,
+                                    totalSpent: Number(o.total) || 0,
+                                    lastOrderDate: o.date || o.createdAt
+                                });
+                            } else {
+                                const c = custMap.get(p);
+                                c.ordersCount++;
+                                c.totalSpent += Number(o.total) || 0;
+                                if (o.customerName && c.name === 'Client Thiès') c.name = o.customerName;
+                                if (o.address && !c.address) c.address = o.address;
                             }
                         }
                     });
-
-                    if (hasNewOrder || hasStatusChange) {
-                        this.save();
-                        window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
-                            detail: { newOrders: brandNewOrders, hasStatusChange }
-                        }));
-                    }
+                    this.data.customers = Array.from(custMap.values());
                 }
             }
 
-            // 2. Synchronize Restaurants & Subscriptions (Partner -> Super Admin)
-            const isAdm = typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession;
-            const restosResp = await fetch(`/api/restaurants?all=${isAdm ? 'true' : 'false'}`);
+            // 2. Synchronize Restaurants (Strictly mirror live server / Supabase)
+            const restosResp = await fetch('/api/restaurants?all=true');
             if (restosResp.ok) {
                 const restosData = await restosResp.json();
-                if (restosData && Array.isArray(restosData.restaurants)) {
-                    let restoUpdates = false;
-                    let pendingPartnersCount = 0;
-
-                    restosData.restaurants.forEach(sr => {
-                        const existing = this.data.restaurants.find(r => r.id === sr.id || r.slug === sr.slug);
-                        if (existing) {
-                            let changed = false;
-                            if (existing.status !== sr.status) { existing.status = sr.status; changed = true; }
-                            if (existing.subscriptionPack !== sr.subscriptionPack) { existing.subscriptionPack = sr.subscriptionPack; changed = true; }
-                            if (existing.subscriptionPaidAt !== sr.subscriptionPaidAt) { existing.subscriptionPaidAt = sr.subscriptionPaidAt; changed = true; }
-                            if (existing.subscriptionMethod !== sr.subscriptionMethod) { existing.subscriptionMethod = sr.subscriptionMethod; changed = true; }
-                            if (existing.hasPaidSubscription !== sr.hasPaidSubscription) { existing.hasPaidSubscription = sr.hasPaidSubscription; changed = true; }
-                            if (changed) restoUpdates = true;
-                        } else {
-                            this.data.restaurants.push(sr);
-                            restoUpdates = true;
-                        }
-                        if (sr.status === 'pending') pendingPartnersCount++;
-                    });
-
-                    if (restoUpdates) {
-                        this.save();
-                        window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
-                            detail: { pendingCount: pendingPartnersCount }
-                        }));
-                    }
+                if (restosData && Array.isArray(restosData.restaurants) && restosData.restaurants.length > 0) {
+                    this.data.restaurants = restosData.restaurants;
                 }
             }
 
-            // 3. Synchronize Customers (Client Accounts -> Super Admin)
-            try {
-                const custResp = await fetch('/api/customers');
-                if (custResp.ok) {
-                    const custData = await custResp.json();
-                    if (custData && Array.isArray(custData.customers)) {
-                        let newCustCount = 0;
-                        this.data.customers = this.data.customers || [];
-                        custData.customers.forEach(sc => {
-                            const pClean = String(sc.phone || '').replace(/\D/g, '');
-                            const existingIdx = this.data.customers.findIndex(c => {
-                                const ep = String(c.phone || '').replace(/\D/g, '');
-                                return (ep && ep === pClean) || c.id === sc.id;
-                            });
-                            if (existingIdx === -1) {
-                                this.data.customers.push(sc);
-                                newCustCount++;
-                            } else {
-                                this.data.customers[existingIdx] = { ...this.data.customers[existingIdx], ...sc };
-                            }
-                        });
-                        if (newCustCount > 0) {
-                            this.save();
-                            window.dispatchEvent(new CustomEvent('thies_customers_live_update', {
-                                detail: { count: this.data.customers.length }
-                            }));
-                        }
-                    }
-                }
-            } catch (ce) {}
+            this.save();
         } catch (e) {
-            // Non-critical network notice
+            // Keep current memory state
         } finally {
             this._isSyncingLive = false;
+        }
+    }
+
+    async reFetchRestaurants() {
+        console.log('[Store] Re-fetching restaurant list from database / server (/api/restaurants?all=true)...');
+        try {
+            const resp = await fetch('/api/restaurants?all=true');
+            if (!resp.ok) {
+                console.error(`[Store] Erreur HTTP lors du re-fetch des restaurants: ${resp.status}`);
+                return this.data.restaurants;
+            }
+            const data = await resp.json();
+            if (data && Array.isArray(data.restaurants)) {
+                console.log(`[Store] ${data.restaurants.length} restaurant(s) reçus du serveur.`);
+                
+                data.restaurants.forEach(sr => {
+                    const idx = this.data.restaurants.findIndex(r => r.id === sr.id || r.slug === sr.slug);
+                    if (idx !== -1) {
+                        this.data.restaurants[idx] = {
+                            ...this.data.restaurants[idx],
+                            ...sr,
+                            rating: Number(sr.rating) || 5.0,
+                            reviewsCount: Number(sr.reviewsCount || sr.reviews_count) || 0
+                        };
+                    } else {
+                        this.data.restaurants.push({
+                            ...sr,
+                            rating: Number(sr.rating) || 5.0,
+                            reviewsCount: Number(sr.reviewsCount || sr.reviews_count) || 0
+                        });
+                    }
+                });
+                this.save();
+                window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
+                    detail: { restaurants: this.data.restaurants }
+                }));
+                console.log('[Store] Liste locale des restaurants mise à jour et persistée avec succès.');
+            }
+            return this.data.restaurants;
+        } catch (err) {
+            console.error('[Store] Exception lors du re-fetch des restaurants:', err);
+            return this.data.restaurants;
         }
     }
 
@@ -624,19 +561,30 @@ class Store {
                     if (adminData.orders) {
                         const mappedOrders = adminData.orders.map(o => {
                             const ts = o.created_at ? new Date(o.created_at).getTime() : (o.date && o.time ? new Date(`${o.date}T${o.time}`).getTime() : Date.now());
+                            let lat = o.client_lat || o.deliveryLat || o.delivery_lat || null;
+                            let lng = o.client_lng || o.deliveryLng || o.delivery_lng || null;
+                            if (!lat && o.note && o.note.includes('[GPS:')) {
+                                const m = o.note.match(/\[GPS:\s*([\d.-]+),\s*([\d.-]+)\]/);
+                                if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+                            }
+                            let dFee = Number(o.delivery_fee || o.deliveryFee || 0);
+                            if (!dFee && o.note && o.note.includes('[Livraison:')) {
+                                const mf = o.note.match(/\[Livraison:\s*(\d+)/);
+                                if (mf) dFee = parseInt(mf[1], 10);
+                            }
                             return {
                                 id: o.id,
-                                orderNumber: o.order_number || o.orderNumber || null,
+                                orderNumber: o.order_number || o.orderNumber || o.id,
                                 restaurantId: o.restaurant_id,
                                 customerName: o.customer_name,
                                 customerPhone: o.customer_phone,
                                 mode: o.mode,
                                 address: o.address || o.delivery_address || '',
-                                deliveryLat: o.client_lat || o.deliveryLat || o.delivery_lat || null,
-                                deliveryLng: o.client_lng || o.deliveryLng || o.delivery_lng || null,
+                                deliveryLat: lat,
+                                deliveryLng: lng,
                                 items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []),
                                 total: Number(o.total),
-                                deliveryFee: Number(o.delivery_fee || o.deliveryFee || 0),
+                                deliveryFee: dFee,
                                 loyaltyApplied: Boolean(o.loyalty_applied || o.loyaltyApplied),
                                 otpVerified: Boolean(o.otp_verified !== false),
                                 note: o.note,
@@ -673,19 +621,30 @@ class Store {
                 if (!ordersError && myOrders) {
                     const mappedOrders = myOrders.map(o => {
                         const ts = o.created_at ? new Date(o.created_at).getTime() : (o.date && o.time ? new Date(`${o.date}T${o.time}`).getTime() : Date.now());
+                        let lat = o.client_lat || o.deliveryLat || o.delivery_lat || null;
+                        let lng = o.client_lng || o.deliveryLng || o.delivery_lng || null;
+                        if (!lat && o.note && o.note.includes('[GPS:')) {
+                            const m = o.note.match(/\[GPS:\s*([\d.-]+),\s*([\d.-]+)\]/);
+                            if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+                        }
+                        let dFee = Number(o.delivery_fee || o.deliveryFee || 0);
+                        if (!dFee && o.note && o.note.includes('[Livraison:')) {
+                            const mf = o.note.match(/\[Livraison:\s*(\d+)/);
+                            if (mf) dFee = parseInt(mf[1], 10);
+                        }
                         return {
                             id: o.id,
-                            orderNumber: o.order_number || o.orderNumber || null,
+                            orderNumber: o.order_number || o.orderNumber || o.id,
                             restaurantId: o.restaurant_id,
                             customerName: o.customer_name,
                             customerPhone: o.customer_phone,
                             mode: o.mode,
                             address: o.address || o.delivery_address || '',
-                            deliveryLat: o.client_lat || o.deliveryLat || o.delivery_lat || null,
-                            deliveryLng: o.client_lng || o.deliveryLng || o.delivery_lng || null,
+                            deliveryLat: lat,
+                            deliveryLng: lng,
                             items: typeof o.items === 'string' ? JSON.parse(o.items) : (o.items || []),
                             total: Number(o.total),
-                            deliveryFee: Number(o.delivery_fee || o.deliveryFee || 0),
+                            deliveryFee: dFee,
                             loyaltyApplied: Boolean(o.loyalty_applied || o.loyaltyApplied),
                             otpVerified: Boolean(o.otp_verified !== false),
                             note: o.note,
@@ -943,49 +902,40 @@ class Store {
         if (!supabaseClient) return;
         try {
             const isOtp = order.otpVerified !== false;
-            const { data, error } = await supabaseClient.rpc('place_secure_order', {
-                p_order_id: order.id,
-                p_restaurant_id: order.restaurantId,
-                p_customer_name: order.customerName,
-                p_customer_phone: order.customerPhone,
-                p_mode: order.mode,
-                p_address: order.address,
-                p_note: order.note,
-                p_items: order.items,
-                p_date: order.date,
-                p_time: order.time,
-                p_delivery_fee: order.deliveryFee || 0,
-                p_loyalty_applied: order.loyaltyApplied || false,
-                p_otp_verified: isOtp,
-                p_otp_verified_via: order.otpVerifiedVia || 'WhatsApp / Direct Vérifié'
-            });
-            if (error) {
-                console.warn("RPC place_secure_order notice, using direct table fallback:", error.message || error);
-                const { error: insertError } = await supabaseClient.from('orders').upsert({
-                    id: order.id,
-                    order_number: order.orderNumber || null,
-                    restaurant_id: order.restaurantId,
-                    customer_name: order.customerName,
-                    customer_phone: order.customerPhone,
-                    mode: order.mode,
-                    address: order.address,
-                    delivery_address: order.address,
-                    client_lat: order.deliveryLat || order.delivery_lat || null,
-                    client_lng: order.deliveryLng || order.delivery_lng || null,
-                    note: order.note,
-                    items: order.items,
-                    total: order.total,
-                    delivery_fee: order.deliveryFee || 0,
-                    loyalty_applied: order.loyaltyApplied || false,
-                    otp_verified: isOtp,
-                    otp_verified_via: order.otpVerifiedVia || 'WhatsApp / Direct Vérifié',
-                    date: order.date,
-                    time: order.time,
-                    status: order.status || 'En attente'
-                });
-                if (insertError) {
-                    console.error("Direct insert into orders failed:", insertError);
-                }
+
+            // Preserve GPS coordinates and delivery fee cleanly inside note string
+            let notePayload = order.note || '';
+            const lat = order.deliveryLat || order.delivery_lat;
+            const lng = order.deliveryLng || order.delivery_lng;
+            if (lat && lng && !notePayload.includes('[GPS:')) {
+                notePayload = (notePayload ? notePayload + ' ' : '') + `[GPS: ${lat}, ${lng}]`;
+            }
+            if (order.deliveryFee && !notePayload.includes('[Livraison:')) {
+                notePayload = (notePayload ? notePayload + ' ' : '') + `[Livraison: ${order.deliveryFee} FCFA]`;
+            }
+
+            // Strictly use columns that exist in the Supabase orders table schema
+            const supabaseOrderPayload = {
+                id: String(order.id),
+                restaurant_id: String(order.restaurantId),
+                customer_name: order.customerName || 'Client',
+                customer_phone: order.customerPhone || '',
+                mode: order.mode || 'Livraison',
+                address: order.address || '',
+                note: notePayload,
+                items: order.items || [],
+                total: Number(order.total) || 0,
+                loyalty_applied: Boolean(order.loyaltyApplied),
+                otp_verified: isOtp,
+                otp_verified_via: order.otpVerifiedVia || 'WhatsApp / Direct Vérifié',
+                date: order.date || new Date().toISOString().split('T')[0],
+                time: order.time || new Date().toTimeString().slice(0, 5),
+                status: order.status || 'En attente'
+            };
+
+            const { error: insertError } = await supabaseClient.from('orders').upsert(supabaseOrderPayload, { onConflict: 'id' });
+            if (insertError) {
+                console.warn("Notice on Supabase order sync:", insertError.message || insertError);
             }
         } catch (e) {
             console.warn("Notice: Failed to push order to Supabase (offline/sync mode):", e);
@@ -1052,6 +1002,13 @@ class Store {
         let changed = false;
         
         this.data.restaurants.forEach(r => {
+            if (typeof r.rating !== 'number' || isNaN(r.rating)) {
+                r.rating = Number(r.rating) || 5.0;
+            }
+            if (typeof r.reviewsCount !== 'number' || isNaN(r.reviewsCount)) {
+                r.reviewsCount = Number(r.reviewsCount) || 0;
+            }
+
             // Registration date
             const createdAt = new Date(r.createdAt || '2026-06-26T00:00:00Z');
             const diffTime = Math.abs(currentDate - createdAt);
@@ -1059,8 +1016,9 @@ class Store {
             
             // Suspend restaurant if 7 days free trial has expired and no paid package is active
             let packSubscribed = r.subscriptionPack || 'Essai 7 Jours (Gratuit)';
-            const isPaid = packSubscribed && !packSubscribed.includes('Gratuit') && !packSubscribed.includes('Essai') && !packSubscribed.includes('Aucun');
+            const isPaid = (packSubscribed && !packSubscribed.includes('Gratuit') && !packSubscribed.includes('Essai') && !packSubscribed.includes('Aucun')) || Boolean(r.hasPaidSubscription);
             if (diffDays > 7 && r.status === 'active' && !isPaid) {
+                console.log(`[Store Auto-Suspend] Restaurant "${r.name}" (${r.id}) suspended: trial expired (${diffDays} days) and no paid subscription.`);
                 r.status = 'suspended';
                 changed = true;
                 this.pushRestaurantToSupabase(r);

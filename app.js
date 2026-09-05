@@ -820,25 +820,25 @@ window.renderMobileBottomNav = function() {
             </a>
         `;
     } 
-    // 2. Super Admin Session (Central Administration Navigation)
-    else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
+    // 2. Super Admin Session (Central Administration Navigation - 4 Clean Tabs: Console, Restaurants, Clients, Profil)
+    else if ((typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) || (typeof window !== 'undefined' && window.location.hash && window.location.hash.startsWith('#/admin'))) {
         const active = typeof adminActiveTab !== 'undefined' ? adminActiveTab : 'console';
         nav.innerHTML = `
-            <a href="#" id="bottom-nav-admin-console" class="nav-item ${active === 'console' || active === 'orders' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('console'); return false;">
+            <a href="#" id="bottom-nav-admin-console" class="nav-item ${active === 'console' || active === 'dashboard' || active === 'orders' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('console'); return false;">
                 <div class="nav-icon"><i class="ri-dashboard-3-line"></i></div>
                 <span>Console</span>
             </a>
-            <a href="#" id="bottom-nav-admin-nouveau" class="nav-item ${active === 'nouveau' || active === 'restaurants' || active === 'active' || active === 'pending' || active === 'create' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('nouveau'); return false;">
+            <a href="#" id="bottom-nav-admin-restaurants" class="nav-item ${active === 'restaurants' || active === 'nouveau' || active === 'active' || active === 'pending' || active === 'create' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('restaurants'); return false;">
                 <div class="nav-icon"><i class="ri-store-2-line"></i></div>
-                <span>Nouveau</span>
+                <span>Restaurants</span>
             </a>
             <a href="#" id="bottom-nav-admin-customers" class="nav-item ${active === 'clients' || active === 'customers' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('clients'); return false;">
-                <div class="nav-icon"><i class="ri-user-star-line"></i></div>
+                <div class="nav-icon"><i class="ri-group-line"></i></div>
                 <span>Clients</span>
             </a>
-            <a href="#" id="bottom-nav-admin-security" class="nav-item ${active === 'securite' || active === 'security' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('securite'); return false;">
-                <div class="nav-icon"><i class="ri-lock-password-line"></i></div>
-                <span>Sécurité</span>
+            <a href="#" id="bottom-nav-admin-profil" class="nav-item ${active === 'profil' || active === 'profile' || active === 'securite' || active === 'security' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('profil'); return false;">
+                <div class="nav-icon"><i class="ri-user-settings-line"></i></div>
+                <span>Profil</span>
             </a>
         `;
     }
@@ -1855,7 +1855,7 @@ window.renderDailySpecialsHtml = function(dishes, isInnerOnly = false) {
         const restoUrl = `#/restaurant/${dish.restaurantSlug}`;
         const defaultFallback = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
         const imgUrl = dish.image || defaultFallback;
-        const rating = (dish.restaurantRating || 4.5).toFixed(1);
+        const rating = (Number(dish.restaurantRating) || 4.5).toFixed(1);
 
         cardsHtml += `
             <div class="daily-special-card hover-3d" id="daily-dish-card-${dish.id}" onclick="if (event.target.closest('.daily-special-resto-name') || event.target.closest('.daily-special-view-btn') || event.target.closest('.daily-special-order-btn')) return; openProductModal('${dish.restaurantId}', '${dish.id}')">
@@ -2711,7 +2711,7 @@ window.applyFilters = function applyFilters() {
                 <div class="restaurant-card-body">
                     <div class="restaurant-card-top-row">
                         <h3 class="restaurant-card-name" title="${r.name}">${r.name}</h3>
-                        <span class="stars-rating">★ ${r.rating.toFixed(1)}</span>
+                        <span class="stars-rating">★ ${(Number(r.rating) || 5.0).toFixed(1)}</span>
                     </div>
                     <p class="restaurant-card-address">
                         <span>📍</span> <span class="restaurant-card-address-text">${r.address}</span>
@@ -5042,7 +5042,7 @@ function renderFavoritesView() {
                     <div class="restaurant-card-body">
                         <div class="restaurant-card-top-row">
                             <h3 class="restaurant-card-name" title="${r.name}">${r.name}</h3>
-                            <span class="stars-rating">★ ${r.rating.toFixed(1)}</span>
+                            <span class="stars-rating">★ ${(Number(r.rating) || 5.0).toFixed(1)}</span>
                         </div>
                         <p class="restaurant-card-address">
                             <span>📍</span> <span class="restaurant-card-address-text">${r.address}</span>
@@ -5434,68 +5434,16 @@ router.add('#/404', () => {
 });
 
 // ----------------------------------------------------
-// Social Proof Logic
+// Social Proof Logic (Disabled to ensure 100% genuine data)
 // ----------------------------------------------------
 let socialProofInterval = null;
 window.startSocialProof = function() {
     if (socialProofInterval) clearInterval(socialProofInterval);
     const toast = document.getElementById('social-proof-toast');
-    if (!toast) return;
-
-    const names = ['Fatou', 'Ousmane', 'Awa', 'Mamadou', 'Aminata', 'Cheikh', 'Ndeye', 'Ibrahima', 'Khadija', 'Fallou'];
-    const actions = [
-        (name, resto, dish) => `<strong>${name}</strong> a commandé <em>${dish}</em> chez <strong>${resto}</strong>`,
-        (name, resto, dish) => `<strong>${name}</strong> a gagné +5 points fidélité chez <strong>${resto}</strong>`,
-        (name, resto, dish) => `<strong>${name}</strong> a réservé une table chez <strong>${resto}</strong>`
-    ];
-    
-    const allDishes = [];
-    store.getRestaurants().filter(r => r.status === 'active').forEach(r => {
-        if(r.menu && Array.isArray(r.menu)) {
-            r.menu.forEach(c => {
-                if(c.items && Array.isArray(c.items)) {
-                    c.items.forEach(i => allDishes.push({ dish: i.name, resto: r.name }));
-                }
-            });
-        }
-    });
-
-    if(allDishes.length === 0) return;
-
-    socialProofInterval = setInterval(() => {
-        // Stop if not on home page
-        if (window.location.hash !== '' && window.location.hash !== '#/') {
-            return;
-        }
-
-        const randomName = names[Math.floor(Math.random() * names.length)];
-        const randomDishItem = allDishes[Math.floor(Math.random() * allDishes.length)];
-        const randomAction = actions[Math.floor(Math.random() * actions.length)];
-        const minutes = Math.floor(Math.random() * 5) + 1;
-        
-        toast.innerHTML = `
-            <div style="background: rgba(207,168,83,0.15); padding: 10px; border-radius: 50%; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; height: 40px; width: 40px; flex-shrink: 0;">🔥</div>
-            <div>
-                <p style="margin: 0; font-size: 0.85rem; font-weight: 400; line-height: 1.3;">${randomAction(randomName, randomDishItem.resto, randomDishItem.dish)}</p>
-                <p style="margin: 0; font-size: 0.75rem; color: var(--accent); margin-top: 3px; font-weight: bold;">Il y a ${minutes} min</p>
-            </div>
-        `;
-        
-        toast.style.display = 'flex';
-        // Force reflow
-        void toast.offsetWidth;
-        toast.style.opacity = '1';
-        
-        // Hide after 5 seconds
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            setTimeout(() => {
-                if(toast.style.opacity === '0') toast.style.display = 'none';
-            }, 500);
-        }, 5000);
-        
-    }, 12000 + Math.random() * 8000); // Randomly between 12s and 20s
-}
+    if (toast) {
+        toast.style.display = 'none';
+    }
+};
 
 // ----------------------------------------------------
 // PWA Service Worker Registration

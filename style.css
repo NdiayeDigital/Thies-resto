@@ -7870,6 +7870,842 @@ html[data-theme="dark"] .mobile-bottom-nav {
     color: #ffffff;
 }
 
+/* ========================================================================== */
+/* GUESTREST / RESTAURANT SALES REPORT MODERN DASHBOARD                       */
+/* Designed according to executive UX & Senior Developer architecture       */
+/* ========================================================================== */
+
+.gr-dashboard-container {
+    --gr-dark-green: #0B3B24;
+    --gr-darker-green: #072517;
+    --gr-card-green: #093722;
+    --gr-bright-green: #10B981;
+    --gr-vibrant-badge: #22C55E;
+    --gr-danger-badge: #EF4444;
+    --gr-bg-body: #EFF2F0;
+    --gr-bg-card: #FFFFFF;
+    --gr-border: #E3E9E5;
+    --gr-border-subtle: rgba(11, 59, 36, 0.08);
+    --gr-text-title: #0D1B14;
+    --gr-text-muted: #5B6A62;
+    --gr-radius-card: 22px;
+    --gr-radius-btn: 14px;
+    --gr-shadow-card: 0 4px 20px rgba(11, 59, 36, 0.04);
+
+    background: var(--gr-bg-body);
+    min-height: 100vh;
+    padding: 1.5rem;
+    font-family: var(--font-sans);
+    color: var(--gr-text-title);
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.gr-dashboard-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1.75rem;
+    max-width: 1600px;
+    margin: 0 auto;
+    align-items: start;
+}
+
+/* --- SIDEBAR --- */
+.gr-sidebar {
+    background: var(--gr-bg-card);
+    border-radius: var(--gr-radius-card);
+    padding: 1.5rem 1.15rem;
+    box-shadow: var(--gr-shadow-card);
+    border: 1px solid var(--gr-border);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    position: sticky;
+    top: 1.5rem;
+    max-height: calc(100vh - 3rem);
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+.gr-sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+.gr-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--gr-border);
+}
+.gr-brand-logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--gr-dark-green);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-serif);
+    font-weight: 800;
+    font-size: 1.35rem;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(11, 59, 36, 0.2);
+}
+.gr-brand-info {
+    overflow: hidden;
+}
+.gr-brand-name {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--gr-text-title);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+.gr-brand-sub {
+    font-size: 0.72rem;
+    color: var(--gr-text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.15rem;
+}
+
+.gr-menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+.gr-menu-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--gr-text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.65rem 0.2rem 0.65rem;
+}
+.gr-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: var(--gr-radius-btn);
+    color: var(--gr-text-muted);
+    font-weight: 600;
+    font-size: 0.88rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.18s ease;
+    width: 100%;
+    text-align: left;
+    min-height: 42px;
+}
+.gr-nav-item i {
+    font-size: 1.15rem;
+    line-height: 1;
+    color: var(--gr-text-muted);
+    transition: color 0.18s ease;
+}
+.gr-nav-item:hover {
+    background: rgba(11, 59, 36, 0.05);
+    color: var(--gr-text-title);
+}
+.gr-nav-item:hover i {
+    color: var(--gr-dark-green);
+}
+.gr-nav-item.active {
+    background: var(--gr-dark-green);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(11, 59, 36, 0.25);
+}
+.gr-nav-item.active i {
+    color: #ffffff !important;
+}
+.gr-nav-badge {
+    margin-left: auto;
+    background: var(--gr-danger-badge);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 999px;
+    line-height: 1;
+}
+
+/* Sidebar Upgrade Card */
+.gr-upgrade-card {
+    background: var(--gr-darker-green);
+    border-radius: 18px;
+    padding: 1.25rem 1rem;
+    color: #ffffff;
+    margin-top: auto;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(7, 37, 23, 0.35);
+}
+.gr-upgrade-card::after {
+    content: "";
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.25) 0%, transparent 70%);
+    pointer-events: none;
+}
+.gr-upgrade-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--gr-bright-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+.gr-upgrade-title {
+    font-family: var(--font-serif);
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+    color: #ffffff;
+}
+.gr-upgrade-desc {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.75);
+    line-height: 1.4;
+    margin-bottom: 0.85rem;
+}
+.gr-upgrade-btn {
+    background: var(--gr-dark-green);
+    color: #ffffff;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    border-radius: 10px;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+}
+.gr-upgrade-btn:hover {
+    background: #0f4f31;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* --- MAIN DASHBOARD AREA --- */
+.gr-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+}
+
+/* Top Header */
+.gr-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.gr-header-titles h1 {
+    font-family: var(--font-serif);
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: var(--gr-text-title);
+    margin: 0;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+.gr-header-titles p {
+    margin: 0.25rem 0 0 0;
+    color: var(--gr-text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+.gr-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.gr-circle-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--gr-bg-card);
+    border: 1px solid var(--gr-border);
+    color: var(--gr-text-title);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s ease;
+    position: relative;
+}
+.gr-circle-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: #cbd5e1;
+}
+.gr-circle-btn .dot-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gr-danger-badge);
+    border: 2px solid #ffffff;
+}
+.gr-user-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: var(--gr-bg-card);
+    border: 1px solid var(--gr-border);
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem 0.3rem 0.35rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+.gr-user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #E8EFEA;
+    color: var(--gr-dark-green);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.gr-user-info {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    line-height: 1.15;
+}
+.gr-user-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--gr-text-title);
+    white-space: nowrap;
+}
+.gr-user-role {
+    font-size: 0.68rem;
+    color: var(--gr-text-muted);
+    font-weight: 500;
+}
+
+/* --- GRID CONTENT: LEFT (65%) & RIGHT (35%) --- */
+.gr-bento-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.gr-left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+}
+.gr-right-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+}
+
+/* 4 KPIs Grid (2x2) */
+.gr-kpis-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.gr-kpi-card {
+    border-radius: var(--gr-radius-card);
+    padding: 1.35rem;
+    box-shadow: var(--gr-shadow-card);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 135px;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.gr-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(11, 59, 36, 0.08);
+}
+
+/* Primary Card (Total Sales - Forest Green) */
+.gr-kpi-primary {
+    background: var(--gr-dark-green);
+    color: #ffffff;
+    border: 1px solid var(--gr-card-green);
+    box-shadow: 0 8px 28px rgba(11, 59, 36, 0.2);
+}
+.gr-kpi-light {
+    background: var(--gr-bg-card);
+    border: 1px solid var(--gr-border);
+    color: var(--gr-text-title);
+}
+
+.gr-kpi-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+.gr-kpi-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+}
+.gr-kpi-primary .gr-kpi-icon {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+.gr-kpi-light .gr-kpi-icon {
+    background: #F0F4F2;
+    color: var(--gr-dark-green);
+}
+
+.gr-kpi-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    line-height: 1;
+}
+.gr-badge-success {
+    background: rgba(34, 197, 94, 0.18);
+    color: #15803d;
+}
+.gr-kpi-primary .gr-badge-success {
+    background: var(--gr-vibrant-badge);
+    color: #052e16;
+}
+.gr-badge-danger {
+    background: rgba(239, 68, 68, 0.14);
+    color: var(--gr-danger-badge);
+}
+
+.gr-kpi-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+.gr-kpi-primary .gr-kpi-label {
+    color: rgba(255, 255, 255, 0.82);
+}
+.gr-kpi-light .gr-kpi-label {
+    color: var(--gr-text-muted);
+}
+
+.gr-kpi-bottom {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+.gr-kpi-value {
+    font-family: var(--font-serif);
+    font-weight: 800;
+    font-size: 1.85rem;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+}
+.gr-kpi-primary .gr-kpi-value {
+    color: #ffffff;
+}
+.gr-kpi-light .gr-kpi-value {
+    color: var(--gr-text-title);
+}
+
+.gr-kpi-compare {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-align: right;
+    line-height: 1.2;
+}
+.gr-kpi-primary .gr-kpi-compare {
+    color: rgba(255, 255, 255, 0.7);
+}
+.gr-kpi-light .gr-kpi-compare {
+    color: var(--gr-text-muted);
+}
+
+/* Customer Habits (Bar Chart Card) */
+.gr-card {
+    background: var(--gr-bg-card);
+    border-radius: var(--gr-radius-card);
+    padding: 1.5rem;
+    box-shadow: var(--gr-shadow-card);
+    border: 1px solid var(--gr-border);
+}
+.gr-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+.gr-card-header-title {
+    font-family: var(--font-serif);
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--gr-text-title);
+    margin: 0;
+}
+.gr-card-header-sub {
+    font-size: 0.78rem;
+    color: var(--gr-text-muted);
+    margin: 0.15rem 0 0 0;
+}
+.gr-select-pill {
+    background: #F4F7F5;
+    border: 1px solid var(--gr-border);
+    color: var(--gr-text-title);
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s ease;
+}
+.gr-select-pill:hover {
+    background: #EAEFEA;
+}
+
+.gr-chart-legend {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 1rem;
+}
+.gr-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--gr-text-muted);
+}
+.gr-legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/* SVG Habits Bar Chart Styling */
+.gr-habits-chart-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+.gr-svg-chart {
+    width: 100%;
+    height: auto;
+    min-height: 250px;
+}
+
+/* Product Statistic Card (Soft Sage Gradient Card) */
+.gr-product-stat-card {
+    background: linear-gradient(180deg, #D4E5DC 0%, #E7EFEB 100%);
+    border: 1px solid rgba(11, 59, 36, 0.08);
+    border-radius: var(--gr-radius-card);
+    padding: 1.5rem;
+    box-shadow: var(--gr-shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+.gr-pie-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 0;
+}
+.gr-pie-svg {
+    width: 175px;
+    height: 175px;
+    filter: drop-shadow(0 8px 18px rgba(11, 59, 36, 0.15));
+}
+.gr-stat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    border-top: 1px solid rgba(11, 59, 36, 0.08);
+    padding-top: 1rem;
+}
+.gr-stat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+.gr-stat-category {
+    font-weight: 600;
+    color: var(--gr-text-title);
+}
+.gr-stat-numbers {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+.gr-stat-count {
+    font-weight: 700;
+    color: var(--gr-text-title);
+    font-size: 0.88rem;
+}
+
+/* Customer Growth (Location Card) */
+.gr-growth-card {
+    background: var(--gr-bg-card);
+    border-radius: var(--gr-radius-card);
+    padding: 1.5rem;
+    box-shadow: var(--gr-shadow-card);
+    border: 1px solid var(--gr-border);
+}
+.gr-bubbles-stage {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 0;
+    position: relative;
+    height: 130px;
+}
+.gr-bubble {
+    border-radius: 50%;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    position: absolute;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+}
+.gr-bubble:hover {
+    transform: scale(1.06);
+}
+.gr-bubble-1 {
+    width: 72px;
+    height: 72px;
+    background: var(--gr-dark-green);
+    left: 20%;
+    top: 25px;
+    font-size: 1.05rem;
+    z-index: 4;
+}
+.gr-bubble-2 {
+    width: 58px;
+    height: 58px;
+    background: #0D4E30;
+    left: 48%;
+    top: 45px;
+    font-size: 0.88rem;
+    z-index: 3;
+}
+.gr-bubble-3 {
+    width: 44px;
+    height: 44px;
+    background: var(--gr-bright-green);
+    left: 40%;
+    top: 15px;
+    font-size: 0.75rem;
+    z-index: 2;
+}
+.gr-bubble-4 {
+    width: 38px;
+    height: 38px;
+    background: #34D399;
+    color: #064E3B;
+    left: 70%;
+    top: 25px;
+    font-size: 0.72rem;
+    z-index: 1;
+}
+
+.gr-location-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    margin-top: 0.5rem;
+}
+.gr-location-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.82rem;
+}
+.gr-location-flag {
+    font-size: 1.05rem;
+    line-height: 1;
+}
+.gr-location-name {
+    font-weight: 600;
+    color: var(--gr-text-title);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.gr-progress-bar-wrap {
+    width: 85px;
+    height: 6px;
+    background: #E8EFEA;
+    border-radius: 999px;
+    overflow: hidden;
+}
+.gr-progress-bar-fill {
+    height: 100%;
+    background: var(--gr-dark-green);
+    border-radius: 999px;
+}
+
+/* Orders History Section in Dashboard */
+.gr-orders-section {
+    grid-column: 1 / -1;
+    background: var(--gr-bg-card);
+    border-radius: var(--gr-radius-card);
+    padding: 1.5rem;
+    box-shadow: var(--gr-shadow-card);
+    border: 1px solid var(--gr-border);
+    margin-top: 0.5rem;
+}
+.gr-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.gr-search-input {
+    background: #F4F7F5;
+    border: 1px solid var(--gr-border);
+    border-radius: 12px;
+    padding: 0.5rem 1rem 0.5rem 2.2rem;
+    font-size: 0.85rem;
+    color: var(--gr-text-title);
+    outline: none;
+    width: 260px;
+    transition: all 0.2s ease;
+}
+.gr-search-input:focus {
+    background: #ffffff;
+    border-color: var(--gr-dark-green);
+    box-shadow: 0 0 0 3px rgba(11, 59, 36, 0.1);
+}
+.gr-table-wrap {
+    overflow-x: auto;
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid var(--gr-border);
+}
+.gr-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+.gr-table th {
+    background: #F7FAF8;
+    color: var(--gr-text-muted);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--gr-border);
+}
+.gr-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--gr-border);
+    vertical-align: middle;
+}
+.gr-table tr:last-child td {
+    border-bottom: none;
+}
+.gr-table tr:hover td {
+    background: rgba(11, 59, 36, 0.02);
+}
+
+/* Responsiveness */
+@media (max-width: 1100px) {
+    .gr-dashboard-layout {
+        grid-template-columns: 1fr;
+    }
+    .gr-sidebar {
+        position: static;
+        max-height: none;
+    }
+    .gr-bento-grid {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 640px) {
+    .gr-dashboard-container {
+        padding: 0.75rem;
+    }
+    .gr-kpis-grid {
+        grid-template-columns: 1fr;
+    }
+    .gr-kpi-value {
+        font-size: 1.5rem;
+    }
+    .gr-search-input {
+        width: 100%;
+    }
+}
+
+/* Super-Admin Responsive Navigation */
+@media (max-width: 768px) {
+    .admin-desktop-tabs {
+        display: none !important;
+    }
+    .admin-shell {
+        padding-bottom: 85px !important;
+    }
+}
+@media (min-width: 769px) {
+    .admin-desktop-tabs {
+        display: flex !important;
+    }
+}
+
+
+
 
 
 
