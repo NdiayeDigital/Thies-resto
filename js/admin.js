@@ -4017,109 +4017,153 @@ router.add('#/admin-login', () => {
 
 async function handleAdminLogin(e) {
     e.preventDefault();
-    const user = (document.getElementById('admin-user') ? document.getElementById('admin-user').value : '').trim().toLowerCase();
+    const user = (document.getElementById('admin-user') ? document.getElementById('admin-user').value : '').trim();
     const pass = (document.getElementById('admin-pass') ? document.getElementById('admin-pass').value : '').trim();
     
-    // 1. Call secure proxy API (Zero Payload Logging)
+    if (!user || !pass) {
+        showToast("Veuillez saisir votre identifiant et votre mot de passe administrateur.", "warning");
+        return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnContent = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Authentification sécurisée...';
+    }
+
     try {
-        await fetch('/api/auth/admin-login', {
+        const response = await fetch('/api/auth/admin-login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: user, password: pass })
         });
-    } catch (proxyErr) {}
 
-    // Accept standard admin usernames or passwords
-    const isUserAdmin = !user || user === 'thiesresto' || user === 'admin' || user === 'superadmin' || user === 'super-admin' || user === 'root' || user === 'thiesresto.th@gmail.com';
-    const isPassAdmin = pass === 'thiesresto221' || pass === 'admin221' || pass === 'admin' || pass === 'thies2026' || pass === '1234' || pass.length >= 3;
+        const data = await response.json();
 
-    if (isUserAdmin && isPassAdmin) {
-        isSuperAdminSession = true;
-        try {
-            sessionStorage.setItem('admin_session', 'true');
-            sessionStorage.setItem('thies_admin_logged', 'true');
-            sessionStorage.setItem('admin_password', pass || 'thiesresto221');
-            localStorage.setItem('admin_session', 'true');
-        } catch (err) {}
-
-        if (typeof updateNavbar === 'function') updateNavbar();
-        showToast("Connexion Super-Admin établie ️", "success");
-        router.navigate('/admin');
-        return;
-    }
-    
-    // Attempt Supabase RPC if client exists
-    if (typeof supabaseClient !== 'undefined' && supabaseClient) {
-        try {
-            const { data: isValid, error } = await supabaseClient.rpc('verify_admin_login', {
-                p_password: pass
-            });
-            if (!error && isValid) {
-                isSuperAdminSession = true;
-                try {
-                    sessionStorage.setItem('admin_session', 'true');
-                    sessionStorage.setItem('thies_admin_logged', 'true');
-                    sessionStorage.setItem('admin_password', pass);
-                    localStorage.setItem('admin_session', 'true');
-                } catch (err) {}
-                showToast("Connexion Super-Admin établie", "success");
-                router.navigate('/admin');
-                return;
+        if (response.ok && data.success && data.token) {
+            // Strict server-validated session with cryptographic JWT token
+            isSuperAdminSession = true;
+            window.isSuperAdminSession = true;
+            try {
+                sessionStorage.setItem('thies_admin_token', data.token);
+                sessionStorage.setItem('admin_session', 'true');
+                sessionStorage.setItem('thies_admin_logged', 'true');
+                sessionStorage.removeItem('admin_password');
+                localStorage.setItem('thies_admin_token', data.token);
+                localStorage.setItem('admin_session', 'true');
+            } catch (storageErr) {
+                console.warn("Storage warning:", storageErr);
             }
-        } catch (ex) {}
+
+            showToast("Authentification réussie ! Bienvenue dans la Console Super-Admin 🛡️", "success");
+            if (typeof updateNavbar === 'function') updateNavbar();
+            if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
+
+            // Sync fresh data
+            if (typeof store !== 'undefined' && typeof store.syncLiveServerData === 'function') {
+                store.syncLiveServerData().catch(() => {});
+            }
+
+            router.navigate('/admin');
+            return;
+        }
+
+        // Authentication rejected by server: clear any previous tokens/sessions
+        window.logoutSuperAdmin(false);
+        const errorMsg = data && data.message ? data.message : "Identifiants administrateur invalides ou non reconnus.";
+        showToast(errorMsg, "danger");
+    } catch (err) {
+        console.error("Admin login network/server error:", err);
+        showToast("Erreur de connexion au serveur d'authentification.", "danger");
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnContent;
+        }
+    }
+}
+
+// ----------------------------------------------------
+// Strict Server Token Verification for Admin Access
+// ----------------------------------------------------
+window.verifyAdminSessionToken = async function() {
+    const token = sessionStorage.getItem('thies_admin_token') || localStorage.getItem('thies_admin_token');
+    if (!token) {
+        window.logoutSuperAdmin(false);
+        return false;
     }
 
-    // Direct fallback for ease of access
-    isSuperAdminSession = true;
     try {
-        sessionStorage.setItem('admin_session', 'true');
-        sessionStorage.setItem('thies_admin_logged', 'true');
-        localStorage.setItem('admin_session', 'true');
-    } catch (err) {}
-    showToast("Connexion Super-Admin autorisée", "success");
-    router.navigate('/admin');
-}
+        const res = await fetch('/api/auth/verify-session', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.valid && data.session && data.session.role === 'superadmin') {
+                isSuperAdminSession = true;
+                window.isSuperAdminSession = true;
+                return true;
+            }
+        }
+    } catch (e) {
+        console.warn("Session verification network error:", e);
+        // In case of transient network glitch but token exists and was previously validated
+        if (token && isSuperAdminSession) {
+            return true;
+        }
+    }
+
+    window.logoutSuperAdmin(false);
+    return false;
+};
 
 let adminActiveTab = 'console';
 if (typeof window !== 'undefined') {
-    if (!window.isSuperAdminSession) {
-        window.isSuperAdminSession = Boolean(
-            sessionStorage.getItem('admin_session') === 'true' ||
-            sessionStorage.getItem('thies_admin_logged') === 'true' ||
-            localStorage.getItem('admin_session') === 'true'
-        );
-    }
+    window.isSuperAdminSession = Boolean(
+        (sessionStorage.getItem('thies_admin_token') || localStorage.getItem('thies_admin_token')) &&
+        (sessionStorage.getItem('admin_session') === 'true' || localStorage.getItem('admin_session') === 'true')
+    );
 }
 
-window.logoutSuperAdmin = function() {
+window.logoutSuperAdmin = function(notify = true) {
     try {
+        sessionStorage.removeItem('thies_admin_token');
         sessionStorage.removeItem('admin_session');
         sessionStorage.removeItem('thies_admin_logged');
         sessionStorage.removeItem('admin_password');
+        localStorage.removeItem('thies_admin_token');
         localStorage.removeItem('admin_session');
     } catch(e) {}
     isSuperAdminSession = false;
     window.isSuperAdminSession = false;
-    if (typeof showToast === 'function') showToast("Déconnexion Super-Admin réussie.", "info");
+    if (notify && typeof showToast === 'function') {
+        showToast("Déconnexion Super-Admin réussie.", "info");
+    }
     if (typeof updateNavbar === 'function') updateNavbar();
     if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
-    if (typeof router !== 'undefined') router.navigate('/');
+    if (typeof router !== 'undefined' && window.location.hash && window.location.hash.startsWith('#/admin')) {
+        router.navigate('/');
+    }
 };
 
-router.add('#/admin', () => {
+router.add('#/admin', async () => {
     // Hide cart
-    document.getElementById('floating-cart-bar').style.display = 'none';
-    stopOrderPolling();
-    hideLoadingOverlay();
+    const cartBar = document.getElementById('floating-cart-bar');
+    if (cartBar) cartBar.style.display = 'none';
+    if (typeof stopOrderPolling === 'function') stopOrderPolling();
+    if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
     
-    // Always ensure super admin session is maintained when accessing /admin
-    isSuperAdminSession = true;
-    window.isSuperAdminSession = true;
-    try {
-        sessionStorage.setItem('admin_session', 'true');
-        sessionStorage.setItem('thies_admin_logged', 'true');
-        localStorage.setItem('admin_session', 'true');
-    } catch(e) {}
+    // Strict Token Authenticity Check on View Load
+    const isValid = await window.verifyAdminSessionToken();
+    if (!isValid) {
+        showToast("Session expirée ou non autorisée. Veuillez vous connecter.", "danger");
+        router.navigate('/admin-login');
+        return;
+    }
     
     renderAdminView();
     if (typeof window.renderMobileBottomNav === 'function') {

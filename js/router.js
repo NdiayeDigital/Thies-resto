@@ -101,6 +101,18 @@ class Router {
             }
         }
 
+        // 1b. GUEST / CLIENT ATTEMPTING TO ACCESS #/admin DIRECTLY: Must have valid token, otherwise redirect to #/admin-login
+        else if (hash === '#/admin') {
+            const hasAdminToken = Boolean(
+                (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('thies_admin_token')) ||
+                (typeof localStorage !== 'undefined' && localStorage.getItem('thies_admin_token'))
+            );
+            if (!hasAdminToken) {
+                this.navigate('/admin-login');
+                return;
+            }
+        }
+
         // 2. RESTAURANT PARTNER LOCK-IN: Restaurant can only access Dashboard routes until disconnected
         else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
             const allowedRestoRoutes = [

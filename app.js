@@ -1729,9 +1729,11 @@ function updateNavbar() {
 
 function logoutAdmin() {
     try {
+        sessionStorage.removeItem('thies_admin_token');
         sessionStorage.removeItem('admin_session');
         sessionStorage.removeItem('thies_admin_logged');
         sessionStorage.removeItem('admin_password');
+        localStorage.removeItem('thies_admin_token');
         localStorage.removeItem('admin_session');
         sessionStorage.removeItem('resto_session');
         sessionStorage.removeItem('restaurantSession');
@@ -1740,9 +1742,11 @@ function logoutAdmin() {
         console.warn("Failed to clear admin_session from storage", e);
     }
     isSuperAdminSession = false;
+    window.isSuperAdminSession = false;
     currentRestaurantSession = null;
     if (typeof showToast === 'function') showToast("Déconnexion Super-Admin réussie. Vous êtes maintenant sur l'espace client.", "info");
     if (typeof updateNavbar === 'function') updateNavbar();
+    if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
     if (typeof router !== 'undefined') router.navigate('/');
 }
 window.logoutAdmin = logoutAdmin;

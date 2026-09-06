@@ -70,30 +70,33 @@ export default async function handler(req, res) {
   const { action } = req.query || {};
 
   try {
+    if (req.method === 'GET' && (action === 'verify-session' || req.url.includes('verify-session'))) {
+      const authHeader = req.headers['authorization'] || '';
+      const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || '');
+      const payload = verifySignedToken(token);
+      if (payload) {
+        return res.status(200).json({ valid: true, session: payload });
+      }
+      return res.status(401).json({ valid: false, message: 'Session invalide ou expirée.' });
+    }
+
     if (req.method === 'POST' && (action === 'admin' || req.url.includes('admin'))) {
       const { username, password } = req.body || {};
       const userClean = cleanAuthString(username);
       const passClean = String(password || '').trim();
 
       const userRaw = String(username || '').trim().toLowerCase();
-      const isAdminUser = !userClean || userClean === 'admin' || userClean === 'thiesresto' || userClean === 'superadmin' || userClean === 'root' || userRaw === 'thiesresto.th@gmail.com' || userClean === 'thiesrestothgmailcom';
-      const envAdminPass = process.env.ADMIN_PASSWORD || 'thiesresto221';
+      const isAdminUser = userClean === 'admin' || userClean === 'thiesresto' || userClean === 'superadmin' || userClean === 'root' || userRaw === 'thiesresto.th@gmail.com' || userClean === 'thiesrestothgmailcom';
+      const strongAdminPass = process.env.ADMIN_PASSWORD || 'thiesresto221';
 
-      const validPasswords = [
-        envAdminPass,
-        'thiesresto221',
-        'admin221',
-        'admin',
-        'thies2026',
-        '1234'
-      ];
-
-      const isPassValid = validPasswords.some(p => timingSafeStringEqual(passClean, p)) || passClean.length >= 3;
+      // Strict timing-safe validation against strong admin password: NO length>=3 bypass, NO weak fallbacks ('admin', '1234')
+      const isPassValid = timingSafeStringEqual(passClean, strongAdminPass);
 
       if (isAdminUser && isPassValid) {
         const token = generateSignedToken({
           role: 'superadmin',
-          name: 'Super Admin THIES Resto'
+          name: 'Super Admin THIES Resto',
+          scope: 'full_platform'
         });
 
         return res.status(200).json({
@@ -105,7 +108,7 @@ export default async function handler(req, res) {
         });
       }
 
-      return res.status(401).json({ success: false, message: 'Identifiants administrateur non reconnus.' });
+      return res.status(401).json({ success: false, message: 'Identifiants administrateur invalides ou non reconnus.' });
     }
 
     if (req.method === 'POST') {

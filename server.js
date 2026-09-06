@@ -376,19 +376,11 @@ app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
     const passClean = String(password || '').trim();
 
     const userRaw = String(username || '').trim().toLowerCase();
-    const isAdminUser = !userClean || userClean === 'admin' || userClean === 'thiesresto' || userClean === 'superadmin' || userClean === 'root' || userRaw === 'thiesresto.th@gmail.com' || userClean === 'thiesrestothgmailcom';
-    const envAdminPass = process.env.ADMIN_PASSWORD || 'thiesresto221';
+    const isAdminUser = userClean === 'admin' || userClean === 'thiesresto' || userClean === 'superadmin' || userClean === 'root' || userRaw === 'thiesresto.th@gmail.com' || userClean === 'thiesrestothgmailcom';
+    const strongAdminPass = process.env.ADMIN_PASSWORD || 'thiesresto221';
     
-    const validPasswords = [
-      envAdminPass,
-      'thiesresto221',
-      'admin221',
-      'admin',
-      'thies2026',
-      '1234'
-    ];
-
-    const isPassValid = validPasswords.some(p => timingSafeStringEqual(passClean, p)) || passClean.length >= 3;
+    // Strict timing-safe validation against strong admin password: NO length>=3 bypass, NO weak fallbacks ('admin', '1234')
+    const isPassValid = timingSafeStringEqual(passClean, strongAdminPass);
 
     if (isAdminUser && isPassValid) {
       const sessionData = {
@@ -404,7 +396,7 @@ app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
         entity_type: 'security',
         entity_id: 'admin',
         actor: 'SuperAdmin',
-        details: 'Authentification console Super-Admin validée.',
+        details: 'Authentification console Super-Admin validée par JWT signé.',
         req
       });
 
@@ -417,9 +409,18 @@ app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
       });
     }
 
+    recordActivityLog({
+      action: 'Tentative de connexion Super-Admin rejetée',
+      entity_type: 'security',
+      entity_id: 'admin',
+      actor: 'Inconnu',
+      details: `Échec d'authentification pour l'utilisateur: ${userRaw || 'anonyme'}.`,
+      req
+    });
+
     return res.status(401).json({
       success: false,
-      message: 'Identifiants administrateur non reconnus.'
+      message: 'Identifiants administrateur invalides ou non reconnus.'
     });
   } catch (err) {
     console.error('[Auth Proxy] Erreur lors de l\'authentification admin.');

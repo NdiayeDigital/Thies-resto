@@ -36,9 +36,12 @@ try {
     if (sessionStr) {
         currentRestaurantSession = JSON.parse(sessionStr);
     }
-    isSuperAdminSession = sessionStorage.getItem('admin_session') === 'true' || 
-                          sessionStorage.getItem('thies_admin_logged') === 'true' || 
-                          localStorage.getItem('admin_session') === 'true';
+    const hasAdminToken = Boolean(sessionStorage.getItem('thies_admin_token') || localStorage.getItem('thies_admin_token'));
+    isSuperAdminSession = hasAdminToken && (
+        sessionStorage.getItem('admin_session') === 'true' || 
+        sessionStorage.getItem('thies_admin_logged') === 'true' || 
+        localStorage.getItem('admin_session') === 'true'
+    );
 } catch (e) {
     console.warn("Session storage restore warning:", e);
 }

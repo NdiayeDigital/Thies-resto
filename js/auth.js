@@ -493,46 +493,54 @@ async function handleRestaurantLogin(e) {
     const cleanInputUser = cleanNormalize(username).replace(/^id_?/, '');
     const cleanInputPass = cleanNormalize(password);
 
-    // 1. Super Admin Detection (par identifiant, email et mot de passe admin)
-    const customAdminPass = localStorage.getItem('thies_super_admin_password') || 'thiesresto221';
+    // 1. Super Admin Detection (par identifiant/email avec vérification stricte du token serveur)
     const isAdminUser = username === 'thiesresto' || username === 'admin' || username === 'superadmin' || username === 'super-admin' || username === 'root' || username === 'thiesresto.th@gmail.com';
-    const isSuperPassMatch = (password === customAdminPass) || (password === 'thiesresto221') || (password === 'admin221') || (password === 'admin123');
 
-    if (isAdminUser && isSuperPassMatch) {
-        // Authentification via Proxy API sécurisé (sans logging de payload)
+    if (isAdminUser) {
         try {
-            await fetch('/api/auth/admin-login', {
+            const adminLoginRes = await fetch('/api/auth/admin-login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
+
+            const authData = await adminLoginRes.json();
+
+            if (adminLoginRes.ok && authData.success && authData.token) {
+                isSuperAdminSession = true;
+                window.isSuperAdminSession = true;
+                try {
+                    sessionStorage.setItem('thies_admin_token', authData.token);
+                    sessionStorage.setItem('thies_admin_logged', 'true');
+                    sessionStorage.setItem('admin_session', 'true');
+                    sessionStorage.removeItem('admin_password');
+                    localStorage.setItem('thies_admin_token', authData.token);
+                    localStorage.setItem('admin_session', 'true');
+                } catch (err) {}
+                
+                showToast("Connexion réussie ! Bienvenue dans la Console Super-Admin 🛡️", "success");
+                if (typeof updateNavbar === 'function') updateNavbar();
+                if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
+                
+                if (typeof store !== 'undefined' && store.syncFromSupabase) {
+                    try {
+                        await store.syncFromSupabase();
+                    } catch (syncErr) {}
+                }
+
+                setTimeout(() => {
+                    const modal = document.getElementById('auth-modal');
+                    if (modal) modal.style.display = 'none';
+                    router.navigate('/admin');
+                }, 300);
+                return;
+            }
         } catch (proxyErr) {
-            // Non-blocking fallback
+            console.error("Super Admin auth proxy error:", proxyErr);
         }
 
-        isSuperAdminSession = true;
-        try {
-            sessionStorage.setItem('thies_admin_logged', 'true');
-            sessionStorage.setItem('admin_session', 'true');
-            sessionStorage.setItem('admin_password', password || 'thiesresto221');
-            localStorage.setItem('admin_session', 'true');
-        } catch (err) {}
-        
-        showToast("Connexion réussie ! Bienvenue dans la Console Super-Admin 🛡️", "success");
-        if (typeof updateNavbar === 'function') updateNavbar();
-        
-        if (typeof store !== 'undefined' && store.syncFromSupabase) {
-            try {
-                await store.syncFromSupabase();
-            } catch (syncErr) {}
-        }
-
-        setTimeout(() => {
-            const modal = document.getElementById('auth-modal');
-            if (modal) modal.style.display = 'none';
-            router.navigate('/admin');
-        }, 300);
-        return;
+        // Si échec de la validation serveur pour un compte admin, ne pas faire de fallback client
+        // On continue uniquement si ce n'est pas un mot de passe admin valide pour vérifier si c'est un resto
     }
     
     // 2. Restaurant Login verification with strict Super-Admin approval check
