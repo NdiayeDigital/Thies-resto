@@ -5249,7 +5249,7 @@ window.toggleProfileEditForm = function() {
 };
 
 window.showAffiliateProgramModal = function(source = 'general') {
-    const supportPhone = '221784799882';
+    const supportPhone = '221776064596';
     const waText = encodeURIComponent(`Bonjour l'équipe THIES Resto 👋\n\nJe souhaite rejoindre le *Programme Affilié & Ambassadeur* de la plateforme à Thiès (Réf: ${source}).\n\n👤 Mon Nom : \n📱 Téléphone WhatsApp : \n📍 Quartier à Thiès : \n\nMerci de m'indiquer la démarche et mes liens de parrainage !`);
     const waLink = `https://wa.me/${supportPhone}?text=${waText}`;
 
@@ -5316,7 +5316,7 @@ window.showAffiliateProgramModal = function(source = 'general') {
                 <i class="ri-whatsapp-line" style="font-size: 1.2rem;"></i> Postuler &amp; Contacter le Support WhatsApp
             </a>
             <div style="text-align: center; margin-top: 0.5rem; font-size: 0.76rem; color: var(--text-secondary);">
-                Réponse rapide garantie par notre équipe locale à Thiès (+221 78 479 98 82)
+                Réponse rapide garantie par notre équipe locale à Thiès (+221 77 606 45 96)
             </div>
         </div>
     `);
@@ -5486,7 +5486,7 @@ function renderCGV() {
                 <h2 style="color: var(--text-primary); margin-top: 2rem; margin-bottom: 1rem; font-family: var(--font-serif); font-size: 1.5rem;">1. Mentions Légales</h2>
                 <p><strong>Éditeur de la plateforme :</strong> NdiayeDigital</p>
                 <p><strong>Plateforme :</strong> THIES Resto (thies-resto.com)</p>
-                <p><strong>Contact :</strong> contact@thies-resto.com / +221 78 479 98 82</p>
+                <p><strong>Contact :</strong> thiesresto.th@gmail.com / +221 77 606 45 96</p>
                 <p><strong>Hébergement :</strong> Vercel Inc. (USA) / Base de données : Supabase</p>
                 <p>La plateforme THIES Resto est un annuaire et un outil de mise en relation dématérialisé dédié à la restauration dans la région de Thiès (Sénégal).</p>
 
@@ -5519,7 +5519,7 @@ function renderCGV() {
                     <li>La transmission de la commande au restaurant.</li>
                     <li>Le suivi du programme de fidélité.</li>
                 </ul>
-                <p>Conformément à la législation sénégalaise sur la protection des données à caractère personnel (CDP), THIES Resto s'engage à ne jamais revendre ces données à des tiers. Vous disposez d'un droit d'accès et de suppression de vos données en contactant : contact@thies-resto.com.</p>
+                <p>Conformément à la législation sénégalaise sur la protection des données à caractère personnel (CDP), THIES Resto s'engage à ne jamais revendre ces données à des tiers. Vous disposez d'un droit d'accès et de suppression de vos données en contactant : thiesresto.th@gmail.com.</p>
                 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 2rem 0;">
                 <p style="font-size: 0.85rem; font-style: italic; text-align: center;">Ces conditions sont acceptées implicitement par toute personne utilisant la plateforme.</p>

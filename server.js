@@ -375,7 +375,8 @@ app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
     const userClean = cleanAuthString(username);
     const passClean = String(password || '').trim();
 
-    const isAdminUser = !userClean || userClean === 'admin' || userClean === 'thiesresto' || userClean === 'superadmin' || userClean === 'root';
+    const userRaw = String(username || '').trim().toLowerCase();
+    const isAdminUser = !userClean || userClean === 'admin' || userClean === 'thiesresto' || userClean === 'superadmin' || userClean === 'root' || userRaw === 'thiesresto.th@gmail.com' || userClean === 'thiesrestothgmailcom';
     const envAdminPass = process.env.ADMIN_PASSWORD || 'thiesresto221';
     
     const validPasswords = [

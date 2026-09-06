@@ -493,9 +493,9 @@ async function handleRestaurantLogin(e) {
     const cleanInputUser = cleanNormalize(username).replace(/^id_?/, '');
     const cleanInputPass = cleanNormalize(password);
 
-    // 1. Super Admin Detection (par identifiant et mot de passe admin)
+    // 1. Super Admin Detection (par identifiant, email et mot de passe admin)
     const customAdminPass = localStorage.getItem('thies_super_admin_password') || 'thiesresto221';
-    const isAdminUser = username === 'thiesresto' || username === 'admin' || username === 'superadmin' || username === 'super-admin' || username === 'root';
+    const isAdminUser = username === 'thiesresto' || username === 'admin' || username === 'superadmin' || username === 'super-admin' || username === 'root' || username === 'thiesresto.th@gmail.com';
     const isSuperPassMatch = (password === customAdminPass) || (password === 'thiesresto221') || (password === 'admin221') || (password === 'admin123');
 
     if (isAdminUser && isSuperPassMatch) {

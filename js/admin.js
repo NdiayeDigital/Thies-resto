@@ -455,7 +455,7 @@ function renderDashboardTabContent(r) {
     // Block restricted tabs if trial expired
     const lockedTabs = ['orders', 'reservations', 'menu', 'accounting'];
     if (trialExpired && lockedTabs.includes(dashboardActiveTab)) {
-        const adminWhatsApp = '221784799882';
+        const adminWhatsApp = '221776064596';
         const reactivateMsg = encodeURIComponent(`Bonjour Thiès Resto \n\nMa période d'essai gratuit de 7 jours est terminée et je souhaite réactiver mon restaurant.\n\n<i class="store-2-line"></i> Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
         panel.innerHTML = `
             <div style="text-align: center; padding: 3.5rem 2rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; max-width: 680px; margin: 1.5rem auto;">
@@ -1874,7 +1874,7 @@ function renderDashboardTabContent(r) {
         const isPaid = r.subscriptionPack && !r.subscriptionPack.includes('Gratuit') && !r.subscriptionPack.includes('Essai') && !r.subscriptionPack.includes('Aucun');
         
         // WhatsApp admin number for subscription requests
-        const adminWhatsApp = '221784799882';
+        const adminWhatsApp = '221776064596';
         const buildWhatsAppLink = (pack, price, period = 'mois') => {
             const msg = encodeURIComponent(`Bonjour Thiès Resto \n\nJe souhaite souscrire au *${pack}* (${price} FCFA/${period}) pour mon restaurant.\n\n<i class='ri-store-2-line'></i> Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n<i class="inbox-archive-line"></i> Pack choisi : ${pack}\n\nMerci de procéder à l'activation !`);
             return 'https://wa.me/' + adminWhatsApp + '?text=' + msg;
@@ -2398,7 +2398,7 @@ window.openSubscriptionPaymentModal = function(restaurantId, packName, amount, i
 
     const formattedAmount = Number(amount).toLocaleString('fr-FR') + ' FCFA';
     const period = packName.includes('VIP') || packName.includes('Annuel') ? 'an' : 'mois';
-    const adminWhatsApp = '221784799882';
+    const adminWhatsApp = '221776064596';
     const waHelpMsg = encodeURIComponent(`Bonjour Thiès Resto \n\nJe suis en train de régler mon abonnement *${packName}* (${formattedAmount}/${period}) pour *${r.name}* via ${initialMethod === 'orange' ? 'Orange Money' : 'Wave'}.\n\nPouvez-vous m'assister pour la validation ?`);
     const waLink = `https://wa.me/${adminWhatsApp}?text=${waHelpMsg}`;
 
@@ -4030,7 +4030,7 @@ async function handleAdminLogin(e) {
     } catch (proxyErr) {}
 
     // Accept standard admin usernames or passwords
-    const isUserAdmin = !user || user === 'thiesresto' || user === 'admin' || user === 'superadmin' || user === 'super-admin' || user === 'root';
+    const isUserAdmin = !user || user === 'thiesresto' || user === 'admin' || user === 'superadmin' || user === 'super-admin' || user === 'root' || user === 'thiesresto.th@gmail.com';
     const isPassAdmin = pass === 'thiesresto221' || pass === 'admin221' || pass === 'admin' || pass === 'thies2026' || pass === '1234' || pass.length >= 3;
 
     if (isUserAdmin && isPassAdmin) {
@@ -5202,6 +5202,11 @@ function renderAdminTabTable() {
                     </div>
 
                     <form onsubmit="handleAdminChangePassword(event)" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 700; font-size: 0.88rem;">Email Super Administrateur</label>
+                            <input type="email" class="form-control" value="thiesresto.th@gmail.com" disabled style="background: var(--bg-secondary); color: var(--text-primary); font-weight: 700; font-size: 0.95rem; border-radius: 10px;">
+                        </div>
+
                         <div class="form-group">
                             <label class="form-label" style="font-weight: 700; font-size: 0.88rem;">Identifiant Administrateur</label>
                             <input type="text" class="form-control" value="thiesresto" disabled style="background: var(--bg-secondary); color: var(--text-primary); font-weight: 700; font-family: monospace; font-size: 0.95rem; border-radius: 10px;">
