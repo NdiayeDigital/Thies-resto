@@ -111,20 +111,17 @@ class Router {
             }
         }
 
-        // 1b. ACCESS TO #/admin: Opens the Super-Admin console directly without intermediate prompts
+        // 1b. GUEST / UNAUTHENTICATED ATTEMPT TO ACCESS #/admin: Must be authenticated super-admin, otherwise redirect to #/admin-login
         else if (hash === '#/admin') {
-            isSuperAdminSession = true;
-            if (typeof window !== 'undefined') window.isSuperAdminSession = true;
-            try {
-                const adminToken = 'admin_session_jwt_' + Date.now();
-                sessionStorage.setItem('thies_admin_token', adminToken);
-                sessionStorage.setItem('admin_session', 'true');
-                sessionStorage.setItem('thies_admin_logged', 'true');
-                localStorage.setItem('thies_admin_token', adminToken);
-                localStorage.setItem('admin_session', 'true');
-            } catch (e) {}
-            if (typeof updateNavbar === 'function') updateNavbar();
-            if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
+            const hasAdminToken = Boolean(
+                (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) ||
+                (typeof sessionStorage !== 'undefined' && (sessionStorage.getItem('thies_admin_token') || sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true')) ||
+                (typeof localStorage !== 'undefined' && (localStorage.getItem('thies_admin_token') || localStorage.getItem('admin_session') === 'true'))
+            );
+            if (!hasAdminToken) {
+                this.navigate('/admin-login');
+                return;
+            }
         }
 
         // 2. RESTAURANT PARTNER LOCK-IN: Restaurant can only access Dashboard routes until disconnected

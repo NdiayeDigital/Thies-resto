@@ -765,7 +765,7 @@ window.renderMobileBottomNav = function() {
         `;
     } 
     // 2. Super Admin Session (Central Administration Navigation - 4 Clean Tabs: Console, Restaurants, Clients, Profil)
-    else if ((typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) || (typeof window !== 'undefined' && window.location.hash && window.location.hash.startsWith('#/admin'))) {
+    else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession && (typeof window !== 'undefined' && window.location.hash === '#/admin')) {
         const active = typeof adminActiveTab !== 'undefined' ? adminActiveTab : 'console';
         nav.innerHTML = `
             <a href="#" id="bottom-nav-admin-console" class="nav-item ${active === 'console' || active === 'dashboard' || active === 'orders' ? 'active' : ''}" onclick="router.navigate('/admin'); if(typeof switchAdminTab === 'function') switchAdminTab('console'); return false;">

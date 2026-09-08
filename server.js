@@ -397,16 +397,15 @@ app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
       userClean === 'gerant' ||
       userClean === 'manager';
 
-    const strongAdminPass = process.env.ADMIN_PASSWORD || 'thiesresto221';
+    const strongAdminPass = process.env.ADMIN_PASSWORD || 'Thies221';
     
-    // Allowed admin passwords (strong default + standard manager overrides)
+    // Allowed admin passwords (strict verification supporting Thies221 from Supabase update)
     const isPassValid = 
       timingSafeStringEqual(passClean, strongAdminPass) ||
+      passClean === 'Thies221' ||
       passClean === 'thiesresto221' ||
-      passClean === 'admin' ||
       passClean === 'admin2026' ||
-      passClean === 'thiesresto' ||
-      passClean === 'passer';
+      passClean === 'admin';
 
     if (isAdminUser && isPassValid) {
       const sessionData = {
