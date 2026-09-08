@@ -24,13 +24,25 @@ router.add('#/auth', () => {
     const isCustomerAuth = typeof customerAuth !== 'undefined' && customerAuth.isAuthenticated();
     const customerUser = typeof customerAuth !== 'undefined' ? customerAuth.getUser() : {};
     
-    // Check if URL hash indicates partner tab
+    // Check if URL hash indicates partner tab or email confirmation
     const hash = window.location.hash || '';
-    const shouldOpenPartner = hash.includes('partner') || hash.includes('resto') || hash.includes('tab=partner');
+    const searchParams = new URLSearchParams(window.location.search || '');
+    const isEmailVerified = searchParams.get('verified') === 'true' || hash.includes('verified=true');
+    const shouldOpenPartner = hash.includes('partner') || hash.includes('resto') || hash.includes('tab=partner') || isEmailVerified;
 
     container.innerHTML = `
         <div class="auth-container" style="max-width: 500px; margin: 2rem auto; padding: 2rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
             
+            ${isEmailVerified ? `
+                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; border-radius: 16px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; text-align: center;">
+                    <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">🎉</div>
+                    <h3 style="color: #059669; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.35rem;">Email confirmé avec succès !</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">
+                        Votre adresse email a été validée par Supabase. Votre dossier restaurant est désormais transmis pour activation finale par le Super-Admin.
+                    </p>
+                </div>
+            ` : ''}
+
             <!-- SEGMENTED AUTH TABS -->
             <div style="display: flex; background: var(--bg-page); padding: 4px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1.75rem;">
                 <button type="button" id="tab-btn-customer" onclick="switchAuthTab('customer')" style="flex: 1; padding: 0.65rem 0.5rem; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; background: ${shouldOpenPartner ? 'transparent' : 'var(--bg-card)'}; color: ${shouldOpenPartner ? 'var(--text-secondary)' : 'var(--text-primary)'}; box-shadow: ${shouldOpenPartner ? 'none' : '0 2px 6px rgba(0,0,0,0.08)'}; transition: all 0.2s ease;">
@@ -319,6 +331,12 @@ router.add('#/partnership', () => {
                         <option value="Pâtisserie">Pâtisserie / Petit Déjeuner</option>
                         <option value="Gastronomique">Chic / Gastronomique</option>
                     </select>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Email professionnel du gérant <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="email" id="reg-email" class="form-control" placeholder="contact@votre-restaurant.com" required autocomplete="email">
+                    <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Un lien de confirmation sécurisé vous y sera envoyé pour valider votre compte.</small>
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1.25rem;">
@@ -625,21 +643,34 @@ async function handleRestaurantLogin(e) {
 }
 window.handleRestaurantLogin = handleRestaurantLogin;
 
-function handleRestaurantRegister(e) {
+async function handleRestaurantRegister(e) {
     e.preventDefault();
     
     const name = document.getElementById('reg-name').value.trim();
     const address = document.getElementById('reg-address').value.trim();
     const category = document.getElementById('reg-category').value;
+    const emailEl = document.getElementById('reg-email');
+    const email = emailEl ? emailEl.value.trim().toLowerCase() : '';
     const whatsapp = cleanPhoneNumber(document.getElementById('reg-whatsapp').value.trim());
     const openH = document.getElementById('reg-open').value;
     const closeH = document.getElementById('reg-close').value;
     const username = document.getElementById('reg-username').value.trim().toLowerCase();
     const password = document.getElementById('reg-password').value;
-    const imageUrl = document.getElementById('reg-image-url').value;
+    const imageUrl = document.getElementById('reg-image-url') ? document.getElementById('reg-image-url').value : '';
     
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showToast("Veuillez saisir une adresse email valide pour la confirmation", "danger");
+        if (emailEl) emailEl.focus();
+        return;
+    }
+
     if (!/^\+221(70|75|76|77|78)\d{7}$/.test(whatsapp.replace(/\s+/g, ''))) {
         showToast("Numéro WhatsApp invalide (ex: +221 77 XXX XX XX)", "danger");
+        return;
+    }
+
+    if (!password || password.length < 6) {
+        showToast("Le mot de passe doit comporter au moins 6 caractères", "danger");
         return;
     }
 
@@ -648,6 +679,12 @@ function handleRestaurantRegister(e) {
     if (exists) {
         showToast("Cet identifiant est déjà utilisé", "danger");
         return;
+    }
+
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `Envoi en cours... <span class="spinner" style="display:inline-block; width:14px; height:14px; border:2px solid #fff; border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite; vertical-align:middle;"></span>`;
     }
 
     const newId = "r" + (store.getRestaurants().length + 1);
@@ -662,6 +699,7 @@ function handleRestaurantRegister(e) {
         category,
         address,
         whatsapp,
+        email,
         image: imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500',
         openHours: `${openH} - ${closeH}`,
         closedDays: [],
@@ -673,26 +711,87 @@ function handleRestaurantRegister(e) {
         reviews: []
     };
 
+    let emailSent = false;
+
+    // Supabase Auth Integration: Envoi du mail de confirmation
+    if (typeof supabaseClient !== 'undefined' && supabaseClient && supabaseClient.auth) {
+        try {
+            const redirectUrl = window.location.origin.includes('thies-resto.com') 
+                ? 'https://thies-resto.com/#/auth?verified=true'
+                : `${window.location.origin}/#/auth?verified=true`;
+
+            const { data: authData, error: authError } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    emailRedirectTo: redirectUrl,
+                    data: {
+                        restaurant_id: newId,
+                        restaurant_name: name,
+                        username: username,
+                        whatsapp: whatsapp,
+                        role: 'restaurant_partner'
+                    }
+                }
+            });
+
+            if (authError) {
+                console.warn("Supabase auth.signUp avertissement:", authError.message);
+                if (authError.message && authError.message.toLowerCase().includes('already registered')) {
+                    showToast("Cette adresse email est déjà associée à un compte.", "danger");
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = `Envoyer la demande de partenariat 🚀`;
+                    }
+                    return;
+                }
+            } else {
+                emailSent = true;
+            }
+        } catch (authEx) {
+            console.error("Erreur lors de l'enregistrement Supabase Auth:", authEx);
+        }
+    }
+
+    // Sauvegarde du restaurant en statut 'pending'
     store.addRestaurant(newResto);
     
-    const container = document.querySelector('.auth-container');
-    container.innerHTML = `
-        <div style="text-align: center; padding: 2rem 1rem;">
-            <div style="font-size: 3.5rem; margin-bottom: 1rem;">⏳</div>
-            <h2 style="font-size: 1.25rem;">Demande d'inscription envoyée !</h2>
-            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 1.5rem 0;">
-                Votre dossier pour "<strong>${name}</strong>" a été transmis avec succès.
-            </p>
-            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.85rem; text-align: left; margin-bottom: 1.5rem;">
-                Notre super-administrateur valide les inscriptions sous 10 minutes. Vous recevrez une confirmation et un message d'activation directement sur WhatsApp au <strong>${whatsapp}</strong>.<br><br>
-                <strong>Important :</strong> Votre mot de passe choisi sera fonctionnel une fois votre compte activé.
+    const container = document.querySelector('.auth-container') || document.getElementById('main-content');
+    if (container) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 2rem 1rem; max-width: 500px; margin: 0 auto;">
+                <div style="font-size: 3.5rem; margin-bottom: 1rem;">✉️</div>
+                <h2 style="font-size: 1.35rem; color: var(--text-primary); font-family: var(--font-serif); font-weight: 800;">
+                    Vérifiez votre boîte mail !
+                </h2>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 1.5rem 0; line-height: 1.5;">
+                    Un email de confirmation vient d'être envoyé à l'adresse :<br>
+                    <strong style="color: var(--primary); font-size: 0.95rem;">${email}</strong>
+                </p>
+                <div style="background: rgba(var(--primary-rgb), 0.06); border: 1px solid var(--border); padding: 1.25rem; border-radius: 16px; font-size: 0.85rem; text-align: left; margin-bottom: 1.75rem; line-height: 1.5;">
+                    <div style="font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
+                        <span>📋</span> <span>Étapes suivantes :</span>
+                    </div>
+                    <strong>1.</strong> Ouvrez l'email reçu de <em>THIES Resto</em> et cliquez sur le lien de confirmation.<br>
+                    <strong>2.</strong> Une fois votre email confirmé, notre super-administrateur valide le dossier sous 10 minutes.<br>
+                    <strong>3.</strong> Vous recevrez également un message de bienvenue sur WhatsApp au <strong>${whatsapp}</strong>.<br><br>
+                    <small style="color: var(--text-secondary);">💡 Pensez à vérifier vos courriers indésirables (Spam) si vous ne voyez pas l'email.</small>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <button class="btn btn-primary btn-block" onclick="router.navigate('/auth')" style="width: 100%; border-radius: 12px; font-weight: 700; padding: 0.85rem;">
+                        Accéder à l'Espace de Connexion 🔓
+                    </button>
+                    <button class="btn btn-outline btn-block" onclick="router.navigate('/')" style="width: 100%; border-radius: 12px; padding: 0.75rem;">
+                        Retourner à l'accueil
+                    </button>
+                </div>
             </div>
-            <button class="btn btn-primary btn-block" onclick="router.navigate('/')">Retourner à l'accueil</button>
-        </div>
-    `;
+        `;
+    }
     
-    showToast("Inscription enregistrée. En attente d'approbation.", "success");
+    showToast("Demande envoyée ! Veuillez confirmer votre email.", "success");
 }
+window.handleRestaurantRegister = handleRestaurantRegister;
 
 window.handleForgotPassword = function() {
     const usernameEl = document.getElementById('login-id') || document.getElementById('login-username');

@@ -1758,26 +1758,20 @@
       "createdAt": "2026-07-26T10:53:52.123983+00:00"
     },
     {
-      "id": "ORD-6243",
-      "orderNumber": "ORD-6243",
-      "restaurantId": "r8",
-      "customerName": "LUNIKPAPA🫥 ndiaye",
-      "customerPhone": "+221781197096",
-      "mode": "Sur place",
+      "id": "ORD-1688",
+      "orderNumber": "ORD-1688",
+      "restaurantId": "r21",
+      "customerName": "Awa Diop",
+      "customerPhone": "+221769003551",
+      "mode": "A emporter",
       "address": "",
-      "items": [
-        {
-          "qty": 1,
-          "name": "Burger Teranga Double Cheese",
-          "price": 2000
-        }
-      ],
-      "total": 2000,
-      "note": "[Analytics: Temps total: 249s. Parcours: / -> /r/cafe-du-rail -> / -> /r/fast-food-dakar-thies]",
-      "status": "Reçue",
-      "date": "2026-07-30",
-      "time": "00:04",
-      "createdAt": "2026-07-30T00:04:29.748596+00:00"
+      "items": [],
+      "total": 0,
+      "note": "Sauce a part | [Analytics: Temps total: 30542s. Parcours: / -> /r/alamindelice]",
+      "status": "Annulée",
+      "date": "2026-07-26",
+      "time": "12:53",
+      "createdAt": "2026-07-26T10:53:46.797235+00:00"
     },
     {
       "id": "ORD-1787",
@@ -1790,26 +1784,42 @@
       "items": [],
       "total": 0,
       "note": "[Analytics: Temps total: 250s. Parcours: / -> /r/cafe-du-rail -> / -> /r/fast-food-dakar-thies]",
-      "status": "Reçue",
+      "status": "Annulée",
       "date": "2026-07-30",
       "time": "00:04",
       "createdAt": "2026-07-30T00:04:30.931326+00:00"
     },
     {
-      "id": "ORD-8877",
-      "orderNumber": "ORD-8877",
-      "restaurantId": "r11",
-      "customerName": "Djibril Sall",
-      "customerPhone": "+221771920994",
+      "id": "ORD-6288",
+      "orderNumber": "ORD-6288",
+      "restaurantId": "r19",
+      "customerName": "Khadidiatou Bah",
+      "customerPhone": "+221770810101",
       "mode": "Livraison",
-      "address": "Quartier dixième, Cneps",
+      "address": "Keur thieme",
       "items": [],
       "total": 0,
-      "note": "[Analytics: Temps total: 168s. Parcours: / -> /r/restaurant-central]",
-      "status": "Reçue",
-      "date": "2026-08-01",
-      "time": "19:09",
-      "createdAt": "2026-08-01T19:10:00.831128+00:00"
+      "note": "Sans piment sans mayonnaise et de moutarde | [Analytics: Temps total: 239s. Parcours: / -> /r/restaurant-madiba -> /r/snack-du-marche -> /r/biba-food]",
+      "status": "Annulée",
+      "date": "2026-08-02",
+      "time": "21:00",
+      "createdAt": "2026-08-02T21:00:29.481504+00:00"
+    },
+    {
+      "id": "ORD-3433",
+      "orderNumber": "ORD-3433",
+      "restaurantId": "r19",
+      "customerName": "Khadidiatou Bah",
+      "customerPhone": "+221770810101",
+      "mode": "Livraison",
+      "address": "Keur thieme",
+      "items": [],
+      "total": 0,
+      "note": "Sans piment sans mayonnaise et de moutarde | [Analytics: Temps total: 232s. Parcours: / -> /r/restaurant-madiba -> /r/snack-du-marche -> /r/biba-food]",
+      "status": "Annulée",
+      "date": "2026-08-02",
+      "time": "21:00",
+      "createdAt": "2026-08-02T21:00:22.166643+00:00"
     },
     {
       "id": "ORD-8737",
@@ -1822,32 +1832,26 @@
       "items": [],
       "total": 0,
       "note": "[Analytics: Temps total: 173s. Parcours: / -> /r/restaurant-central]",
-      "status": "Reçue",
+      "status": "Annulée",
       "date": "2026-08-01",
       "time": "19:09",
       "createdAt": "2026-08-01T19:10:00.970138+00:00"
     },
     {
-      "id": "ORD-8622",
-      "orderNumber": "ORD-8622",
+      "id": "ORD-8877",
+      "orderNumber": "ORD-8877",
       "restaurantId": "r11",
       "customerName": "Djibril Sall",
       "customerPhone": "+221771920994",
       "mode": "Livraison",
       "address": "Quartier dixième, Cneps",
-      "items": [
-        {
-          "qty": 1,
-          "name": "Yassa Poulet au Feu de Bois",
-          "price": 2200
-        }
-      ],
-      "total": 2200,
-      "note": "[Analytics: Temps total: 163s. Parcours: / -> /r/restaurant-central]",
-      "status": "Reçue",
+      "items": [],
+      "total": 0,
+      "note": "[Analytics: Temps total: 168s. Parcours: / -> /r/restaurant-central]",
+      "status": "Annulée",
       "date": "2026-08-01",
       "time": "19:09",
-      "createdAt": "2026-08-01T19:10:01.028935+00:00"
+      "createdAt": "2026-08-01T19:10:00.831128+00:00"
     },
     {
       "id": "ORD-2205",
@@ -1866,58 +1870,54 @@
       ],
       "total": 800,
       "note": "Sans piment sans mayonnaise et de moutarde | [Analytics: Temps total: 230s. Parcours: / -> /r/restaurant-madiba -> /r/snack-du-marche -> /r/biba-food]",
-      "status": "Reçue",
+      "status": "Annulée",
       "date": "2026-08-02",
       "time": "21:00",
       "createdAt": "2026-08-02T21:00:20.787918+00:00"
     },
     {
-      "id": "ORD-3433",
-      "orderNumber": "ORD-3433",
-      "restaurantId": "r19",
-      "customerName": "Khadidiatou Bah",
-      "customerPhone": "+221770810101",
+      "id": "ORD-8622",
+      "orderNumber": "ORD-8622",
+      "restaurantId": "r11",
+      "customerName": "Djibril Sall",
+      "customerPhone": "+221771920994",
       "mode": "Livraison",
-      "address": "Keur thieme",
-      "items": [],
-      "total": 0,
-      "note": "Sans piment sans mayonnaise et de moutarde | [Analytics: Temps total: 232s. Parcours: / -> /r/restaurant-madiba -> /r/snack-du-marche -> /r/biba-food]",
-      "status": "Reçue",
-      "date": "2026-08-02",
-      "time": "21:00",
-      "createdAt": "2026-08-02T21:00:22.166643+00:00"
-    },
-    {
-      "id": "ORD-6288",
-      "orderNumber": "ORD-6288",
-      "restaurantId": "r19",
-      "customerName": "Khadidiatou Bah",
-      "customerPhone": "+221770810101",
-      "mode": "Livraison",
-      "address": "Keur thieme",
-      "items": [],
-      "total": 0,
-      "note": "Sans piment sans mayonnaise et de moutarde | [Analytics: Temps total: 239s. Parcours: / -> /r/restaurant-madiba -> /r/snack-du-marche -> /r/biba-food]",
-      "status": "Reçue",
-      "date": "2026-08-02",
-      "time": "21:00",
-      "createdAt": "2026-08-02T21:00:29.481504+00:00"
-    },
-    {
-      "id": "ORD-1688",
-      "orderNumber": "ORD-1688",
-      "restaurantId": "r21",
-      "customerName": "Awa Diop",
-      "customerPhone": "+221769003551",
-      "mode": "A emporter",
-      "address": "",
-      "items": [],
-      "total": 0,
-      "note": "Sauce a part | [Analytics: Temps total: 30542s. Parcours: / -> /r/alamindelice]",
+      "address": "Quartier dixième, Cneps",
+      "items": [
+        {
+          "qty": 1,
+          "name": "Yassa Poulet au Feu de Bois",
+          "price": 2200
+        }
+      ],
+      "total": 2200,
+      "note": "[Analytics: Temps total: 163s. Parcours: / -> /r/restaurant-central]",
       "status": "Annulée",
-      "date": "2026-07-26",
-      "time": "12:53",
-      "createdAt": "2026-07-26T10:53:46.797235+00:00"
+      "date": "2026-08-01",
+      "time": "19:09",
+      "createdAt": "2026-08-01T19:10:01.028935+00:00"
+    },
+    {
+      "id": "ORD-6243",
+      "orderNumber": "ORD-6243",
+      "restaurantId": "r8",
+      "customerName": "LUNIKPAPA🫥 ndiaye",
+      "customerPhone": "+221781197096",
+      "mode": "Sur place",
+      "address": "",
+      "items": [
+        {
+          "qty": 1,
+          "name": "Burger Teranga Double Cheese",
+          "price": 2000
+        }
+      ],
+      "total": 2000,
+      "note": "[Analytics: Temps total: 249s. Parcours: / -> /r/cafe-du-rail -> / -> /r/fast-food-dakar-thies]",
+      "status": "Annulée",
+      "date": "2026-07-30",
+      "time": "00:04",
+      "createdAt": "2026-07-30T00:04:29.748596+00:00"
     }
   ],
   "customers": [
@@ -1949,15 +1949,6 @@
       "lastOrderDate": "2026-07-30"
     },
     {
-      "id": "c_221771920994",
-      "name": "Djibril Sall",
-      "phone": "+221771920994",
-      "address": "Quartier dixième, Cneps",
-      "ordersCount": 3,
-      "totalSpent": 2200,
-      "lastOrderDate": "2026-08-01"
-    },
-    {
       "id": "c_221770810101",
       "name": "Khadidiatou Bah",
       "phone": "+221770810101",
@@ -1965,7 +1956,16 @@
       "ordersCount": 3,
       "totalSpent": 800,
       "lastOrderDate": "2026-08-02"
+    },
+    {
+      "id": "c_221771920994",
+      "name": "Djibril Sall",
+      "phone": "+221771920994",
+      "address": "Quartier dixième, Cneps",
+      "ordersCount": 3,
+      "totalSpent": 2200,
+      "lastOrderDate": "2026-08-01"
     }
   ],
-  "savedAt": "2026-09-04T23:22:59.124Z"
+  "savedAt": "2026-09-08T11:14:11.836Z"
 }

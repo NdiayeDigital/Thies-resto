@@ -165,7 +165,8 @@ class Router {
         }
 
         if (!matched) {
-            const handler = this.routes[hash] || this.routes['#/404'];
+            const cleanRouteKey = hash.split('?')[0];
+            const handler = this.routes[hash] || this.routes[cleanRouteKey] || this.routes['#/404'];
             if (handler) {
                 handler();
             } else {

@@ -119,6 +119,12 @@ router.add('#/partnership', () => {
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label class="form-label">Email professionnel du gérant <span class="required" style="color: var(--accent);">*</span></label>
+                    <input type="email" id="reg-email" class="form-control" placeholder="contact@votre-restaurant.com" required autocomplete="email">
+                    <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Un lien de confirmation sécurisé vous y sera envoyé pour valider votre compte.</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label class="form-label">Numéro WhatsApp de réception <span class="required" style="color: var(--accent);">*</span></label>
                     <input type="tel" id="reg-whatsapp" class="form-control" placeholder="ex: +221 77 123 45 67" required>
                     <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">C'est sur ce numéro que vous recevrez les commandes clients.</small>
@@ -270,71 +276,9 @@ window.handleRegImageUpload = async function(event) {
 // The global implementations are exported on window in js/auth.js
 
 function handleRestaurantRegister(e) {
-    e.preventDefault();
-    
-    const name = document.getElementById('reg-name').value.trim();
-    const address = document.getElementById('reg-address').value.trim();
-    const category = document.getElementById('reg-category').value;
-    const whatsapp = cleanPhoneNumber(document.getElementById('reg-whatsapp').value.trim());
-    const openH = document.getElementById('reg-open').value;
-    const closeH = document.getElementById('reg-close').value;
-    const username = document.getElementById('reg-username').value.trim().toLowerCase();
-    const password = document.getElementById('reg-password').value;
-    const imageUrl = document.getElementById('reg-image-url').value;
-    
-    if (!/^\+221(70|75|76|77|78)\d{7}$/.test(whatsapp.replace(/\s+/g, ''))) {
-        showToast("Numéro WhatsApp invalide (ex: +221 77 XXX XX XX)", "danger");
-        return;
+    if (typeof window.handleRestaurantRegister === 'function' && window.handleRestaurantRegister !== handleRestaurantRegister) {
+        return window.handleRestaurantRegister(e);
     }
-
-    // Check availability
-    const exists = store.getRestaurants().find(r => r.username === username || r.slug === username);
-    if (exists) {
-        showToast("Cet identifiant est déjà utilisé", "danger");
-        return;
-    }
-
-    const newId = "r" + (store.getRestaurants().length + 1);
-    const slug = username.replace(/[^a-z0-9]/g, '-');
-    
-    const newResto = {
-        id: newId,
-        name,
-        slug,
-        rating: 5.0,
-        reviewsCount: 0,
-        category,
-        address,
-        whatsapp,
-        image: imageUrl || 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500',
-        openHours: `${openH} - ${closeH}`,
-        closedDays: [],
-        isOpenManual: true,
-        status: "pending",
-        username,
-        password,
-        menu: [],
-        reviews: []
-    };
-
-    store.addRestaurant(newResto);
-    
-    const container = document.querySelector('.auth-container');
-    container.innerHTML = `
-        <div style="text-align: center; padding: 2rem 1rem;">
-            <div style="font-size: 3.5rem; margin-bottom: 1rem;">⏳</div>
-            <h2 style="font-size: 1.25rem;">Demande d'inscription envoyée !</h2>
-            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 1rem 0 1.5rem 0;">
-                Votre dossier pour "<strong>${name}</strong>" a été transmis avec succès.
-            </p>
-            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.85rem; text-align: left; margin-bottom: 1.5rem;">
-                Notre super-administrateur valide les inscriptions sous 10 minutes. Vous recevrez une confirmation et un message d'activation directement sur WhatsApp au <strong>${whatsapp}</strong>.
-            </div>
-            <button class="btn btn-primary btn-block" onclick="router.navigate('/')">Retourner à l'accueil</button>
-        </div>
-    `;
-    
-    showToast("Inscription enregistrée. En attente d'approbation.", "success");
 }
 
 // ----------------------------------------------------
