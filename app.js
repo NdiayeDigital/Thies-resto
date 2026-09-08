@@ -6543,9 +6543,11 @@ window.checkUntreatedOrdersFor10MinAlert = function() {
     }
 };
 
-// Démarrer la surveillance automatique toutes les 20 secondes
+// Démarrer la surveillance automatique uniquement lorsque la page est visible et active
 if (!window._unprocessedOrderInterval) {
     window._unprocessedOrderInterval = setInterval(() => {
+        // Ne jamais actualiser ni alerter en arrière-plan lorsque la personne quitte la plateforme
+        if (typeof document !== 'undefined' && document.hidden) return;
         if (typeof window.checkUntreatedOrdersFor10MinAlert === 'function') {
             window.checkUntreatedOrdersFor10MinAlert();
         }

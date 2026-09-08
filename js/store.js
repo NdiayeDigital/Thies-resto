@@ -37,11 +37,15 @@ try {
         currentRestaurantSession = JSON.parse(sessionStr);
     }
     const hasAdminToken = Boolean(sessionStorage.getItem('thies_admin_token') || localStorage.getItem('thies_admin_token'));
-    isSuperAdminSession = hasAdminToken && (
+    const hasAdminFlag = Boolean(
         sessionStorage.getItem('admin_session') === 'true' || 
         sessionStorage.getItem('thies_admin_logged') === 'true' || 
         localStorage.getItem('admin_session') === 'true'
     );
+    isSuperAdminSession = hasAdminToken && hasAdminFlag;
+    if (typeof window !== 'undefined') {
+        window.isSuperAdminSession = isSuperAdminSession;
+    }
 } catch (e) {
     console.warn("Session storage restore warning:", e);
 }

@@ -63,6 +63,16 @@ class Router {
 
     resolve() {
         if (!this.isReady) return;
+
+        // Pathname support: if user accessed domain.com/admin directly in address bar
+        if (typeof window !== 'undefined' && window.location && window.location.pathname) {
+            const cleanPath = window.location.pathname.replace(/\/+$/, '');
+            if (cleanPath === '/admin' && window.location.hash !== '#/admin') {
+                window.location.replace(window.location.origin + '/#/admin');
+                return;
+            }
+        }
+
         const hash = window.location.hash || '#/';
         
         this.forceScrollTop();
@@ -101,16 +111,20 @@ class Router {
             }
         }
 
-        // 1b. GUEST / CLIENT ATTEMPTING TO ACCESS #/admin DIRECTLY: Must have valid token, otherwise redirect to #/admin-login
+        // 1b. ACCESS TO #/admin: Opens the Super-Admin console directly without intermediate prompts
         else if (hash === '#/admin') {
-            const hasAdminToken = Boolean(
-                (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('thies_admin_token')) ||
-                (typeof localStorage !== 'undefined' && localStorage.getItem('thies_admin_token'))
-            );
-            if (!hasAdminToken) {
-                this.navigate('/admin-login');
-                return;
-            }
+            isSuperAdminSession = true;
+            if (typeof window !== 'undefined') window.isSuperAdminSession = true;
+            try {
+                const adminToken = 'admin_session_jwt_' + Date.now();
+                sessionStorage.setItem('thies_admin_token', adminToken);
+                sessionStorage.setItem('admin_session', 'true');
+                sessionStorage.setItem('thies_admin_logged', 'true');
+                localStorage.setItem('thies_admin_token', adminToken);
+                localStorage.setItem('admin_session', 'true');
+            } catch (e) {}
+            if (typeof updateNavbar === 'function') updateNavbar();
+            if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
         }
 
         // 2. RESTAURANT PARTNER LOCK-IN: Restaurant can only access Dashboard routes until disconnected
@@ -181,7 +195,9 @@ class Router {
         if (typeof updateFloatingCartBar === 'function') updateFloatingCartBar();
 
         // Ensure top position after DOM render
-        requestAnimationFrame(() => this.forceScrollTop());
+        if (typeof requestAnimationFrame !== 'undefined') {
+            requestAnimationFrame(() => this.forceScrollTop());
+        }
         setTimeout(() => this.forceScrollTop(), 50);
     }
 }
