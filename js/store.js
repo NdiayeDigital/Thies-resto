@@ -164,20 +164,23 @@ class Store {
         // Background sync with Supabase and Express Server API
         this.syncPromise = this.syncFromSupabase();
 
-        // Continuous real-time live synchronization (every 5 seconds)
+        // Continuous real-time live synchronization (every 5 seconds when tab is visible)
         if (typeof window !== 'undefined') {
             setInterval(() => {
                 try {
+                    // Do not run background requests when the user has switched tabs or left the platform
+                    if (typeof document !== 'undefined' && document.hidden) return;
                     this.syncLiveServerData();
                 } catch(e) {}
             }, 5000);
         }
 
-        // Auto-check and cancel stale/unacknowledged orders
+        // Auto-check and cancel stale/unacknowledged orders (only when tab is active)
         this.checkAndAutoCancelStaleOrders();
         if (typeof window !== 'undefined') {
             setInterval(() => {
                 try {
+                    if (typeof document !== 'undefined' && document.hidden) return;
                     this.checkAndAutoCancelStaleOrders();
                 } catch(e) {}
             }, 30000);
@@ -264,6 +267,7 @@ class Store {
 
     // High-frequency live synchronization strictly mirroring Supabase and central server
     async syncLiveServerData() {
+        if (typeof document !== 'undefined' && document.hidden) return;
         if (this._isSyncingLive) return;
         this._isSyncingLive = true;
 

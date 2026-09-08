@@ -2081,7 +2081,7 @@ router.add('#/', () => {
                 <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤔</div>
                 <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.2rem;">Votre restaurant préféré n'est pas là ?</h3>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Nous ajoutons continuellement de nouvelles tables à Thiès. Aidez-nous à découvrir les meilleures !</p>
-                <a href="https://wa.me/221784799882?text=Bonjour,%20j'aimerais%20suggérer%20ce%20restaurant%20sur%20Thiès%20à%20Table%20:%20[Insérez le nom]" target="_blank" class="btn btn-primary" style="background: var(--bg-card); color: var(--primary); border: 1px solid var(--primary); text-decoration: none;">
+                <a href="https://wa.me/221776064596?text=Bonjour,%20j'aimerais%20suggérer%20ce%20restaurant%20sur%20Thiès%20Resto%20:%20[Insérez le nom]" target="_blank" class="btn btn-primary" style="background: var(--bg-card); color: var(--primary); border: 1px solid var(--primary); text-decoration: none;">
                     Suggérer un restaurant 💡
                 </a>
             </div>
@@ -4395,7 +4395,7 @@ router.add('#/livreurs', () => {
                 </div>
 
                 <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-                    <a href="https://wa.me/221784799882?text=${encodeURIComponent("Bonjour THIES Resto, je souhaite postuler comme livreur partenaire à Thiès.")}" target="_blank" class="btn btn-primary" style="font-weight: 700; border-radius: 12px; padding: 0.75rem 1.5rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
+                    <a href="https://wa.me/221776064596?text=${encodeURIComponent("Bonjour THIES Resto, je souhaite postuler comme livreur partenaire à Thiès.")}" target="_blank" class="btn btn-primary" style="font-weight: 700; border-radius: 12px; padding: 0.75rem 1.5rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
                         💬 Rejoindre la flotte sur WhatsApp
                     </a>
                     <button class="btn btn-secondary" onclick="router.navigate('/')" style="font-weight: 600; border-radius: 12px; padding: 0.75rem 1.25rem;">
@@ -5289,21 +5289,9 @@ window.showPaymentMethodsModal = function() {
                     </div>
                 </div>
                 <div style="padding: 0.85rem; background: var(--bg-input); border-radius: 12px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
-                    <div style="display: flex; gap: 4px; align-items: center; flex-shrink: 0;">
-                        <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style="border-radius:4px;" title="Wave Sénégal">
-                            <circle cx="24" cy="24" r="24" fill="#1DC3EC"/>
-                            <path d="M24 8C17.4 8 12 13.4 12 20C12 24.2 13.8 27.8 16.8 30.2V39C16.8 40.1 17.9 41 19 41H29C30.1 41 31.2 40.1 31.2 39V30.2C34.2 27.8 36 24.2 36 20C36 13.4 30.6 8 24 8Z" fill="#0F172A"/>
-                            <path d="M24 13C19.6 13 16 16.6 16 21C16 24.2 18 26.8 20.5 28V37.5H27.5V28C30 26.8 32 24.2 32 21C32 16.6 28.4 13 24 13Z" fill="#FFFFFF"/>
-                            <circle cx="20.5" cy="18.5" r="1.8" fill="#0F172A"/>
-                            <circle cx="27.5" cy="18.5" r="1.8" fill="#0F172A"/>
-                            <path d="M21.5 23C22.2 24.2 23 24.8 24 24.8C25 24.8 25.8 24.2 26.5 23" stroke="#F59E0B" stroke-width="2.2" stroke-linecap="round"/>
-                        </svg>
-                        <svg width="22" height="22" viewBox="0 0 48 48" fill="none" style="border-radius:4px;" title="Orange Money">
-                            <rect width="48" height="48" rx="8" fill="#000000"/>
-                            <circle cx="24" cy="24" r="17" fill="#FF7900"/>
-                            <path d="M15 24C15 19 19 15 24 15C29 15 33 19 33 24C33 29 29 33 24 33" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round"/>
-                            <circle cx="24" cy="24" r="3.5" fill="#FFFFFF"/>
-                        </svg>
+                    <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
+                        <img src="/images/wave_senegal.png" alt="Wave Sénégal" style="width: 26px; height: 26px; border-radius: 6px; object-fit: contain; box-shadow: 0 1px 4px rgba(0,0,0,0.12);" title="Wave Sénégal">
+                        <img src="/images/orange_money_senegal.png" alt="Orange Money Sénégal" style="width: 26px; height: 26px; border-radius: 6px; object-fit: contain; box-shadow: 0 1px 4px rgba(0,0,0,0.12);" title="Orange Money Sénégal">
                     </div>
                     <div>
                         <strong style="color: var(--text-primary); font-size: 0.95rem;">2. Paiement d'Avance ou à Réception (Wave / Orange Money)</strong>
@@ -5745,8 +5733,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
 });
 
-// Auto-refresh data every 20 seconds
+// Auto-refresh data every 20 seconds (only when page is visible)
 setInterval(() => {
+    if (typeof document !== 'undefined' && document.hidden) return;
     if (typeof store !== 'undefined' && store.syncFromSupabase) {
         // We only want to refresh silently if we're not currently editing something.
         // For clients, it's fine. For admin, maybe skip if typing.

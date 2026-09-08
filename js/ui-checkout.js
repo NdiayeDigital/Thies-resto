@@ -200,9 +200,19 @@ function renderCheckoutTab(r) {
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <img src="/images/wave_senegal.png" alt="Wave Sénégal" style="width: 20px; height: 20px; border-radius: 4px; object-fit: contain;">
-                                <strong style="color: var(--text-primary); font-size: 0.95rem;">Paiement Wave d'avance (Direct au restaurant)</strong>
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">Paiement Wave (Direct au restaurant)</strong>
                             </div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Transfert Wave direct sur le numéro WhatsApp officiel du restaurateur pour lancer la commande</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Transfert Wave sans frais sur le numéro officiel du restaurant pour préparer la commande</div>
+                        </div>
+                    </label>
+                    <label class="delivery-radio-card" style="padding: 0.85rem 1rem; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; border: 1px solid var(--border); background: var(--bg-card);">
+                        <input type="radio" name="order-payment" value="Orange Money Sénégal" style="accent-color: var(--primary);">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <img src="/images/orange_money_senegal.png" alt="Orange Money Sénégal" style="width: 20px; height: 20px; border-radius: 4px; object-fit: contain;">
+                                <strong style="color: var(--text-primary); font-size: 0.95rem;">Paiement Orange Money (Direct au restaurant)</strong>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Transfert via #144# ou Max It sur le numéro Orange Money officiel du restaurant</div>
                         </div>
                     </label>
                 </div>
