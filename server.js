@@ -391,6 +391,19 @@ function cleanAuthString(str) {
 }
 
 // ---------------------------------------------------------------------------
+// HEALTH CHECK API
+// ---------------------------------------------------------------------------
+app.get('/api/health', (req, res) => {
+  return res.json({
+    status: 'ok',
+    uptime: Math.round(process.uptime()),
+    timestamp: new Date().toISOString(),
+    restaurantsCount: serverRestaurants.length,
+    ordersCount: serverOrders.length
+  });
+});
+
+// ---------------------------------------------------------------------------
 // AUTHENTICATION PROXY API
 // ---------------------------------------------------------------------------
 app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
@@ -756,7 +769,7 @@ app.get('/api/restaurants', async (req, res) => {
   }
 
   // Public filter: active only with stripped passwords
-  const activeRestos = list.filter(r => r.status === 'active').map(sanitizeResto);
+  const activeRestos = list.filter(r => (r.status || 'active').toLowerCase().startsWith('act')).map(sanitizeResto);
   return res.json({ success: true, restaurants: activeRestos, total: activeRestos.length });
 });
 

@@ -408,7 +408,7 @@
         1
       ],
       "isOpenManual": true,
-      "status": "active",
+      "status": "Actif",
       "username": "le-jardin-des-saveurs",
       "password": "$2a$06$Gn3xE2xBXuEM3ni/xl90gOXHEjzDkYLT8NWwpL1uCJctBdjyc/RMC",
       "coverImage": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&auto=format&fit=crop&q=60",
@@ -1643,5 +1643,5 @@
   ],
   "orders": [],
   "customers": [],
-  "savedAt": "2026-09-09T23:48:56.599Z"
+  "savedAt": "2026-09-10T00:29:14.108Z"
 }
