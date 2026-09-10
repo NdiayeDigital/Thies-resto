@@ -444,16 +444,16 @@ function getDashboardSubNavHtml(activeTab) {
 function renderDashboardTabContent(r) {
     const panel = document.getElementById('dashboard-tab-panel');
     
-    // Check trial expiry for paywall (7-day trial policy)
-    const _cr = new Date(r.createdAt || '2026-06-25T00:00:00Z');
+    // Check trial expiry for paywall (7-day trial policy) - NEVER block active restaurants or the orders tab
+    const _cr = new Date(r.createdAt || new Date().toISOString());
     const _dt = Math.abs(new Date() - _cr);
     const _dd = Math.ceil(_dt / (1000 * 60 * 60 * 24));
     const _pk = r.subscriptionPack || 'Essai 7 Jours (Gratuit)';
-    const isPaid = _pk && !_pk.includes('Gratuit') && !_pk.includes('Essai') && !_pk.includes('Aucun');
+    const isPaid = (_pk && !_pk.includes('Gratuit') && !_pk.includes('Essai') && !_pk.includes('Aucun')) || r.hasPaidSubscription || r.status === 'active';
     const trialExpired = _dd > 7 && !isPaid && !isSuperAdminSession;
     
-    // Block restricted tabs if trial expired
-    const lockedTabs = ['orders', 'reservations', 'menu', 'accounting'];
+    // Only lock management tabs if trial is explicitly expired and restaurant is not active
+    const lockedTabs = ['menu', 'accounting'];
     if (trialExpired && lockedTabs.includes(dashboardActiveTab)) {
         const adminWhatsApp = '221776064596';
         const reactivateMsg = encodeURIComponent(`Bonjour Thiès Resto \n\nMa période d'essai gratuit de 7 jours est terminée et je souhaite réactiver mon restaurant.\n\n<i class="store-2-line"></i> Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
@@ -4735,6 +4735,150 @@ function renderAdminTabTable() {
                 </div>
             </div>
 
+            <!-- Real-Time Restaurant Traffic & Live Orders Monitor -->
+            <div class="admin-card-section" style="margin-bottom: 2rem;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem; border-bottom:1px solid var(--border); padding-bottom:1rem;">
+                    <div>
+                        <div style="display:inline-flex; align-items:center; gap:0.4rem; font-size:0.75rem; font-weight:700; text-transform:uppercase; color:#10b981; margin-bottom:0.25rem;">
+                            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; box-shadow: 0 0 8px #10b981;"></span>
+                            <span>Flux En Direct • Temps Réel</span>
+                        </div>
+                        <h3 style="margin:0; font-size:1.2rem; font-weight:800; color:var(--text-primary); display:flex; align-items:center; gap:0.5rem;">
+                            <i class='ri-line-chart-line' style="color: var(--primary);"></i>
+                            <span>Trafic des Restaurants &amp; Commandes Réseau</span>
+                        </h3>
+                        <p style="margin:0.25rem 0 0 0; font-size:0.82rem; color:var(--text-secondary);">
+                            Surveillance instantanée des flux de commandes, du volume d'affaires et de l'activité par établissement.
+                        </p>
+                    </div>
+                    <div style="display:flex; gap:0.5rem; align-items:center;">
+                        <button class="btn btn-secondary btn-sm" onclick="store.syncLiveServerData(); renderAdminTabTable(); showToast('Trafic synchronisé', 'success');" style="font-size:0.8rem; font-weight:700; border-radius:8px; display:inline-flex; align-items:center; gap:0.35rem;">
+                            <i class='ri-refresh-line'></i> Actualiser le Trafic
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Live Traffic Table per Restaurant -->
+                <div style="overflow-x: auto; margin-bottom: 1.5rem;">
+                    <table class="admin-table-modern">
+                        <thead>
+                            <tr>
+                                <th>Établissement</th>
+                                <th>Statut Réseau</th>
+                                <th>Commandes Reçues</th>
+                                <th>Volume d'Affaires (GMV)</th>
+                                <th>Dernière Activité</th>
+                                <th>Actions Directes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(() => {
+                                const restoTraffic = restos.map(r => {
+                                    const rOrders = orders.filter(o => o.restaurantId === r.id);
+                                    const rGmv = rOrders.filter(o => o.status !== 'Annulée' && o.status !== 'cancelled').reduce((s, o) => s + (Number(o.total) || 0), 0);
+                                    const lastOrder = rOrders[0] || null;
+                                    return {
+                                        ...r,
+                                        ordersCount: rOrders.length,
+                                        gmv: rGmv,
+                                        lastOrder
+                                    };
+                                }).sort((a, b) => (b.ordersCount - a.ordersCount) || (b.gmv - a.gmv));
+
+                                if (restoTraffic.length === 0) {
+                                    return `<tr><td colspan="6" style="text-align:center; padding:1.5rem; color:var(--text-secondary);">Aucun restaurant enregistré.</td></tr>`;
+                                }
+
+                                return restoTraffic.slice(0, 10).map(r => {
+                                    const isLive = r.status === 'active';
+                                    let lastOrderText = '<span style="color:var(--text-secondary); font-size:0.75rem;">Aucune commande</span>';
+                                    if (r.lastOrder) {
+                                        lastOrderText = `<span style="font-weight:700; color:var(--text-primary); font-size:0.82rem;">${r.lastOrder.id}</span> <span style="font-size:0.75rem; color:var(--text-secondary);">(${Number(r.lastOrder.total || 0).toLocaleString()} F)</span>`;
+                                    }
+
+                                    return `
+                                        <tr>
+                                            <td>
+                                                <div style="font-weight: 800; color: var(--text-primary); font-size: 0.92rem; display:flex; align-items:center; gap:0.4rem;">
+                                                    <span>${r.name}</span>
+                                                    ${r.ordersCount > 0 ? `<span style="background:rgba(16,185,129,0.12); color:#10b981; font-size:0.7rem; font-weight:800; padding:2px 6px; border-radius:6px;">Actif</span>` : ''}
+                                                </div>
+                                                <div style="font-size: 0.75rem; color: var(--text-secondary);">${r.category || 'Restaurant'} • ${r.address || 'Thiès'}</div>
+                                            </td>
+                                            <td>
+                                                <span class="badge ${isLive ? 'badge-success' : 'badge-warning'}" style="font-size:0.75rem;">
+                                                    ${isLive ? '🟢 En Ligne' : (r.status === 'pending' ? '⏳ En attente' : '🔴 Suspendu')}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <strong style="font-size: 0.95rem; color: var(--text-primary);">${r.ordersCount}</strong>
+                                                <span style="font-size: 0.75rem; color: var(--text-secondary);"> commande(s)</span>
+                                            </td>
+                                            <td>
+                                                <strong style="font-size: 0.95rem; color: #10b981;">${r.gmv.toLocaleString()} FCFA</strong>
+                                            </td>
+                                            <td>
+                                                ${lastOrderText}
+                                            </td>
+                                            <td>
+                                                <div style="display: flex; gap: 0.35rem;">
+                                                    <a href="https://wa.me/${(r.whatsapp || '').replace(/\D/g, '')}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-ghost" style="padding: 0.25rem 0.5rem; color: #25D366;" title="Contacter sur WhatsApp">
+                                                        <i class="ri-whatsapp-line"></i>
+                                                    </a>
+                                                    <button class="btn btn-sm btn-secondary" onclick="switchAdminTab('restaurants'); window.adminRestoSearch='${r.name.replace(/'/g, "\\'")}'; renderAdminTabTable();" style="font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.55rem; border-radius: 6px;">
+                                                        Voir Fiche
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('');
+                            })()}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Recent Live Orders Feed -->
+                <div style="background: var(--bg-page); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem;">
+                    <div style="font-size: 0.9rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="display: flex; align-items: center; gap: 0.4rem;">
+                            <i class="ri-history-line" style="color: var(--primary);"></i>
+                            <span>Dernières Commandes Passées sur la Plateforme</span>
+                        </span>
+                        <span style="font-size: 0.78rem; color: var(--text-secondary); font-weight: 600;">
+                            Total : ${orders.length} commande(s)
+                        </span>
+                    </div>
+                    ${orders.length === 0 ? `
+                        <div style="text-align: center; padding: 1.5rem; color: var(--text-secondary); font-size: 0.85rem;">
+                            ⏳ Aucune commande enregistrée pour le moment. Dès qu'un client passe commande, elle apparaîtra ici et chez le restaurant concerné en temps réel.
+                        </div>
+                    ` : `
+                        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                            ${orders.slice(0, 6).map(o => {
+                                const resto = store.getRestaurantById(o.restaurantId);
+                                const rName = resto ? resto.name : (o.restaurantName || o.restaurantId);
+                                return `
+                                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; flex-wrap: wrap; gap: 0.5rem;">
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <div style="font-weight: 800; color: var(--primary); font-family: monospace; font-size: 0.9rem;">${o.id}</div>
+                                            <div>
+                                                <div style="font-weight: 700; color: var(--text-primary); font-size: 0.85rem;">${o.customerName || 'Client'} chez <strong>${rName}</strong></div>
+                                                <div style="font-size: 0.75rem; color: var(--text-secondary);">${o.mode || 'Livraison'} • ${o.date || o.createdAt || 'Aujourd\'hui'}</div>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                            <span class="badge badge-info" style="font-size: 0.75rem;">${o.status || 'Reçue'}</span>
+                                            <strong style="color: #10b981; font-size: 0.95rem;">${Number(o.total || 0).toLocaleString()} FCFA</strong>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    `}
+                </div>
+            </div>
+
             <!-- Integrated Subscriptions Management Section -->
             <div class="admin-card-section" style="margin-bottom: 2rem;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem; border-bottom:1px solid var(--border); padding-bottom:1rem;">
@@ -6969,18 +7113,47 @@ if (typeof window !== 'undefined') {
 
         // 2. Super-Admin active session:
         if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
-            if (typeof adminActiveTab !== 'undefined' && (adminActiveTab === 'console' || adminActiveTab === 'clients')) {
-                if (typeof renderAdminTabTable === 'function') {
-                    renderAdminTabTable();
+            if (newOrders && newOrders.length > 0) {
+                if (typeof window.playOrderAlertSound === 'function') {
+                    window.playOrderAlertSound();
+                } else if (typeof playNotificationSound === 'function') {
+                    playNotificationSound();
                 }
+                newOrders.forEach(o => {
+                    const client = o.customerName || 'Client';
+                    const totalFormatted = (Number(o.total) || 0).toLocaleString();
+                    const resto = (typeof store !== 'undefined' && store.getRestaurantById) ? store.getRestaurantById(o.restaurantId) : null;
+                    const rName = resto ? resto.name : (o.restaurantName || o.restaurantId);
+                    if (typeof showToast === 'function') {
+                        showToast(`🔔 NOUVELLE COMMANDE : ${client} chez ${rName} (${totalFormatted} FCFA)`, 'info', 7000);
+                    }
+                });
+            }
+            if (typeof renderAdminTabTable === 'function') {
+                renderAdminTabTable();
             }
         }
     });
 
     window.addEventListener('thies_restaurants_live_update', (e) => {
+        const { restaurants, newPending } = (e && e.detail) || {};
         // When restaurants change (new partner registered, status updated, subscription changed):
         if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
-            if (typeof renderAdminView === 'function') {
+            if (newPending && newPending.length > 0) {
+                if (typeof window.playOrderAlertSound === 'function') {
+                    window.playOrderAlertSound();
+                } else if (typeof playNotificationSound === 'function') {
+                    playNotificationSound();
+                }
+                newPending.forEach(p => {
+                    if (typeof showToast === 'function') {
+                        showToast(`🔔 NOUVELLE DEMANDE PARTENAIRE : Le restaurant « ${p.name} » attend votre validation !`, 'warning', 10000);
+                    }
+                });
+            }
+            if (typeof renderAdminTabTable === 'function') {
+                renderAdminTabTable();
+            } else if (typeof renderAdminView === 'function') {
                 renderAdminView();
             }
         }

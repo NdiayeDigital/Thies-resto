@@ -168,15 +168,13 @@ class Store {
         // Background sync with Supabase and Express Server API
         this.syncPromise = this.syncFromSupabase();
 
-        // Continuous real-time live synchronization (every 5 seconds when tab is visible)
+        // Continuous real-time live synchronization (every 4 seconds, even in background so sound alerts fire)
         if (typeof window !== 'undefined') {
             setInterval(() => {
                 try {
-                    // Do not run background requests when the user has switched tabs or left the platform
-                    if (typeof document !== 'undefined' && document.hidden) return;
                     this.syncLiveServerData();
                 } catch(e) {}
-            }, 5000);
+            }, 4000);
         }
 
         // Auto-check and cancel stale/unacknowledged orders (only when tab is active)
@@ -271,7 +269,6 @@ class Store {
 
     // High-frequency live synchronization strictly mirroring Supabase and central server
     async syncLiveServerData() {
-        if (typeof document !== 'undefined' && document.hidden) return;
         if (this._isSyncingLive) return;
         this._isSyncingLive = true;
 
@@ -281,7 +278,22 @@ class Store {
             if (ordersResp.ok) {
                 const ordersData = await ordersResp.json();
                 if (ordersData && Array.isArray(ordersData.orders)) {
-                    this.data.orders = ordersData.orders;
+                    const currentOrders = this.data.orders || [];
+                    const prevOrderIds = new Set(currentOrders.map(o => String(o.id)));
+                    const prevStatusMap = new Map(currentOrders.map(o => [String(o.id), o.status]));
+                    
+                    const incomingOrders = ordersData.orders;
+                    const brandNewOrders = incomingOrders.filter(o => !prevOrderIds.has(String(o.id)));
+                    let hasStatusChange = false;
+                    for (const o of incomingOrders) {
+                        const sid = String(o.id);
+                        if (prevStatusMap.has(sid) && prevStatusMap.get(sid) !== o.status) {
+                            hasStatusChange = true;
+                            break;
+                        }
+                    }
+
+                    this.data.orders = incomingOrders;
                     
                     // Derive customers strictly from real orders
                     const custMap = new Map();
@@ -308,6 +320,19 @@ class Store {
                         }
                     });
                     this.data.customers = Array.from(custMap.values());
+
+                    // Dispatch real-time orders event if there are new orders or status changed
+                    if (brandNewOrders.length > 0 || hasStatusChange) {
+                        if (typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
+                                detail: {
+                                    newOrders: brandNewOrders,
+                                    hasStatusChange,
+                                    allOrders: incomingOrders
+                                }
+                            }));
+                        }
+                    }
                 }
             }
 
@@ -316,7 +341,30 @@ class Store {
             if (restosResp.ok) {
                 const restosData = await restosResp.json();
                 if (restosData && Array.isArray(restosData.restaurants) && restosData.restaurants.length > 0) {
-                    this.data.restaurants = restosData.restaurants;
+                    const currentRestos = this.data.restaurants || [];
+                    const prevPending = currentRestos.filter(r => r.status === 'pending');
+                    const prevPendingIds = new Set(prevPending.map(r => String(r.id)));
+
+                    const incomingRestos = restosData.restaurants;
+                    const newPendingRestos = incomingRestos.filter(r => r.status === 'pending' && !prevPendingIds.has(String(r.id)));
+                    const countChanged = incomingRestos.length !== currentRestos.length;
+                    const anyStatusChanged = incomingRestos.some(ir => {
+                        const existing = currentRestos.find(cr => cr.id === ir.id);
+                        return existing && existing.status !== ir.status;
+                    });
+
+                    this.data.restaurants = incomingRestos;
+
+                    if (newPendingRestos.length > 0 || countChanged || anyStatusChanged) {
+                        if (typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
+                                detail: {
+                                    restaurants: this.data.restaurants,
+                                    newPending: newPendingRestos
+                                }
+                            }));
+                        }
+                    }
                 }
             }
 
@@ -1221,6 +1269,11 @@ class Store {
         this.data.restaurants.push(resto);
         this.save();
         this.pushRestaurantToSupabase(resto);
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
+                detail: { restaurants: this.data.restaurants, newPending: resto.status === 'pending' ? [resto] : [] }
+            }));
+        }
     }
 
     deleteRestaurant(id) {
@@ -1261,6 +1314,16 @@ class Store {
         // Also save customer profile in Supabase
         const usedRewards = (this.data.usedRewards && this.data.usedRewards[order.customerPhone]) || 0;
         this.pushCustomerToSupabase(order.customerPhone, order.customerName, usedRewards);
+
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
+                detail: {
+                    newOrders: [order],
+                    hasStatusChange: false,
+                    allOrders: this.data.orders
+                }
+            }));
+        }
     }
 
     getOrderAgeMinutes(order) {

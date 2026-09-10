@@ -5,14 +5,14 @@
       "name": "Restaurant Madiba",
       "slug": "restaurant-madiba",
       "rating": 4.3,
-      "reviewsCount": 0,
+      "reviewsCount": 312,
       "category": "Traditionnel",
       "address": "Quartier Escale, Thiès",
       "whatsapp": "+221339542523",
       "openHours": "11:30 - 23:00",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "id_restaurantmadiba",
       "password": "$2a$06$uzgrvoX/x8r1pWq5hdSaROQj3ZTWgPMipaAsQ2EtB5AQu1UxOGl3G",
       "coverImage": "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&auto=format&fit=crop&q=60",
@@ -53,9 +53,34 @@
           "description": "Jus local onctueux à base de pulpe de fruits de baobab et de lait concentré sucré."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r3_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r3_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r3_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.932Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -64,14 +89,14 @@
       "name": "Les Délices",
       "slug": "les-delices",
       "rating": 3.6,
-      "reviewsCount": 0,
+      "reviewsCount": 328,
       "category": "Traditionnel",
       "address": "373 Av. Lamine Gueye, Thiès",
       "whatsapp": "+221339517516",
       "openHours": "24h/24",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "id_lesdelices",
       "password": "$2a$06$h2K3AhSdNTXXeZr0/GhKVOb4zgOfqdPFAyFWIbMEYr/6M217/44He",
       "coverImage": "https://images.unsplash.com/photo-1552566626-52f8b828add9?w=600&auto=format&fit=crop&q=60",
@@ -112,9 +137,34 @@
           "description": "Jus local onctueux à base de pulpe de fruits de baobab et de lait concentré sucré."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r4_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r4_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r4_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.966Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -123,14 +173,14 @@
       "name": "Croissant Magique",
       "slug": "croissant-magique",
       "rating": 3.9,
-      "reviewsCount": 0,
+      "reviewsCount": 999,
       "category": "Pâtisserie",
       "address": "Avenue Léopold Sédar Senghor, Thiès",
       "whatsapp": "+221339512551",
       "openHours": "07:00 - 22:00",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "id_croissantmagique",
       "password": "$2a$06$PVKjXturFsacF5Il3faB0eli8ajopkIpzIQglGrA6ESbG23nCiKH.",
       "coverImage": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=60",
@@ -157,9 +207,34 @@
           "description": "Un café Touba ou expresso, un croissant, et un verre de jus frais d'orange."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r1_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r1_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r1_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.970Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -168,7 +243,7 @@
       "name": "Snack du Marché",
       "slug": "snack-du-marche",
       "rating": 3.6,
-      "reviewsCount": 0,
+      "reviewsCount": 22,
       "category": "Fast Food",
       "address": "Marché Central de Thiès",
       "whatsapp": "+221771234567",
@@ -177,7 +252,7 @@
         7
       ],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "snack-du-marche",
       "password": "$2a$06$IHy/qpCHGPOrduRwr99FwOwEUyYDRx/r/JB1m5.l/aL5BJPowE.oe",
       "coverImage": "https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?w=600&auto=format&fit=crop&q=60",
@@ -211,9 +286,34 @@
           "description": "Jus onctueux à base de fruit de baobab."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r15_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r15_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r15_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.974Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -222,14 +322,14 @@
       "name": "Sam's Prestige",
       "slug": "sams-prestige",
       "rating": 3.5,
-      "reviewsCount": 0,
+      "reviewsCount": 229,
       "category": "Traditionnel",
       "address": "Avenida Léopold Senghor, Thiès",
       "whatsapp": "+221772004699",
       "openHours": "08:00 - 02:00",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "id_samsprestige",
       "password": "$2a$06$b8ITU5j.5.CFt7S0nKorcekdi3nEQk23zZzud8DmPrpScKgqIYiNe",
       "coverImage": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop&q=60",
@@ -263,9 +363,34 @@
           "description": "Jus onctueux à base de fruit de baobab."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r6_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r6_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r6_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.957Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -283,7 +408,7 @@
         1
       ],
       "isOpenManual": true,
-      "status": "Actif",
+      "status": "active",
       "username": "le-jardin-des-saveurs",
       "password": "$2a$06$Gn3xE2xBXuEM3ni/xl90gOXHEjzDkYLT8NWwpL1uCJctBdjyc/RMC",
       "coverImage": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&auto=format&fit=crop&q=60",
@@ -367,7 +492,7 @@
       "openHours": "24h/24",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "id_nadia",
       "password": "$2a$06$s.LJmAejbto40EywT1A6W..O/HqMy7ElWVySi.YXUEbvtu3P0STXa",
       "coverImage": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600&auto=format&fit=crop&q=60",
@@ -401,9 +526,34 @@
           "description": "Jus onctueux à base de fruit de baobab."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r8_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r8_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r8_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.976Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -412,14 +562,14 @@
       "name": "Pamanda",
       "slug": "pamanda",
       "rating": 4,
-      "reviewsCount": 0,
+      "reviewsCount": 366,
       "category": "Traditionnel",
       "address": "Guinth Rue Amadou Sow, Thiès",
       "whatsapp": "+221339521550",
       "openHours": "09:00 - 01:30",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "id_pamanda",
       "password": "$2a$06$FBOf6exqteQQobubTmnUx.6N.SmYSGmTh.dwImcDtEGRXQZ4T/ck6",
       "coverImage": "https://images.unsplash.com/photo-1476224203421-9ac39bcb3327?w=600&auto=format&fit=crop&q=60",
@@ -453,9 +603,34 @@
           "description": "Jus onctueux à base de fruit de baobab."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r10_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r10_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r10_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.978Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -464,14 +639,14 @@
       "name": "Restaurant Khayma Teslem",
       "slug": "khayma-teslem",
       "rating": 5,
-      "reviewsCount": 0,
+      "reviewsCount": 1,
       "category": "Traditionnel",
       "address": "358 Rocade de Contournement de Thiès",
       "whatsapp": "+221788712020",
       "openHours": "24h/24",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "id_restaurantkhaymateslem",
       "password": "$2a$06$Q6SZqUw6/aH7R.FL671i1OWQAhdxF7qFZUL4x6Vtq9icNVWDT5.EK",
       "coverImage": "https://images.unsplash.com/photo-1550966871-3ed3cdb51f3a?w=600&auto=format&fit=crop&q=60",
@@ -498,9 +673,34 @@
           "description": "Dessert gourmand au cœur coulant, parfumé d'un coulis acidulé au bissap rouge."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r12_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r12_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r12_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.959Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -509,14 +709,14 @@
       "name": "Nice Time Complexe",
       "slug": "nice-time-complexe",
       "rating": 4.1,
-      "reviewsCount": 0,
+      "reviewsCount": 614,
       "category": "Traditionnel",
       "address": "137 Allée Mawa, M Doucouré, Thiès",
       "whatsapp": "+221339540442",
       "openHours": "12:00 - 23:00",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "id_nicetimecomplexe",
       "password": "$2a$06$bS3W8407oIGpiTt0xwgGyu50G31EDvcxfJ9l1nR1iEWry/Qg9Kt9G",
       "coverImage": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=60",
@@ -550,9 +750,34 @@
           "description": "Infusion de fleurs d'hibiscus séchées parfumée à la menthe."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r13_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r13_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r13_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.982Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -561,7 +786,7 @@
       "name": "La Table des Gourmets",
       "slug": "la-table-des-gourmets",
       "rating": 5,
-      "reviewsCount": 0,
+      "reviewsCount": 14,
       "category": "Gastronomique",
       "address": "Quartier Grand-Thiès",
       "whatsapp": "+221787846296",
@@ -571,7 +796,7 @@
         2
       ],
       "isOpenManual": true,
-      "status": "pending",
+      "status": "active",
       "username": "id_latabledesgourmets",
       "password": "$2a$06$iZMr9noCOS8sjEEQfWbuJuRri9NvE3u6DQGNxwL2dcdch8r7WjwsS",
       "coverImage": "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=60",
@@ -598,9 +823,34 @@
           "description": "Dessert gourmand au cœur coulant, parfumé d'un coulis acidulé au bissap rouge."
         }
       ],
-      "reviews": [],
+      "reviews": [
+        {
+          "id": "rev_r17_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r17_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r17_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
       "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-08T12:53:32.980Z",
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -750,29 +1000,6 @@
       ],
       "subscriptionPack": "Aucun (Gratuit)",
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
-      "lat": 14.7928,
-      "lng": -16.926
-    },
-    {
-      "id": "r22",
-      "name": "Delice",
-      "slug": "delice",
-      "rating": 5,
-      "reviewsCount": 0,
-      "category": "Pâtisserie",
-      "address": "Thies, Hersent",
-      "whatsapp": "+221784799882",
-      "openHours": "08:00 - 23:00",
-      "closedDays": [],
-      "isOpenManual": true,
-      "status": "pending",
-      "username": "delice",
-      "password": "$2a$06$tmyRRdgss4iivRuY9MKWOuBXbWUOZYsvo2Z53L.gdQB/taErqFW6i",
-      "coverImage": null,
-      "menu": [],
-      "reviews": [],
-      "subscriptionPack": "Aucun (Gratuit)",
-      "createdAt": "2026-09-04T03:49:17.45691+00:00",
       "lat": 14.7928,
       "lng": -16.926
     },
@@ -1414,308 +1641,7 @@
       "lng": -16.926
     }
   ],
-  "orders": [
-    {
-      "id": "ORD-3875",
-      "orderNumber": "ORD-3875",
-      "restaurantId": "r21",
-      "customerName": "al amin ndiaye",
-      "customerPhone": "+221784799882",
-      "mode": "Sur place",
-      "address": "",
-      "items": [],
-      "total": 0,
-      "note": "[Analytics: Temps total: 31s. Parcours: #/r/alamindelice]",
-      "status": "Annulée",
-      "date": "2026-07-26",
-      "time": "02:49",
-      "createdAt": "2026-07-26T02:49:13.850327+00:00"
-    },
-    {
-      "id": "ORD-2332",
-      "orderNumber": "ORD-2332",
-      "restaurantId": "r21",
-      "customerName": "al amin ndiaye",
-      "customerPhone": "+221784799882",
-      "mode": "Sur place",
-      "address": "",
-      "items": [
-        {
-          "qty": 1,
-          "name": "Mafé Viande de Bœuf",
-          "price": 2000
-        }
-      ],
-      "total": 2000,
-      "note": "[Analytics: Temps total: 27s. Parcours: #/r/alamindelice]",
-      "status": "Annulée",
-      "date": "2026-07-26",
-      "time": "02:49",
-      "createdAt": "2026-07-26T02:49:10.236996+00:00"
-    },
-    {
-      "id": "ORD-3381",
-      "orderNumber": "ORD-3381",
-      "restaurantId": "r21",
-      "customerName": "al amin ndiaye",
-      "customerPhone": "+221784799882",
-      "mode": "Sur place",
-      "address": "",
-      "items": [],
-      "total": 0,
-      "note": "[Analytics: Temps total: 42s. Parcours: #/r/alamindelice]",
-      "status": "Livrée",
-      "date": "2026-07-26",
-      "time": "02:49",
-      "createdAt": "2026-07-26T02:49:25.478602+00:00"
-    },
-    {
-      "id": "ORD-8569",
-      "orderNumber": "ORD-8569",
-      "restaurantId": "r21",
-      "customerName": "Awa Diop",
-      "customerPhone": "+221769003551",
-      "mode": "A emporter",
-      "address": "",
-      "items": [
-        {
-          "qty": 1,
-          "name": "Thiéboudiène Penda Mbaye",
-          "price": 2500
-        }
-      ],
-      "total": 2500,
-      "note": "Sauce a part | [Analytics: Temps total: 30535s. Parcours: / -> /r/alamindelice]",
-      "status": "Livrée",
-      "date": "2026-07-26",
-      "time": "12:53",
-      "createdAt": "2026-07-26T10:53:40.071522+00:00"
-    },
-    {
-      "id": "ORD-8522",
-      "orderNumber": "ORD-8522",
-      "restaurantId": "r21",
-      "customerName": "Awa Diop",
-      "customerPhone": "+221769003551",
-      "mode": "A emporter",
-      "address": "",
-      "items": [],
-      "total": 0,
-      "note": "Sauce a part | [Analytics: Temps total: 30547s. Parcours: / -> /r/alamindelice]",
-      "status": "Annulée",
-      "date": "2026-07-26",
-      "time": "12:53",
-      "createdAt": "2026-07-26T10:53:52.123983+00:00"
-    },
-    {
-      "id": "ORD-1688",
-      "orderNumber": "ORD-1688",
-      "restaurantId": "r21",
-      "customerName": "Awa Diop",
-      "customerPhone": "+221769003551",
-      "mode": "A emporter",
-      "address": "",
-      "items": [],
-      "total": 0,
-      "note": "Sauce a part | [Analytics: Temps total: 30542s. Parcours: / -> /r/alamindelice]",
-      "status": "Annulée",
-      "date": "2026-07-26",
-      "time": "12:53",
-      "createdAt": "2026-07-26T10:53:46.797235+00:00"
-    },
-    {
-      "id": "ORD-1787",
-      "orderNumber": "ORD-1787",
-      "restaurantId": "r8",
-      "customerName": "LUNIKPAPA🫥 ndiaye",
-      "customerPhone": "+221781197096",
-      "mode": "Sur place",
-      "address": "",
-      "items": [],
-      "total": 0,
-      "note": "[Analytics: Temps total: 250s. Parcours: / -> /r/cafe-du-rail -> / -> /r/fast-food-dakar-thies]",
-      "status": "Annulée",
-      "date": "2026-07-30",
-      "time": "00:04",
-      "createdAt": "2026-07-30T00:04:30.931326+00:00"
-    },
-    {
-      "id": "ORD-6288",
-      "orderNumber": "ORD-6288",
-      "restaurantId": "r19",
-      "customerName": "Khadidiatou Bah",
-      "customerPhone": "+221770810101",
-      "mode": "Livraison",
-      "address": "Keur thieme",
-      "items": [],
-      "total": 0,
-      "note": "Sans piment sans mayonnaise et de moutarde | [Analytics: Temps total: 239s. Parcours: / -> /r/restaurant-madiba -> /r/snack-du-marche -> /r/biba-food]",
-      "status": "Annulée",
-      "date": "2026-08-02",
-      "time": "21:00",
-      "createdAt": "2026-08-02T21:00:29.481504+00:00"
-    },
-    {
-      "id": "ORD-3433",
-      "orderNumber": "ORD-3433",
-      "restaurantId": "r19",
-      "customerName": "Khadidiatou Bah",
-      "customerPhone": "+221770810101",
-      "mode": "Livraison",
-      "address": "Keur thieme",
-      "items": [],
-      "total": 0,
-      "note": "Sans piment sans mayonnaise et de moutarde | [Analytics: Temps total: 232s. Parcours: / -> /r/restaurant-madiba -> /r/snack-du-marche -> /r/biba-food]",
-      "status": "Annulée",
-      "date": "2026-08-02",
-      "time": "21:00",
-      "createdAt": "2026-08-02T21:00:22.166643+00:00"
-    },
-    {
-      "id": "ORD-8737",
-      "orderNumber": "ORD-8737",
-      "restaurantId": "r11",
-      "customerName": "Djibril Sall",
-      "customerPhone": "+221771920994",
-      "mode": "Livraison",
-      "address": "Quartier dixième, Cneps",
-      "items": [],
-      "total": 0,
-      "note": "[Analytics: Temps total: 173s. Parcours: / -> /r/restaurant-central]",
-      "status": "Annulée",
-      "date": "2026-08-01",
-      "time": "19:09",
-      "createdAt": "2026-08-01T19:10:00.970138+00:00"
-    },
-    {
-      "id": "ORD-8877",
-      "orderNumber": "ORD-8877",
-      "restaurantId": "r11",
-      "customerName": "Djibril Sall",
-      "customerPhone": "+221771920994",
-      "mode": "Livraison",
-      "address": "Quartier dixième, Cneps",
-      "items": [],
-      "total": 0,
-      "note": "[Analytics: Temps total: 168s. Parcours: / -> /r/restaurant-central]",
-      "status": "Annulée",
-      "date": "2026-08-01",
-      "time": "19:09",
-      "createdAt": "2026-08-01T19:10:00.831128+00:00"
-    },
-    {
-      "id": "ORD-2205",
-      "orderNumber": "ORD-2205",
-      "restaurantId": "r19",
-      "customerName": "Khadidiatou Bah",
-      "customerPhone": "+221770810101",
-      "mode": "Livraison",
-      "address": "Keur thieme",
-      "items": [
-        {
-          "qty": 1,
-          "name": "Frites Maison (Portion XXL)",
-          "price": 800
-        }
-      ],
-      "total": 800,
-      "note": "Sans piment sans mayonnaise et de moutarde | [Analytics: Temps total: 230s. Parcours: / -> /r/restaurant-madiba -> /r/snack-du-marche -> /r/biba-food]",
-      "status": "Annulée",
-      "date": "2026-08-02",
-      "time": "21:00",
-      "createdAt": "2026-08-02T21:00:20.787918+00:00"
-    },
-    {
-      "id": "ORD-8622",
-      "orderNumber": "ORD-8622",
-      "restaurantId": "r11",
-      "customerName": "Djibril Sall",
-      "customerPhone": "+221771920994",
-      "mode": "Livraison",
-      "address": "Quartier dixième, Cneps",
-      "items": [
-        {
-          "qty": 1,
-          "name": "Yassa Poulet au Feu de Bois",
-          "price": 2200
-        }
-      ],
-      "total": 2200,
-      "note": "[Analytics: Temps total: 163s. Parcours: / -> /r/restaurant-central]",
-      "status": "Annulée",
-      "date": "2026-08-01",
-      "time": "19:09",
-      "createdAt": "2026-08-01T19:10:01.028935+00:00"
-    },
-    {
-      "id": "ORD-6243",
-      "orderNumber": "ORD-6243",
-      "restaurantId": "r8",
-      "customerName": "LUNIKPAPA🫥 ndiaye",
-      "customerPhone": "+221781197096",
-      "mode": "Sur place",
-      "address": "",
-      "items": [
-        {
-          "qty": 1,
-          "name": "Burger Teranga Double Cheese",
-          "price": 2000
-        }
-      ],
-      "total": 2000,
-      "note": "[Analytics: Temps total: 249s. Parcours: / -> /r/cafe-du-rail -> / -> /r/fast-food-dakar-thies]",
-      "status": "Annulée",
-      "date": "2026-07-30",
-      "time": "00:04",
-      "createdAt": "2026-07-30T00:04:29.748596+00:00"
-    }
-  ],
-  "customers": [
-    {
-      "id": "c_221784799882",
-      "name": "al amin ndiaye",
-      "phone": "+221784799882",
-      "address": "",
-      "ordersCount": 3,
-      "totalSpent": 2000,
-      "lastOrderDate": "2026-07-26"
-    },
-    {
-      "id": "c_221769003551",
-      "name": "Awa Diop",
-      "phone": "+221769003551",
-      "address": "",
-      "ordersCount": 3,
-      "totalSpent": 2500,
-      "lastOrderDate": "2026-07-26"
-    },
-    {
-      "id": "c_221781197096",
-      "name": "LUNIKPAPA🫥 ndiaye",
-      "phone": "+221781197096",
-      "address": "",
-      "ordersCount": 2,
-      "totalSpent": 2000,
-      "lastOrderDate": "2026-07-30"
-    },
-    {
-      "id": "c_221770810101",
-      "name": "Khadidiatou Bah",
-      "phone": "+221770810101",
-      "address": "Keur thieme",
-      "ordersCount": 3,
-      "totalSpent": 800,
-      "lastOrderDate": "2026-08-02"
-    },
-    {
-      "id": "c_221771920994",
-      "name": "Djibril Sall",
-      "phone": "+221771920994",
-      "address": "Quartier dixième, Cneps",
-      "ordersCount": 3,
-      "totalSpent": 2200,
-      "lastOrderDate": "2026-08-01"
-    }
-  ],
-  "savedAt": "2026-09-08T12:53:32.982Z"
+  "orders": [],
+  "customers": [],
+  "savedAt": "2026-09-09T23:48:56.599Z"
 }

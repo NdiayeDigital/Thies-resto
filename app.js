@@ -883,8 +883,53 @@ function playNotificationSound() {
 
 // ---------- ORDER POLLING (Supabase Realtime WebSockets) ----------
 let orderChannel = null;
+let orderHttpInterval = null;
+
 function startOrderPolling(restaurantId) {
     stopOrderPolling();
+    
+    // 1. HTTP Server Fast Polling (Guaranteed 3s interval fallback even if WebSockets are blocked)
+    const pollServerOrders = async () => {
+        try {
+            const resp = await fetch(`/api/orders?restaurantId=${encodeURIComponent(restaurantId)}`);
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data && Array.isArray(data.orders)) {
+                    const currentIds = new Set((store.data.orders || []).map(o => String(o.id)));
+                    const newIncoming = data.orders.filter(o => !currentIds.has(String(o.id)));
+                    if (newIncoming.length > 0) {
+                        if (typeof window.playOrderAlertSound === 'function') {
+                            window.playOrderAlertSound();
+                        } else if (typeof playNotificationSound === 'function') {
+                            playNotificationSound();
+                        }
+                        newIncoming.forEach(o => {
+                            if (typeof showToast === 'function') {
+                                showToast(`🔔 NOUVELLE COMMANDE REÇUE : Commande n°${o.orderNumber || o.id} de ${o.customerName || 'Client'} (${Number(o.total || 0).toLocaleString()} FCFA) !`, 'success', 8000);
+                            }
+                            store.data.orders.unshift(o);
+                        });
+                        store.save();
+                        if (typeof renderDashboardTabContent === 'function') {
+                            const r = store.getRestaurantById(restaurantId);
+                            if (r && document.getElementById('dashboard-view-orders') && document.getElementById('dashboard-view-orders').classList.contains('active')) {
+                                renderDashboardTabContent(r);
+                            }
+                        }
+                        if (typeof renderAdminDashboard === 'function') {
+                            renderAdminDashboard();
+                        }
+                    }
+                }
+            }
+        } catch (err) {}
+    };
+    
+    // Run immediate check then poll every 3.5 seconds
+    pollServerOrders();
+    orderHttpInterval = setInterval(pollServerOrders, 3500);
+
+    // 2. Supabase Realtime WebSockets
     if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         orderChannel = supabaseClient
             .channel('realtime-orders')
@@ -897,7 +942,11 @@ function startOrderPolling(restaurantId) {
                         // Avoid duplicates if sync already caught it
                         const exists = store.data.orders.find(o => o.id === newOrder.id);
                         if (!exists) {
-                            playNotificationSound();
+                            if (typeof window.playOrderAlertSound === 'function') {
+                                window.playOrderAlertSound();
+                            } else {
+                                playNotificationSound();
+                            }
                             if (typeof showToast === 'function') showToast(`🔔 Nouvelle commande reçue !`, 'success');
                             
                             // Trigger Push Notification if permission granted
@@ -931,6 +980,9 @@ function startOrderPolling(restaurantId) {
                                     renderDashboardTabContent(r);
                                 }
                             }
+                            if (typeof renderAdminDashboard === 'function') {
+                                renderAdminDashboard();
+                            }
                         }
                     }
                 }
@@ -939,6 +991,10 @@ function startOrderPolling(restaurantId) {
     }
 }
 function stopOrderPolling() {
+    if (orderHttpInterval) {
+        clearInterval(orderHttpInterval);
+        orderHttpInterval = null;
+    }
     if (orderChannel && typeof supabaseClient !== 'undefined' && supabaseClient) {
         supabaseClient.removeChannel(orderChannel);
         orderChannel = null;
