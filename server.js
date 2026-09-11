@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import QRCode from 'qrcode';
+import { initializeApp as initFirebaseApp, getApps as getFirebaseApps } from 'firebase/app';
+import { getFirestore, doc as fsDoc, setDoc as fsSetDoc } from 'firebase/firestore';
 import {
   generateAndSendOtp,
   verifyOtp,
@@ -229,6 +231,111 @@ try {
 }
 
 // Synchronisation autoritaire avec Supabase (Base de données réelle de production)
+async function syncRestaurantToSupabase(resto) {
+  if (!resto || !resto.id) return;
+  try {
+    const payload = {
+      status: resto.status || 'active',
+      is_open_manual: resto.isOpenManual !== undefined ? Boolean(resto.isOpenManual) : true,
+      name: resto.name,
+      category: resto.category,
+      address: resto.address,
+      whatsapp: resto.whatsapp,
+      open_hours: resto.openHours || '10:00 - 23:00',
+      subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
+    };
+    if (resto.menu && Array.isArray(resto.menu)) {
+      payload.menu = resto.menu;
+    }
+    if (resto.coverImage) {
+      payload.cover_image = resto.coverImage;
+    }
+
+    const patchRes = await fetch(`${SUPABASE_URL}/rest/v1/restaurants?id=eq.${encodeURIComponent(resto.id)}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (patchRes.ok) {
+      const patched = await patchRes.json();
+      if (Array.isArray(patched) && patched.length === 0) {
+        await fetch(`${SUPABASE_URL}/rest/v1/restaurants`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=merge-duplicates'
+          },
+          body: JSON.stringify({
+            id: resto.id,
+            name: resto.name,
+            slug: resto.slug || resto.id,
+            status: resto.status || 'active',
+            category: resto.category || 'Traditionnel',
+            address: resto.address || 'Thiès, Sénégal',
+            whatsapp: resto.whatsapp || '',
+            open_hours: resto.openHours || '10:00 - 23:00',
+            is_open_manual: resto.isOpenManual !== undefined ? Boolean(resto.isOpenManual) : true,
+            username: resto.username || `id_${resto.id}`,
+            password: resto.password || 'resto221',
+            menu: resto.menu || [],
+            cover_image: resto.coverImage || null
+          })
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('[Supabase Sync Restaurant Notice]:', err.message);
+  }
+}
+
+// ============================================================================
+// FIRESTORE REAL-TIME SYNCHRONIZER (Direct Authoritative Trigger)
+// ============================================================================
+let firestoreDb = null;
+try {
+  const firebaseConfig = JSON.parse(fs.readFileSync(path.join(__dirname, 'firebase-applet-config.json'), 'utf8'));
+  const fbApp = getFirebaseApps().length === 0 ? initFirebaseApp(firebaseConfig) : getFirebaseApps()[0];
+  firestoreDb = getFirestore(fbApp, firebaseConfig.firestoreDatabaseId);
+  console.log('[Firestore Server] Connecté à Firestore avec ID base:', firebaseConfig.firestoreDatabaseId);
+} catch (e) {
+  console.warn('[Firestore Server] Erreur initialisation Firestore:', e.message);
+}
+
+async function syncRestaurantToFirestore(resto) {
+  if (!firestoreDb || !resto || !resto.id) return;
+  try {
+    const docData = {
+      id: resto.id,
+      name: resto.name,
+      slug: resto.slug || resto.id,
+      status: resto.status || 'active',
+      category: resto.category || 'Traditionnel',
+      address: resto.address || 'Thiès, Sénégal',
+      whatsapp: resto.whatsapp || '',
+      openHours: resto.openHours || '10:00 - 23:00',
+      isOpenManual: resto.isOpenManual !== undefined ? Boolean(resto.isOpenManual) : true,
+      rating: Number(resto.rating) || 4.5,
+      reviewsCount: Number(resto.reviewsCount) || 0,
+      coverImage: resto.coverImage || null,
+      suspendReason: resto.suspendReason || null,
+      suspendedAt: resto.suspendedAt || null,
+      updatedAt: new Date().toISOString()
+    };
+    await fsSetDoc(fsDoc(firestoreDb, 'restaurants', resto.id), docData, { merge: true });
+    console.log(`[Firestore Live Sync] Restaurant "${resto.name}" (${resto.id}) synchro Firestore (status: "${docData.status}").`);
+  } catch (err) {
+    console.warn('[Firestore Live Sync] Erreur synchro Firestore:', err.message);
+  }
+}
+
 async function syncWithSupabase() {
   try {
     const rRes = await fetch(`${SUPABASE_URL}/rest/v1/restaurants?select=*`, {
@@ -275,15 +382,22 @@ async function syncWithSupabase() {
               merged[idx].status = 'suspended';
               merged[idx].suspendReason = localR.suspendReason;
               merged[idx].suspendedAt = localR.suspendedAt;
+              // Push to Supabase if Supabase was out of sync
+              if (incomingRestos[idx] && incomingRestos[idx].status !== 'suspended') {
+                syncRestaurantToSupabase(localR);
+              }
             }
             if (localR.menu && localR.menu.length > 0) merged[idx].menu = localR.menu;
             if (localR.hasPaidSubscription) merged[idx].hasPaidSubscription = true;
           } else {
             // Local restaurant not yet in Supabase (e.g., brand new pending registration from public form)
             merged.push(localR);
+            syncRestaurantToSupabase(localR);
           }
         });
         serverRestaurants = merged;
+        // Synchronize all restaurants to Firestore for real-time client listeners
+        serverRestaurants.forEach(r => syncRestaurantToFirestore(r));
       }
     }
 
@@ -293,7 +407,7 @@ async function syncWithSupabase() {
     if (oRes.ok) {
       const rawOrders = await oRes.json();
       if (Array.isArray(rawOrders)) {
-        serverOrders = rawOrders.map(o => ({
+        const incomingOrders = rawOrders.map(o => ({
           id: o.id,
           orderNumber: o.id,
           restaurantId: o.restaurant_id,
@@ -309,6 +423,14 @@ async function syncWithSupabase() {
           time: o.time,
           createdAt: o.created_at
         }));
+        // Merge to preserve locally created orders that are pending Supabase insertion
+        const mergedOrders = [...incomingOrders];
+        serverOrders.forEach(localO => {
+          if (!mergedOrders.some(mo => mo.id === localO.id)) {
+            mergedOrders.unshift(localO);
+          }
+        });
+        serverOrders = mergedOrders;
       }
     }
 
@@ -802,6 +924,13 @@ app.post(['/api/admin/restaurants/update', '/api/restaurants/update'], async (re
       };
       serverRestaurants[idx] = updated;
       saveServerData();
+      try {
+        await upsertRestaurant(updated);
+      } catch (dbErr) {
+        console.warn('[Cloud SQL] Upsert notice:', dbErr.message);
+      }
+      await syncRestaurantToSupabase(updated);
+      await syncRestaurantToFirestore(updated);
       return res.json({ success: true, restaurant: updated });
     }
 
@@ -941,6 +1070,11 @@ app.post(['/api/admin/restaurants/approve', '/api/admin/restaurants/reactivate']
       .then(() => console.log(`[Database/Server] Cloud SQL status updated for "${r.name}".`))
       .catch((dbErr) => console.warn('[Database/Server] Cloud SQL update notice:', dbErr.message));
 
+    // Synchronize to Supabase immediately
+    await syncRestaurantToSupabase(r);
+    // Synchronize to Firestore in real-time to trigger onSnapshot on all clients
+    await syncRestaurantToFirestore(r);
+
     recordActivityLog({
       action: 'Validation/Réactivation manuelle d\'un restaurant',
       entity_type: 'restaurant',
@@ -980,6 +1114,11 @@ app.post('/api/admin/restaurants/suspend', authRateLimiter, async (req, res) => 
       console.warn('[Cloud SQL] Update restaurant status notice:', dbErr.message);
     }
 
+    // Synchronize immediately to Supabase
+    await syncRestaurantToSupabase(r);
+    // Synchronize to Firestore immediately to trigger onSnapshot on all client instances
+    await syncRestaurantToFirestore(r);
+
     recordActivityLog({
       action: 'Suspension manuelle d\'un restaurant',
       entity_type: 'restaurant',
@@ -1013,6 +1152,34 @@ app.post('/api/admin/restaurants/reject', authRateLimiter, async (req, res) => {
     }
 
     saveServerData();
+
+    try {
+      await updateRestaurantStatus(restaurantId, 'rejected');
+    } catch (dbErr) {
+      console.warn('[Cloud SQL] Reject restaurant notice:', dbErr.message);
+    }
+
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/restaurants?id=eq.${encodeURIComponent(restaurantId)}`, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` }
+      });
+    } catch (sbErr) {
+      console.warn('[Supabase] Delete restaurant notice:', sbErr.message);
+    }
+
+    try {
+      if (firestoreDb) {
+        await fsSetDoc(fsDoc(firestoreDb, 'restaurants', restaurantId), {
+          status: 'suspended',
+          isOpenManual: false,
+          suspendReason: reason || 'Demande rejetée',
+          suspendedAt: new Date().toISOString()
+        }, { merge: true });
+      }
+    } catch (fsErr) {
+      console.warn('[Firestore] Reject sync notice:', fsErr.message);
+    }
 
     recordActivityLog({
       action: 'Rejet et suppression candidature restaurant',
@@ -1292,6 +1459,7 @@ app.post('/api/admin/restaurants/auto-deactivate', (req, res) => {
           r.suspendReason = 'Désactivation automatique après 7 jours sans abonnement payant';
           r.suspendedAt = new Date().toISOString();
           deactivated.push(r.name);
+          syncRestaurantToFirestore(r);
 
           recordActivityLog({
             action: 'Désactivation automatique après 7 jours',
@@ -1366,12 +1534,32 @@ app.post(['/api/orders', '/api/orders/create'], orderRateLimiter, async (req, re
       console.warn('[Supabase] Order insert notice:', dbErr.message);
     }
 
-    // 2. Synchronize memory
+    // 2. Synchronize memory & persist
     const existingIdx = serverOrders.findIndex(o => o.id === orderId);
     if (existingIdx >= 0) {
       serverOrders[existingIdx] = { ...serverOrders[existingIdx], ...newOrder };
     } else {
       serverOrders.unshift(newOrder);
+    }
+    saveServerData();
+
+    // 3. Persist order to Cloud SQL
+    try {
+      await createOrder({
+        id: orderId,
+        orderNumber: newOrder.orderNumber ? String(newOrder.orderNumber) : null,
+        restaurantId: newOrder.restaurantId,
+        customerName: newOrder.customerName || 'Client Thiès',
+        customerPhone: newOrder.customerPhone,
+        customerAddress: newOrder.customerAddress || newOrder.address || '',
+        items: typeof newOrder.items === 'string' ? newOrder.items : JSON.stringify(newOrder.items || []),
+        total: String(newOrder.total || 0),
+        status: newOrder.status || 'En attente',
+        mode: newOrder.mode || 'Livraison',
+        note: newOrder.note || ''
+      });
+    } catch (sqlErr) {
+      console.warn('[Cloud SQL] Order insert notice:', sqlErr.message);
     }
 
     const resto = serverRestaurants.find(r => r.id === newOrder.restaurantId);
@@ -1425,10 +1613,26 @@ app.put('/api/orders/:id/status', async (req, res) => {
       order.cancelledAt = new Date().toISOString();
     }
 
+    saveServerData();
+
     try {
       await updateOrderStatus(id, status);
     } catch (dbErr) {
       console.warn('[Cloud SQL] Update order status notice:', dbErr.message);
+    }
+
+    try {
+      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status })
+      });
+    } catch (sbErr) {
+      console.warn('[Supabase] Update order status notice:', sbErr.message);
     }
 
     recordActivityLog({

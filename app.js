@@ -2946,6 +2946,27 @@ router.add('#/r/:slug', async (slug, startTab = 'menu', groupId = null) => {
         return;
     }
 
+    const isSuperAdmin = typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession;
+    const isOwner = typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (currentRestaurantSession.id === r.id || currentRestaurantSession.slug === r.slug);
+    if (r.status === 'suspended' && !isSuperAdmin && !isOwner) {
+        if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
+        document.getElementById('main-content').innerHTML = `
+            <div style="text-align: center; padding: 5rem 1.5rem; max-width: 580px; margin: 0 auto;" class="page-transition">
+                <div style="width: 72px; height: 72px; border-radius: 50%; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 1.5rem;">
+                    <i class="ri-error-warning-line"></i>
+                </div>
+                <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--text-primary);">Établissement Suspendu</h2>
+                <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 2rem;">
+                    Le restaurant <strong>${r.name}</strong> a été temporairement suspendu par l'administration de Thiès-Resto et n'est pas disponible pour les commandes actuellement.
+                </p>
+                <button class="btn btn-primary" onclick="router.navigate('/')" style="border-radius: 12px; padding: 0.75rem 1.5rem; font-weight: 700;">
+                    <i class="ri-arrow-left-line"></i> Découvrir d'autres restaurants à Thiès
+                </button>
+            </div>
+        `;
+        return;
+    }
+
     // Hide loading overlay if visible
     hideLoadingOverlay();
     stopOrderPolling();
@@ -3304,6 +3325,16 @@ window.addModalItemToCart = function(restaurantId, dishId) {
 function addToCart(restaurantId, dishId) {
     const r = store.getRestaurantById(restaurantId);
     if (!r || !r.menu) return;
+
+    if (r.status === 'suspended') {
+        if (typeof showToast === 'function') {
+            showToast(`« ${r.name} » est actuellement suspendu et n'accepte pas de commande.`, 'danger');
+        } else {
+            alert(`« ${r.name} » est actuellement suspendu et n'accepte pas de commande.`);
+        }
+        return;
+    }
+
     const dish = r.menu.find(d => String(d.id) === String(dishId));
     if (!dish) return;
     
@@ -6777,11 +6808,35 @@ if (typeof store !== 'undefined' && store.syncPromise) {
             if (typeof applyFilters === 'function') {
                 applyFilters();
             }
+            if (typeof updateCategoryBadges === 'function') {
+                updateCategoryBadges();
+            }
         }
     }).catch(err => {
         console.warn("Background initial sync notice:", err);
     });
 }
+
+// Live listener: Automatically refresh client views whenever restaurants are suspended, activated, or updated
+window.addEventListener('thies_restaurants_live_update', (e) => {
+    const hash = window.location.hash || '#/';
+    if (hash === '#/' || hash === '' || hash === '#/explore') {
+        if (typeof applyFilters === 'function') {
+            applyFilters();
+        }
+        if (typeof updateCategoryBadges === 'function') {
+            updateCategoryBadges();
+        }
+    } else if (hash.startsWith('#/r/')) {
+        const slug = hash.replace('#/r/', '').split('?')[0].split('/')[0];
+        const r = store.data.restaurants.find(item => item.slug === slug || item.id === slug);
+        const isSuperAdmin = typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession;
+        const isOwner = typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (currentRestaurantSession.id === (r && r.id) || currentRestaurantSession.slug === slug);
+        if (r && r.status === 'suspended' && !isSuperAdmin && !isOwner) {
+            router.navigate(hash);
+        }
+    }
+});
 
 // ==================== PHASE 5: PWA INSTALLATION ====================
 // deferredPrompt already declared

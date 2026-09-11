@@ -144,10 +144,36 @@ window.testSupabaseConnection = async function() {
 // App Local Database state manager (with Supabase sync)
 class Store {
     constructor() {
-        // Initialisation avec les données autoritaires Supabase
-        const initialRestos = (typeof SEED_RESTAURANTS !== 'undefined' && Array.isArray(SEED_RESTAURANTS))
+        // Initialisation avec les données autoritaires Supabase et cache local
+        let initialRestos = (typeof SEED_RESTAURANTS !== 'undefined' && Array.isArray(SEED_RESTAURANTS))
             ? JSON.parse(JSON.stringify(SEED_RESTAURANTS))
             : [];
+
+        // Hydrater immédiatement les statuts (ex: suspension) depuis le cache local avant la fin du sync réseau
+        try {
+            if (typeof localStorage !== 'undefined') {
+                const savedOverrides = JSON.parse(localStorage.getItem('thies_restaurant_overrides') || '{}');
+                if (savedOverrides && typeof savedOverrides === 'object') {
+                    initialRestos.forEach(r => {
+                        if (savedOverrides[r.id]) {
+                            if (savedOverrides[r.id].status) r.status = savedOverrides[r.id].status;
+                            if (savedOverrides[r.id].isOpenManual !== undefined) r.isOpenManual = savedOverrides[r.id].isOpenManual;
+                            if (savedOverrides[r.id].suspendReason) r.suspendReason = savedOverrides[r.id].suspendReason;
+                            if (savedOverrides[r.id].suspendedAt) r.suspendedAt = savedOverrides[r.id].suspendedAt;
+                        }
+                    });
+                }
+                const savedCustoms = JSON.parse(localStorage.getItem('thies_custom_restaurants') || '[]');
+                if (Array.isArray(savedCustoms)) {
+                    savedCustoms.forEach(c => {
+                        if (!initialRestos.some(ir => ir.id === c.id || ir.slug === c.slug)) {
+                            initialRestos.push(c);
+                        }
+                    });
+                }
+            }
+        } catch(e) {}
+
         this.data = {
             restaurants: initialRestos,
             orders: [],
@@ -454,8 +480,7 @@ class Store {
     async syncFromSupabase() {
         // Also fetch from server API to ensure no registrations or orders are missed
         try {
-            const isAdm = typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession;
-            const srvResp = await fetch(`/api/restaurants?all=${isAdm ? 'true' : 'false'}`);
+            const srvResp = await fetch('/api/restaurants?all=true');
             if (srvResp.ok) {
                 const srvData = await srvResp.json();
                 if (srvData && Array.isArray(srvData.restaurants)) {
@@ -463,6 +488,9 @@ class Store {
                         const existing = this.data.restaurants.find(r => r.id === sr.id || r.slug === sr.slug);
                         if (existing) {
                             if (sr.status) existing.status = sr.status;
+                            if (sr.isOpenManual !== undefined) existing.isOpenManual = sr.isOpenManual;
+                            if (sr.suspendReason) existing.suspendReason = sr.suspendReason;
+                            if (sr.suspendedAt) existing.suspendedAt = sr.suspendedAt;
                             if (sr.subscriptionPack) existing.subscriptionPack = sr.subscriptionPack;
                             if (sr.subscriptionPaidAt) existing.subscriptionPaidAt = sr.subscriptionPaidAt;
                             if (sr.subscriptionMethod) existing.subscriptionMethod = sr.subscriptionMethod;
@@ -775,6 +803,11 @@ class Store {
             if (typeof hideLoadingOverlay === 'function') hideLoadingOverlay();
             if (typeof applyFilters === 'function') {
                 applyFilters();
+            }
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
+                    detail: { restaurants: this.data.restaurants }
+                }));
             }
 
         } catch (e) {

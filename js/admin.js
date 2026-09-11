@@ -4707,7 +4707,7 @@ async function handleAdminLogin(e) {
     });
 
     if (matchedResto && (matchedResto.password === pass || pass === 'resto221' || pass === 'Thies221' || pass === 'admin')) {
-        currentRestaurantSession = { id: matchedResto.id, name: matchedResto.name, slug: matchedResto.slug, status: matchedResto.status };
+        currentRestaurantSession = { id: matchedResto.id, name: matchedResto.name, slug: matchedResto.slug, status: matchedResto.status, password: matchedResto.password || pass };
         try {
             sessionStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
             localStorage.setItem('resto_session', JSON.stringify(currentRestaurantSession));
@@ -6574,6 +6574,13 @@ async function suspendRestaurant(id) {
         suspendedAt: new Date().toISOString()
     });
 
+    // Real-time Firestore direct synchronization to trigger onSnapshot on all client instances
+    if (typeof window.updateFirestoreRestaurantStatus === 'function') {
+        window.updateFirestoreRestaurantStatus(id, 'suspended', 'Suspension manuelle SuperAdmin').catch(err => {
+            console.warn("[SuperAdmin] Notice synchro Firestore client:", err);
+        });
+    }
+
     try {
         console.log(`[SuperAdmin] Envoi requête POST /api/admin/restaurants/suspend...`);
         const resp = await fetch('/api/admin/restaurants/suspend', {
@@ -6622,6 +6629,13 @@ async function reactivateRestaurant(id) {
         suspendedAt: null
     });
     console.log(`[SuperAdmin] Store local mis à jour: statut='active', hasPaidSubscription=true, createdAt='${nowIso}'.`);
+
+    // Real-time Firestore direct synchronization to trigger onSnapshot on all client instances
+    if (typeof window.updateFirestoreRestaurantStatus === 'function') {
+        window.updateFirestoreRestaurantStatus(id, 'active').catch(err => {
+            console.warn("[SuperAdmin] Notice synchro Firestore client reactivate:", err);
+        });
+    }
 
     try {
         // 2. Call server/database endpoint
@@ -7655,14 +7669,26 @@ if (typeof window !== 'undefined') {
                 });
 
                 // Auto-refresh restaurant dashboard view if viewing orders or accounting
-                if (typeof dashboardActiveTab !== 'undefined' && (dashboardActiveTab === 'orders' || dashboardActiveTab === 'accounting')) {
-                    if (typeof renderAdminDashboard === 'function') {
-                        renderAdminDashboard();
+                if (typeof dashboardActiveTab !== 'undefined' && (dashboardActiveTab === 'orders' || dashboardActiveTab === 'accounting' || dashboardActiveTab === 'overview')) {
+                    if (document.getElementById('dashboard-tab-panel')) {
+                        const r = store.getRestaurantById(currentRestaurantSession.id);
+                        if (r && typeof renderDashboardTabContent === 'function') {
+                            renderDashboardTabContent(r);
+                        }
+                    }
+                    if (typeof renderMobileBottomNav === 'function') {
+                        renderMobileBottomNav();
                     }
                 }
-            } else if (hasStatusChange && typeof dashboardActiveTab !== 'undefined' && dashboardActiveTab === 'orders') {
-                if (typeof renderAdminDashboard === 'function') {
-                    renderAdminDashboard();
+            } else if (hasStatusChange && typeof dashboardActiveTab !== 'undefined') {
+                if (document.getElementById('dashboard-tab-panel')) {
+                    const r = store.getRestaurantById(currentRestaurantSession.id);
+                    if (r && typeof renderDashboardTabContent === 'function') {
+                        renderDashboardTabContent(r);
+                    }
+                }
+                if (typeof renderMobileBottomNav === 'function') {
+                    renderMobileBottomNav();
                 }
             }
         }

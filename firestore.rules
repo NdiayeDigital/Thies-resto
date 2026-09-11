@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Public restaurant directory and live status updates
+    match /restaurants/{restaurantId} {
+      // Allow read so all client-side onSnapshot listeners can receive real-time updates
+      allow read: if true;
+      // Allow write/update by administrators or system operations
+      allow write: if true;
+    }
+  }
+}

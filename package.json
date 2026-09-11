@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node server.js",
     "lint": "node -e \"console.log('Lint clean')\"",
-    "build": "node -e \"console.log('Build completed')\"",
+    "build": "npx esbuild js/firebase-listener.js --bundle --format=iife --outfile=js/firebase-listener.bundle.js",
     "start": "node server.js"
   },
   "dependencies": {

@@ -412,6 +412,15 @@ function submitSimpleOrder(e, restaurantId) {
     const r = store.getRestaurantById(restaurantId);
     if (!r) return;
 
+    if (r.status === 'suspended') {
+        if (typeof showToast === 'function') {
+            showToast(`« ${r.name} » est actuellement suspendu et ne peut pas accepter de commande.`, 'danger');
+        } else {
+            alert(`« ${r.name} » est actuellement suspendu et ne peut pas accepter de commande.`);
+        }
+        return;
+    }
+
     const phoneInput = document.getElementById('order-phone');
     const rawPhone = phoneInput ? phoneInput.value.trim() : '';
     

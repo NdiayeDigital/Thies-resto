@@ -11,7 +11,7 @@
       "whatsapp": "+221339542523",
       "openHours": "11:30 - 23:00",
       "closedDays": [],
-      "isOpenManual": false,
+      "isOpenManual": true,
       "status": "suspended",
       "username": "id_restaurantmadiba",
       "password": "$2a$06$uzgrvoX/x8r1pWq5hdSaROQj3ZTWgPMipaAsQ2EtB5AQu1UxOGl3G",
@@ -168,52 +168,60 @@
       ],
       "subscriptionPack": "Aucun (Gratuit)",
       "hasPaidSubscription": true,
-      "createdAt": "2026-06-20T03:24:45.203377+00:00",
+      "createdAt": "2026-09-11T19:57:11.625Z",
       "lat": 14.7928,
-      "lng": -16.926
+      "lng": -16.926,
+      "approvedAt": "2026-09-11T19:57:11.625Z"
     },
     {
-      "id": "r1",
-      "name": "Croissant Magique",
-      "slug": "croissant-magique",
-      "rating": 3.9,
-      "reviewsCount": 999,
-      "category": "Pâtisserie",
-      "address": "Avenue Léopold Sédar Senghor, Thiès",
-      "whatsapp": "+221339512551",
-      "openHours": "07:00 - 22:00",
+      "id": "r6",
+      "name": "Sam's Prestige",
+      "slug": "sams-prestige",
+      "rating": 3.5,
+      "reviewsCount": 229,
+      "category": "Traditionnel",
+      "address": "Avenida Léopold Senghor, Thiès",
+      "whatsapp": "+221772004699",
+      "openHours": "08:00 - 02:00",
       "closedDays": [],
       "isOpenManual": true,
       "status": "active",
-      "username": "id_croissantmagique",
-      "password": "$2a$06$PVKjXturFsacF5Il3faB0eli8ajopkIpzIQglGrA6ESbG23nCiKH.",
-      "coverImage": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=60",
+      "username": "id_samsprestige",
+      "password": "$2a$06$b8ITU5j.5.CFt7S0nKorcekdi3nEQk23zZzud8DmPrpScKgqIYiNe",
+      "coverImage": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop&q=60",
       "menu": [
         {
-          "id": "dish_12",
-          "name": "Croissant Beurre Français",
-          "image": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&auto=format&fit=crop&q=60",
-          "price": 500,
-          "description": "Feuilletage croustillant pur beurre, doré à souhait."
+          "id": "dish_9",
+          "name": "Burger Teranga Double Cheese",
+          "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
+          "price": 2000,
+          "description": "Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison."
         },
         {
-          "id": "dish_13",
-          "name": "Pain au Chocolat (Chocolatine)",
-          "image": "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=500&auto=format&fit=crop&q=60",
-          "price": 600,
-          "description": "Viennoiserie feuilletée avec deux barres de chocolat noir."
-        },
-        {
-          "id": "dish_14",
-          "name": "Formule Petit-Déjeuner Express",
-          "image": "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&auto=format&fit=crop&q=60",
+          "id": "dish_10",
+          "name": "Chawarma Poulet Fromage",
+          "image": "https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60",
           "price": 1500,
-          "description": "Un café Touba ou expresso, un croissant, et un verre de jus frais d'orange."
+          "description": "Pain libanais roulé garni de poulet émincé grillé, frites maison, crème d'ail et fromage."
+        },
+        {
+          "id": "dish_11",
+          "name": "Frites Maison (Portion XXL)",
+          "image": "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60",
+          "price": 800,
+          "description": "Pommes de terre fraîches coupées à la main et frites dorées aux herbes aromatiques."
+        },
+        {
+          "id": "dish_5",
+          "name": "Jus de Bouye",
+          "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60",
+          "price": 500,
+          "description": "Jus onctueux à base de fruit de baobab."
         }
       ],
       "reviews": [
         {
-          "id": "rev_r1_0",
+          "id": "rev_r6_0",
           "date": "2026-06-10",
           "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
           "author": "Abdoulaye Diallo",
@@ -221,7 +229,7 @@
           "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
         },
         {
-          "id": "rev_r1_1",
+          "id": "rev_r6_1",
           "date": "2026-06-12",
           "reply": null,
           "author": "Khadija Fall",
@@ -229,7 +237,7 @@
           "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
         },
         {
-          "id": "rev_r1_2",
+          "id": "rev_r6_2",
           "date": "2026-06-14",
           "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
           "author": "Michel Dupont",
@@ -324,84 +332,6 @@
       "lng": -16.926
     },
     {
-      "id": "r6",
-      "name": "Sam's Prestige",
-      "slug": "sams-prestige",
-      "rating": 3.5,
-      "reviewsCount": 229,
-      "category": "Traditionnel",
-      "address": "Avenida Léopold Senghor, Thiès",
-      "whatsapp": "+221772004699",
-      "openHours": "08:00 - 02:00",
-      "closedDays": [],
-      "isOpenManual": true,
-      "status": "active",
-      "username": "id_samsprestige",
-      "password": "$2a$06$b8ITU5j.5.CFt7S0nKorcekdi3nEQk23zZzud8DmPrpScKgqIYiNe",
-      "coverImage": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600&auto=format&fit=crop&q=60",
-      "menu": [
-        {
-          "id": "dish_9",
-          "name": "Burger Teranga Double Cheese",
-          "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
-          "price": 2000,
-          "description": "Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison."
-        },
-        {
-          "id": "dish_10",
-          "name": "Chawarma Poulet Fromage",
-          "image": "https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60",
-          "price": 1500,
-          "description": "Pain libanais roulé garni de poulet émincé grillé, frites maison, crème d'ail et fromage."
-        },
-        {
-          "id": "dish_11",
-          "name": "Frites Maison (Portion XXL)",
-          "image": "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60",
-          "price": 800,
-          "description": "Pommes de terre fraîches coupées à la main et frites dorées aux herbes aromatiques."
-        },
-        {
-          "id": "dish_5",
-          "name": "Jus de Bouye",
-          "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60",
-          "price": 500,
-          "description": "Jus onctueux à base de fruit de baobab."
-        }
-      ],
-      "reviews": [
-        {
-          "id": "rev_r6_0",
-          "date": "2026-06-10",
-          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
-          "author": "Abdoulaye Diallo",
-          "rating": 5,
-          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
-        },
-        {
-          "id": "rev_r6_1",
-          "date": "2026-06-12",
-          "reply": null,
-          "author": "Khadija Fall",
-          "rating": 4,
-          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
-        },
-        {
-          "id": "rev_r6_2",
-          "date": "2026-06-14",
-          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
-          "author": "Michel Dupont",
-          "rating": 5,
-          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
-        }
-      ],
-      "subscriptionPack": "Aucun (Gratuit)",
-      "hasPaidSubscription": true,
-      "createdAt": "2026-06-20T03:24:45.203377+00:00",
-      "lat": 14.7928,
-      "lng": -16.926
-    },
-    {
       "id": "r20",
       "name": "Le Jardin des Saveurs",
       "slug": "le-jardin-des-saveurs",
@@ -475,84 +405,6 @@
         },
         {
           "id": "rev_r20_2",
-          "date": "2026-06-14",
-          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
-          "author": "Michel Dupont",
-          "rating": 5,
-          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
-        }
-      ],
-      "subscriptionPack": "Aucun (Gratuit)",
-      "hasPaidSubscription": true,
-      "createdAt": "2026-06-20T03:24:45.203377+00:00",
-      "lat": 14.7928,
-      "lng": -16.926
-    },
-    {
-      "id": "r8",
-      "name": "Nadia",
-      "slug": "nadia",
-      "rating": 4,
-      "reviewsCount": 0,
-      "category": "Traditionnel",
-      "address": "Thiès 21000, Sénégal",
-      "whatsapp": "+221774640624",
-      "openHours": "24h/24",
-      "closedDays": [],
-      "isOpenManual": true,
-      "status": "active",
-      "username": "id_nadia",
-      "password": "$2a$06$s.LJmAejbto40EywT1A6W..O/HqMy7ElWVySi.YXUEbvtu3P0STXa",
-      "coverImage": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600&auto=format&fit=crop&q=60",
-      "menu": [
-        {
-          "id": "dish_9",
-          "name": "Burger Teranga Double Cheese",
-          "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
-          "price": 2000,
-          "description": "Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison."
-        },
-        {
-          "id": "dish_10",
-          "name": "Chawarma Poulet Fromage",
-          "image": "https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60",
-          "price": 1500,
-          "description": "Pain libanais roulé garni de poulet émincé grillé, frites maison, crème d'ail et fromage."
-        },
-        {
-          "id": "dish_11",
-          "name": "Frites Maison (Portion XXL)",
-          "image": "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60",
-          "price": 800,
-          "description": "Pommes de terre fraîches coupées à la main et frites dorées aux herbes aromatiques."
-        },
-        {
-          "id": "dish_5",
-          "name": "Jus de Bouye",
-          "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60",
-          "price": 500,
-          "description": "Jus onctueux à base de fruit de baobab."
-        }
-      ],
-      "reviews": [
-        {
-          "id": "rev_r8_0",
-          "date": "2026-06-10",
-          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
-          "author": "Abdoulaye Diallo",
-          "rating": 5,
-          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
-        },
-        {
-          "id": "rev_r8_1",
-          "date": "2026-06-12",
-          "reply": null,
-          "author": "Khadija Fall",
-          "rating": 4,
-          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
-        },
-        {
-          "id": "rev_r8_2",
           "date": "2026-06-14",
           "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
           "author": "Michel Dupont",
@@ -794,80 +646,6 @@
       "lng": -16.926
     },
     {
-      "id": "r17",
-      "name": "La Table des Gourmets",
-      "slug": "la-table-des-gourmets",
-      "rating": 5,
-      "reviewsCount": 14,
-      "category": "Gastronomique",
-      "address": "Quartier Grand-Thiès",
-      "whatsapp": "+221787846296",
-      "openHours": "19:00 - 23:30",
-      "closedDays": [
-        1,
-        2
-      ],
-      "isOpenManual": true,
-      "status": "active",
-      "username": "id_latabledesgourmets",
-      "password": "$2a$06$iZMr9noCOS8sjEEQfWbuJuRri9NvE3u6DQGNxwL2dcdch8r7WjwsS",
-      "coverImage": "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=60",
-      "menu": [
-        {
-          "id": "dish_15",
-          "name": "Lotte rôtie sauce vanille de Casamance",
-          "image": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop&q=60",
-          "price": 7500,
-          "description": "Médaillon de lotte poêlé, purée fine de patate douce et émulsion à la vanille."
-        },
-        {
-          "id": "dish_16",
-          "name": "Filet de Bœuf braisé au Café Touba",
-          "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60",
-          "price": 8000,
-          "description": "Filet tendre de bœuf du pays, sauce corsée infusée au café Touba et poivre de Selim, petits légumes."
-        },
-        {
-          "id": "dish_17",
-          "name": "Moelleux au Chocolat & Coulis Bissap",
-          "image": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop&q=60",
-          "price": 2500,
-          "description": "Dessert gourmand au cœur coulant, parfumé d'un coulis acidulé au bissap rouge."
-        }
-      ],
-      "reviews": [
-        {
-          "id": "rev_r17_0",
-          "date": "2026-06-10",
-          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
-          "author": "Abdoulaye Diallo",
-          "rating": 5,
-          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
-        },
-        {
-          "id": "rev_r17_1",
-          "date": "2026-06-12",
-          "reply": null,
-          "author": "Khadija Fall",
-          "rating": 4,
-          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
-        },
-        {
-          "id": "rev_r17_2",
-          "date": "2026-06-14",
-          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
-          "author": "Michel Dupont",
-          "rating": 5,
-          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
-        }
-      ],
-      "subscriptionPack": "Aucun (Gratuit)",
-      "hasPaidSubscription": true,
-      "createdAt": "2026-06-20T03:24:45.203377+00:00",
-      "lat": 14.7928,
-      "lng": -16.926
-    },
-    {
       "id": "r19",
       "name": "Biba Food",
       "slug": "biba-food",
@@ -1032,7 +810,7 @@
         1
       ],
       "isOpenManual": true,
-      "status": "active",
+      "status": "suspended",
       "username": "id_lecafedurail",
       "password": "$2a$06$lqPzOvgfgZ8vx7fUgGyJ4.Ime.MMx7B//hgxQ1KzSrESsGsbbxY/m",
       "coverImage": "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&auto=format&fit=crop&q=60",
@@ -1103,7 +881,9 @@
       "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
-      "lng": -16.926
+      "lng": -16.926,
+      "suspendReason": "Suspension manuelle SuperAdmin",
+      "suspendedAt": "2026-09-11T17:17:33.849Z"
     },
     {
       "id": "r7",
@@ -1117,7 +897,7 @@
       "openHours": "08:00 - 04:00",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "active",
+      "status": "suspended",
       "username": "id_iledegoree",
       "password": "$2a$06$LEmdeDg6RGP9UsvYJGusb.w27ORr8zvyzQUgcx/UJtjoCTEhB43bK",
       "coverImage": "https://images.unsplash.com/photo-1559339352-11d035aa65de?w=600&auto=format&fit=crop&q=60",
@@ -1188,7 +968,9 @@
       "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
-      "lng": -16.926
+      "lng": -16.926,
+      "suspendReason": "Suspension manuelle SuperAdmin",
+      "suspendedAt": "2026-09-11T17:17:34.856Z"
     },
     {
       "id": "r14",
@@ -1287,7 +1069,7 @@
       "openHours": "24h/24",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "active",
+      "status": "suspended",
       "username": "id_obsrestochicha",
       "password": "$2a$06$adBsxMjQpAZe18n3rQ45r.WjYnAChBAn5P8RXPsKvGnbhkUAt3.pq",
       "coverImage": "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600&auto=format&fit=crop&q=60",
@@ -1358,6 +1140,157 @@
       "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
+      "lng": -16.926,
+      "suspendReason": "Suspension manuelle SuperAdmin",
+      "suspendedAt": "2026-09-11T17:17:36.965Z"
+    },
+    {
+      "id": "r1",
+      "name": "Croissant Magique",
+      "slug": "croissant-magique",
+      "rating": 3.9,
+      "reviewsCount": 999,
+      "category": "Pâtisserie",
+      "address": "Avenue Léopold Sédar Senghor, Thiès",
+      "whatsapp": "+221339512551",
+      "openHours": "07:00 - 22:00",
+      "closedDays": [],
+      "isOpenManual": false,
+      "status": "active",
+      "username": "id_croissantmagique",
+      "password": "$2a$06$PVKjXturFsacF5Il3faB0eli8ajopkIpzIQglGrA6ESbG23nCiKH.",
+      "coverImage": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&auto=format&fit=crop&q=60",
+      "menu": [
+        {
+          "id": "dish_12",
+          "name": "Croissant Beurre Français",
+          "image": "https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&auto=format&fit=crop&q=60",
+          "price": 500,
+          "description": "Feuilletage croustillant pur beurre, doré à souhait."
+        },
+        {
+          "id": "dish_13",
+          "name": "Pain au Chocolat (Chocolatine)",
+          "image": "https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=500&auto=format&fit=crop&q=60",
+          "price": 600,
+          "description": "Viennoiserie feuilletée avec deux barres de chocolat noir."
+        },
+        {
+          "id": "dish_14",
+          "name": "Formule Petit-Déjeuner Express",
+          "image": "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&auto=format&fit=crop&q=60",
+          "price": 1500,
+          "description": "Un café Touba ou expresso, un croissant, et un verre de jus frais d'orange."
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev_r1_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r1_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r1_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
+      "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
+      "lat": 14.7928,
+      "lng": -16.926
+    },
+    {
+      "id": "r8",
+      "name": "Nadia",
+      "slug": "nadia",
+      "rating": 4,
+      "reviewsCount": 0,
+      "category": "Traditionnel",
+      "address": "Thiès 21000, Sénégal",
+      "whatsapp": "+221774640624",
+      "openHours": "24h/24",
+      "closedDays": [],
+      "isOpenManual": true,
+      "status": "active",
+      "username": "id_nadia",
+      "password": "$2a$06$s.LJmAejbto40EywT1A6W..O/HqMy7ElWVySi.YXUEbvtu3P0STXa",
+      "coverImage": "https://images.unsplash.com/photo-1561758033-d89a9ad46330?w=600&auto=format&fit=crop&q=60",
+      "menu": [
+        {
+          "id": "dish_9",
+          "name": "Burger Teranga Double Cheese",
+          "image": "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=60",
+          "price": 2000,
+          "description": "Pain artisanal, double steak de bœuf haché, double cheddar fondu, sauce maison."
+        },
+        {
+          "id": "dish_10",
+          "name": "Chawarma Poulet Fromage",
+          "image": "https://images.unsplash.com/photo-1626700051175-6518c4793f06?w=500&auto=format&fit=crop&q=60",
+          "price": 1500,
+          "description": "Pain libanais roulé garni de poulet émincé grillé, frites maison, crème d'ail et fromage."
+        },
+        {
+          "id": "dish_11",
+          "name": "Frites Maison (Portion XXL)",
+          "image": "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=500&auto=format&fit=crop&q=60",
+          "price": 800,
+          "description": "Pommes de terre fraîches coupées à la main et frites dorées aux herbes aromatiques."
+        },
+        {
+          "id": "dish_5",
+          "name": "Jus de Bouye",
+          "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=500&auto=format&fit=crop&q=60",
+          "price": 500,
+          "description": "Jus onctueux à base de fruit de baobab."
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev_r8_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r8_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r8_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
+      "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
+      "lat": 14.7928,
       "lng": -16.926
     },
     {
@@ -1372,7 +1305,7 @@
       "openHours": "09:00 - 00:00",
       "closedDays": [],
       "isOpenManual": true,
-      "status": "active",
+      "status": "suspended",
       "username": "id_caseateranga",
       "password": "$2a$06$T4xJ/x1vOBkPXs80t6SMOeOZJ7RQdldkLooo2wJQbHcwkT4uuXBj6",
       "coverImage": "https://images.unsplash.com/photo-1537047902294-62a40c20a6ae?w=600&auto=format&fit=crop&q=60",
@@ -1432,6 +1365,82 @@
         },
         {
           "id": "rev_r11_2",
+          "date": "2026-06-14",
+          "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
+          "author": "Michel Dupont",
+          "rating": 5,
+          "comment": "Un trésor caché à Thiès. Le service Teranga est excellent."
+        }
+      ],
+      "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
+      "createdAt": "2026-06-20T03:24:45.203377+00:00",
+      "lat": 14.7928,
+      "lng": -16.926,
+      "suspendReason": "Suspension manuelle SuperAdmin",
+      "suspendedAt": "2026-09-11T17:17:38.031Z"
+    },
+    {
+      "id": "r17",
+      "name": "La Table des Gourmets",
+      "slug": "la-table-des-gourmets",
+      "rating": 5,
+      "reviewsCount": 14,
+      "category": "Gastronomique",
+      "address": "Quartier Grand-Thiès",
+      "whatsapp": "+221787846296",
+      "openHours": "19:00 - 23:30",
+      "closedDays": [
+        1,
+        2
+      ],
+      "isOpenManual": true,
+      "status": "active",
+      "username": "id_latabledesgourmets",
+      "password": "$2a$06$iZMr9noCOS8sjEEQfWbuJuRri9NvE3u6DQGNxwL2dcdch8r7WjwsS",
+      "coverImage": "https://images.unsplash.com/photo-1544025162-d76694265947?w=600&auto=format&fit=crop&q=60",
+      "menu": [
+        {
+          "id": "dish_15",
+          "name": "Lotte rôtie sauce vanille de Casamance",
+          "image": "https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=500&auto=format&fit=crop&q=60",
+          "price": 7500,
+          "description": "Médaillon de lotte poêlé, purée fine de patate douce et émulsion à la vanille."
+        },
+        {
+          "id": "dish_16",
+          "name": "Filet de Bœuf braisé au Café Touba",
+          "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=60",
+          "price": 8000,
+          "description": "Filet tendre de bœuf du pays, sauce corsée infusée au café Touba et poivre de Selim, petits légumes."
+        },
+        {
+          "id": "dish_17",
+          "name": "Moelleux au Chocolat & Coulis Bissap",
+          "image": "https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=500&auto=format&fit=crop&q=60",
+          "price": 2500,
+          "description": "Dessert gourmand au cœur coulant, parfumé d'un coulis acidulé au bissap rouge."
+        }
+      ],
+      "reviews": [
+        {
+          "id": "rev_r17_0",
+          "date": "2026-06-10",
+          "reply": "Merci Abdoulaye ! Nous mettons du cœur dans nos assiettes.",
+          "author": "Abdoulaye Diallo",
+          "rating": 5,
+          "comment": "Incroyable expérience ! Les saveurs sénégalaises revisitées avec brio. Je recommande vivement."
+        },
+        {
+          "id": "rev_r17_1",
+          "date": "2026-06-12",
+          "reply": null,
+          "author": "Khadija Fall",
+          "rating": 4,
+          "comment": "Très bon repas, le thiéboudiène est très savoureux. Un tout petit peu d'attente à la livraison."
+        },
+        {
+          "id": "rev_r17_2",
           "date": "2026-06-14",
           "reply": "Merci Michel ! Heureux de vous avoir accueilli.",
           "author": "Michel Dupont",
@@ -1666,39 +1675,71 @@
   ],
   "orders": [
     {
+      "id": "CMD-966370",
+      "orderNumber": "CMD-966370",
+      "restaurantId": "r8",
+      "customerName": "Ablaye Diop",
+      "customerPhone": "+221771234567",
+      "mode": "Livraison",
+      "address": "Quartier Mbour 1, Thiès",
+      "items": [
+        {
+          "id": "d1",
+          "name": "Poulet Rôti Thiès",
+          "price": 3500,
+          "quantity": 1
+        }
+      ],
+      "total": 4500,
+      "note": "Sans piment",
+      "status": "Annulée",
+      "date": "2026-09-11",
+      "time": "17:49:26",
+      "createdAt": "2026-09-11T17:49:26.445813+00:00"
+    },
+    {
       "id": "CMD-1",
       "orderNumber": "CMD-1",
-      "restaurantId": "r1",
-      "customerName": "mouhamadou al amin ndiaye",
-      "customerPhone": "+221784799882",
+      "restaurantId": "r21",
+      "customerName": "Cheikh Aïdara",
+      "customerPhone": "+221771772527",
       "mode": "Sur place",
       "address": "",
       "items": [
         {
-          "id": "dish_13",
+          "id": "dish_1",
           "qty": 1,
-          "name": "Pain au Chocolat (Chocolatine)",
-          "price": 600
+          "name": "Thiéboudiène Penda Mbaye",
+          "price": 2500
         }
       ],
-      "total": 600,
-      "note": "[Analytics: Temps total: 20s. Parcours: #/r/croissant-magique]",
-      "status": "En attente",
-      "date": "2026-09-10",
-      "time": "13:37",
+      "total": 2500,
+      "note": "[Analytics: Temps total: 48s. Parcours: / -> /r/alamindelice]",
+      "status": "Annulée",
+      "date": "2026-09-11",
+      "time": "17:35",
       "createdAt": "2026-09-10T11:37:23.5945+00:00"
     }
   ],
   "customers": [
     {
-      "id": "c_221784799882",
-      "name": "mouhamadou al amin ndiaye",
-      "phone": "+221784799882",
+      "id": "c_221771234567",
+      "name": "Ablaye Diop",
+      "phone": "+221771234567",
+      "address": "Quartier Mbour 1, Thiès",
+      "ordersCount": 1,
+      "totalSpent": 4500,
+      "lastOrderDate": "2026-09-11"
+    },
+    {
+      "id": "c_221771772527",
+      "name": "Cheikh Aïdara",
+      "phone": "+221771772527",
       "address": "",
       "ordersCount": 1,
-      "totalSpent": 600,
-      "lastOrderDate": "2026-09-10"
+      "totalSpent": 2500,
+      "lastOrderDate": "2026-09-11"
     }
   ],
-  "savedAt": "2026-09-10T11:42:57.154Z"
+  "savedAt": "2026-09-11T19:57:11.625Z"
 }

@@ -1,0 +1,35 @@
+{
+  "entities": {
+    "Restaurant": {
+      "title": "Restaurant",
+      "description": "Restaurant document containing public catalog details, menu, and status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "status": {
+          "type": "string",
+          "enum": ["active", "suspended", "pending", "rejected"]
+        },
+        "category": { "type": "string" },
+        "address": { "type": "string" },
+        "whatsapp": { "type": "string" },
+        "openHours": { "type": "string" },
+        "isOpenManual": { "type": "boolean" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "coverImage": { "type": "string" },
+        "suspendReason": { "type": "string" },
+        "suspendedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "slug", "status"]
+    }
+  },
+  "firestore": {
+    "/restaurants/{restaurantId}": {
+      "schema": "Restaurant",
+      "description": "Directory of restaurants in Thiès with live status and details"
+    }
+  }
+}
