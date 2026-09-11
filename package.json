@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "node server.js",
     "lint": "node -e \"console.log('Lint clean')\"",
-    "build": "npx esbuild js/firebase-listener.js --bundle --format=iife --outfile=js/firebase-listener.bundle.js",
+    "build": "esbuild js/firebase-listener.js --bundle --format=iife --outfile=js/firebase-listener.bundle.js",
     "start": "node server.js"
   },
   "dependencies": {
@@ -22,6 +22,7 @@
     "twilio": "^6.1.0"
   },
   "devDependencies": {
-    "@types/pg": "^8.23.1"
+    "@types/pg": "^8.23.1",
+    "esbuild": "^0.28.2"
   }
 }
