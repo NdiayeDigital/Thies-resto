@@ -1359,14 +1359,7 @@ textarea.form-control {
 }
 
 .dashboard-subnav {
-    display: flex;
-    gap: 0.5rem;
-    margin-bottom: 1.25rem;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid var(--border);
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+    display: none !important;
 }
 
 .dashboard-subnav::-webkit-scrollbar {
@@ -7902,12 +7895,115 @@ html[data-theme="dark"] .mobile-bottom-nav {
 }
 
 .gr-dashboard-layout {
-    display: grid;
-    grid-template-columns: 260px 1fr;
-    gap: 1.75rem;
-    max-width: 1600px;
+    display: block;
+    width: 100%;
+    max-width: 1400px;
     margin: 0 auto;
-    align-items: start;
+}
+
+/* --- MANAGER TOP BAR & 3-DOTS MENU --- */
+.gr-manager-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    width: 100%;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.gr-more-menu-wrapper {
+    position: relative;
+}
+
+.gr-three-dots-btn {
+    background: var(--bg-primary, #ffffff);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.gr-three-dots-btn:hover {
+    background: var(--bg-hover, rgba(0,0,0,0.05));
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.gr-manager-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 12px 36px rgba(0,0,0,0.15);
+    min-width: 250px;
+    z-index: 9999;
+    padding: 0.5rem;
+    animation: fadeInDropdown 0.15s ease-out;
+}
+
+@keyframes fadeInDropdown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.gr-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.gr-dropdown-item:hover {
+    background: var(--bg-hover, rgba(0,0,0,0.05));
+}
+
+.gr-dropdown-item.active {
+    background: var(--primary, #0B3B24);
+    color: #ffffff !important;
+}
+
+.gr-dropdown-item.active i, .gr-dropdown-item.active span {
+    color: #ffffff !important;
+}
+
+.gr-dropdown-item i {
+    font-size: 1.15rem;
+    color: var(--text-secondary);
+}
+
+.gr-dropdown-item .gr-nav-badge {
+    margin-left: auto;
+    background: var(--danger, #dc2626);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 0.15rem 0.45rem;
+    border-radius: 10px;
 }
 
 /* --- SIDEBAR --- */
@@ -8661,22 +8757,41 @@ html[data-theme="dark"] .mobile-bottom-nav {
     background: rgba(11, 59, 36, 0.02);
 }
 
+.gr-sidebar {
+    display: none !important;
+}
+
 /* Responsiveness */
 @media (max-width: 1100px) {
-    .gr-dashboard-layout {
-        grid-template-columns: 1fr;
-    }
-    .gr-sidebar {
-        position: static;
-        max-height: none;
-    }
     .gr-bento-grid {
         grid-template-columns: 1fr;
     }
 }
+@media (max-width: 768px) {
+    .gr-manager-top-bar {
+        padding: 0.65rem 0.85rem;
+        margin-bottom: 0.85rem;
+    }
+    .gr-dashboard-container {
+        padding: 0.75rem 0.5rem 90px 0.5rem !important;
+    }
+    .gr-main {
+        width: 100% !important;
+        padding-bottom: 25px !important;
+    }
+    .mobile-bottom-nav {
+        display: flex !important;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        z-index: 9999 !important;
+    }
+}
 @media (max-width: 640px) {
     .gr-dashboard-container {
-        padding: 0.75rem;
+        padding: 0.5rem 0.4rem 95px 0.4rem !important;
     }
     .gr-kpis-grid {
         grid-template-columns: 1fr;

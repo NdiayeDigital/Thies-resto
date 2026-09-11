@@ -36,11 +36,16 @@ try {
     if (sessionStr) {
         currentRestaurantSession = JSON.parse(sessionStr);
     }
-    const hasAdminToken = Boolean(sessionStorage.getItem('thies_admin_token') || localStorage.getItem('thies_admin_token'));
+    // Clean up any stale admin credentials from localStorage for strict security
+    if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('thies_admin_token');
+        localStorage.removeItem('admin_session');
+    }
+    // Super-Admin access strictly requires active, non-persistent sessionStorage token
+    const hasAdminToken = Boolean(sessionStorage.getItem('thies_admin_token'));
     const hasAdminFlag = Boolean(
-        sessionStorage.getItem('admin_session') === 'true' || 
-        sessionStorage.getItem('thies_admin_logged') === 'true' || 
-        localStorage.getItem('admin_session') === 'true'
+        sessionStorage.getItem('admin_session') === 'true' && 
+        sessionStorage.getItem('thies_admin_logged') === 'true'
     );
     isSuperAdminSession = hasAdminToken && hasAdminFlag;
     if (typeof window !== 'undefined') {
@@ -342,11 +347,39 @@ class Store {
                 const restosData = await restosResp.json();
                 if (restosData && Array.isArray(restosData.restaurants) && restosData.restaurants.length > 0) {
                     const currentRestos = this.data.restaurants || [];
-                    const prevPending = currentRestos.filter(r => r.status === 'pending');
-                    const prevPendingIds = new Set(prevPending.map(r => String(r.id)));
-
                     const incomingRestos = restosData.restaurants;
-                    const newPendingRestos = incomingRestos.filter(r => r.status === 'pending' && !prevPendingIds.has(String(r.id)));
+
+                    // Initialize seen pending set on first sync so existing restaurants never fire fake new-partner notifications
+                    if (!this._seenPendingRestoIds) {
+                        this._seenPendingRestoIds = new Set();
+                        try {
+                            const cached = JSON.parse(sessionStorage.getItem('thies_seen_pending_restos') || '[]');
+                            if (Array.isArray(cached)) cached.forEach(id => this._seenPendingRestoIds.add(String(id)));
+                        } catch (e) {}
+
+                        // Mark all current pending restaurants as already known on initial boot
+                        incomingRestos.filter(r => r.status === 'pending').forEach(r => {
+                            this._seenPendingRestoIds.add(String(r.id));
+                        });
+                        try {
+                            sessionStorage.setItem('thies_seen_pending_restos', JSON.stringify(Array.from(this._seenPendingRestoIds)));
+                        } catch (e) {}
+                    }
+
+                    // Genuine new pending partner applications arriving while Super Admin is active
+                    const newPendingRestos = incomingRestos.filter(r => 
+                        r.status === 'pending' && 
+                        !this._seenPendingRestoIds.has(String(r.id))
+                    );
+
+                    // Add them to seen set immediately so they never trigger duplicate toasts
+                    if (newPendingRestos.length > 0) {
+                        newPendingRestos.forEach(r => this._seenPendingRestoIds.add(String(r.id)));
+                        try {
+                            sessionStorage.setItem('thies_seen_pending_restos', JSON.stringify(Array.from(this._seenPendingRestoIds)));
+                        } catch (e) {}
+                    }
+
                     const countChanged = incomingRestos.length !== currentRestos.length;
                     const anyStatusChanged = incomingRestos.some(ir => {
                         const existing = currentRestos.find(cr => cr.id === ir.id);
@@ -824,12 +857,12 @@ class Store {
     }
 
     async pushRestaurantToSupabase(resto) {
-        // Broadcast to central server for instant Super Admin and multi-device visibility
+        // Broadcast to central server safely without changing status
         try {
-            await fetch('/api/restaurants/register', {
+            await fetch('/api/admin/restaurants/update', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(resto)
+                body: JSON.stringify({ restaurant: resto })
             });
         } catch (e) {
             console.warn("Server restaurant sync notice:", e.message);
@@ -1057,9 +1090,6 @@ class Store {
         }
     }
     getRestaurants() {
-        const currentDate = new Date();
-        let changed = false;
-        
         this.data.restaurants.forEach(r => {
             if (typeof r.rating !== 'number' || isNaN(r.rating)) {
                 r.rating = Number(r.rating) || 5.0;
@@ -1067,26 +1097,7 @@ class Store {
             if (typeof r.reviewsCount !== 'number' || isNaN(r.reviewsCount)) {
                 r.reviewsCount = Number(r.reviewsCount) || 0;
             }
-
-            // Registration date
-            const createdAt = new Date(r.createdAt || '2026-06-26T00:00:00Z');
-            const diffTime = Math.abs(currentDate - createdAt);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            // Suspend restaurant if 7 days free trial has expired and no paid package is active
-            let packSubscribed = r.subscriptionPack || 'Essai 7 Jours (Gratuit)';
-            const isPaid = (packSubscribed && !packSubscribed.includes('Gratuit') && !packSubscribed.includes('Essai') && !packSubscribed.includes('Aucun')) || Boolean(r.hasPaidSubscription);
-            if (diffDays > 7 && r.status === 'active' && !isPaid) {
-                console.log(`[Store Auto-Suspend] Restaurant "${r.name}" (${r.id}) suspended: trial expired (${diffDays} days) and no paid subscription.`);
-                r.status = 'suspended';
-                changed = true;
-                this.pushRestaurantToSupabase(r);
-            }
         });
-        
-        if (changed) {
-            this.save();
-        }
         return this.data.restaurants;
     }
 
@@ -1268,7 +1279,15 @@ class Store {
     addRestaurant(resto) {
         this.data.restaurants.push(resto);
         this.save();
-        this.pushRestaurantToSupabase(resto);
+        if (resto.status === 'pending') {
+            fetch('/api/restaurants/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(resto)
+            }).catch(() => {});
+        } else {
+            this.pushRestaurantToSupabase(resto);
+        }
         if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
                 detail: { restaurants: this.data.restaurants, newPending: resto.status === 'pending' ? [resto] : [] }

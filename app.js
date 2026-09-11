@@ -711,22 +711,48 @@ window.switchDashboardSection = function(sectionName) {
         return;
     }
 
-    if (sectionName === 'accounting' || sectionName === 'summary') {
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'accounting';
-        if (typeof router !== 'undefined') router.navigate('/dashboard');
-    } else if (sectionName === 'orders' || sectionName === 'reservations') {
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'orders';
-        if (typeof router !== 'undefined') router.navigate('/dashboard-orders');
-    } else if (sectionName === 'dishes' || sectionName === 'menu' || sectionName === 'add-menu' || sectionName === 'daily-menu') {
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'dishes';
-        if (typeof router !== 'undefined') router.navigate('/dashboard-dishes');
-    } else if (sectionName === 'account' || sectionName === 'settings' || sectionName === 'subscription' || sectionName === 'reviews') {
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'account';
-        if (typeof router !== 'undefined') router.navigate('/dashboard-account');
+    if (sectionName === 'accounting' || sectionName === 'summary' || sectionName === 'dashboard') {
+        if (typeof switchDashboardTab === 'function') {
+            switchDashboardTab('accounting');
+        } else {
+            if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'accounting';
+            if (typeof router !== 'undefined') router.navigate('/dashboard');
+        }
+    } else if (sectionName === 'orders' || sectionName === 'reservations' || sectionName === 'consumer') {
+        if (typeof switchDashboardTab === 'function') {
+            switchDashboardTab('orders');
+        } else {
+            if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'orders';
+            if (typeof router !== 'undefined') router.navigate('/dashboard-orders');
+        }
+    } else if (sectionName === 'dishes' || sectionName === 'menu' || sectionName === 'add-menu' || sectionName === 'daily-menu' || sectionName === 'products') {
+        if (typeof switchDashboardTab === 'function') {
+            switchDashboardTab('dishes');
+        } else {
+            if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'dishes';
+            if (typeof router !== 'undefined') router.navigate('/dashboard-dishes');
+        }
+    } else if (sectionName === 'reports' || sectionName === 'report') {
+        if (typeof switchDashboardTab === 'function') {
+            switchDashboardTab('reports');
+        } else {
+            if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'reports';
+            if (typeof router !== 'undefined') router.navigate('/dashboard-reports');
+        }
+    } else if (sectionName === 'account' || sectionName === 'settings' || sectionName === 'subscription' || sectionName === 'reviews' || sectionName === 'profile') {
+        if (typeof switchDashboardTab === 'function') {
+            switchDashboardTab('account');
+        } else {
+            if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'account';
+            if (typeof router !== 'undefined') router.navigate('/dashboard-account');
+        }
     } else {
-        // default: accounting (premiere page)
-        if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'accounting';
-        if (typeof router !== 'undefined') router.navigate('/dashboard');
+        if (typeof switchDashboardTab === 'function') {
+            switchDashboardTab('accounting');
+        } else {
+            if (typeof dashboardActiveTab !== 'undefined') dashboardActiveTab = 'accounting';
+            if (typeof router !== 'undefined') router.navigate('/dashboard');
+        }
     }
 
     if (typeof updateNavbar === 'function') updateNavbar();
@@ -737,30 +763,45 @@ window.renderMobileBottomNav = function() {
     const nav = document.getElementById('mobile-bottom-nav');
     if (!nav) return;
 
-    // 1. Logged in Restaurant (Restaurant Only Navigation - 4 Clean Pages: Comptabilité, Commandes, Plats, Compte)
-    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
+    // 1. Logged in Restaurant (5 Clean, unified tabs: Dashboard, Commandes, Produits, Rapports, Paramètres)
+    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
         const active = typeof dashboardActiveTab !== 'undefined' ? dashboardActiveTab : 'accounting';
-        const isAccounting = active === 'accounting' || active === 'summary';
-        const isOrders = active === 'orders' || active === 'reservations';
-        const isDishes = active === 'dishes' || active === 'menu' || active === 'add-menu' || active === 'daily-menu';
-        const isAccount = active === 'account' || active === 'settings' || active === 'subscription' || active === 'reviews';
+        const isAccounting = active === 'accounting' || active === 'summary' || active === 'dashboard';
+        const isOrders = active === 'orders' || active === 'reservations' || active === 'consumer';
+        const isDishes = active === 'dishes' || active === 'menu' || active === 'add-menu' || active === 'daily-menu' || active === 'products';
+        const isReports = active === 'reports' || active === 'report';
+        const isAccount = active === 'account' || active === 'settings' || active === 'subscription' || active === 'reviews' || active === 'profile';
+
+        // Count pending orders for badge
+        let pendingCount = 0;
+        try {
+            if (typeof store !== 'undefined' && typeof store.getOrdersByRestaurant === 'function') {
+                const orders = store.getOrdersByRestaurant(currentRestaurantSession.id) || [];
+                pendingCount = orders.filter(o => o.status === 'En attente' || o.status === 'Reçue').length;
+            }
+        } catch (e) {}
 
         nav.innerHTML = `
             <a href="#" id="bottom-nav-resto-accounting" class="nav-item ${isAccounting ? 'active' : ''}" onclick="switchDashboardSection('accounting'); return false;">
-                <div class="nav-icon"><i class="ri-bar-chart-2-line"></i></div>
-                <span>Comptabilité</span>
+                <div class="nav-icon"><i class="ri-home-4-line"></i></div>
+                <span>Dashboard</span>
             </a>
-            <a href="#" id="bottom-nav-resto-orders" class="nav-item ${isOrders ? 'active' : ''}" onclick="switchDashboardSection('orders'); return false;">
-                <div class="nav-icon"><i class="ri-file-list-3-line"></i></div>
+            <a href="#" id="bottom-nav-resto-orders" class="nav-item ${isOrders ? 'active' : ''}" onclick="switchDashboardSection('orders'); return false;" style="position: relative;">
+                <div class="nav-icon"><i class="ri-shopping-bag-3-line"></i></div>
                 <span>Commandes</span>
+                ${pendingCount > 0 ? `<span class="nav-badge" style="display: flex;">${pendingCount}</span>` : ''}
             </a>
             <a href="#" id="bottom-nav-resto-dishes" class="nav-item ${isDishes ? 'active' : ''}" onclick="switchDashboardSection('dishes'); return false;">
-                <div class="nav-icon"><i class="ri-restaurant-line"></i></div>
-                <span>Plats</span>
+                <div class="nav-icon"><i class="ri-restaurant-2-line"></i></div>
+                <span>Produits</span>
+            </a>
+            <a href="#" id="bottom-nav-resto-reports" class="nav-item ${isReports ? 'active' : ''}" onclick="switchDashboardSection('reports'); return false;">
+                <div class="nav-icon"><i class="ri-file-chart-line"></i></div>
+                <span>Rapports</span>
             </a>
             <a href="#" id="bottom-nav-resto-account" class="nav-item ${isAccount ? 'active' : ''}" onclick="switchDashboardSection('account'); return false;">
-                <div class="nav-icon"><i class="ri-user-settings-line"></i></div>
-                <span>Compte</span>
+                <div class="nav-icon"><i class="ri-settings-3-line"></i></div>
+                <span>Paramètres &amp; QR</span>
             </a>
         `;
     } 
@@ -828,13 +869,15 @@ window.updateBottomNavFromRoute = function(hash) {
     window.renderMobileBottomNav();
 
     // Check Restaurant routes
-    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (typeof isSuperAdminSession === 'undefined' || !isSuperAdminSession)) {
+    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
         if (!hash || hash === '#/dashboard' || hash.startsWith('#/dashboard-accounting')) {
             window.updateBottomNavActive('resto-accounting');
         } else if (hash.startsWith('#/dashboard-orders') || hash.startsWith('#/dashboard-reservations')) {
             window.updateBottomNavActive('resto-orders');
-        } else if (hash.startsWith('#/dashboard-dishes') || hash.startsWith('#/dashboard-menu') || hash.startsWith('#/dashboard-add-menu') || hash.startsWith('#/dashboard-daily-menu')) {
+        } else if (hash.startsWith('#/dashboard-dishes') || hash.startsWith('#/dashboard-menu') || hash.startsWith('#/dashboard-add-menu') || hash.startsWith('#/dashboard-daily-menu') || hash.startsWith('#/dashboard-products')) {
             window.updateBottomNavActive('resto-dishes');
+        } else if (hash.startsWith('#/dashboard-reports') || hash.startsWith('#/dashboard-report')) {
+            window.updateBottomNavActive('resto-reports');
         } else if (hash.startsWith('#/dashboard-account') || hash.startsWith('#/dashboard-settings') || hash.startsWith('#/dashboard-subscription') || hash.startsWith('#/dashboard-reviews')) {
             window.updateBottomNavActive('resto-account');
         }
@@ -3002,9 +3045,6 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
                 </a>
                 <button class="btn btn-primary btn-sm" onclick="shareRestaurant('${r.name}', '${r.slug}')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
                     📤 Partager à un ami
-                </button>
-                <button class="btn btn-outline btn-sm" onclick="window.showAffiliateProgramModal('${r.name}')" style="display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; border-radius: 12px;">
-                    🤝 Devenir affilié
                 </button>
             </div>
         </div>

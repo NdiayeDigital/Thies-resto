@@ -78,6 +78,20 @@ router.add('#/dashboard-dishes', () => {
     renderDashboardShell();
 });
 
+router.add('#/dashboard-dishes', () => {
+    const cart = document.getElementById('floating-cart-bar');
+    if (cart) cart.style.display = 'none';
+    if (!currentRestaurantSession) {
+        router.navigate('/auth');
+        return;
+    }
+    dashboardActiveTab = 'dishes';
+    window.currentDishesSubView = 'all';
+    startOrderPolling(currentRestaurantSession.id);
+    hideLoadingOverlay();
+    renderDashboardShell();
+});
+
 router.add('#/dashboard-menu', () => {
     const cart = document.getElementById('floating-cart-bar');
     if (cart) cart.style.display = 'none';
@@ -162,6 +176,19 @@ router.add('#/dashboard-reviews', () => {
     renderDashboardShell();
 });
 
+router.add('#/dashboard-reports', () => {
+    const cart = document.getElementById('floating-cart-bar');
+    if (cart) cart.style.display = 'none';
+    if (!currentRestaurantSession) {
+        router.navigate('/auth');
+        return;
+    }
+    dashboardActiveTab = 'reports';
+    startOrderPolling(currentRestaurantSession.id);
+    hideLoadingOverlay();
+    renderDashboardShell();
+});
+
 function renderDashboardShell() {
     const container = document.getElementById('main-content');
     if (!currentRestaurantSession || !currentRestaurantSession.id) {
@@ -209,15 +236,9 @@ function renderDashboardShell() {
     const _diffTime = Math.abs(new Date() - _createdAt);
     const _diffDays = Math.ceil(_diffTime / (1000 * 60 * 60 * 24));
     const _packSubscribed = r.subscriptionPack || 'Essai 7 Jours (Gratuit)';
-    const isPaidPack = _packSubscribed && !_packSubscribed.includes('Gratuit') && !_packSubscribed.includes('Essai') && !_packSubscribed.includes('Aucun');
-    const isTrialExpired = _diffDays > 7 && !isPaidPack && !isSuperAdminSession;
+    const isPaidPack = (_packSubscribed && !_packSubscribed.includes('Gratuit') && !_packSubscribed.includes('Essai') && !_packSubscribed.includes('Aucun')) || r.hasPaidSubscription || r.status === 'active';
+    const isTrialExpired = _diffDays > 7 && !isPaidPack && !isSuperAdminSession && r.status === 'suspended';
     const daysLeftTrial = Math.max(0, 7 - _diffDays);
-
-    // Auto-update status if trial expired and active
-    if (isTrialExpired && r.status === 'active') {
-        r.status = 'suspended';
-        store.updateRestaurant(r.id, { status: 'suspended' });
-    }
 
     // Alert banner for expired trials or active trial countdown
     let trialAlertBanner = '';
@@ -257,9 +278,35 @@ function renderDashboardShell() {
         `;
     }
 
-    const isAccounting = dashboardActiveTab === 'accounting' || dashboardActiveTab === 'summary';
-    const isOrders = dashboardActiveTab === 'orders' || dashboardActiveTab === 'reservations';
-    const isDishes = dashboardActiveTab === 'dishes' || dashboardActiveTab === 'menu' || dashboardActiveTab === 'add-menu' || dashboardActiveTab === 'daily-menu';
+    const isSuspended = r.status === 'suspended';
+    const statusBadgeHtml = isSuspended
+        ? `<span class="badge" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 800; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; display: inline-flex; align-items: center; gap: 0.25rem;"><i class='ri-lock-2-line'></i> SUSPENDU</span>`
+        : `<span class="badge ${r.isOpenManual ? 'badge-success' : 'badge-danger'}" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 700;">${r.isOpenManual ? 'OUVERT' : 'FERMÉ'}</span>`;
+
+    let suspendedAlertBanner = '';
+    if (isSuspended) {
+        suspendedAlertBanner = `
+            <div style="background: #fef2f2; border: 1px solid #f87171; color: #991b1b; padding: 0.85rem 1.25rem; border-radius: 14px; margin: 1rem auto; max-width: 1200px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <i class='ri-error-warning-fill' style="font-size: 1.5rem; color: #dc2626;"></i>
+                    <div>
+                        <strong style="font-size: 0.95rem; color: #b91c1c; display: block;">Restaurant actuellement SUSPENDU</strong>
+                        <p style="margin: 0; font-size: 0.82rem; color: #7f1d1d;">${r.suspendReason || 'Suspension manuelle par l\'administration'}. La visibilité publique et les commandes clients sont coupées.</p>
+                    </div>
+                </div>
+                ${isSuperAdminSession ? `
+                <button class="btn btn-sm" onclick="reactivateRestaurant('${r.id}'); setTimeout(renderDashboardShell, 150);" style="background: #16a34a; color: white; border: none; font-weight: 700; padding: 0.45rem 0.85rem; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <i class='ri-checkbox-circle-line'></i> Réactiver le restaurant
+                </button>
+                ` : ''}
+            </div>
+        `;
+    }
+
+    const isAccounting = dashboardActiveTab === 'accounting' || dashboardActiveTab === 'summary' || dashboardActiveTab === 'dashboard';
+    const isOrders = dashboardActiveTab === 'orders' || dashboardActiveTab === 'reservations' || dashboardActiveTab === 'consumer';
+    const isDishes = dashboardActiveTab === 'dishes' || dashboardActiveTab === 'menu' || dashboardActiveTab === 'add-menu' || dashboardActiveTab === 'daily-menu' || dashboardActiveTab === 'products';
+    const isReports = dashboardActiveTab === 'reports' || dashboardActiveTab === 'report';
     const isAccount = dashboardActiveTab === 'account' || dashboardActiveTab === 'settings' || dashboardActiveTab === 'reviews' || dashboardActiveTab === 'profile';
     const isSubscription = dashboardActiveTab === 'subscription';
 
@@ -270,89 +317,83 @@ function renderDashboardShell() {
     container.innerHTML = `
         <div class="gr-dashboard-container">
             ${impersonateBanner}
+            ${suspendedAlertBanner}
             ${trialAlertBanner}
-            <div class="gr-dashboard-layout">
-                <aside class="gr-sidebar">
-                    <div class="gr-brand">
-                        <div class="gr-brand-logo">
-                            ${(r.name || 'G').charAt(0).toUpperCase()}
+
+            <!-- Manager Top Bar (Desktop & Mobile) -->
+            <div class="gr-manager-top-bar">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div class="gr-brand-logo" style="width: 42px; height: 42px; font-size: 1.25rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: var(--primary, #0B3B24); color: #ffffff; font-weight: 800; flex-shrink: 0;">
+                        ${(r.name || 'G').charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <span style="font-weight: 800; font-size: 1.05rem; color: var(--text-primary); line-height: 1.2;">${r.name}</span>
+                            ${statusBadgeHtml}
                         </div>
-                        <div class="gr-brand-info">
-                            <div class="gr-brand-name" title="${r.name}">${r.name}</div>
-                            <div class="gr-brand-sub">Thiès Resto Partner</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">Thiès Resto Partner • Espace Gérant</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <!-- Bouton 3 Points (Menu Navigation) -->
+                    <div class="gr-more-menu-wrapper">
+                        <button id="gr-three-dots-btn" class="gr-three-dots-btn" onclick="toggleManagerDropdown(event)" title="Menu de gestion" aria-label="Menu de navigation Espace Gérant">
+                            <i class='ri-more-2-fill' style="font-size: 1.4rem;"></i>
+                        </button>
+
+                        <!-- Menu déroulant Espace Gérant -->
+                        <div id="gr-manager-dropdown" class="gr-manager-dropdown" style="display: none;">
+                            <div style="padding: 0.6rem 0.85rem; border-bottom: 1px solid var(--border); margin-bottom: 0.35rem;">
+                                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-primary);">${r.name}</div>
+                                <div style="font-size: 0.72rem; color: var(--text-secondary);">Menu Espace Gérant</div>
+                            </div>
+                            <button class="gr-dropdown-item ${isAccounting ? 'active' : ''}" onclick="switchDashboardTab('accounting'); closeManagerDropdown();">
+                                <i class='ri-home-4-line'></i>
+                                <span>Dashboard</span>
+                            </button>
+                            <button class="gr-dropdown-item ${isOrders ? 'active' : ''}" onclick="switchDashboardTab('orders'); closeManagerDropdown();">
+                                <i class='ri-shopping-bag-3-line'></i>
+                                <span>Commandes</span>
+                                ${pendingOrdersCount > 0 ? `<span class="gr-nav-badge">${pendingOrdersCount}</span>` : ''}
+                            </button>
+                            <button class="gr-dropdown-item ${isDishes ? 'active' : ''}" onclick="switchDashboardTab('dishes'); closeManagerDropdown();">
+                                <i class='ri-restaurant-2-line'></i>
+                                <span>Produits</span>
+                            </button>
+                            <button class="gr-dropdown-item ${isReports ? 'active' : ''}" onclick="switchDashboardTab('reports'); closeManagerDropdown();">
+                                <i class='ri-file-chart-line'></i>
+                                <span>Rapports</span>
+                            </button>
+                            <button class="gr-dropdown-item ${isAccount ? 'active' : ''}" onclick="switchDashboardTab('account'); closeManagerDropdown();">
+                                <i class='ri-settings-3-line'></i>
+                                <span>Paramètres &amp; QR</span>
+                            </button>
+                            <div style="height: 1px; background: var(--border); margin: 0.4rem 0;"></div>
+                            <button class="gr-dropdown-item" onclick="switchDashboardTab('subscription', 'wow'); closeManagerDropdown();" style="color: #d97706;">
+                                <i class='ri-sparkling-fill'></i>
+                                <span>Formule Partenaire</span>
+                            </button>
+                            ${isSuperAdminSession ? `
+                            <button class="gr-dropdown-item" onclick="exitImpersonation(); closeManagerDropdown();" style="color: #dc2626;">
+                                <i class='ri-shield-user-fill'></i>
+                                <span>Console Super-Admin</span>
+                            </button>
+                            ` : ''}
+                            <button class="gr-dropdown-item" onclick="logoutRestaurant()" style="color: var(--danger);">
+                                <i class='ri-logout-box-r-line'></i>
+                                <span>Déconnexion</span>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Groupe MENU -->
-                    <div class="gr-menu-group">
-                        <div class="gr-menu-label">Menu</div>
-                        <button class="gr-nav-item ${isAccounting ? 'active' : ''}" onclick="switchDashboardTab('accounting')">
-                            <i class='ri-home-4-line'></i>
-                            <span>Dashboard</span>
-                        </button>
-                        <button class="gr-nav-item ${isAccounting ? 'active' : ''}" onclick="switchDashboardTab('accounting')">
-                            <i class='ri-computer-line'></i>
-                            <span>Report</span>
-                        </button>
-                        <button class="gr-nav-item ${isDishes ? 'active' : ''}" onclick="switchDashboardTab('dishes')">
-                            <i class='ri-price-tag-3-line'></i>
-                            <span>Products</span>
-                        </button>
-                        <button class="gr-nav-item ${isOrders ? 'active' : ''}" onclick="switchDashboardTab('orders')">
-                            <i class='ri-group-line'></i>
-                            <span>Consumer</span>
-                            ${pendingOrdersCount > 0 ? `<span class="gr-nav-badge">${pendingOrdersCount}</span>` : ''}
-                        </button>
-                    </div>
-
-                    <!-- Groupe FINANCIAL -->
-                    <div class="gr-menu-group">
-                        <div class="gr-menu-label">Financial</div>
-                        <button class="gr-nav-item" onclick="switchDashboardTab('accounting'); setTimeout(() => { const el = document.getElementById('gr-orders-table-card'); if (el) el.scrollIntoView({behavior:'smooth'}); }, 100);">
-                            <i class='ri-send-plane-line'></i>
-                            <span>Transactions</span>
-                        </button>
-                        <button class="gr-nav-item" onclick="window.exportOrdersCSV('${r.id}')">
-                            <i class='ri-file-text-line'></i>
-                            <span>Invoices</span>
-                        </button>
-                    </div>
-
-                    <!-- Groupe TOOLS -->
-                    <div class="gr-menu-group">
-                        <div class="gr-menu-label">Tools</div>
-                        <button class="gr-nav-item ${isAccount && window.currentAccountSubView === 'profile' ? 'active' : ''}" onclick="switchDashboardTab('account', 'profile')">
-                            <i class='ri-settings-3-line'></i>
-                            <span>Settings</span>
-                        </button>
-                        <button class="gr-nav-item ${isAccount && window.currentAccountSubView === 'reviews' ? 'active' : ''}" onclick="switchDashboardTab('account', 'reviews')">
-                            <i class='ri-thumb-up-line'></i>
-                            <span>Feedback</span>
-                        </button>
-                        <button class="gr-nav-item" onclick="window.open('https://wa.me/221776064596?text=' + encodeURIComponent('Bonjour Thiès Resto, support restaurant : ' + '${encodeURIComponent(r.name)}'), '_blank')">
-                            <i class='ri-question-line'></i>
-                            <span>Help</span>
-                        </button>
-                    </div>
-
-                    <!-- Upgrade Pro Card -->
-                    <div class="gr-upgrade-card">
-                        <div class="gr-upgrade-badge">
-                            <i class='ri-restaurant-2-line'></i>
-                        </div>
-                        <div class="gr-upgrade-title">Upgrade Pro</div>
-                        <div class="gr-upgrade-desc">Profitez des commandes directes illimitées et du QR code de table.</div>
-                        <button class="gr-upgrade-btn" onclick="switchDashboardTab('subscription', 'wow')">
-                            <i class='ri-sparkling-fill'></i> Mettre à niveau
-                        </button>
-                    </div>
-
-                    <button class="gr-nav-item" onclick="logoutRestaurant()" style="color: var(--danger); margin-top: 0.25rem;">
-                        <i class='ri-logout-box-r-line' style="color: var(--danger);"></i>
-                        <span>Déconnexion</span>
+                    <button class="btn btn-ghost btn-sm" onclick="logoutRestaurant()" title="Déconnexion" style="padding: 0.4rem 0.6rem; color: var(--danger); border-radius: 10px;">
+                        <i class='ri-logout-box-r-line' style="font-size: 1.2rem;"></i>
                     </button>
-                </aside>
+                </div>
+            </div>
 
+            <div class="gr-dashboard-layout">
                 <main class="gr-main" id="dashboard-tab-panel">
                     <!-- Sub tab contents injected here -->
                 </main>
@@ -361,22 +402,59 @@ function renderDashboardShell() {
     `;
 
     renderDashboardTabContent(r);
+    if (typeof renderMobileBottomNav === 'function') {
+        renderMobileBottomNav();
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 3-DOTS DROPDOWN CONTROLS
+// ---------------------------------------------------------------------------
+window.toggleManagerDropdown = function(event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const dd = document.getElementById('gr-manager-dropdown');
+    if (!dd) return;
+    const isVisible = dd.style.display === 'block';
+    dd.style.display = isVisible ? 'none' : 'block';
+};
+
+window.closeManagerDropdown = function() {
+    const dd = document.getElementById('gr-manager-dropdown');
+    if (dd) dd.style.display = 'none';
+};
+
+if (typeof window !== 'undefined' && !window._grDropdownListenerAdded) {
+    window._grDropdownListenerAdded = true;
+    document.addEventListener('click', function(e) {
+        const dd = document.getElementById('gr-manager-dropdown');
+        const btn = document.getElementById('gr-three-dots-btn');
+        if (dd && dd.style.display === 'block') {
+            if (!dd.contains(e.target) && (!btn || !btn.contains(e.target))) {
+                dd.style.display = 'none';
+            }
+        }
+    });
 }
 
 function switchDashboardTab(tab, subTab) {
-    if (tab === 'summary' || tab === 'accounting') {
+    if (tab === 'summary' || tab === 'accounting' || tab === 'dashboard') {
         dashboardActiveTab = 'accounting';
     } else if (tab === 'reservations') {
         dashboardActiveTab = 'orders';
         window.currentOrdersSubView = 'reservations';
-    } else if (tab === 'orders') {
+    } else if (tab === 'orders' || tab === 'consumer') {
         dashboardActiveTab = 'orders';
         if (subTab) window.currentOrdersSubView = subTab;
-    } else if (tab === 'menu' || tab === 'add-menu' || tab === 'daily-menu' || tab === 'dishes') {
+    } else if (tab === 'menu' || tab === 'add-menu' || tab === 'daily-menu' || tab === 'dishes' || tab === 'products') {
         dashboardActiveTab = 'dishes';
         if (tab === 'daily-menu' || subTab === 'daily') window.currentDishesSubView = 'daily';
         else if (tab === 'add-menu' || subTab === 'add') window.currentDishesSubView = 'add';
         else if (subTab) window.currentDishesSubView = subTab;
+    } else if (tab === 'reports' || tab === 'report' || tab === 'transactions' || tab === 'invoices') {
+        dashboardActiveTab = 'reports';
     } else if (tab === 'subscription') {
         dashboardActiveTab = 'subscription';
         if (subTab === 'payment' || subTab === 'wow') {
@@ -409,40 +487,13 @@ window.setSubscriptionStep = function(step) {
 };
 
 function getDashboardSubNavHtml(activeTab) {
-    const r = currentRestaurantSession ? store.getRestaurantById(currentRestaurantSession.id) : null;
-    const currentOrders = r ? store.getOrdersByRestaurant(r.id) : [];
-    const pendingOrdersCount = currentOrders.filter(o => o.status === 'En attente' || o.status === 'Reçue').length;
-
-    const isAccounting = activeTab === 'accounting' || activeTab === 'summary';
-    const isOrders = activeTab === 'orders' || activeTab === 'reservations';
-    const isDishes = activeTab === 'dishes' || activeTab === 'menu' || activeTab === 'add-menu' || activeTab === 'daily-menu';
-    const isAccount = activeTab === 'account' || activeTab === 'settings' || activeTab === 'reviews' || activeTab === 'profile';
-    const isSub = activeTab === 'subscription';
-
-    return `
-        <div class="dashboard-subnav" style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; overflow-x: auto; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border);">
-            <button class="btn btn-sm ${isAccounting ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('accounting')" style="font-weight: 700; border-radius: 12px; padding: 0.45rem 0.95rem; white-space: nowrap; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-                <i class='ri-bar-chart-2-line'></i> <span>Comptabilité</span>
-            </button>
-            <button class="btn btn-sm ${isOrders ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('orders')" style="font-weight: 700; border-radius: 12px; padding: 0.45rem 0.95rem; white-space: nowrap; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-                <i class='ri-file-list-3-line'></i> <span>Commandes</span>
-                ${pendingOrdersCount > 0 ? `<span style="background: var(--danger); color: white; border-radius: 10px; padding: 1px 6px; font-size: 0.7rem; font-weight: 700; margin-left: 0.25rem;">${pendingOrdersCount}</span>` : ''}
-            </button>
-            <button class="btn btn-sm ${isDishes ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('dishes')" style="font-weight: 700; border-radius: 12px; padding: 0.45rem 0.95rem; white-space: nowrap; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-                <i class='ri-restaurant-line'></i> <span>Plats</span>
-            </button>
-            <button class="btn btn-sm ${isAccount ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('account')" style="font-weight: 700; border-radius: 12px; padding: 0.45rem 0.95rem; white-space: nowrap; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem;">
-                <i class='ri-user-settings-line'></i> <span>Compte</span>
-            </button>
-            <button class="btn btn-sm ${isSub ? 'btn-primary' : 'btn-secondary'}" onclick="switchDashboardTab('subscription', 'wow')" style="font-weight: 700; border-radius: 12px; padding: 0.45rem 0.95rem; white-space: nowrap; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; background: ${isSub ? '' : 'linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(2, 132, 199, 0.12))'}; border: ${isSub ? '' : '1px solid rgba(245, 158, 11, 0.3)'};">
-                <i class='ri-sparkling-fill' style="color: #f59e0b;"></i> <span>Abonnement Pro</span>
-            </button>
-        </div>
-    `;
+    return '';
 }
 
 function renderDashboardTabContent(r) {
     const panel = document.getElementById('dashboard-tab-panel');
+    const allRestoOrders = (typeof store !== 'undefined' && store.getOrdersByRestaurant) ? store.getOrdersByRestaurant(r.id) : [];
+    const pendingOrdersCount = allRestoOrders.filter(o => o.status === 'En attente' || o.status === 'Reçue').length;
     
     // Check trial expiry for paywall (7-day trial policy) - NEVER block active restaurants or the orders tab
     const _cr = new Date(r.createdAt || new Date().toISOString());
@@ -478,8 +529,8 @@ function renderDashboardTabContent(r) {
         return;
     }
     
-    if (dashboardActiveTab === 'accounting' || dashboardActiveTab === 'summary') {
-        let allOrders = store.getOrdersByRestaurant(r.id);
+    if (dashboardActiveTab === 'accounting' || dashboardActiveTab === 'summary' || dashboardActiveTab === 'dashboard') {
+        let allOrders = allRestoOrders;
         let orders = [...allOrders];
         const todayStr = new Date().toISOString().split('T')[0];
         
@@ -1225,8 +1276,6 @@ function renderDashboardTabContent(r) {
         }
 
         panel.innerHTML = `
-            ${getDashboardSubNavHtml('orders')}
-            
             <!-- Real-time header & controls -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
                 <div>
@@ -1345,7 +1394,6 @@ function renderDashboardTabContent(r) {
         }
 
         panel.innerHTML = `
-            ${getDashboardSubNavHtml('reservations')}
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
                 <h2 style="font-size: 1.25rem; margin: 0;">Réservations de Tables</h2>
                 <div style="display: flex; gap: 0.5rem;">
@@ -1405,7 +1453,197 @@ function renderDashboardTabContent(r) {
             </div>
         `;
     } 
-    else if (dashboardActiveTab === 'menu' || dashboardActiveTab === 'add-menu') {
+    else if (dashboardActiveTab === 'reports' || dashboardActiveTab === 'report') {
+        const allOrders = store.getOrdersByRestaurant(r.id) || [];
+        const todayStr = new Date().toISOString().split('T')[0];
+        const now = new Date();
+        const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+        const validOrders = allOrders.filter(o => o.status !== 'Annulée');
+        const todayOrders = validOrders.filter(o => o.createdAt && o.createdAt.startsWith(todayStr));
+        const weekOrders = validOrders.filter(o => o.createdAt && new Date(o.createdAt) >= sevenDaysAgo);
+        const monthOrders = validOrders.filter(o => o.createdAt && new Date(o.createdAt) >= thirtyDaysAgo);
+
+        const totalRevenue = validOrders.reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+        const todayRevenue = todayOrders.reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+        const weekRevenue = weekOrders.reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+        const monthRevenue = monthOrders.reduce((acc, o) => acc + (Number(o.total) || 0), 0);
+
+        const deliveredCount = allOrders.filter(o => o.status === 'Livrée' || o.status === 'Terminée' || o.status === 'Prête').length;
+        const avgBasket = validOrders.length > 0 ? Math.round(totalRevenue / validOrders.length) : 0;
+
+        // Categories breakdown
+        const categoryMap = {};
+        allOrders.forEach(o => {
+            if (Array.isArray(o.items)) {
+                o.items.forEach(item => {
+                    const dish = (r.menu || []).find(m => m.id === item.id || m.name === item.name);
+                    const cat = dish ? (dish.category || 'Menu du Jour') : 'Spécialités';
+                    categoryMap[cat] = (categoryMap[cat] || 0) + ((Number(item.price) || 0) * (Number(item.quantity) || 1));
+                });
+            }
+        });
+        const categories = Object.keys(categoryMap).map(k => ({ name: k, total: categoryMap[k] })).sort((a, b) => b.total - a.total);
+        const maxCatTotal = categories.length > 0 ? Math.max(...categories.map(c => c.total), 1) : 1;
+
+        // Filtered transactions
+        const filterPeriod = window.reportsFilterPeriod || 'all';
+        let displayOrders = [...allOrders];
+        if (filterPeriod === 'today') displayOrders = todayOrders;
+        else if (filterPeriod === 'week') displayOrders = weekOrders;
+        else if (filterPeriod === 'month') displayOrders = monthOrders;
+
+        let tableRowsHtml = '';
+        if (displayOrders.length === 0) {
+            tableRowsHtml = `<tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-secondary); font-size: 0.9rem;">Aucune transaction enregistrée pour cette période.</td></tr>`;
+        } else {
+            displayOrders.slice(0, 50).forEach(o => {
+                const dateFormatted = o.createdAt ? new Date(o.createdAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Récemment';
+                const itemsSummary = Array.isArray(o.items) ? o.items.map(i => `${i.quantity}x ${i.name}`).join(', ') : 'Articles divers';
+                
+                let badgeClass = 'badge-secondary';
+                if (o.status === 'Livrée' || o.status === 'Terminée') badgeClass = 'badge-success';
+                else if (o.status === 'En cuisine' || o.status === 'Prête') badgeClass = 'badge-primary';
+                else if (o.status === 'En attente') badgeClass = 'badge-warning';
+                else if (o.status === 'Annulée') badgeClass = 'badge-danger';
+
+                tableRowsHtml += `
+                    <tr style="border-bottom: 1px solid var(--border);">
+                        <td style="padding: 0.85rem 1rem; font-family: monospace; font-size: 0.82rem; font-weight: 700; color: var(--primary);">#${(o.id || '').substring(0, 8)}</td>
+                        <td style="padding: 0.85rem 1rem; font-size: 0.82rem; color: var(--text-secondary); white-space: nowrap;">${dateFormatted}</td>
+                        <td style="padding: 0.85rem 1rem;">
+                            <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-primary);">${o.customerName || 'Client'}</div>
+                            <div style="font-size: 0.78rem; color: var(--text-secondary);">${o.customerPhone || 'Direct'}</div>
+                        </td>
+                        <td style="padding: 0.85rem 1rem; font-size: 0.82rem; color: var(--text-secondary); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${itemsSummary}">${itemsSummary}</td>
+                        <td style="padding: 0.85rem 1rem; font-weight: 800; font-size: 0.92rem; color: var(--text-primary); text-align: right; white-space: nowrap;">${(Number(o.total) || 0).toLocaleString()} FCFA</td>
+                        <td style="padding: 0.85rem 1rem; text-align: center;">
+                            <span class="badge ${badgeClass}" style="font-size: 0.75rem; padding: 3px 8px; border-radius: 8px;">${o.status || 'En attente'}</span>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        panel.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.4rem; margin: 0; color: var(--text-primary); font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class='ri-file-chart-line' style="color: var(--primary);"></i> Rapports Financiers &amp; Ventes
+                    </h2>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.25rem 0 0 0;">Analyse détaillée de vos recettes, commandes complétées et transactions comptables.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-outline btn-sm" onclick="window.print()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <i class='ri-printer-line'></i> Imprimer
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="window.exportOrdersCSV('${r.id}')" style="font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">
+                        <i class='ri-download-2-line'></i> Télécharger CSV Factures
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPI Cards Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.15rem; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Recettes Totales</span>
+                        <span style="color: var(--primary); font-size: 1.1rem;"><i class='ri-money-cny-circle-line'></i></span>
+                    </div>
+                    <div style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary);">${totalRevenue.toLocaleString()} <span style="font-size: 0.85rem; font-weight: 600;">FCFA</span></div>
+                    <div style="font-size: 0.78rem; color: var(--success); margin-top: 0.25rem; font-weight: 600;">Sur l'ensemble des commandes</div>
+                </div>
+
+                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.15rem; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Aujourd'hui</span>
+                        <span style="color: #0284c7; font-size: 1.1rem;"><i class='ri-calendar-check-line'></i></span>
+                    </div>
+                    <div style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary);">${todayRevenue.toLocaleString()} <span style="font-size: 0.85rem; font-weight: 600;">FCFA</span></div>
+                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.25rem;">${todayOrders.length} commande(s) ce jour</div>
+                </div>
+
+                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.15rem; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">7 Derniers Jours</span>
+                        <span style="color: #f59e0b; font-size: 1.1rem;"><i class='ri-line-chart-line'></i></span>
+                    </div>
+                    <div style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary);">${weekRevenue.toLocaleString()} <span style="font-size: 0.85rem; font-weight: 600;">FCFA</span></div>
+                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.25rem;">${weekOrders.length} commande(s)</div>
+                </div>
+
+                <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.15rem; border-radius: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Panier Moyen</span>
+                        <span style="color: #8b5cf6; font-size: 1.1rem;"><i class='ri-shopping-basket-line'></i></span>
+                    </div>
+                    <div style="font-size: 1.45rem; font-weight: 800; color: var(--text-primary);">${avgBasket.toLocaleString()} <span style="font-size: 0.85rem; font-weight: 600;">FCFA</span></div>
+                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.25rem;">${deliveredCount} commande(s) livrée(s)</div>
+                </div>
+            </div>
+
+            <!-- Categories Breakdown -->
+            ${categories.length > 0 ? `
+                <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class='ri-pie-chart-2-line' style="color: var(--primary);"></i> Répartition des Ventes par Catégorie
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+                        ${categories.map(cat => {
+                            const percent = Math.round((cat.total / (totalRevenue || 1)) * 100);
+                            return `
+                                <div style="background: var(--bg-main); padding: 0.85rem 1rem; border-radius: 12px; border: 1px solid var(--border);">
+                                    <div style="display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 700; margin-bottom: 0.35rem;">
+                                        <span style="color: var(--text-primary);">${cat.name}</span>
+                                        <span style="color: var(--primary);">${cat.total.toLocaleString()} F (${percent}%)</span>
+                                    </div>
+                                    <div style="background: var(--border); height: 6px; border-radius: 3px; overflow: hidden;">
+                                        <div style="background: var(--primary); height: 100%; width: ${Math.min(100, Math.max(8, percent))}%; border-radius: 3px;"></div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            ` : ''}
+
+            <!-- Transactions Table -->
+            <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.25rem 1rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.75rem;">
+                    <div>
+                        <h3 style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary); margin: 0;">Journal des Transactions</h3>
+                        <div style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.15rem;">Affichage des 50 dernières commandes enregistrées</div>
+                    </div>
+                    <div style="display: flex; gap: 0.35rem; background: var(--bg-main); padding: 3px; border-radius: 10px; border: 1px solid var(--border);">
+                        <button class="btn btn-sm ${filterPeriod === 'all' ? 'btn-primary' : 'btn-ghost'}" onclick="window.reportsFilterPeriod='all'; renderDashboardTabContent(store.getRestaurantById('${r.id}'));" style="padding: 0.3rem 0.65rem; font-size: 0.78rem; font-weight: 700;">Tout</button>
+                        <button class="btn btn-sm ${filterPeriod === 'today' ? 'btn-primary' : 'btn-ghost'}" onclick="window.reportsFilterPeriod='today'; renderDashboardTabContent(store.getRestaurantById('${r.id}'));" style="padding: 0.3rem 0.65rem; font-size: 0.78rem; font-weight: 700;">Aujourd'hui</button>
+                        <button class="btn btn-sm ${filterPeriod === 'week' ? 'btn-primary' : 'btn-ghost'}" onclick="window.reportsFilterPeriod='week'; renderDashboardTabContent(store.getRestaurantById('${r.id}'));" style="padding: 0.3rem 0.65rem; font-size: 0.78rem; font-weight: 700;">Semaine</button>
+                        <button class="btn btn-sm ${filterPeriod === 'month' ? 'btn-primary' : 'btn-ghost'}" onclick="window.reportsFilterPeriod='month'; renderDashboardTabContent(store.getRestaurantById('${r.id}'));" style="padding: 0.3rem 0.65rem; font-size: 0.78rem; font-weight: 700;">Mois</button>
+                    </div>
+                </div>
+
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="background: var(--bg-main); font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">
+                                <th style="padding: 0.75rem 1rem;">Réf</th>
+                                <th style="padding: 0.75rem 1rem;">Date</th>
+                                <th style="padding: 0.75rem 1rem;">Client</th>
+                                <th style="padding: 0.75rem 1rem;">Articles</th>
+                                <th style="padding: 0.75rem 1rem; text-align: right;">Montant</th>
+                                <th style="padding: 0.75rem 1rem; text-align: center;">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+    else if (dashboardActiveTab === 'dishes' || dashboardActiveTab === 'products' || dashboardActiveTab === 'menu' || dashboardActiveTab === 'add-menu' || dashboardActiveTab === 'daily-menu') {
         let menuHtml = '';
         if (r.menu.length === 0) {
             menuHtml = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 2rem 0; font-size: 0.9rem;">Aucun plat n'a encore été ajouté. Créez votre premier plat ci-dessous.</div>`;
@@ -1691,7 +1929,6 @@ function renderDashboardTabContent(r) {
         }
 
         panel.innerHTML = `
-            ${getDashboardSubNavHtml('reviews')}
             <h2 style="font-size: 1.25rem; margin-bottom: 1.5rem;">Avis Clients</h2>
             <div class="reviews-list">
                 ${reviewsHtml}
@@ -1699,8 +1936,41 @@ function renderDashboardTabContent(r) {
         `;
     }
     else if (dashboardActiveTab === 'account' || dashboardActiveTab === 'settings') {
-        const clientLink = `${window.location.origin}${window.location.pathname}#/r/${r.slug}`;
-        const qrCodeUrl = `https://quickchart.io/qr?size=200&text=${encodeURIComponent(clientLink)}`;
+        const baseDomain = (window.location.origin.includes('localhost') || window.location.origin.includes('run.app')) 
+            ? window.location.origin 
+            : 'https://thies-resto.com';
+        const clientLink = `${baseDomain}/#/r/${r.slug}`;
+        const localQrUrl = `/api/qr?format=image&size=400&text=${encodeURIComponent(clientLink)}`;
+
+        // Compute unique clients for this specific restaurant
+        const restoOrders = (typeof store !== 'undefined' && typeof store.getOrdersByRestaurant === 'function') 
+            ? store.getOrdersByRestaurant(r.id) || [] 
+            : [];
+        const clientsMap = {};
+        restoOrders.forEach(o => {
+            const phone = (o.customerPhone || o.phone || '').trim();
+            if (!phone) return;
+            if (!clientsMap[phone]) {
+                clientsMap[phone] = {
+                    phone: phone,
+                    name: o.customerName || o.name || 'Client',
+                    address: o.address || o.deliveryAddress || '',
+                    ordersCount: 0,
+                    totalSpent: 0,
+                    lastOrderDate: o.createdAt || o.date || ''
+                };
+            }
+            clientsMap[phone].ordersCount++;
+            clientsMap[phone].totalSpent += Number(o.total || 0);
+            const thisDate = new Date(o.createdAt || o.date || 0);
+            const prevDate = new Date(clientsMap[phone].lastOrderDate || 0);
+            if (thisDate > prevDate) {
+                clientsMap[phone].lastOrderDate = o.createdAt || o.date || '';
+                if (o.customerName) clientsMap[phone].name = o.customerName;
+            }
+        });
+        const restoClients = Object.values(clientsMap).sort((a, b) => b.totalSpent - a.totalSpent);
+        const totalClientsRevenue = restoClients.reduce((sum, c) => sum + c.totalSpent, 0);
 
         // Days checklist
         let daysHtml = '';
@@ -1717,11 +1987,79 @@ function renderDashboardTabContent(r) {
 
         const notifGranted = typeof Notification !== 'undefined' && Notification.permission === 'granted';
 
+        // Build HTML for restaurant clients rows
+        let clientsListHtml = '';
+        if (restoClients.length === 0) {
+            clientsListHtml = `
+                <div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+                    <i class='ri-user-unfollow-line' style="font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+                    Aucune commande client enregistrée pour le moment.<br>
+                    Partagez votre <strong>fiche client</strong> ou vos <strong>QR Codes</strong> pour recevoir vos premières commandes !
+                </div>
+            `;
+        } else {
+            clientsListHtml = `
+                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                    <table class="gr-table" style="width: 100%; text-align: left; font-size: 0.83rem; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--border); color: var(--text-secondary); font-size: 0.75rem; text-transform: uppercase;">
+                                <th style="padding: 0.6rem 0.75rem;">Client</th>
+                                <th style="padding: 0.6rem 0.75rem;">Téléphone</th>
+                                <th style="padding: 0.6rem 0.75rem; text-align: center;">Commandes</th>
+                                <th style="padding: 0.6rem 0.75rem; text-align: right;">Total Ventes</th>
+                                <th style="padding: 0.6rem 0.75rem; text-align: right;">Dernier Achat</th>
+                                <th style="padding: 0.6rem 0.75rem; text-align: center;">Contact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${restoClients.map(c => {
+                                const cleanPhone = (c.phone || '').replace(/[^0-9]/g, '');
+                                const intlPhone = cleanPhone.startsWith('221') ? cleanPhone : '221' + cleanPhone;
+                                const dateFormatted = c.lastOrderDate ? new Date(c.lastOrderDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '-';
+                                return `
+                                    <tr class="resto-client-row" data-search="${(c.name + ' ' + c.phone).toLowerCase()}" style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 0.65rem 0.75rem; font-weight: 600; color: var(--text-primary);">
+                                            ${c.name}
+                                            ${c.address ? `<div style="font-size: 0.72rem; color: var(--text-secondary); font-weight: 400;">${c.address}</div>` : ''}
+                                        </td>
+                                        <td style="padding: 0.65rem 0.75rem; color: var(--text-primary); font-family: monospace;">
+                                            ${c.phone}
+                                        </td>
+                                        <td style="padding: 0.65rem 0.75rem; text-align: center;">
+                                            <span class="badge badge-info" style="font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">
+                                                ${c.ordersCount}
+                                            </span>
+                                        </td>
+                                        <td style="padding: 0.65rem 0.75rem; text-align: right; font-weight: 700; color: #0B3B24;">
+                                            ${formatPrice(c.totalSpent)}
+                                        </td>
+                                        <td style="padding: 0.65rem 0.75rem; text-align: right; font-size: 0.78rem; color: var(--text-secondary);">
+                                            ${dateFormatted}
+                                        </td>
+                                        <td style="padding: 0.65rem 0.75rem; text-align: center;">
+                                            <div style="display: inline-flex; gap: 0.35rem;">
+                                                <a href="https://wa.me/${intlPhone}?text=${encodeURIComponent('Bonjour ' + c.name + ', c\'est le restaurant ' + r.name + ' ! Merci de votre fidélité.')}" target="_blank" class="btn btn-ghost btn-xs" title="Message WhatsApp" style="color: #25D366; padding: 0.25rem 0.4rem; font-size: 1rem;">
+                                                    <i class='ri-whatsapp-line'></i>
+                                                </a>
+                                                <a href="tel:${cleanPhone}" class="btn btn-ghost btn-xs" title="Appeler" style="color: var(--primary); padding: 0.25rem 0.4rem; font-size: 1rem;">
+                                                    <i class='ri-phone-line'></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
         panel.innerHTML = `
             <div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
                 <div>
-                    <h2 style="font-size: 1.3rem; margin: 0; color: var(--text-primary); font-weight: 700;">Compte Restaurant &amp; Paramètres</h2>
-                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.2rem 0 0 0;">Gérez vos coordonnées, horaires, notifications d'alerte et accès sécurisé.</p>
+                    <h2 style="font-size: 1.3rem; margin: 0; color: var(--text-primary); font-weight: 700;">Paramètres &amp; Outils</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.2rem 0 0 0;">Accédez à votre fiche client, consultez vos clients, téléchargez vos factures CSV et configurez votre établissement.</p>
                 </div>
                 <button class="btn btn-secondary btn-sm" onclick="switchDashboardTab('subscription')" style="font-weight: 600; font-size: 0.82rem;">
                     <i class='ri-bank-card-line'></i> Mon Abonnement
@@ -1729,6 +2067,118 @@ function renderDashboardTabContent(r) {
             </div>
             
             <div style="display: grid; grid-template-columns: 1fr; gap: 1.25rem;">
+                
+                <!-- GRILLE DES 4 PAGES & OUTILS DÉDIÉS : Ma Fiche, Mes Clients, Factures CSV, Support WhatsApp -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem;">
+                    
+                    <!-- 1. Ma Fiche Client -->
+                    <div style="background: var(--bg-card); border: 1.5px solid var(--border); padding: 1.15rem; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+                                <span style="display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: rgba(11, 59, 36, 0.08); color: #0B3B24;">
+                                    <i class='ri-external-link-line' style="font-size: 1.25rem;"></i>
+                                </span>
+                                <span class="badge badge-success" style="font-size: 0.7rem; font-weight: 700;">En Ligne</span>
+                            </div>
+                            <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.3rem 0;">Ma fiche client</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.78rem; margin: 0 0 0.85rem 0; line-height: 1.35;">
+                                Votre page vitrine publique pour que vos clients découvrent vos plats et commandent directement.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.4rem; flex-direction: column;">
+                            <a href="${clientLink}" target="_blank" class="btn btn-primary btn-sm" style="font-weight: 600; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                                <i class='ri-external-link-line'></i> Ouvrir ma fiche
+                            </a>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText('${clientLink}'); if(typeof showToast === 'function') showToast('Lien de votre fiche client copié !', 'success');" style="font-weight: 600; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                                <i class='ri-file-copy-line'></i> Copier le lien
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 2. Mes Clients -->
+                    <div style="background: var(--bg-card); border: 1.5px solid var(--border); padding: 1.15rem; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+                                <span style="display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: rgba(242, 107, 33, 0.1); color: var(--primary);">
+                                    <i class='ri-group-line' style="font-size: 1.25rem;"></i>
+                                </span>
+                                <span class="badge badge-info" style="font-size: 0.7rem; font-weight: 700;">${restoClients.length} client(s)</span>
+                            </div>
+                            <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.3rem 0;">Mes clients</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.78rem; margin: 0 0 0.85rem 0; line-height: 1.35;">
+                                Répertoire de vos clients, coordonnées WhatsApp, historique et cumul d'achats (${formatPrice(totalClientsRevenue)}).
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.4rem; flex-direction: column;">
+                            <button type="button" class="btn btn-primary btn-sm" onclick="toggleRestoClientsDirectory()" style="font-weight: 600; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                                <i class='ri-contacts-book-line'></i> Voir le répertoire
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="exportRestoClientsCSV('${r.id}')" style="font-weight: 600; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                                <i class='ri-download-2-line'></i> Exporter clients CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Factures CSV -->
+                    <div style="background: var(--bg-card); border: 1.5px solid var(--border); padding: 1.15rem; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+                                <span style="display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: rgba(16, 185, 129, 0.1); color: #10B981;">
+                                    <i class='ri-file-excel-2-line' style="font-size: 1.25rem;"></i>
+                                </span>
+                                <span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #047857; font-size: 0.7rem; font-weight: 700;">${restoOrders.length} facture(s)</span>
+                            </div>
+                            <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.3rem 0;">Factures CSV</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.78rem; margin: 0 0 0.85rem 0; line-height: 1.35;">
+                                Exportez en un clic le registre comptable complet de vos commandes et factures au format Excel / CSV.
+                            </p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="window.exportOrdersCSV('${r.id}')" style="font-weight: 600; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
+                            <i class='ri-download-cloud-2-line'></i> Télécharger factures CSV
+                        </button>
+                    </div>
+
+                    <!-- 4. Support WhatsApp -->
+                    <div style="background: var(--bg-card); border: 1.5px solid var(--border); padding: 1.15rem; border-radius: 16px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                        <div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem;">
+                                <span style="display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 10px; background: rgba(37, 211, 102, 0.12); color: #25D366;">
+                                    <i class='ri-whatsapp-line' style="font-size: 1.25rem;"></i>
+                                </span>
+                                <span class="badge" style="background: rgba(37, 211, 102, 0.15); color: #15803d; font-size: 0.7rem; font-weight: 700;">7j/7</span>
+                            </div>
+                            <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.3rem 0;">Support WhatsApp</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.78rem; margin: 0 0 0.85rem 0; line-height: 1.35;">
+                                Assistance prioritaire directe avec l'équipe de conciergerie Thiès Resto pour toute question ou aide technique.
+                            </p>
+                        </div>
+                        <a href="https://wa.me/221776064596?text=${encodeURIComponent('Bonjour Thiès Resto, support restaurant : ' + r.name + ' (ID: ' + r.slug + ')')}" target="_blank" class="btn btn-sm" style="background: #25D366; color: white; font-weight: 700; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; border-radius: 8px;">
+                            <i class='ri-whatsapp-line'></i> Contacter le Support
+                        </a>
+                    </div>
+
+                </div>
+
+                <!-- SECTION DÉTAILLÉE : RÉPERTOIRE DES CLIENTS (EXPANDABLE) -->
+                <div id="resto-clients-panel" style="background: var(--bg-card); border: 1.5px solid var(--border); padding: 1.25rem; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;">
+                        <div>
+                            <h3 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0; display: flex; align-items: center; gap: 0.4rem;">
+                                <i class='ri-contacts-book-line' style="color: var(--primary);"></i> Répertoire de Mes Clients (${restoClients.length})
+                            </h3>
+                            <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0.2rem 0 0 0;">
+                                Consultez vos acheteurs, relancez vos clients fidèles et téléchargez vos fiches contact.
+                            </p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="text" placeholder="Rechercher par nom ou tél..." oninput="filterRestoClientsList(this.value)" style="font-size: 0.82rem; padding: 0.4rem 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-primary); color: var(--text-primary); min-width: 210px;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="exportRestoClientsCSV('${r.id}')" title="Exporter en CSV">
+                                <i class='ri-file-download-line'></i> CSV
+                            </button>
+                        </div>
+                    </div>
+                    ${clientsListHtml}
+                </div>
                 
                 <!-- Open/Closed Status Switch -->
                 <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.25rem; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
@@ -1747,7 +2197,7 @@ function renderDashboardTabContent(r) {
                     </div>
                 </div>
 
-                <!-- Notifications Push & Alertes Sonores (Requested Feature) -->
+                <!-- Notifications Push & Alertes Sonores -->
                 <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.25rem; border-radius: 16px;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
                         <div style="flex: 1; min-width: 260px;">
@@ -1835,31 +2285,36 @@ function renderDashboardTabContent(r) {
                     </form>
                 </div>
 
-                <!-- QR Code Generation -->
-                <div class="qr-container" style="margin: 0 auto; width: 100%; max-width: 450px; background: var(--bg-card); border: 1px solid var(--border); padding: 1.25rem; border-radius: 16px; text-align: center;">
-                    <h3 style="font-size: 1rem; margin-bottom: 0.35rem; font-weight: 700; color: var(--text-primary);">QR Code de votre Restaurant</h3>
-                    <p style="color: var(--text-secondary); font-size: 0.8rem; margin-bottom: 0.85rem;">Imprimez et posez ce QR Code sur vos tables pour que vos clients ouvrent directement votre carte.</p>
-                    <img src="${qrCodeUrl}" class="qr-image" alt="QR Code" style="margin: 0 auto 0.85rem auto; border-radius: 8px;">
-                    <a href="${qrCodeUrl}" target="_blank" download="qrcode-${r.slug}.png" class="btn btn-secondary btn-sm btn-block" style="font-weight: 600;">
-                        <i class='ri-download-line'></i> Télécharger le QR Code
-                    </a>
-                </div>
-
-                <!-- Programme Partenaire & Affiliation -->
-                <div style="background: linear-gradient(135deg, rgba(242,107,33,0.06), rgba(245,158,11,0.08)); border: 1.5px solid rgba(242,107,33,0.2); padding: 1.25rem; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                            <span style="font-size: 1.2rem;"><i class='ri-hand-heart-line'></i></span>
-                            <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0;">Programme Ambassadeur &amp; Affilié</h3>
-                            <span style="font-size: 0.72rem; background: #FEF3C7; color: #92400E; padding: 0.15rem 0.5rem; border-radius: 10px; font-weight: 700;">Revenus Complémentaires</span>
-                        </div>
-                        <p style="color: var(--text-secondary); font-size: 0.82rem; margin: 0; line-height: 1.4;">
-                            Parrainez d'autres restaurants ou commerces à Thiès et recevez des commissions versées directement sur votre compte Wave ou Orange Money.
-                        </p>
+                <!-- QR Code Officiel du Restaurant -->
+                <div class="qr-container" style="margin: 0 auto; width: 100%; max-width: 500px; background: var(--bg-card); border: 1.5px solid var(--border); padding: 1.5rem; border-radius: 18px; text-align: center; box-shadow: 0 4px 16px rgba(0,0,0,0.03);">
+                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 14px; background: rgba(11, 59, 36, 0.1); color: #0B3B24; margin-bottom: 0.75rem;">
+                        <i class='ri-qr-code-line' style="font-size: 1.6rem;"></i>
                     </div>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="if(typeof window.showAffiliateProgramModal === 'function') window.showAffiliateProgramModal('Restaurant ${r.name}'); else alert("Programme Affilié : Contactez le support au +221 77 606 45 96");" style="font-weight: 700; border-radius: 12px; white-space: nowrap;">
-                        <i class='ri-hand-heart-line'></i> Devenir Affilié
-                    </button>
+                    <h3 style="font-size: 1.15rem; margin-bottom: 0.35rem; font-weight: 800; color: var(--text-primary);">QR Code de Table de Votre Restaurant</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.83rem; margin-bottom: 1.1rem; line-height: 1.45;">
+                        Imprimez et posez ce QR Code sur vos tables. Vos clients le scannent directement avec leur téléphone pour ouvrir votre carte et passer commande sur WhatsApp.
+                    </p>
+                    
+                    <div style="background: white; padding: 1rem; border-radius: 14px; display: inline-block; box-shadow: 0 4px 14px rgba(0,0,0,0.06); margin-bottom: 1rem; border: 1px solid rgba(0,0,0,0.08);">
+                        <img src="${localQrUrl}" 
+                             class="qr-image" 
+                             alt="QR Code ${r.name}" 
+                             style="width: 220px; height: 220px; display: block; object-fit: contain; margin: 0 auto; border-radius: 6px;" 
+                             onerror="this.onerror=null; this.src='https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(clientLink)}';">
+                    </div>
+
+                    <div style="background: rgba(11, 59, 36, 0.05); padding: 0.6rem 0.85rem; border-radius: 10px; margin-bottom: 1.25rem; font-size: 0.78rem; font-family: monospace; color: #0B3B24; word-break: break-all; border: 1px solid rgba(11, 59, 36, 0.15);">
+                        <i class='ri-link' style="margin-right: 0.25rem;"></i>${clientLink}
+                    </div>
+
+                    <div style="display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap;">
+                        <a href="${localQrUrl}" download="qrcode-${r.slug}.png" class="btn btn-primary btn-sm" style="font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.1rem; border-radius: 10px;">
+                            <i class='ri-download-2-line'></i> Télécharger le QR Code (PNG)
+                        </a>
+                        <a href="${clientLink}" target="_blank" class="btn btn-secondary btn-sm" style="font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.1rem; border-radius: 10px;">
+                            <i class='ri-external-link-line'></i> Tester ma Page Vendeur
+                        </a>
+                    </div>
                 </div>
             </div>
         `;
@@ -1885,8 +2340,11 @@ function renderDashboardTabContent(r) {
             return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
         };
 
-        const publicUrl = window.location.origin + '/#/r/' + r.slug;
-        const qrCodeApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(publicUrl)}`;
+        const baseDomain = (window.location.origin.includes('localhost') || window.location.origin.includes('run.app')) 
+            ? window.location.origin 
+            : 'https://thies-resto.com';
+        const publicUrl = baseDomain + '/#/r/' + r.slug;
+        const qrCodeApiUrl = `/api/qr?format=image&size=300&text=${encodeURIComponent(publicUrl)}`;
         
         // Ensure valid subscription step ('wow' or 'payment')
         const currentStep = window.subscriptionFlowStep === 'payment' ? 'payment' : 'wow';
@@ -2648,6 +3106,94 @@ window.playOrderAlertSound = function() {
         osc2.stop(now + 0.7);
     } catch(e) {
         console.warn("Order audio chime notice:", e);
+    }
+};
+
+window.toggleRestoClientsDirectory = function() {
+    const el = document.getElementById('resto-clients-panel');
+    if (!el) return;
+    if (el.style.display === 'none') {
+        el.style.display = 'block';
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
+
+window.filterRestoClientsList = function(query) {
+    const q = (query || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.resto-client-row');
+    rows.forEach(row => {
+        const text = row.getAttribute('data-search') || '';
+        if (!q || text.includes(q)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+};
+
+window.exportRestoClientsCSV = function(restoId) {
+    const id = restoId || (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession ? currentRestaurantSession.id : null);
+    if (!id || typeof store === 'undefined' || typeof store.getRestaurantById !== 'function') return;
+    const r = store.getRestaurantById(id);
+    if (!r) return;
+    const orders = (typeof store.getOrdersByRestaurant === 'function') ? store.getOrdersByRestaurant(r.id) || [] : [];
+    const clientsMap = {};
+    orders.forEach(o => {
+        const phone = (o.customerPhone || o.phone || '').trim();
+        if (!phone) return;
+        if (!clientsMap[phone]) {
+            clientsMap[phone] = {
+                phone: phone,
+                name: o.customerName || o.name || 'Client',
+                ordersCount: 0,
+                totalSpent: 0,
+                lastOrderDate: o.createdAt || o.date || ''
+            };
+        }
+        clientsMap[phone].ordersCount++;
+        clientsMap[phone].totalSpent += Number(o.total || 0);
+        const thisDate = new Date(o.createdAt || o.date || 0);
+        const prevDate = new Date(clientsMap[phone].lastOrderDate || 0);
+        if (thisDate > prevDate) {
+            clientsMap[phone].lastOrderDate = o.createdAt || o.date || '';
+            if (o.customerName) clientsMap[phone].name = o.customerName;
+        }
+    });
+    const clients = Object.values(clientsMap).sort((a, b) => b.totalSpent - a.totalSpent);
+    if (clients.length === 0) {
+        if (typeof showToast === 'function') {
+            showToast("Aucun client à exporter pour le moment", "warning");
+        }
+        return;
+    }
+
+    let csvContent = "\ufeff";
+    csvContent += "Nom Client;Telephone;Nombre de Commandes;Total Depense (FCFA);Derniere Commande\n";
+    clients.forEach(c => {
+        const name = (c.name || '').replace(/"/g, '""');
+        const phone = (c.phone || '').replace(/"/g, '""');
+        const row = [
+            `"${name}"`,
+            `"${phone}"`,
+            c.ordersCount,
+            c.totalSpent,
+            `"${c.lastOrderDate}"`
+        ].join(';');
+        csvContent += row + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const encodedUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUrl);
+    link.setAttribute("download", `clients_${r.slug || r.id}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if (typeof showToast === 'function') {
+        showToast("Répertoire clients exporté en CSV avec succès !", "success");
     }
 };
 
@@ -4202,10 +4748,14 @@ window.verifyStrictSuperAdminAuth = async function() {
     }
 
     // 2. Check signed token and active admin session in storage
-    const token = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('thies_admin_token')) ||
-                  (typeof localStorage !== 'undefined' && localStorage.getItem('thies_admin_token'));
-    const hasAdminSession = (typeof sessionStorage !== 'undefined' && (sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true')) ||
-                            (typeof localStorage !== 'undefined' && localStorage.getItem('admin_session') === 'true');
+    try {
+        localStorage.removeItem('thies_admin_token');
+        localStorage.removeItem('admin_session');
+        localStorage.removeItem('thies_admin_logged');
+    } catch(e) {}
+
+    const token = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('thies_admin_token'));
+    const hasAdminSession = (typeof sessionStorage !== 'undefined' && (sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true'));
 
     if (!token && !hasAdminSession) {
         isSuperAdminSession = false;
@@ -4248,9 +4798,10 @@ window.verifyAdminSessionToken = window.verifyStrictSuperAdminAuth;
 let adminActiveTab = 'console';
 if (typeof window !== 'undefined') {
     window.isSuperAdminSession = Boolean(
-        (sessionStorage.getItem('thies_admin_token') || localStorage.getItem('thies_admin_token')) &&
-        (sessionStorage.getItem('admin_session') === 'true' || localStorage.getItem('admin_session') === 'true')
+        sessionStorage.getItem('thies_admin_token') &&
+        sessionStorage.getItem('admin_session') === 'true'
     );
+    isSuperAdminSession = window.isSuperAdminSession;
 }
 
 window.logoutSuperAdmin = function(notify = true, shouldRedirect = true) {
@@ -6078,7 +6629,12 @@ async function reactivateRestaurant(id) {
         const response = await fetch('/api/admin/restaurants/reactivate', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ restaurantId: id })
+            body: JSON.stringify({ 
+                restaurantId: id,
+                slug: r.slug,
+                username: r.username,
+                name: r.name
+            })
         });
 
         console.log(`[SuperAdmin] Statut de réponse HTTP reçu: ${response.status} (${response.statusText})`);
@@ -7135,21 +7691,27 @@ if (typeof window !== 'undefined') {
         }
     });
 
+    window._notifiedPartnerIds = window._notifiedPartnerIds || new Set();
+
     window.addEventListener('thies_restaurants_live_update', (e) => {
         const { restaurants, newPending } = (e && e.detail) || {};
         // When restaurants change (new partner registered, status updated, subscription changed):
         if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
             if (newPending && newPending.length > 0) {
-                if (typeof window.playOrderAlertSound === 'function') {
-                    window.playOrderAlertSound();
-                } else if (typeof playNotificationSound === 'function') {
-                    playNotificationSound();
-                }
-                newPending.forEach(p => {
-                    if (typeof showToast === 'function') {
-                        showToast(`🔔 NOUVELLE DEMANDE PARTENAIRE : Le restaurant « ${p.name} » attend votre validation !`, 'warning', 10000);
+                const trulyNew = newPending.filter(p => p && p.id && !window._notifiedPartnerIds.has(String(p.id)));
+                if (trulyNew.length > 0) {
+                    if (typeof window.playOrderAlertSound === 'function') {
+                        window.playOrderAlertSound();
+                    } else if (typeof playNotificationSound === 'function') {
+                        playNotificationSound();
                     }
-                });
+                    trulyNew.forEach(p => {
+                        window._notifiedPartnerIds.add(String(p.id));
+                        if (typeof showToast === 'function') {
+                            showToast(`🔔 NOUVELLE DEMANDE PARTENAIRE : Le restaurant « ${p.name} » attend votre validation !`, 'warning', 10000);
+                        }
+                    });
+                }
             }
             if (typeof renderAdminTabTable === 'function') {
                 renderAdminTabTable();

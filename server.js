@@ -3,6 +3,7 @@ import path from 'path';
 import crypto from 'crypto';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import QRCode from 'qrcode';
 import {
   generateAndSendOtp,
   verifyOtp,
@@ -236,29 +237,53 @@ async function syncWithSupabase() {
     if (rRes.ok) {
       const rawRestos = await rRes.json();
       if (Array.isArray(rawRestos) && rawRestos.length > 0) {
-        serverRestaurants = rawRestos.map(r => ({
-          id: r.id,
-          name: r.name,
-          slug: r.slug,
-          rating: Number(r.rating) || 4.5,
-          reviewsCount: Number(r.reviews_count) || 0,
-          category: r.category || 'Traditionnel',
-          address: r.address || 'Thiès, Sénégal',
-          whatsapp: r.whatsapp || '',
-          openHours: r.open_hours || '10:00 - 23:00',
-          closedDays: Array.isArray(r.closed_days) ? r.closed_days : [],
-          isOpenManual: r.is_open_manual !== undefined ? Boolean(r.is_open_manual) : true,
-          status: r.status || 'active',
-          username: r.username,
-          password: r.password,
-          coverImage: r.cover_image,
-          menu: Array.isArray(r.menu) ? r.menu : (typeof r.menu === 'string' ? JSON.parse(r.menu || '[]') : []),
-          reviews: Array.isArray(r.reviews) ? r.reviews : [],
-          subscriptionPack: r.subscription_pack || 'Aucun (Gratuit)',
-          createdAt: r.created_at || '2026-06-25T00:00:00Z',
-          lat: r.lat ? Number(r.lat) : 14.7928,
-          lng: r.lng ? Number(r.lng) : -16.926
-        }));
+        const incomingRestos = rawRestos.map(r => {
+          const rawStatus = (r.status || 'active').toString().toLowerCase();
+          const cleanStatus = (rawStatus === 'actif' || rawStatus === 'active') ? 'active' : (rawStatus === 'pending' ? 'pending' : (rawStatus === 'suspended' ? 'suspended' : 'active'));
+          return {
+            id: r.id,
+            name: r.name,
+            slug: r.slug,
+            rating: Number(r.rating) || 4.5,
+            reviewsCount: Number(r.reviews_count) || 0,
+            category: r.category || 'Traditionnel',
+            address: r.address || 'Thiès, Sénégal',
+            whatsapp: r.whatsapp || '',
+            openHours: r.open_hours || '10:00 - 23:00',
+            closedDays: Array.isArray(r.closed_days) ? r.closed_days : [],
+            isOpenManual: r.is_open_manual !== undefined ? Boolean(r.is_open_manual) : true,
+            status: cleanStatus,
+            username: r.username,
+            password: r.password,
+            coverImage: r.cover_image,
+            menu: Array.isArray(r.menu) ? r.menu : (typeof r.menu === 'string' ? JSON.parse(r.menu || '[]') : []),
+            reviews: Array.isArray(r.reviews) ? r.reviews : [],
+            subscriptionPack: r.subscription_pack || 'Pack Standard',
+            hasPaidSubscription: true,
+            createdAt: r.created_at || '2026-06-25T00:00:00Z',
+            lat: r.lat ? Number(r.lat) : 14.7928,
+            lng: r.lng ? Number(r.lng) : -16.926
+          };
+        });
+
+        // Reconcile intelligently: preserve explicit local admin statuses (e.g. manual suspension or locally registered pending applicants)
+        const merged = [...incomingRestos];
+        serverRestaurants.forEach(localR => {
+          const idx = merged.findIndex(m => m.id === localR.id || m.slug === localR.slug);
+          if (idx >= 0) {
+            if (localR.status === 'suspended') {
+              merged[idx].status = 'suspended';
+              merged[idx].suspendReason = localR.suspendReason;
+              merged[idx].suspendedAt = localR.suspendedAt;
+            }
+            if (localR.menu && localR.menu.length > 0) merged[idx].menu = localR.menu;
+            if (localR.hasPaidSubscription) merged[idx].hasPaidSubscription = true;
+          } else {
+            // Local restaurant not yet in Supabase (e.g., brand new pending registration from public form)
+            merged.push(localR);
+          }
+        });
+        serverRestaurants = merged;
       }
     }
 
@@ -687,9 +712,14 @@ app.post(['/api/restaurants/register', '/api/partnerships/register'], registerRa
 
     const existingIdx = serverRestaurants.findIndex(r => r.id === id || r.slug === slug);
     if (existingIdx >= 0) {
-      newResto.id = serverRestaurants[existingIdx].id;
-      newResto.slug = serverRestaurants[existingIdx].slug || slug;
-      serverRestaurants[existingIdx] = { ...serverRestaurants[existingIdx], ...newResto };
+      const existing = serverRestaurants[existingIdx];
+      // Critical fix: never downgrade an existing active or suspended restaurant back to pending!
+      newResto.id = existing.id;
+      newResto.slug = existing.slug || slug;
+      newResto.status = existing.status || 'active';
+      newResto.createdAt = existing.createdAt || newResto.createdAt;
+      newResto.hasPaidSubscription = existing.hasPaidSubscription !== undefined ? existing.hasPaidSubscription : true;
+      serverRestaurants[existingIdx] = { ...existing, ...newResto, status: existing.status || 'active' };
     } else {
       serverRestaurants.push(newResto);
     }
@@ -743,6 +773,45 @@ app.post(['/api/restaurants/register', '/api/partnerships/register'], registerRa
   }
 });
 
+// Update an existing restaurant (menu, settings, photos, etc.) without altering status
+app.post(['/api/admin/restaurants/update', '/api/restaurants/update'], async (req, res) => {
+  try {
+    const resto = req.body.restaurant || req.body || {};
+    const targetId = String(resto.id || req.body.restaurantId || '').trim();
+    if (!targetId) {
+      return res.status(400).json({ success: false, message: 'Identifiant restaurant requis.' });
+    }
+
+    const idx = serverRestaurants.findIndex(r => 
+      r.id === targetId || 
+      r.slug === targetId ||
+      String(r.id).toLowerCase() === targetId.toLowerCase() ||
+      String(r.slug).toLowerCase() === targetId.toLowerCase()
+    );
+
+    if (idx >= 0) {
+      const existing = serverRestaurants[idx];
+      // Keep existing status unless explicit authorized admin change
+      const updated = {
+        ...existing,
+        ...resto,
+        id: existing.id,
+        slug: existing.slug,
+        status: resto.status || existing.status,
+        hasPaidSubscription: existing.hasPaidSubscription !== undefined ? existing.hasPaidSubscription : true
+      };
+      serverRestaurants[idx] = updated;
+      saveServerData();
+      return res.json({ success: true, restaurant: updated });
+    }
+
+    return res.status(404).json({ success: false, message: 'Restaurant introuvable pour mise à jour.' });
+  } catch (err) {
+    console.error('Erreur update restaurant:', err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Get all restaurants (Public gets active, Admin gets all) - Passwords strictly sanitized
 app.get('/api/restaurants', async (req, res) => {
   const authHeader = req.headers['authorization'] || '';
@@ -773,21 +842,62 @@ app.get('/api/restaurants', async (req, res) => {
   return res.json({ success: true, restaurants: activeRestos, total: activeRestos.length });
 });
 
+// Robust local QR Code generation for restaurants and tables
+app.get('/api/qr', async (req, res) => {
+  try {
+    const text = String(req.query.text || 'https://thies-resto.com').trim();
+    const size = Math.min(Math.max(parseInt(req.query.size) || 300, 100), 800);
+    const dataUrl = await QRCode.toDataURL(text, {
+      width: size,
+      margin: 2,
+      color: {
+        dark: '#0B3B24',
+        light: '#FFFFFF'
+      }
+    });
+
+    if (req.query.format === 'image') {
+      const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
+      const imgBuffer = Buffer.from(base64Data, 'base64');
+      res.writeHead(200, {
+        'Content-Type': 'image/png',
+        'Content-Length': imgBuffer.length,
+        'Cache-Control': 'public, max-age=86400'
+      });
+      return res.end(imgBuffer);
+    }
+
+    return res.json({ success: true, dataUrl, text });
+  } catch (err) {
+    console.error('[QRCode] Generation error:', err);
+    return res.status(500).json({ success: false, message: 'Erreur génération QR Code' });
+  }
+});
+
 // Admin approves or reactivates restaurant
 app.post(['/api/admin/restaurants/approve', '/api/admin/restaurants/reactivate'], authRateLimiter, async (req, res) => {
   try {
     const { restaurantId } = req.body || {};
-    console.log(`[Database/Server] Reactivate request received for restaurant ID: "${restaurantId}"`);
-    if (!restaurantId) {
+    const targetId = String(restaurantId || '').trim();
+    console.log(`[Database/Server] Reactivate request received for restaurant ID: "${targetId}"`);
+    if (!targetId) {
       console.warn('[Database/Server] Reactivate rejected: missing restaurantId in request body.');
       return res.status(400).json({ success: false, message: 'Identifiant restaurant requis.' });
     }
 
-    let r = serverRestaurants.find(item => item.id === restaurantId || item.slug === restaurantId);
+    let r = serverRestaurants.find(item => 
+      item.id === targetId || 
+      item.slug === targetId ||
+      item.username === targetId ||
+      String(item.id).toLowerCase() === targetId.toLowerCase() ||
+      String(item.slug).toLowerCase() === targetId.toLowerCase() ||
+      String(item.name || '').toLowerCase() === targetId.toLowerCase()
+    );
+
     if (!r) {
       try {
-        console.log(`[Database/Server] Restaurant not in memory cache, querying database for ID: "${restaurantId}"...`);
-        const dbR = await getRestaurantById(restaurantId);
+        console.log(`[Database/Server] Restaurant not in memory cache, checking database for ID: "${targetId}"...`);
+        const dbR = await getRestaurantById(targetId);
         if (dbR) {
           serverRestaurants.push(dbR);
           r = dbR;
@@ -797,8 +907,21 @@ app.post(['/api/admin/restaurants/approve', '/api/admin/restaurants/reactivate']
       }
     }
 
+    if (!r && Array.isArray(initialRestaurants)) {
+      const seedMatch = initialRestaurants.find(item => 
+        item.id === targetId || 
+        item.slug === targetId ||
+        String(item.id).toLowerCase() === targetId.toLowerCase() ||
+        String(item.slug).toLowerCase() === targetId.toLowerCase()
+      );
+      if (seedMatch) {
+        r = { ...seedMatch };
+        serverRestaurants.push(r);
+      }
+    }
+
     if (!r) {
-      console.warn(`[Database/Server] Reactivate failed: restaurant "${restaurantId}" not found in database or memory.`);
+      console.warn(`[Database/Server] Reactivate failed: restaurant "${targetId}" not found.`);
       return res.status(404).json({ success: false, message: 'Restaurant introuvable.' });
     }
 
@@ -813,12 +936,10 @@ app.post(['/api/admin/restaurants/approve', '/api/admin/restaurants/reactivate']
     saveServerData();
     console.log(`[Database/Server] Persisted to admin_data.json: "${r.name}" (${r.id}) status: "${previousStatus}" -> "active".`);
 
-    try {
-      await updateRestaurantStatus(r.id, 'active');
-      console.log(`[Database/Server] Updated Cloud SQL PostgreSQL: "${r.name}" (${r.id}) status set to "active".`);
-    } catch (dbErr) {
-      console.warn('[Database/Server] Cloud SQL update notice (using JSON persistence):', dbErr.message);
-    }
+    // Non-blocking asynchronous update to Cloud SQL
+    updateRestaurantStatus(r.id, 'active')
+      .then(() => console.log(`[Database/Server] Cloud SQL status updated for "${r.name}".`))
+      .catch((dbErr) => console.warn('[Database/Server] Cloud SQL update notice:', dbErr.message));
 
     recordActivityLog({
       action: 'Validation/Réactivation manuelle d\'un restaurant',
@@ -847,6 +968,7 @@ app.post('/api/admin/restaurants/suspend', authRateLimiter, async (req, res) => 
     }
 
     r.status = 'suspended';
+    r.isOpenManual = false;
     r.suspendedAt = new Date().toISOString();
     r.suspendReason = reason || 'Suspension manuelle SuperAdmin';
 
@@ -1187,40 +1309,14 @@ app.post('/api/admin/restaurants/auto-deactivate', (req, res) => {
       success: true,
       deactivatedCount: deactivated.length,
       deactivatedNames: deactivated,
-      message: `${deactivated.length} restaurant(s) désactivé(s) automatiquement après expiration de l'essai gratuit.`
+      message: `${deactivated.length} restaurant(s) audités.`
     });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Erreur lors de l\'audit de désactivation.' });
   }
 });
 
-// Periodic background check for auto-deactivation every 1 hour
-setInterval(() => {
-  try {
-    const now = Date.now();
-    serverRestaurants.forEach(r => {
-      if (r.status === 'active') {
-        const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z').getTime();
-        const ageDays = (now - createdAt) / (1000 * 60 * 60 * 24);
-        const hasPaid = Boolean(r.hasPaidSubscription || r.subscriptionPaidAt);
-
-        if (ageDays > 7 && !hasPaid) {
-          r.status = 'suspended';
-          r.suspendReason = 'Désactivation automatique après 7 jours sans abonnement payant';
-          r.suspendedAt = new Date().toISOString();
-
-          recordActivityLog({
-            action: 'Désactivation automatique après 7 jours',
-            entity_type: 'restaurant',
-            entity_id: r.id,
-            actor: 'System',
-            details: `Période d'essai expirée (> 7 jours). Suspension automatique de "${r.name}".`
-          });
-        }
-      }
-    });
-  } catch(e) {}
-}, 60 * 60 * 1000);
+// Note: Background auto-deactivation timer removed - only Super-Admin can suspend/activate restaurants.
 
 // ---------------------------------------------------------------------------
 // ORDERS MANAGEMENT API (PostgreSQL Cloud SQL & Live Sync)
@@ -1855,9 +1951,17 @@ app.get('/api/maps-config', (req, res) => {
 // ---------------------------------------------------------------------------
 // STATIC FILES & SPA FALLBACK
 // ---------------------------------------------------------------------------
-// Direct Super-Admin Access: When navigating to /admin, redirect straight to the admin console
-app.get(['/admin', '/admin/'], (req, res) => {
-  res.redirect('/#/admin');
+// Strict Super-Admin Security: Any direct browser navigation to admin entrypoints redirects to login
+app.get(['/admin', '/admin/', '/admin-login', '/superadmin', '/admin-console', '/js/admin'], (req, res) => {
+  res.redirect('/#/admin-login');
+});
+
+// Guard against direct browser navigation to admin script file in address bar
+app.get(['/js/admin.js'], (req, res, next) => {
+  if (req.headers.accept && req.headers.accept.includes('text/html')) {
+    return res.redirect('/#/admin-login');
+  }
+  next();
 });
 
 app.use(express.static(__dirname));

@@ -3,6 +3,7 @@
   "appId": "1:938967401827:web:c2173871a6aadd4cd3ff56",
   "apiKey": "AIzaSyCoz5Iqu7DG8c8zHElIdI2DhtOU6VmlbfM",
   "authDomain": "hybrid-cairn-7lcf1.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-thiesresto-66a06ac6-b260-4eaf-8696-0f86d68b4812",
   "storageBucket": "hybrid-cairn-7lcf1.firebasestorage.app",
   "messagingSenderId": "938967401827",
   "measurementId": "",

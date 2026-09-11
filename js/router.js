@@ -66,14 +66,37 @@ class Router {
 
         // Pathname support: if user accessed domain.com/admin directly in address bar
         if (typeof window !== 'undefined' && window.location && window.location.pathname) {
-            const cleanPath = window.location.pathname.replace(/\/+$/, '');
-            if (cleanPath === '/admin' && window.location.hash !== '#/admin') {
-                window.location.replace(window.location.origin + '/#/admin');
-                return;
+            const cleanPath = window.location.pathname.replace(/\/+$/, '').toLowerCase();
+            if (cleanPath === '/admin' || cleanPath === '/admin-login' || cleanPath === '/js/admin' || cleanPath === '/js/admin.js' || cleanPath === '/superadmin') {
+                const hasValidAdminAuth = Boolean(
+                    typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession &&
+                    sessionStorage.getItem('thies_admin_token') &&
+                    sessionStorage.getItem('admin_session') === 'true'
+                );
+                if (hasValidAdminAuth && cleanPath === '/admin') {
+                    if (window.location.hash !== '#/admin') {
+                        window.location.replace(window.location.origin + '/#/admin');
+                        return;
+                    }
+                } else {
+                    if (window.location.hash !== '#/admin-login') {
+                        window.location.replace(window.location.origin + '/#/admin-login');
+                        return;
+                    }
+                }
             }
         }
 
-        const hash = window.location.hash || '#/';
+        let hash = window.location.hash || '#/';
+        // Normalize hash shortcuts
+        if (hash === '#admin' || hash === '#/admin/' || hash === '#superadmin' || hash === '#admin-console') {
+            hash = '#/admin';
+            window.location.hash = '#/admin';
+        }
+        if (hash === '#admin-login' || hash === '#/admin-login/') {
+            hash = '#/admin-login';
+            window.location.hash = '#/admin-login';
+        }
         
         this.forceScrollTop();
 
@@ -81,7 +104,49 @@ class Router {
         // STRICT SESSION ROUTE GUARDS (Super-Admin & Restaurant Isolation)
         // ----------------------------------------------------
         
-        // 1. SUPER ADMIN LOCK-IN: Super-Admin can only access Admin and Management routes until disconnected
+        // 1. GUEST / UNAUTHENTICATED ATTEMPT TO ACCESS #/admin:
+        // Must be authenticated with valid token & session in sessionStorage, otherwise redirect immediately to #/admin-login
+        const isAccessingAdminConsole = hash === '#/admin' || (hash.startsWith('#/admin') && hash !== '#/admin-login');
+        if (isAccessingAdminConsole) {
+            const hasValidAdminAuth = Boolean(
+                typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession &&
+                sessionStorage.getItem('thies_admin_token') &&
+                sessionStorage.getItem('admin_session') === 'true'
+            );
+            if (!hasValidAdminAuth) {
+                // Clear any lingering / corrupt state
+                if (typeof isSuperAdminSession !== 'undefined') isSuperAdminSession = false;
+                if (typeof window !== 'undefined') window.isSuperAdminSession = false;
+                try {
+                    sessionStorage.removeItem('thies_admin_token');
+                    sessionStorage.removeItem('admin_session');
+                    sessionStorage.removeItem('thies_admin_logged');
+                    localStorage.removeItem('thies_admin_token');
+                    localStorage.removeItem('admin_session');
+                } catch(e) {}
+                this.navigate('/admin-login');
+                return;
+            }
+        }
+
+        // Common complete suite of restaurant manager views
+        const allRestoAllowedRoutes = [
+            '#/dashboard',
+            '#/dashboard-orders',
+            '#/dashboard-reservations',
+            '#/dashboard-dishes',
+            '#/dashboard-menu',
+            '#/dashboard-add-menu',
+            '#/dashboard-daily-menu',
+            '#/dashboard-reports',
+            '#/dashboard-accounting',
+            '#/dashboard-account',
+            '#/dashboard-subscription',
+            '#/dashboard-reviews',
+            '#/politique-admin'
+        ];
+
+        // 2. SUPER ADMIN LOCK-IN: Super-Admin can access Admin console or full impersonation dashboard
         if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
             const allowedAdminRoutes = [
                 '#/admin',
@@ -89,13 +154,8 @@ class Router {
                 '#/politique-admin'
             ];
             const allowedImpersonationRoutes = [
-                '#/dashboard',
-                '#/dashboard-add-menu',
-                '#/dashboard-daily-menu',
-                '#/dashboard-account',
-                '#/dashboard-orders',
-                '#/admin',
-                '#/politique-admin'
+                ...allRestoAllowedRoutes,
+                '#/admin'
             ];
 
             if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
@@ -111,29 +171,11 @@ class Router {
             }
         }
 
-        // 1b. GUEST / UNAUTHENTICATED ATTEMPT TO ACCESS #/admin: Must be authenticated super-admin, otherwise redirect to #/admin-login
-        else if (hash === '#/admin') {
-            const hasAdminToken = Boolean(
-                (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) ||
-                (typeof sessionStorage !== 'undefined' && (sessionStorage.getItem('thies_admin_token') || sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true')) ||
-                (typeof localStorage !== 'undefined' && (localStorage.getItem('thies_admin_token') || localStorage.getItem('admin_session') === 'true'))
-            );
-            if (!hasAdminToken) {
-                this.navigate('/admin-login');
-                return;
-            }
-        }
-
-        // 2. RESTAURANT PARTNER LOCK-IN: Restaurant can only access Dashboard routes until disconnected
+        // 3. RESTAURANT PARTNER LOCK-IN: Restaurant manager can access all manager tabs until logged out
         else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
             const allowedRestoRoutes = [
-                '#/dashboard',
-                '#/dashboard-add-menu',
-                '#/dashboard-daily-menu',
-                '#/dashboard-account',
-                '#/dashboard-orders',
-                '#/auth',
-                '#/politique-admin'
+                ...allRestoAllowedRoutes,
+                '#/auth'
             ];
 
             if (!allowedRestoRoutes.includes(hash)) {

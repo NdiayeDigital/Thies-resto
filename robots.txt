@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://thiesresto.sn/sitemap.xml
+Sitemap: https://thies-resto.com/sitemap.xml

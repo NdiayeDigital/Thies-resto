@@ -11,8 +11,8 @@
       "whatsapp": "+221339542523",
       "openHours": "11:30 - 23:00",
       "closedDays": [],
-      "isOpenManual": true,
-      "status": "active",
+      "isOpenManual": false,
+      "status": "suspended",
       "username": "id_restaurantmadiba",
       "password": "$2a$06$uzgrvoX/x8r1pWq5hdSaROQj3ZTWgPMipaAsQ2EtB5AQu1UxOGl3G",
       "coverImage": "https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&auto=format&fit=crop&q=60",
@@ -80,9 +80,12 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
-      "lng": -16.926
+      "lng": -16.926,
+      "suspendReason": "Suspension manuelle SuperAdmin",
+      "suspendedAt": "2026-09-10T11:34:13.904Z"
     },
     {
       "id": "r4",
@@ -164,6 +167,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -234,6 +238,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -313,6 +318,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -390,6 +396,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -408,7 +415,7 @@
         1
       ],
       "isOpenManual": true,
-      "status": "Actif",
+      "status": "active",
       "username": "le-jardin-des-saveurs",
       "password": "$2a$06$Gn3xE2xBXuEM3ni/xl90gOXHEjzDkYLT8NWwpL1uCJctBdjyc/RMC",
       "coverImage": "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=600&auto=format&fit=crop&q=60",
@@ -476,6 +483,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -553,6 +561,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -630,6 +639,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -700,6 +710,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -777,6 +788,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -850,6 +862,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -927,6 +940,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -999,6 +1013,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -1085,6 +1100,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -1169,6 +1185,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -1253,6 +1270,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -1337,6 +1355,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -1421,6 +1440,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -1480,6 +1500,7 @@
       ],
       "reviews": [],
       "subscriptionPack": "Pack Startup",
+      "hasPaidSubscription": true,
       "createdAt": "2026-07-26T02:27:53.842184+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -1564,6 +1585,7 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
@@ -1636,12 +1658,47 @@
         }
       ],
       "subscriptionPack": "Aucun (Gratuit)",
+      "hasPaidSubscription": true,
       "createdAt": "2026-06-20T03:24:45.203377+00:00",
       "lat": 14.7928,
       "lng": -16.926
     }
   ],
-  "orders": [],
-  "customers": [],
-  "savedAt": "2026-09-10T00:29:14.108Z"
+  "orders": [
+    {
+      "id": "CMD-1",
+      "orderNumber": "CMD-1",
+      "restaurantId": "r1",
+      "customerName": "mouhamadou al amin ndiaye",
+      "customerPhone": "+221784799882",
+      "mode": "Sur place",
+      "address": "",
+      "items": [
+        {
+          "id": "dish_13",
+          "qty": 1,
+          "name": "Pain au Chocolat (Chocolatine)",
+          "price": 600
+        }
+      ],
+      "total": 600,
+      "note": "[Analytics: Temps total: 20s. Parcours: #/r/croissant-magique]",
+      "status": "En attente",
+      "date": "2026-09-10",
+      "time": "13:37",
+      "createdAt": "2026-09-10T11:37:23.5945+00:00"
+    }
+  ],
+  "customers": [
+    {
+      "id": "c_221784799882",
+      "name": "mouhamadou al amin ndiaye",
+      "phone": "+221784799882",
+      "address": "",
+      "ordersCount": 1,
+      "totalSpent": 600,
+      "lastOrderDate": "2026-09-10"
+    }
+  ],
+  "savedAt": "2026-09-10T11:42:57.154Z"
 }
