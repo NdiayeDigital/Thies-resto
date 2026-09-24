@@ -14,8 +14,16 @@ service cloud.firestore {
     match /restaurants/{restaurantId} {
       // Allow read so all client-side onSnapshot listeners can receive real-time updates
       allow read: if true;
-      // Allow write/update by administrators or system operations
-      allow write: if true;
+
+      // Restriction stricte des écritures sur la collection /restaurants/{restaurantId}
+      // Validation obligatoire de l'ID du document, du nom, du slug et des statuts autorisés
+      allow create, update: if request.resource.data.id == restaurantId
+        && request.resource.data.name is string && request.resource.data.name.size() > 0
+        && request.resource.data.slug is string && request.resource.data.slug.size() > 0
+        && request.resource.data.status in ['active', 'suspended', 'pending', 'rejected'];
+
+      // Interdiction formelle de la suppression directe côté client
+      allow delete: if false;
     }
   }
 }

@@ -1,9 +1,8 @@
-import { generateAndSendOtp, verifyOtp, isTwilioConfigured } from '../services/twilioService.js';
+import { generateAndSendOtp, verifyOtp, isOtpConfigured } from '../services/otpService.js';
 
 /**
- * Serverless Function Handler for Twilio OTP & SMS
- * Supports actions: 'send', 'verify', 'status'
- * Compatible with standard Serverless / Edge / Node.js environments
+ * Serverless Function Handler for OTP & Verification
+ * Autonomous native verification service
  */
 export default async function handler(req, res) {
   // CORS Headers
@@ -24,14 +23,14 @@ export default async function handler(req, res) {
   try {
     // 1. Status Check
     if (req.method === 'GET' || action === 'status') {
-      const configured = isTwilioConfigured();
+      const configured = isOtpConfigured();
       return res.status(200).json({
-        twilioConfigured: configured,
-        fromNumber: process.env.TWILIO_PHONE_NUMBER ? process.env.TWILIO_PHONE_NUMBER.replace(/\d(?=\d{4})/g, '*') : null
+        otpConfigured: configured,
+        mode: 'Direct Verification'
       });
     }
 
-    // 2. Generate and Send OTP via Twilio SMS
+    // 2. Generate and Send OTP
     if (req.method === 'POST' && (action === 'send' || !action)) {
       const { phone } = req.body || {};
       if (!phone) {
@@ -62,12 +61,9 @@ export default async function handler(req, res) {
       }
     }
 
-    return res.status(404).json({ success: false, message: 'Action ou méthode HTTP non reconnue.' });
-  } catch (error) {
-    console.error('[Serverless OTP Handler Error]', error);
-    return res.status(500).json({
-      success: false,
-      message: error.message || 'Erreur interne du serveur lors du traitement OTP.'
-    });
+    return res.status(400).json({ success: false, message: 'Action non supportée.' });
+  } catch (err) {
+    console.error('[OTP API Handler Error]:', err);
+    return res.status(500).json({ success: false, message: 'Erreur interne du serveur lors de la vérification.' });
   }
 }

@@ -521,7 +521,7 @@ async function handleRestaurantLogin(e) {
         (username || '').toLowerCase() === 'thiesresto.th@gmail.com' ||
         (username || '').toLowerCase() === 'ecomacademie.th@gmail.com' ||
         cleanInputUser === 'ecomacademiethgmailcom';
-    const isMasterAdminPass = password === 'thiesresto221' || password === 'admin' || password === 'admin2026' || password === 'thiesresto' || password === 'passer' || password === 'Thies221';
+    const isMasterAdminPass = password === 'thiesresto221' || password === 'Thies221' || password === 'admin2026';
 
     if (isAdminUser) {
         let adminSuccess = false;

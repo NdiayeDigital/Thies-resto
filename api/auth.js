@@ -3,7 +3,10 @@
 // ---------------------------------------------------------------------------
 import crypto from 'crypto';
 
-const SESSION_SIGNING_KEY = process.env.SESSION_SECRET || 'thies_resto_production_session_signing_secret_2026';
+const SESSION_SIGNING_KEY = process.env.SESSION_SECRET;
+if (!SESSION_SIGNING_KEY) {
+  throw new Error('FATAL SECURITY ERROR: SESSION_SECRET requis');
+}
 
 function timingSafeStringEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;

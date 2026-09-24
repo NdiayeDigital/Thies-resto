@@ -584,7 +584,7 @@ function saveOrderToHistory(order, restaurantName) {
             ...order, 
             restaurantName, 
             otpVerified: isOtp,
-            otpVerifiedVia: order.otpVerifiedVia || (isOtp ? 'Twilio SMS OTP' : null),
+            otpVerifiedVia: order.otpVerifiedVia || (isOtp ? 'SMS OTP' : null),
             savedAt: new Date().toISOString() 
         });
         if (history.length > 20) history = history.slice(0, 20);
@@ -2501,7 +2501,9 @@ window.matchesCategory = function matchesCategory(restaurant, filter) {
 };
 
 window.updateCategoryBadges = function updateCategoryBadges() {
-    const allRestos = store.getRestaurants().filter(r => r.status === 'active');
+    const allRestos = typeof store.getActiveRestaurants === 'function'
+        ? store.getActiveRestaurants()
+        : store.getRestaurants().filter(r => r.status === 'active');
     const counts = {
         'Tous': allRestos.length,
         'Fast-Food': 0,
@@ -2646,7 +2648,9 @@ window.applyFilters = function applyFilters() {
     const grid = document.getElementById('restaurants-list-grid');
     if (!grid) return;
 
-    let restos = store.getRestaurants().filter(r => r.status === 'active');
+    let restos = typeof store.getActiveRestaurants === 'function'
+        ? store.getActiveRestaurants()
+        : store.getRestaurants().filter(r => r.status === 'active');
 
     // 1. Filter by category
     if (activeFilter !== 'Tous') {
@@ -4727,9 +4731,9 @@ window.fetchOrderTracking = async function() {
 
         // Tri par date décroissante : la plus récente en premier
         allOrders.sort((a, b) => {
-            const dateA = new Date(a.created_at || a.savedAt || a.date || 0).getTime();
-            const dateB = new Date(b.created_at || b.savedAt || b.date || 0).getTime();
-            if (!isNaN(dateA) && !isNaN(dateB) && dateA !== dateB) return dateB - dateA;
+            const timeA = Number(a.timestamp) || new Date(a.createdAt || a.created_at || a.savedAt || a.date || 0).getTime();
+            const timeB = Number(b.timestamp) || new Date(b.createdAt || b.created_at || b.savedAt || b.date || 0).getTime();
+            if (!isNaN(timeA) && !isNaN(timeB) && timeA !== timeB) return timeB - timeA;
             return String(b.id).localeCompare(String(a.id), undefined, { numeric: true });
         });
 
@@ -4748,31 +4752,10 @@ window.fetchOrderTracking = async function() {
             } catch (e) {}
         }
 
-        // Vérification automatique des délais d'expiration (1h30 sans réaction ou non réceptionnée)
-        if (store && typeof store.checkAndAutoCancelStaleOrders === 'function') {
-            store.checkAndAutoCancelStaleOrders();
-        }
-
         const ageMinutes = (store && typeof store.getOrderAgeMinutes === 'function')
             ? store.getOrderAgeMinutes(latestOrder)
             : 0;
-        
-        // Règle 1 : Si le restaurant ne marque pas comme reçu (reste "En attente" sans confirmation > 20 min)
-        if (latestOrder.status === 'En attente' && ageMinutes >= 20) {
-            latestOrder.status = 'Annulée';
-            latestOrder.cancelReason = "Délai expiré : Le restaurant n'a pas confirmé la réception de la commande dans le délai imparti.";
-            if (store && typeof store.updateOrderStatus === 'function') {
-                store.updateOrderStatus(latestOrder.id, 'Annulée', latestOrder.cancelReason);
-            }
-        }
-        // Règle 2 : Si la commande est reçue/acceptée mais reste bloquée sans progression après 1h30 (90 min)
-        else if (latestOrder.status !== 'Livrée' && latestOrder.status !== 'Livré' && latestOrder.status !== 'Annulée' && ageMinutes >= 90) {
-            latestOrder.status = 'Annulée';
-            latestOrder.cancelReason = "Délai expiré : Commande automatiquement annulée après 1h30 sans réaction ou finalisation de livraison par le restaurant.";
-            if (store && typeof store.updateOrderStatus === 'function') {
-                store.updateOrderStatus(latestOrder.id, 'Annulée', latestOrder.cancelReason);
-            }
-        }
+        const isProlongedWait = latestOrder.status === 'En attente' && ageMinutes >= 20;
 
         const r = store.getRestaurantById(latestOrder.restaurant_id || latestOrder.restaurantId);
         const rName = r ? r.name : (latestOrder.restaurantName || 'Restaurant de Thiès');
@@ -4833,7 +4816,7 @@ window.fetchOrderTracking = async function() {
             statusIcon = '❌';
             stepPercent = 100;
             statusLabel = 'Commande annulée';
-            stepDescription = latestOrder.cancelReason || 'Cette commande a été automatiquement annulée.';
+            stepDescription = latestOrder.cancelReason || 'Cette commande a été annulée.';
         }
         
         const isOtpVerified = latestOrder.otpVerified !== false;
@@ -4879,8 +4862,14 @@ window.fetchOrderTracking = async function() {
                     ` : ''}
                     ${latestOrder.paymentMethod ? `
                         <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px dashed var(--border);">
-                            <span>💳 Règlement direct :</span>
+                            <span>💳 Règlement :</span>
                             <span style="font-weight: 700; color: var(--text-primary);">${latestOrder.paymentMethod}</span>
+                        </div>
+                    ` : ''}
+                    ${latestOrder.paymentStatus ? `
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                            <span>Statut paiement :</span>
+                            <span style="font-weight: 700; color: ${latestOrder.isPaid || (latestOrder.paymentStatus && latestOrder.paymentStatus.includes('Payé')) ? '#059669' : '#d97706'};">${latestOrder.paymentStatus}</span>
                         </div>
                     ` : ''}
                 </div>
@@ -6819,6 +6808,16 @@ if (typeof store !== 'undefined' && store.syncPromise) {
 
 // Live listener: Automatically refresh client views whenever restaurants are suspended, activated, or updated
 window.addEventListener('thies_restaurants_live_update', (e) => {
+    if (e.detail && Array.isArray(e.detail.restaurants)) {
+        store.data.restaurants = e.detail.restaurants;
+    } else if (e.detail && e.detail.updatedRestaurant) {
+        const u = e.detail.updatedRestaurant;
+        const idx = store.data.restaurants.findIndex(r => r.id === u.id);
+        if (idx !== -1) {
+            store.data.restaurants[idx] = { ...store.data.restaurants[idx], ...u };
+        }
+    }
+
     const hash = window.location.hash || '#/';
     if (hash === '#/' || hash === '' || hash === '#/explore') {
         if (typeof applyFilters === 'function') {
@@ -6827,13 +6826,20 @@ window.addEventListener('thies_restaurants_live_update', (e) => {
         if (typeof updateCategoryBadges === 'function') {
             updateCategoryBadges();
         }
+        const dailyContainer = document.getElementById('daily-dishes-grid');
+        if (dailyContainer && typeof renderDailyDishesSection === 'function') {
+            renderDailyDishesSection();
+        }
     } else if (hash.startsWith('#/r/')) {
         const slug = hash.replace('#/r/', '').split('?')[0].split('/')[0];
         const r = store.data.restaurants.find(item => item.slug === slug || item.id === slug);
         const isSuperAdmin = typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession;
         const isOwner = typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && (currentRestaurantSession.id === (r && r.id) || currentRestaurantSession.slug === slug);
-        if (r && r.status === 'suspended' && !isSuperAdmin && !isOwner) {
-            router.navigate(hash);
+        const isRestoRestricted = r && (typeof store.isRestaurantVisible === 'function' ? !store.isRestaurantVisible(r) : r.status === 'suspended');
+        if (isRestoRestricted && !isSuperAdmin && !isOwner) {
+            if (typeof renderRestaurantDetail === 'function' && r) {
+                renderRestaurantDetail(r.id);
+            }
         }
     }
 });

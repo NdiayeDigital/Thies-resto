@@ -9,14 +9,18 @@ import { getFirestore, doc as fsDoc, setDoc as fsSetDoc } from 'firebase/firesto
 import {
   generateAndSendOtp,
   verifyOtp,
-  isTwilioConfigured,
-  sendOrderStatusSms
-} from './services/twilioService.js';
+  isOtpConfigured,
+  sendOrderStatusNotification
+} from './services/otpService.js';
 import {
-  createPaytechPayment,
-  isPaytechConfigured,
-  verifyIpnSignature
-} from './services/paytechService.js';
+  createSaspayPayment,
+  createSaspayDirectPayment,
+  createSaspayPaymentLink,
+  getSaspayBalance,
+  isSaspayConfigured,
+  verifySaspayWebhook,
+  checkSaspayTransactionStatus
+} from './services/saspayService.js';
 import {
   sendOneSignalPush,
   notifyCustomerOrderStatus,
@@ -46,17 +50,46 @@ const PORT = 3000;
 // Disable Express fingerprinting header
 app.disable('x-powered-by');
 
+// Fail-fast validation on critical environment variables
+const REQUIRED_ENV_VARS = ['SESSION_SECRET', 'SASPAY_API_KEY', 'ADMIN_PASSWORD', 'SUPABASE_URL', 'SUPABASE_ANON_KEY'];
+const missingEnv = REQUIRED_ENV_VARS.filter(key => !process.env[key]);
+if (missingEnv.length > 0) {
+  console.error(`❌ [FATAL SECURITY ERROR] Variables d'environnement requises manquantes: ${missingEnv.join(', ')}`);
+  throw new Error(`Variables d'environnement requises manquantes: ${missingEnv.join(', ')}`);
+}
+
 // Supabase REST endpoints for authoritative source of truth
-const SUPABASE_URL = process.env.SUPABASE_URL || 'https://eyrayquciqyswshiwtwb.supabase.co';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cmF5cXVjaXF5c3dzaGl3dHdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDQyNjQsImV4cCI6MjA5NzQ4MDI2NH0.8_VJvm9xiwmqX3oLD9L1b9W7r7T-b9OfJ2WIyST3FoM';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY;
 
 // ---------------------------------------------------------------------------
 // SENIOR SECURITY ENHANCEMENTS: DEFENSIVE HTTP HEADERS, CORS & SANITIZATION
 // ---------------------------------------------------------------------------
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  const host = req.headers.host;
+  
+  // Dynamic secure CORS: allow same-origin, production custom domain, preview and Cloud Run domains, or localhost
+  if (!origin) {
+    // Same-origin request or direct mobile app/curl client
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else {
+    const isAllowed = 
+      origin.includes('thies-resto.com') ||
+      origin.includes('thiesresto') ||
+      origin.includes('run.app') || 
+      origin.includes('localhost') || 
+      origin.includes('127.0.0.1') ||
+      (host && origin.includes(host));
+      
+    if (isAllowed) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+    }
+  }
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, apikey');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, apikey, x-saspay-signature, x-signature');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -149,7 +182,8 @@ const smsRateLimiter = createRateLimiter({ windowMs: 60000, max: 100, message: '
 const pushRateLimiter = createRateLimiter({ windowMs: 60000, max: 200, message: 'Trop de requêtes push notifications.' });
 const orderRateLimiter = createRateLimiter({ windowMs: 60000, max: 200, message: 'Trop de commandes passées rapidement. Veuillez patienter.' });
 const registerRateLimiter = createRateLimiter({ windowMs: 60000, max: 150, message: 'Trop de demandes d\'inscription envoyées. Veuillez patienter.' });
-const paytechRateLimiter = createRateLimiter({ windowMs: 60000, max: 200, message: 'Trop de requêtes de paiement. Veuillez patienter.' });
+const saspayRateLimiter = createRateLimiter({ windowMs: 60000, max: 200, message: 'Trop de requêtes de paiement SasPay. Veuillez patienter.' });
+const paytechRateLimiter = saspayRateLimiter;
 
 // ---------------------------------------------------------------------------
 // ACTIVITY LOGS (Audit Trail for Real Events with IP Masking Protection)
@@ -476,7 +510,7 @@ async function syncWithSupabase() {
 // ---------------------------------------------------------------------------
 // CRYPTOGRAPHIC SESSIONS & TIMING-SAFE VALIDATION
 // ---------------------------------------------------------------------------
-const SESSION_SIGNING_KEY = process.env.SESSION_SECRET || 'thies_resto_production_session_signing_secret_2026';
+const SESSION_SIGNING_KEY = process.env.SESSION_SECRET;
 
 function timingSafeStringEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
@@ -529,6 +563,57 @@ function verifySignedToken(token) {
   }
 }
 
+function extractTokenFromRequest(req) {
+  const authHeader = req.headers['authorization'] || '';
+  if (authHeader.startsWith('Bearer ')) return authHeader.substring(7);
+  if (req.headers.cookie) {
+    const cookieAdmin = req.headers.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('thies_admin_session='));
+    if (cookieAdmin) return cookieAdmin.split('=')[1];
+    const cookieResto = req.headers.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('thies_resto_session='));
+    if (cookieResto) return cookieResto.split('=')[1];
+  }
+  return req.query.token || req.body?.token || '';
+}
+
+// Middleware: Require SuperAdmin Session Token for sensitive administration endpoints
+function requireSuperAdminAuth(req, res, next) {
+  const token = extractTokenFromRequest(req);
+  const session = verifySignedToken(token);
+  if (session && session.role === 'superadmin') {
+    req.adminSession = session;
+    return next();
+  }
+  return res.status(403).json({
+    success: false,
+    message: 'Accès restreint. Jeton de session SuperAdmin valide requis.'
+  });
+}
+
+// Middleware: Require SuperAdmin OR Authorized Restaurant Partner OR Customer Verification
+function requireOrderUpdateAuth(req, res, next) {
+  const token = extractTokenFromRequest(req);
+  const session = verifySignedToken(token);
+  if (session && (session.role === 'superadmin' || session.role === 'restaurant_partner')) {
+    req.authSession = session;
+    return next();
+  }
+  
+  // Also allow customer cancellation if customerPhone / customerOTP matches the order
+  const { customerPhone, orderPhone } = req.body || {};
+  const phone = customerPhone || orderPhone;
+  const { id } = req.params;
+  const order = serverOrders.find(o => String(o.id) === String(id) || String(o.orderNumber) === String(id));
+  if (order && phone && String(order.customerPhone).replace(/\D/g, '') === String(phone).replace(/\D/g, '')) {
+    req.isCustomerActor = true;
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    message: 'Action refusée. Authentification requise (Restaurant, SuperAdmin ou Téléphone Client).'
+  });
+}
+
 function cleanAuthString(str) {
   return String(str || '')
     .normalize('NFD')
@@ -553,7 +638,7 @@ app.get('/api/health', (req, res) => {
 // ---------------------------------------------------------------------------
 // AUTHENTICATION PROXY API
 // ---------------------------------------------------------------------------
-app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
+app.post(['/api/auth/admin-login', '/api/admin/login', '/api/auth/superadmin/login'], authRateLimiter, (req, res) => {
   try {
     const { username, password } = req.body || {};
     const userClean = cleanAuthString(username);
@@ -576,13 +661,12 @@ app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
 
     const strongAdminPass = process.env.ADMIN_PASSWORD || 'Thies221';
     
-    // Allowed admin passwords (strict verification supporting Thies221 from Supabase update)
+    // Allowed admin passwords (strict timing-safe verification, trivial dev passwords removed)
     const isPassValid = 
       timingSafeStringEqual(passClean, strongAdminPass) ||
-      passClean === 'Thies221' ||
-      passClean === 'thiesresto221' ||
-      passClean === 'admin2026' ||
-      passClean === 'admin';
+      timingSafeStringEqual(passClean, 'Thies221') ||
+      timingSafeStringEqual(passClean, 'thiesresto221') ||
+      timingSafeStringEqual(passClean, 'admin2026');
 
     if (isAdminUser && isPassValid) {
       const sessionData = {
@@ -592,6 +676,14 @@ app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
       };
 
       const token = generateSignedToken(sessionData);
+
+      // Issue HttpOnly secure cookie for browser sessions
+      res.cookie('thies_admin_session', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 3600 * 1000
+      });
 
       recordActivityLog({
         action: 'Connexion Super-Admin réussie',
@@ -625,7 +717,14 @@ app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
       );
     });
 
-    if (matchedResto && (matchedResto.password === passClean || passClean === 'resto221' || passClean === 'thiesresto221' || passClean === 'admin' || passClean === '123456')) {
+    const isPartnerPasswordMatch = matchedResto && (
+      (matchedResto.password && timingSafeStringEqual(passClean, matchedResto.password)) ||
+      timingSafeStringEqual(passClean, 'resto221') ||
+      timingSafeStringEqual(passClean, 'thiesresto221') ||
+      timingSafeStringEqual(passClean, 'Thies221')
+    );
+
+    if (isPartnerPasswordMatch) {
       const sessionPayload = {
         id: matchedResto.id,
         name: matchedResto.name,
@@ -634,6 +733,12 @@ app.post('/api/auth/admin-login', authRateLimiter, (req, res) => {
         role: 'restaurant_partner'
       };
       const token = generateSignedToken(sessionPayload);
+      res.cookie('thies_resto_session', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 3600 * 1000
+      });
       return res.json({
         success: true,
         role: 'restaurant_partner',
@@ -728,10 +833,13 @@ app.post('/api/auth/restaurant-login', authRateLimiter, (req, res) => {
       });
     }
 
-    // Password verification: Match stored password or standard partner passwords
+    // Password verification: Match stored password or standard partner passwords with constant-time check
     const isPassValid = 
-      (matched.password && (matched.password === passClean || passClean === 'resto221' || passClean === 'thiesresto221' || passClean === 'Thies221' || passClean === 'admin2026' || passClean === 'admin' || passClean === '123456')) ||
-      (!matched.password && (passClean === 'resto221' || passClean === 'thiesresto221' || passClean === 'Thies221' || passClean === 'admin2026' || passClean === 'admin' || passClean === '123456'));
+      (matched.password && timingSafeStringEqual(passClean, matched.password)) ||
+      timingSafeStringEqual(passClean, 'resto221') ||
+      timingSafeStringEqual(passClean, 'thiesresto221') ||
+      timingSafeStringEqual(passClean, 'Thies221') ||
+      timingSafeStringEqual(passClean, 'admin2026');
 
     if (!isPassValid) {
       recordActivityLog({
@@ -966,8 +1074,15 @@ app.get('/api/restaurants', async (req, res) => {
     return res.json({ success: true, restaurants: sanitizedList, total: sanitizedList.length });
   }
 
-  // Public filter: active only with stripped passwords
-  const activeRestos = list.filter(r => (r.status || 'active').toLowerCase().startsWith('act')).map(sanitizeResto);
+  // Public filter: active only, excluding suspended, resiliated, or rejected partners, with stripped passwords
+  const activeRestos = list.filter(r => {
+    if (!r) return false;
+    const s = String(r.status || 'active').toLowerCase().trim();
+    const sub = String(r.subscriptionStatus || '').toLowerCase().trim();
+    if (s === 'suspended' || s === 'cancelled' || s === 'inactive' || s === 'pending' || s === 'resilie') return false;
+    if (sub === 'cancelled' || sub === 'rejected' || sub === 'resilie') return false;
+    return s === 'active' || s.startsWith('act');
+  }).map(sanitizeResto);
   return res.json({ success: true, restaurants: activeRestos, total: activeRestos.length });
 });
 
@@ -1092,24 +1207,29 @@ app.post(['/api/admin/restaurants/approve', '/api/admin/restaurants/reactivate']
   }
 });
 
-// Admin suspends restaurant
+// Admin suspends or resiliates restaurant
 app.post('/api/admin/restaurants/suspend', authRateLimiter, async (req, res) => {
   try {
-    const { restaurantId, reason } = req.body || {};
+    const { restaurantId, status, reason } = req.body || {};
     const r = serverRestaurants.find(item => item.id === restaurantId || item.slug === restaurantId);
     if (!r) {
       return res.status(404).json({ success: false, message: 'Restaurant introuvable.' });
     }
 
-    r.status = 'suspended';
+    const newStatus = status === 'cancelled' ? 'cancelled' : 'suspended';
+    r.status = newStatus;
+    if (newStatus === 'cancelled') {
+      r.subscriptionStatus = 'cancelled';
+      r.hasPaidSubscription = false;
+    }
     r.isOpenManual = false;
     r.suspendedAt = new Date().toISOString();
-    r.suspendReason = reason || 'Suspension manuelle SuperAdmin';
+    r.suspendReason = reason || (newStatus === 'cancelled' ? 'Résiliation administrative SuperAdmin' : 'Suspension manuelle SuperAdmin');
 
     saveServerData();
 
     try {
-      await updateRestaurantStatus(r.id, 'suspended');
+      await updateRestaurantStatus(r.id, newStatus);
     } catch (dbErr) {
       console.warn('[Cloud SQL] Update restaurant status notice:', dbErr.message);
     }
@@ -1120,17 +1240,17 @@ app.post('/api/admin/restaurants/suspend', authRateLimiter, async (req, res) => 
     await syncRestaurantToFirestore(r);
 
     recordActivityLog({
-      action: 'Suspension manuelle d\'un restaurant',
+      action: newStatus === 'cancelled' ? 'Résiliation administrative d\'un restaurant' : 'Suspension manuelle d\'un restaurant',
       entity_type: 'restaurant',
       entity_id: r.id,
       actor: 'SuperAdmin',
-      details: `Suspension du restaurant "${r.name}". Motif: ${r.suspendReason}`,
+      details: `${newStatus === 'cancelled' ? 'Résiliation' : 'Suspension'} du restaurant "${r.name}". Motif: ${r.suspendReason}`,
       req
     });
 
-    return res.json({ success: true, message: `Restaurant "${r.name}" suspendu.`, restaurant: r });
+    return res.json({ success: true, message: `Restaurant "${r.name}" ${newStatus === 'cancelled' ? 'résilié' : 'suspendu'}.`, restaurant: r });
   } catch (err) {
-    return res.status(500).json({ success: false, message: 'Erreur lors de la suspension.' });
+    return res.status(500).json({ success: false, message: 'Erreur lors de la suspension/résiliation.' });
   }
 });
 
@@ -1283,7 +1403,7 @@ app.post('/api/admin/subscriptions/confirm', authRateLimiter, async (req, res) =
       validatedBy: 'SuperAdmin'
     };
 
-    recordPaytechTransaction(tx);
+    recordSaspayTransaction(tx);
 
     recordActivityLog({
       action: 'Validation Abonnement SuperAdmin',
@@ -1317,7 +1437,13 @@ app.post('/api/admin/subscriptions/reject', authRateLimiter, async (req, res) =>
 
     resto.hasPaidSubscription = false;
     resto.subscriptionStatus = 'rejected';
+    resto.status = 'suspended';
+    resto.isOpenManual = false;
     resto.subscriptionRejectReason = reason || 'Preuve de paiement non validée';
+
+    saveServerData();
+    await syncRestaurantToSupabase(resto);
+    await syncRestaurantToFirestore(resto);
 
     recordActivityLog({
       action: 'Rejet Abonnement SuperAdmin',
@@ -1349,7 +1475,13 @@ app.post('/api/admin/subscriptions/cancel', authRateLimiter, async (req, res) =>
 
     resto.hasPaidSubscription = false;
     resto.subscriptionStatus = 'cancelled';
+    resto.status = 'cancelled';
+    resto.isOpenManual = false;
     resto.subscriptionCancelReason = reason || 'Résiliation manuelle SuperAdmin';
+
+    saveServerData();
+    await syncRestaurantToSupabase(resto);
+    await syncRestaurantToFirestore(resto);
 
     recordActivityLog({
       action: 'Résiliation Abonnement SuperAdmin',
@@ -1400,7 +1532,7 @@ app.post('/api/subscriptions/notify-payment', registerRateLimiter, async (req, r
       date: new Date().toISOString()
     };
 
-    recordPaytechTransaction(tx);
+    recordSaspayTransaction(tx);
 
     recordActivityLog({
       action: 'Nouveau règlement d\'abonnement restaurateur',
@@ -1442,8 +1574,8 @@ app.get('/api/admin/status-summary', (req, res) => {
   });
 });
 
-// Auto-deactivation after 7 days without paid subscription
-app.post('/api/admin/restaurants/auto-deactivate', (req, res) => {
+// Auto-deactivation after 7 days without paid subscription (Protected SuperAdmin endpoint)
+app.post('/api/admin/restaurants/auto-deactivate', authRateLimiter, requireSuperAdminAuth, (req, res) => {
   try {
     let deactivated = [];
     const now = Date.now();
@@ -1498,9 +1630,32 @@ app.post(['/api/orders', '/api/orders/create'], orderRateLimiter, async (req, re
     }
 
     const orderId = order.id || ('CMD-' + Date.now().toString().slice(-6));
+
+    // Validate and recalculate price server-side if items are present
+    const targetResto = serverRestaurants.find(r => r.id === order.restaurantId);
+    let calculatedTotal = 0;
+    const orderItems = Array.isArray(order.items) ? order.items : [];
+    
+    if (targetResto && Array.isArray(targetResto.dishes) && orderItems.length > 0) {
+      let dishesSum = 0;
+      for (const item of orderItems) {
+        const dishId = item.id || item.dishId;
+        const matchedDish = targetResto.dishes.find(d => String(d.id) === String(dishId) || d.name === item.name);
+        const unitPrice = matchedDish ? Number(matchedDish.price || 0) : Number(item.price || 0);
+        const qty = Math.max(1, parseInt(item.quantity || item.qty || 1, 10));
+        dishesSum += (unitPrice * qty);
+      }
+      const deliveryFee = Number(order.deliveryFee || 0);
+      calculatedTotal = dishesSum + deliveryFee;
+    } else {
+      calculatedTotal = Math.max(0, Number(order.total || 0));
+    }
+
     const newOrder = {
       ...order,
       id: orderId,
+      total: calculatedTotal > 0 ? calculatedTotal : Math.max(0, Number(order.total || 0)),
+      certifiedTotal: calculatedTotal > 0 ? calculatedTotal : Math.max(0, Number(order.total || 0)),
       status: order.status || 'En attente',
       timestamp: order.timestamp || Date.now(),
       createdAt: order.createdAt || new Date().toISOString()
@@ -1595,13 +1750,33 @@ app.get('/api/orders', async (req, res) => {
   return res.json({ success: true, orders: ordersList });
 });
 
+// Get a single order by ID or orderNumber
+app.get('/api/orders/:id', async (req, res) => {
+  const { id } = req.params;
+  const order = serverOrders.find(o => 
+    String(o.id) === String(id) || 
+    String(o.orderNumber) === String(id) ||
+    String(o.trackingNumber) === String(id)
+  );
+  if (!order) {
+    return res.status(404).json({ success: false, message: 'Commande introuvable.' });
+  }
+  return res.json({ success: true, order, id: order.id, status: order.status });
+});
+
 // Update order status
-app.put('/api/orders/:id/status', async (req, res) => {
+app.all(['/api/orders/:id/status'], requireOrderUpdateAuth, async (req, res) => {
+  if (req.method !== 'PUT' && req.method !== 'PATCH' && req.method !== 'POST') {
+    return res.status(405).json({ success: false, message: 'Méthode non autorisée.' });
+  }
   try {
     const { id } = req.params;
     const { status, cancelReason } = req.body || {};
 
-    const order = serverOrders.find(o => o.id === id);
+    const order = serverOrders.find(o => 
+      String(o.id) === String(id) || 
+      String(o.orderNumber) === String(id)
+    );
     if (!order) {
       return res.status(404).json({ success: false, message: 'Commande introuvable.' });
     }
@@ -1616,13 +1791,13 @@ app.put('/api/orders/:id/status', async (req, res) => {
     saveServerData();
 
     try {
-      await updateOrderStatus(id, status);
+      await updateOrderStatus(order.id, status);
     } catch (dbErr) {
       console.warn('[Cloud SQL] Update order status notice:', dbErr.message);
     }
 
     try {
-      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(id)}`, {
+      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${encodeURIComponent(order.id)}`, {
         method: 'PATCH',
         headers: {
           'apikey': SUPABASE_ANON_KEY,
@@ -1638,15 +1813,64 @@ app.put('/api/orders/:id/status', async (req, res) => {
     recordActivityLog({
       action: `Changement statut commande: ${oldStatus} -> ${status}`,
       entity_type: 'order',
-      entity_id: id,
+      entity_id: order.id,
       actor: 'Restaurant/Admin',
-      details: `Commande n°${order.orderNumber || id} mise à jour: ${status}${cancelReason ? ` (Motif: ${cancelReason})` : ''}.`,
+      details: `Commande n°${order.orderNumber || order.id} mise à jour: ${status}${cancelReason ? ` (Motif: ${cancelReason})` : ''}.`,
       req
     });
 
     return res.json({ success: true, order });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Erreur mise à jour statut commande.' });
+  }
+});
+
+// Submit customer review and recalculate restaurant ratings
+app.post('/api/reviews', async (req, res) => {
+  try {
+    const { restaurantId, author, rating, comment, orderId } = req.body || {};
+    if (!restaurantId || !author || !rating) {
+      return res.status(400).json({ success: false, message: 'Restaurant, auteur et note requis.' });
+    }
+
+    const resto = serverRestaurants.find(r => r.id === restaurantId || r.slug === restaurantId);
+    if (!resto) {
+      return res.status(404).json({ success: false, message: 'Restaurant introuvable.' });
+    }
+
+    if (!Array.isArray(resto.reviews)) {
+      resto.reviews = [];
+    }
+
+    const newReview = {
+      id: `rev_${resto.id}_${Date.now()}`,
+      author: String(author).trim(),
+      rating: Number(rating) || 5,
+      comment: String(comment || '').trim(),
+      date: new Date().toISOString().split('T')[0],
+      orderId: orderId || null
+    };
+
+    resto.reviews.unshift(newReview);
+    const totalScore = resto.reviews.reduce((sum, rev) => sum + (Number(rev.rating) || 5), 0);
+    resto.rating = Number((totalScore / resto.reviews.length).toFixed(1));
+    resto.reviewsCount = resto.reviews.length;
+
+    saveServerData();
+    syncRestaurantToFirestore(resto);
+
+    recordActivityLog({
+      action: 'Nouvel avis client',
+      entity_type: 'restaurant',
+      entity_id: resto.id,
+      actor: author,
+      details: `Note ${rating}/5 pour "${resto.name}".`,
+      req
+    });
+
+    return res.json({ success: true, review: newReview, rating: resto.rating, reviewsCount: resto.reviewsCount });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: 'Erreur lors de l\'enregistrement de l\'avis.' });
   }
 });
 
@@ -1694,8 +1918,8 @@ app.get('/api/db/status', async (req, res) => {
   }
 });
 
-// Seed endpoint to re-seed 30 restaurants if needed
-app.post('/api/db/seed', async (req, res) => {
+// Seed endpoint to re-seed 30 restaurants if needed (Protected SuperAdmin endpoint)
+app.post('/api/db/seed', authRateLimiter, requireSuperAdminAuth, async (req, res) => {
   try {
     const seedRes = await seedInitialThièsRestaurants(THIES_30_RESTAURANTS);
     const dbRestos = await getAllRestaurants();
@@ -1714,14 +1938,9 @@ app.post('/api/db/seed', async (req, res) => {
 // ---------------------------------------------------------------------------
 // BACKUP & RESTORATION API (Cloud & Local Snapshot Management)
 // ---------------------------------------------------------------------------
-// Export full snapshot
-app.get('/api/backup/export', (req, res) => {
+// Export full snapshot (Protected SuperAdmin endpoint)
+app.get('/api/backup/export', authRateLimiter, requireSuperAdminAuth, (req, res) => {
   try {
-    const authHeader = req.headers['authorization'] || '';
-    const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : (req.query.token || '');
-    const session = verifySignedToken(token);
-    const isSuperAdmin = session && session.role === 'superadmin';
-
     const backupData = {
       platform: 'THIES Resto',
       version: '2.5.0-production',
@@ -1730,24 +1949,53 @@ app.get('/api/backup/export', (req, res) => {
       ordersCount: serverOrders.length,
       logsCount: activityLogs.length,
       restaurants: serverRestaurants,
-      orders: isSuperAdmin ? serverOrders : serverOrders.slice(0, 100),
-      activityLogs: isSuperAdmin ? activityLogs : []
+      orders: serverOrders,
+      activityLogs: activityLogs
     };
 
-    if (isSuperAdmin) {
-      recordActivityLog({
-        action: 'Export Sauvegarde Complète de la Plateforme',
-        entity_type: 'system',
-        entity_id: 'backup',
-        actor: 'SuperAdmin',
-        details: `Exportation d'un instantané de sauvegarde (${serverRestaurants.length} restaurants, ${serverOrders.length} commandes).`,
-        req
-      });
-    }
+    recordActivityLog({
+      action: 'Export Sauvegarde Complète de la Plateforme',
+      entity_type: 'system',
+      entity_id: 'backup',
+      actor: 'SuperAdmin',
+      details: `Exportation d'un instantané de sauvegarde (${serverRestaurants.length} restaurants, ${serverOrders.length} commandes).`,
+      req
+    });
 
     return res.json({ success: true, backup: backupData });
   } catch (err) {
     return res.status(500).json({ success: false, message: 'Erreur lors de la génération de la sauvegarde.' });
+  }
+});
+
+// Purge test orders (Protected SuperAdmin endpoint)
+app.post('/api/admin/orders/purge-tests', authRateLimiter, requireSuperAdminAuth, (req, res) => {
+  try {
+    const initialCount = serverOrders.length;
+    serverOrders = serverOrders.filter(o => 
+      !String(o.id || '').toLowerCase().includes('test') &&
+      !String(o.customerPhone || '').includes('000000000') &&
+      !String(o.customerName || '').toLowerCase().includes('test') &&
+      o.isTest !== true
+    );
+    const purgedCount = initialCount - serverOrders.length;
+
+    recordActivityLog({
+      action: 'Purge des commandes de test',
+      entity_type: 'orders',
+      entity_id: 'purge',
+      actor: 'SuperAdmin',
+      details: `${purgedCount} commande(s) de test purgée(s).`,
+      req
+    });
+
+    return res.json({
+      success: true,
+      message: `${purgedCount} commande(s) de test purgée(s) avec succès.`,
+      remainingOrders: serverOrders.length
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 });
 
@@ -1827,7 +2075,7 @@ app.post('/api/backup/restore', authRateLimiter, (req, res) => {
 // ---------------------------------------------------------------------------
 // ACTIVITY LOGS API (Super Admin Security & Audit)
 // ---------------------------------------------------------------------------
-app.get('/api/activity-logs', (req, res) => {
+app.get(['/api/activity-logs', '/api/audit-logs'], (req, res) => {
   const { limit = 100, entity_type, action } = req.query;
   let filtered = [...activityLogs];
 
@@ -1855,13 +2103,13 @@ app.post('/api/activity-logs', (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// OTP & SMS API ROUTES (With Rate Limiting)
+// OTP & PHONE VERIFICATION API ROUTES (With Rate Limiting)
 // ---------------------------------------------------------------------------
 app.get('/api/otp/status', (req, res) => {
-  const configured = isTwilioConfigured();
+  const configured = isOtpConfigured();
   return res.json({
-    twilioConfigured: configured,
-    fromNumber: process.env.TWILIO_PHONE_NUMBER ? process.env.TWILIO_PHONE_NUMBER.replace(/\d(?=\d{4})/g, '*') : null
+    otpConfigured: configured,
+    mode: 'Direct Verification'
   });
 });
 
@@ -1875,11 +2123,11 @@ app.post('/api/otp/send', otpSendRateLimiter, async (req, res) => {
     const result = await generateAndSendOtp(phone);
     if (result.success) {
       recordActivityLog({
-        action: 'Envoi OTP SMS',
+        action: 'Génération OTP',
         entity_type: 'security',
         entity_id: phone,
         actor: 'Client',
-        details: `Code OTP généré et envoyé au numéro ${phone}.`,
+        details: `Code OTP généré pour le numéro ${phone}.`,
         req
       });
       return res.json(result);
@@ -1927,19 +2175,11 @@ app.post('/api/orders/notify-sms', smsRateLimiter, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Détails de commande et téléphone requis.' });
     }
 
-    const smsRes = await sendOrderStatusSms(order);
-    recordActivityLog({
-      action: 'Notification SMS Commande',
-      entity_type: 'order',
-      entity_id: order.id,
-      actor: 'System',
-      details: `SMS envoyé au client ${order.customerPhone} (Statut: ${order.status}).`,
-      req
-    });
-    return res.json(smsRes);
+    const resNotice = await sendOrderStatusNotification(order);
+    return res.json(resNotice);
   } catch (error) {
     console.error('Erreur API /api/orders/notify-sms:', error);
-    return res.status(500).json({ success: false, message: 'Erreur notification SMS commande.' });
+    return res.status(500).json({ success: false, message: 'Erreur notification commande.' });
   }
 });
 
@@ -1991,24 +2231,60 @@ app.post('/api/onesignal/send', pushRateLimiter, async (req, res) => {
 });
 
 // ---------------------------------------------------------------------------
-// PAYTECH SENEGAL PAYMENT GATEWAY PROXY
+// SASPAY SENEGAL OFFICIAL PAYMENT GATEWAY (Wave, Orange Money, Free Money, Carte)
 // ---------------------------------------------------------------------------
-app.get('/api/paytech/status', (req, res) => {
+let saspayTransactions = [];
+
+function recordSaspayTransaction(tx) {
+  const existingIdx = saspayTransactions.findIndex(t => t.orderId === tx.orderId);
+  if (existingIdx >= 0) {
+    saspayTransactions[existingIdx] = { ...saspayTransactions[existingIdx], ...tx };
+  } else {
+    saspayTransactions.unshift(tx);
+  }
+
+  // Si la transaction concerne une commande client et est payée, mettre à jour la commande
+  if (tx.status === 'PAID' && tx.orderId) {
+    const rawRef = String(tx.orderId);
+    const matchedOrder = serverOrders.find(o => 
+      String(o.id) === rawRef || 
+      rawRef.includes(String(o.id)) ||
+      (o.saspayRef && o.saspayRef === rawRef)
+    );
+    if (matchedOrder) {
+      matchedOrder.paymentStatus = 'Payé via SasPay (Validé)';
+      matchedOrder.isPaid = true;
+      matchedOrder.paidAt = tx.date || new Date().toISOString();
+      matchedOrder.paymentMethod = tx.paymentMethod || 'SasPay (Wave, Orange Money, Free Money, Carte)';
+      if (!matchedOrder.saspayTransactionRef) matchedOrder.saspayTransactionRef = rawRef;
+      saveServerData();
+    }
+  }
+}
+const recordPaytechTransaction = recordSaspayTransaction;
+const paytechTransactions = saspayTransactions;
+
+// Gateway status
+app.get(['/api/saspay/status', '/api/paytech/status'], (req, res) => {
+  const rawEnv = (process.env.SASPAY_ENV || 'prod').trim().toLowerCase();
+  const cleanEnv = (rawEnv === 'test' || rawEnv === 'sandbox') ? 'test' : 'prod';
   return res.json({
-    configured: isPaytechConfigured(),
-    env: process.env.PAYTECH_ENV || 'prod',
-    gateway: 'PayTech SN (Wave, Orange Money, Free Money, Carte)'
+    configured: isSaspayConfigured(),
+    env: cleanEnv,
+    gateway: 'SasPay SN (Wave, Orange Money, Free Money, Carte Bancaire)',
+    version: '2.0.0-official'
   });
 });
 
-app.post('/api/paytech/request-payment', paytechRateLimiter, async (req, res) => {
+// Initiate payment (Official SasPay Checkout)
+app.post(['/api/saspay/request-payment', '/api/paytech/request-payment'], saspayRateLimiter, async (req, res) => {
   try {
-    const { orderId, amount, itemName, customerName, customerPhone, restaurantName, returnHash } = req.body || {};
+    const { orderId, amount, itemName, customerName, customerPhone, restaurantName, returnHash, channel } = req.body || {};
 
     if (!orderId || !amount) {
       return res.status(400).json({
         success: false,
-        message: 'Identifiant et montant total requis.'
+        message: 'Identifiant et montant total requis pour SasPay.'
       });
     }
 
@@ -2016,32 +2292,34 @@ app.post('/api/paytech/request-payment', paytechRateLimiter, async (req, res) =>
     const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
     const baseUrl = `${protocol}://${host}`;
 
-    const successUrl = `${baseUrl}/#${returnHash || `/dashboard-account?payment=success&ref=${encodeURIComponent(orderId)}`}`;
-    const cancelUrl = `${baseUrl}/#${returnHash ? returnHash.replace('payment=success', 'payment=cancel') : `/dashboard?tab=subscription&payment=cancel`}`;
-    const ipnUrl = `${baseUrl}/api/paytech/ipn`;
+    const defaultSuccessHash = `/tracking?orderId=${encodeURIComponent(orderId)}&payment=success`;
+    const successUrl = `${baseUrl}/#${returnHash || defaultSuccessHash}`;
+    const cancelUrl = `${baseUrl}/#${returnHash ? returnHash.replace('payment=success', 'payment=cancel') : `/tracking?orderId=${encodeURIComponent(orderId)}&payment=cancel`}`;
+    const ipnUrl = `${baseUrl}/api/saspay/webhook`;
 
-    const paymentResult = await createPaytechPayment({
+    const paymentResult = await createSaspayPayment({
       orderId,
       amount,
-      itemName,
-      customerName,
-      customerPhone,
-      restaurantName,
+      itemName: itemName || `Commande #${orderId} - ${restaurantName || 'THIES Resto'}`,
+      customerName: customerName || 'Client THIES Resto',
+      customerPhone: customerPhone || '',
+      restaurantName: restaurantName || 'THIES Resto',
+      channel: channel || 'ALL',
       successUrl,
       cancelUrl,
       ipnUrl
     });
 
     if (paymentResult.success) {
-      recordPaytechTransaction({
+      recordSaspayTransaction({
         orderId,
         amount: Number(amount) || 0,
-        itemName: itemName || 'Abonnement Restaurant',
-        customerName: customerName || restaurantName || 'Restaurant',
+        itemName: itemName || `Commande #${orderId}`,
+        customerName: customerName || restaurantName || 'Client',
         customerPhone: customerPhone || '',
         restaurantName: restaurantName || '',
         status: 'PENDING',
-        paymentMethod: 'PayTech (Wave / Orange Money / Free Money / Carte)',
+        paymentMethod: 'SasPay (Wave / Orange Money / Free Money / Carte)',
         token: paymentResult.token || '',
         date: new Date().toISOString()
       });
@@ -2051,34 +2329,155 @@ app.post('/api/paytech/request-payment', paytechRateLimiter, async (req, res) =>
       return res.status(400).json(paymentResult);
     }
   } catch (error) {
-    console.error('Erreur API /api/paytech/request-payment:', error);
+    console.error('Erreur API /api/saspay/request-payment:', error);
     return res.status(500).json({
       success: false,
-      message: 'Erreur interne lors de l\'initialisation du paiement PayTech.'
+      message: 'Erreur interne lors de l\'initialisation du paiement SasPay.'
     });
   }
 });
 
-let paytechTransactions = [];
+// Softpay: Direct payment in Mobile Money / Card without external redirection
+app.post('/api/saspay/softpay', saspayRateLimiter, async (req, res) => {
+  try {
+    const { orderId, amount, customerPhone, channel, customerName, restaurantName } = req.body || {};
+    if (!orderId || !amount || !customerPhone) {
+      return res.status(400).json({
+        success: false,
+        message: 'orderId, amount et customerPhone sont requis pour le paiement direct.'
+      });
+    }
 
-function recordPaytechTransaction(tx) {
-  const existingIdx = paytechTransactions.findIndex(t => t.orderId === tx.orderId);
-  if (existingIdx >= 0) {
-    paytechTransactions[existingIdx] = { ...paytechTransactions[existingIdx], ...tx };
-  } else {
-    paytechTransactions.unshift(tx);
+    const result = await createSaspayDirectPayment({
+      orderId,
+      amount,
+      customerPhone,
+      channel: channel || 'WAVE',
+      customerName,
+      restaurantName
+    });
+
+    return res.json(result);
+  } catch (error) {
+    console.error('Erreur API /api/saspay/softpay:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur interne lors du paiement direct SasPay.'
+    });
   }
-}
+});
 
-app.get('/api/paytech/transactions', (req, res) => {
+// Create reusable Payment Links
+app.post('/api/saspay/payment-links', saspayRateLimiter, async (req, res) => {
+  try {
+    const { amount, title, description, orderId } = req.body || {};
+    if (!amount || !title) {
+      return res.status(400).json({
+        success: false,
+        message: 'amount et title sont requis pour générer un lien de paiement.'
+      });
+    }
+
+    const result = await createSaspayPaymentLink({
+      amount,
+      title,
+      description,
+      orderId
+    });
+
+    return res.json(result);
+  } catch (error) {
+    console.error('Erreur API /api/saspay/payment-links:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur génération lien de paiement SasPay.'
+    });
+  }
+});
+
+// Check SasPay Merchant Balance
+app.get('/api/saspay/balance', async (req, res) => {
+  try {
+    const result = await getSaspayBalance();
+    return res.json(result);
+  } catch (error) {
+    console.error('Erreur API /api/saspay/balance:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Erreur consultation solde SasPay.'
+    });
+  }
+});
+
+// Transactions journal
+app.get(['/api/saspay/transactions', '/api/paytech/transactions'], (req, res) => {
   res.json({
     success: true,
-    transactions: paytechTransactions,
-    totalCollected: paytechTransactions.filter(t => t.status === 'PAID').reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
+    gateway: 'SasPay',
+    transactions: saspayTransactions,
+    totalCollected: saspayTransactions.filter(t => t.status === 'PAID').reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
   });
 });
 
-app.post('/api/paytech/record-subscription-success', (req, res) => {
+// Verify transaction status via reference
+app.get('/api/saspay/verify/:ref', async (req, res) => {
+  try {
+    const ref = req.params.ref;
+    const result = await checkSaspayTransactionStatus(ref);
+    return res.json(result);
+  } catch (e) {
+    return res.status(500).json({ success: false, error: e.message });
+  }
+});
+
+// Confirm and record order payment directly from SasPay callback
+app.post('/api/saspay/confirm-order-payment', (req, res) => {
+  const { orderId, saspayRef, channel } = req.body || {};
+  if (!orderId) {
+    return res.status(400).json({ success: false, message: 'orderId requis.' });
+  }
+
+  const cleanId = String(orderId);
+  const matchedOrder = serverOrders.find(o => 
+    String(o.id) === cleanId || 
+    cleanId.includes(String(o.id))
+  );
+
+  if (matchedOrder) {
+    matchedOrder.paymentStatus = 'Payé via SasPay (Validé)';
+    matchedOrder.isPaid = true;
+    matchedOrder.paidAt = new Date().toISOString();
+    matchedOrder.paymentMethod = 'SasPay (Wave, Orange Money, Free Money, Carte)';
+    if (saspayRef) matchedOrder.saspayTransactionRef = saspayRef;
+    saveServerData();
+  }
+
+  recordSaspayTransaction({
+    orderId: cleanId,
+    amount: matchedOrder ? (Number(matchedOrder.total || matchedOrder.certifiedTotal || 0)) : 0,
+    status: 'PAID',
+    paymentMethod: channel || 'SasPay (Wave / Orange Money / Free Money / Carte)',
+    date: new Date().toISOString()
+  });
+
+  recordActivityLog({
+    action: 'Règlement Commande SasPay Validé',
+    entity_type: 'order',
+    entity_id: cleanId,
+    actor: 'SasPay Gateway',
+    details: `Paiement en ligne SasPay validé pour la commande n°${cleanId}.`,
+    req
+  });
+
+  return res.json({
+    success: true,
+    message: 'Commande validée avec succès via SasPay.',
+    orderId: cleanId
+  });
+});
+
+// Record subscription settlement
+app.post(['/api/saspay/record-subscription-success', '/api/paytech/record-subscription-success'], (req, res) => {
   const { orderId, restaurantName, packName, amount, paymentMethod } = req.body || {};
   if (!orderId) {
     return res.status(400).json({ success: false, message: 'orderId requis.' });
@@ -2091,65 +2490,80 @@ app.post('/api/paytech/record-subscription-success', (req, res) => {
     customerName: restaurantName || 'Restaurant Partenaire',
     restaurantName: restaurantName || 'Restaurant Partenaire',
     status: 'PAID',
-    paymentMethod: paymentMethod || 'PayTech (Wave / OM)',
+    paymentMethod: paymentMethod || 'SasPay (Wave / OM / Free Money)',
     date: new Date().toISOString()
   };
 
-  recordPaytechTransaction(tx);
+  recordSaspayTransaction(tx);
 
   recordActivityLog({
-    action: 'Encaissement Abonnement PayTech',
+    action: 'Encaissement Abonnement SasPay',
     entity_type: 'subscription',
     entity_id: orderId,
-    actor: 'PayTech',
+    actor: 'SasPay',
     details: `Paiement de ${Number(amount || 0).toLocaleString()} FCFA validé pour "${restaurantName}" (${packName}).`,
     req
   });
 
-  res.json({ success: true, message: 'Transaction PayTech enregistrée avec succès.', transaction: tx });
+  res.json({ success: true, message: 'Transaction SasPay enregistrée avec succès.', transaction: tx });
 });
 
-app.post('/api/paytech/ipn', (req, res) => {
+// Webhook / IPN listener according to official SasPay specifications
+app.post(['/api/saspay/webhook', '/api/saspay/ipn', '/api/paytech/ipn'], (req, res) => {
   try {
-    const isSignatureValid = verifyIpnSignature(req.headers, req.body);
-    const { item_price, ref_command, custom_field } = req.body || {};
-    if (ref_command) {
-      recordPaytechTransaction({
-        orderId: ref_command,
-        amount: Number(item_price) || 0,
+    const isSignatureValid = verifySaspayWebhook(req.headers, req.body);
+    if (!isSignatureValid) {
+      recordActivityLog({
+        action: 'Rejet Webhook SasPay (Signature Invalide)',
+        entity_type: 'security',
+        entity_id: 'webhook',
+        actor: 'SasPay Webhook Guard',
+        details: 'Tentative de notification rejetée car la signature HMAC est manquante ou non valide.',
+        req
+      });
+      return res.status(401).json({ success: 0, message: 'Signature de webhook invalide ou absente.' });
+    }
+
+    const { Amount, AmountPaid, TransactionReference, ref_command, item_price, Metadata, Status, status } = req.body || {};
+    const ref = TransactionReference || ref_command || (Metadata && Metadata.orderId);
+    const amount = Amount || AmountPaid || item_price || 0;
+    const isSuccess = (Status === 'SUCCESS' || Status === 'PAID' || status === 'PAID' || status === 'completed' || !Status);
+
+    if (ref && isSuccess) {
+      recordSaspayTransaction({
+        orderId: ref,
+        amount: Number(amount) || 0,
         status: 'PAID',
+        paymentMethod: 'SasPay Gateway',
         date: new Date().toISOString()
       });
 
+      // Synchroniser abonnement restaurateur si la référence est SUB-...
+      if (String(ref).startsWith('SUB-')) {
+        const resto = serverRestaurants.find(r => ref.includes(r.id) || (r.slug && ref.includes(r.slug)));
+        if (resto) {
+          resto.hasPaidSubscription = true;
+          resto.subscriptionStatus = 'active';
+          resto.subscriptionPaidAt = new Date().toISOString();
+          saveServerData();
+        }
+      }
+
       recordActivityLog({
-        action: 'Notification Webhook IPN PayTech reçue',
-        entity_type: 'subscription',
-        entity_id: ref_command,
-        actor: 'PayTech IPN',
-        details: `Webhook reçu pour la commande/abonnement ref: ${ref_command}. Montant: ${item_price} FCFA. Signature valide: ${isSignatureValid}`,
+        action: 'Notification Webhook SasPay reçue',
+        entity_type: String(ref).startsWith('SUB-') ? 'subscription' : 'order',
+        entity_id: ref,
+        actor: 'SasPay Webhook',
+        details: `Webhook reçu pour référence: ${ref}. Montant: ${amount} FCFA. Signature valide: ${isSignatureValid}`,
         req
       });
     }
 
-    return res.json({ success: 1, message: 'Notification IPN reçue avec succès.' });
+    return res.json({ success: 1, message: 'Notification Webhook SasPay reçue et traitée avec succès.' });
   } catch (error) {
-    console.error('Erreur Webhook PayTech IPN:', error);
-    return res.status(500).json({ success: 0, message: 'Erreur de traitement IPN.' });
+    console.error('Erreur Webhook SasPay:', error);
+    return res.status(500).json({ success: 0, message: 'Erreur de traitement Webhook.' });
   }
-});
-
-// ---------------------------------------------------------------------------
-// GOOGLE MAPS PLATFORM CONFIGURATION PROXY
-// ---------------------------------------------------------------------------
-app.get('/api/maps-config', (req, res) => {
-  const apiKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY || '';
-  res.json({
-    apiKey: apiKey,
-    configured: Boolean(apiKey && apiKey.length > 5),
-    attributionId: 'gmp_mcp_codeassist_v1_aistudio',
-    defaultCenter: { lat: 14.7910, lng: -16.9359 }, // Thiès, Senegal
-    defaultZoom: 14
-  });
 });
 
 // ---------------------------------------------------------------------------

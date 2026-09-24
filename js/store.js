@@ -160,6 +160,8 @@ class Store {
                             if (savedOverrides[r.id].isOpenManual !== undefined) r.isOpenManual = savedOverrides[r.id].isOpenManual;
                             if (savedOverrides[r.id].suspendReason) r.suspendReason = savedOverrides[r.id].suspendReason;
                             if (savedOverrides[r.id].suspendedAt) r.suspendedAt = savedOverrides[r.id].suspendedAt;
+                            if (savedOverrides[r.id].subscriptionStatus) r.subscriptionStatus = savedOverrides[r.id].subscriptionStatus;
+                            if (savedOverrides[r.id].hasPaidSubscription !== undefined) r.hasPaidSubscription = savedOverrides[r.id].hasPaidSubscription;
                         }
                     });
                 }
@@ -185,9 +187,10 @@ class Store {
         // Nettoyer le cache local de toutes anciennes données factices
         try {
             if (typeof localStorage !== 'undefined') {
-                const savedTxs = JSON.parse(localStorage.getItem('thies_paytech_transactions') || '[]');
+                const savedTxs = JSON.parse(localStorage.getItem('thies_saspay_transactions') || localStorage.getItem('thies_paytech_transactions') || '[]');
                 if (Array.isArray(savedTxs)) {
                     const realTxs = savedTxs.filter(t => t.orderId && !t.orderId.includes('171800000000'));
+                    localStorage.setItem('thies_saspay_transactions', JSON.stringify(realTxs));
                     localStorage.setItem('thies_paytech_transactions', JSON.stringify(realTxs));
                 }
             }
@@ -206,6 +209,40 @@ class Store {
                     this.syncLiveServerData();
                 } catch(e) {}
             }, 4000);
+        }
+
+        // Inter-tab instant synchronization channel for restaurant restrictions and cancellations
+        if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+            try {
+                const syncChannel = new BroadcastChannel('thies_live_sync_channel');
+                syncChannel.onmessage = (event) => {
+                    const msg = event.data;
+                    if (!msg) return;
+                    if (msg.type === 'RESTAURANT_STATUS_CHANGED' && msg.restaurantId) {
+                        if (msg.isDeleted) {
+                            this.data.restaurants = this.data.restaurants.filter(r => r.id !== msg.restaurantId);
+                            this.save();
+                            window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
+                                detail: { restaurants: this.data.restaurants, deletedId: msg.restaurantId }
+                            }));
+                            return;
+                        }
+                        const target = this.getRestaurantById(msg.restaurantId);
+                        if (target) {
+                            target.status = msg.status;
+                            if (msg.isOpenManual !== undefined) target.isOpenManual = msg.isOpenManual;
+                            if (msg.suspendReason !== undefined) target.suspendReason = msg.suspendReason;
+                            if (msg.subscriptionStatus !== undefined) target.subscriptionStatus = msg.subscriptionStatus;
+                            if (msg.hasPaidSubscription !== undefined) target.hasPaidSubscription = msg.hasPaidSubscription;
+                            this.save();
+                            window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
+                                detail: { restaurants: this.data.restaurants, updatedRestaurant: target }
+                            }));
+                        }
+                    }
+                };
+                window._thiesSyncChannel = syncChannel;
+            } catch(e) {}
         }
 
         // Auto-check and cancel stale/unacknowledged orders (only when tab is active)
@@ -246,6 +283,10 @@ class Store {
                     category: r.category,
                     rating: r.rating,
                     reviewsCount: r.reviewsCount,
+                    suspendReason: r.suspendReason,
+                    suspendedAt: r.suspendedAt,
+                    subscriptionStatus: r.subscriptionStatus,
+                    hasPaidSubscription: r.hasPaidSubscription,
                     createdAt: r.createdAt || new Date().toISOString()
                 };
                 
@@ -494,6 +535,7 @@ class Store {
                             if (sr.subscriptionPack) existing.subscriptionPack = sr.subscriptionPack;
                             if (sr.subscriptionPaidAt) existing.subscriptionPaidAt = sr.subscriptionPaidAt;
                             if (sr.subscriptionMethod) existing.subscriptionMethod = sr.subscriptionMethod;
+                            if (sr.subscriptionStatus) existing.subscriptionStatus = sr.subscriptionStatus;
                             if (sr.hasPaidSubscription !== undefined) existing.hasPaidSubscription = sr.hasPaidSubscription;
                         } else {
                             this.data.restaurants.push(sr);
@@ -1215,8 +1257,25 @@ class Store {
         }
     }
 
+    isRestaurantVisible(resto) {
+        if (!resto) return false;
+        const status = String(resto.status || '').toLowerCase().trim();
+        const subStatus = String(resto.subscriptionStatus || '').toLowerCase().trim();
+        if (status === 'suspended' || status === 'suspendu' || status === 'pending' || status === 'inactive' || status === 'cancelled' || status === 'resilie') {
+            return false;
+        }
+        if (subStatus === 'cancelled' || subStatus === 'rejected' || subStatus === 'resilie') {
+            return false;
+        }
+        return status === 'active' || status === 'actif' || !status;
+    }
+
+    getActiveRestaurants() {
+        return this.getRestaurants().filter(r => this.isRestaurantVisible(r));
+    }
+
     getDailyDishes() {
-        const activeRestos = this.getRestaurants().filter(r => r.status === 'active');
+        const activeRestos = this.getActiveRestaurants();
         const dailyDishes = [];
         
         activeRestos.forEach(resto => {
@@ -1304,6 +1363,28 @@ class Store {
             this.data.restaurants[idx] = { ...this.data.restaurants[idx], ...fields };
             this.save();
             this.pushRestaurantToSupabase(this.data.restaurants[idx]);
+
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
+                    detail: {
+                        restaurants: this.data.restaurants,
+                        updatedRestaurant: this.data.restaurants[idx]
+                    }
+                }));
+
+                if (window._thiesSyncChannel) {
+                    try {
+                        window._thiesSyncChannel.postMessage({
+                            type: 'RESTAURANT_STATUS_CHANGED',
+                            restaurantId: id,
+                            status: this.data.restaurants[idx].status,
+                            isOpenManual: this.data.restaurants[idx].isOpenManual,
+                            suspendReason: this.data.restaurants[idx].suspendReason,
+                            subscriptionStatus: this.data.restaurants[idx].subscriptionStatus
+                        });
+                    } catch(e) {}
+                }
+            }
             return this.data.restaurants[idx];
         }
         return null;
@@ -1339,6 +1420,22 @@ class Store {
                 body: JSON.stringify({ restaurantId: id })
             }).catch(() => {});
         } catch (e) {}
+
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
+                detail: { restaurants: this.data.restaurants, deletedId: id }
+            }));
+            if (window._thiesSyncChannel) {
+                try {
+                    window._thiesSyncChannel.postMessage({
+                        type: 'RESTAURANT_STATUS_CHANGED',
+                        restaurantId: id,
+                        status: 'cancelled',
+                        isDeleted: true
+                    });
+                } catch(e) {}
+            }
+        }
     }
 
     getOrdersByRestaurant(restaurantId) {
@@ -1349,8 +1446,17 @@ class Store {
         if (!order.orderNumber) {
             order.orderNumber = this.getNextRestaurantOrderNumber(order.restaurantId);
         }
-        if (!order.id || order.id.startsWith('ORD-')) {
-            order.id = `CMD-${order.orderNumber}`;
+        if (!order.id || order.id.startsWith('ORD-') || order.id === `CMD-${order.orderNumber}`) {
+            order.id = `CMD-${Date.now().toString().slice(-6)}${Math.floor(10 + Math.random() * 90)}`;
+        }
+        if (!order.timestamp) {
+            order.timestamp = Date.now();
+        }
+        if (!order.createdAt) {
+            order.createdAt = new Date().toISOString();
+        }
+        if (!order.created_at) {
+            order.created_at = order.createdAt;
         }
         
         if (window.clientTracker) {
@@ -1405,36 +1511,9 @@ class Store {
     }
 
     checkAndAutoCancelStaleOrders() {
-        if (!this.data || !Array.isArray(this.data.orders)) return;
-        let hasChanges = false;
-        
-        this.data.orders.forEach(order => {
-            if (!order || order.status === 'Livrée' || order.status === 'Livré' || order.status === 'Annulée') {
-                return;
-            }
-            const ageMinutes = this.getOrderAgeMinutes(order);
-            
-            // Condition 1 : Si le restaurant ne marque pas comme reçu (reste "En attente" sans confirmation pendant > 20 min)
-            if (order.status === 'En attente' && ageMinutes >= 20) {
-                order.status = 'Annulée';
-                order.cancelReason = "Délai expiré : Le restaurant n'a pas confirmé la réception de la commande.";
-                order.cancelledAt = new Date().toISOString();
-                hasChanges = true;
-                this.pushOrderToSupabase(order);
-            }
-            // Condition 2 : Si la commande est reçue/acceptée mais sans réaction ni progression après 1h30 (90 min)
-            else if (ageMinutes >= 90) {
-                order.status = 'Annulée';
-                order.cancelReason = "Délai expiré : Commande automatiquement annulée après 1h30 sans réaction ou finalisation par le restaurant.";
-                order.cancelledAt = new Date().toISOString();
-                hasChanges = true;
-                this.pushOrderToSupabase(order);
-            }
-        });
-
-        if (hasChanges) {
-            this.save();
-        }
+        // Safe guard: Orders must NOT be automatically cancelled by client timers.
+        // Orders remain 'En attente' until processed by the restaurant or cancelled by customer.
+        return;
     }
 
     async updateOrderStatus(orderId, status, cancelReason = null) {
@@ -1670,11 +1749,11 @@ class Store {
     }
 
     // ============================================
-    // OTP VERIFICATION METHODS (Twilio SMS & Fallback)
+    // OTP VERIFICATION METHODS (Native SMS & Fallback)
     // ============================================
 
     async generateOtp(phone) {
-        // 1. Appel du backend Twilio SMS API (/api/otp/send)
+        // 1. Appel du backend OTP API (/api/otp/send)
         try {
             const response = await fetch('/api/otp/send', {
                 method: 'POST',
@@ -1683,7 +1762,7 @@ class Store {
             });
             const result = await response.json();
             if (response.ok && result.success) {
-                // Si en mode démo (clés Twilio non encore ajoutées), on garde aussi une copie locale
+                // Si en mode démo (code de secours de développement), on garde aussi une copie locale
                 if (result.devCode) {
                     const otpSession = {
                         code: result.devCode,
@@ -1739,7 +1818,7 @@ class Store {
     }
 
     async verifyOtp(phone, code) {
-        // 1. Vérification via backend Twilio API (/api/otp/verify)
+        // 1. Vérification via backend OTP API (/api/otp/verify)
         try {
             const response = await fetch('/api/otp/verify', {
                 method: 'POST',

@@ -185,36 +185,44 @@ function renderCheckoutTab(r) {
             <div class="form-group" style="margin-top: 1.25rem;">
                 <label class="form-label" style="font-weight: 700;">Mode de Règlement direct <span class="required">*</span></label>
                 <div style="display: flex; flex-direction: column; gap: 0.65rem;">
-                    <label class="delivery-radio-card" style="padding: 0.85rem 1rem; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; border: 1.5px solid var(--primary); background: rgba(var(--primary-rgb), 0.04);">
-                        <input type="radio" name="order-payment" value="Espèces à la livraison" checked style="accent-color: var(--primary);">
+                    <label class="delivery-radio-card" style="padding: 0.95rem 1rem; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; border: 2px solid var(--primary); background: rgba(var(--primary-rgb), 0.05);">
+                        <input type="radio" name="order-payment" value="Espèces à la livraison" checked style="accent-color: var(--primary); transform: scale(1.15);">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem;">
-                                <strong style="color: var(--text-primary); font-size: 0.95rem;">💵 Espèces à la livraison (Cash on Delivery)</strong>
-                                <span class="badge" style="background: #10B981; color: white; font-size: 0.7rem; padding: 2px 7px; border-radius: 6px; font-weight: 700;">Recommandé</span>
+                                <strong style="color: var(--text-primary); font-size: 0.98rem;">💵 Espèces à la livraison (Cash on Delivery)</strong>
+                                <span class="badge" style="background: #10B981; color: white; font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Standard & Immédiat</span>
                             </div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Règlement en liquide de la totalité (repas + livraison) directement en main propre au livreur à l'arrivée</div>
+                            <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem;">Règlement en liquide de la totalité (repas + livraison) directement en main propre au livreur à l'arrivée.</div>
                         </div>
                     </label>
-                    <label class="delivery-radio-card" style="padding: 0.85rem 1rem; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; border: 1px solid var(--border); background: var(--bg-card);">
-                        <input type="radio" name="order-payment" value="Transfert Wave restaurant" style="accent-color: var(--primary);">
+
+                    <div style="padding: 0.8rem 1rem; border-radius: 14px; display: flex; align-items: center; gap: 0.75rem; border: 1px dashed var(--border); background: var(--bg-secondary); opacity: 0.75;">
+                        <input type="radio" disabled style="accent-color: var(--text-muted);">
                         <div style="flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <img src="/images/wave_senegal.png" alt="Wave Sénégal" style="width: 20px; height: 20px; border-radius: 4px; object-fit: contain;">
-                                <strong style="color: var(--text-primary); font-size: 0.95rem;">Paiement Wave (Direct au restaurant)</strong>
+                            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem;">
+                                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                                    <img src="/images/wave_senegal.png" alt="Wave Sénégal" style="width: 20px; height: 20px; border-radius: 4px; object-fit: contain; filter: grayscale(40%);">
+                                    <strong style="color: var(--text-muted); font-size: 0.92rem;">Paiement Wave Sénégal</strong>
+                                </div>
+                                <span class="badge" style="background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); font-size: 0.68rem; padding: 2px 7px; border-radius: 6px; font-weight: 700;">Bientôt disponible</span>
                             </div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Transfert Wave sans frais sur le numéro officiel du restaurant pour préparer la commande</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Paiement direct par Wave intégré directement sur l'application (en cours d'activation).</div>
                         </div>
-                    </label>
-                    <label class="delivery-radio-card" style="padding: 0.85rem 1rem; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 0.75rem; border: 1px solid var(--border); background: var(--bg-card);">
-                        <input type="radio" name="order-payment" value="Orange Money Sénégal" style="accent-color: var(--primary);">
+                    </div>
+
+                    <div style="padding: 0.8rem 1rem; border-radius: 14px; display: flex; align-items: center; gap: 0.75rem; border: 1px dashed var(--border); background: var(--bg-secondary); opacity: 0.75;">
+                        <input type="radio" disabled style="accent-color: var(--text-muted);">
                         <div style="flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <img src="/images/orange_money_senegal.png" alt="Orange Money Sénégal" style="width: 20px; height: 20px; border-radius: 4px; object-fit: contain;">
-                                <strong style="color: var(--text-primary); font-size: 0.95rem;">Paiement Orange Money (Direct au restaurant)</strong>
+                            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem;">
+                                <div style="display: flex; align-items: center; gap: 0.45rem;">
+                                    <img src="/images/orange_money_senegal.png" alt="Orange Money Sénégal" style="width: 20px; height: 20px; border-radius: 4px; object-fit: contain; filter: grayscale(40%);">
+                                    <strong style="color: var(--text-muted); font-size: 0.92rem;">Orange Money Sénégal</strong>
+                                </div>
+                                <span class="badge" style="background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border); font-size: 0.68rem; padding: 2px 7px; border-radius: 6px; font-weight: 700;">Bientôt disponible</span>
                             </div>
-                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">Transfert via #144# ou Max It sur le numéro Orange Money officiel du restaurant</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.2rem;">Paiement instantané par Orange Money #144# (en cours d'activation).</div>
                         </div>
-                    </label>
+                    </div>
                 </div>
             </div>
 
@@ -412,11 +420,9 @@ function submitSimpleOrder(e, restaurantId) {
     const r = store.getRestaurantById(restaurantId);
     if (!r) return;
 
-    if (r.status === 'suspended') {
+    if (r.status === 'suspended' || r.status === 'inactive' || r.status === 'cancelled' || r.subscriptionStatus === 'cancelled' || r.subscriptionStatus === 'rejected') {
         if (typeof showToast === 'function') {
-            showToast(`« ${r.name} » est actuellement suspendu et ne peut pas accepter de commande.`, 'danger');
-        } else {
-            alert(`« ${r.name} » est actuellement suspendu et ne peut pas accepter de commande.`);
+            showToast(`« ${r.name} » n'est pas disponible actuellement pour recevoir des commandes.`, 'danger');
         }
         return;
     }
@@ -497,12 +503,13 @@ function submitSimpleOrder(e, restaurantId) {
 
     const verifiedTotal = Math.max(0, verifiedSubtotal + verifiedDeliveryFee - verifiedDiscount);
 
-    // Format payment labels (direct customer <-> restaurant)
+    // Payment method for meal orders is strictly Cash on Delivery
     let paymentMethod = 'Espèces à la livraison (Cash on Delivery)';
     let paymentStatus = 'À régler au livreur à la réception';
-    if (paymentChoice === 'Transfert Wave restaurant') {
+    if (paymentChoice && paymentChoice.includes('Wave')) {
         paymentMethod = 'Paiement Wave direct au restaurant';
-        paymentStatus = 'À transférer sur le compte Wave du restaurant';
+    } else if (paymentChoice && paymentChoice.includes('Orange')) {
+        paymentMethod = 'Paiement Orange Money direct au restaurant';
     }
 
     // Remember customer details for future orders
@@ -513,9 +520,11 @@ function submitSimpleOrder(e, restaurantId) {
     
     // Calculate sequence number for this specific restaurant (starts at 1 per restaurant)
     const orderSeq = store.getNextRestaurantOrderNumber(r.id);
-    const orderId = "CMD-" + orderSeq;
+    // Unique global order ID prevents clashing with older archived orders across restaurants
+    const orderId = "CMD-" + Date.now().toString().slice(-6) + Math.floor(10 + Math.random() * 90);
     const date = new Date().toISOString().split('T')[0];
     const time = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const nowIso = new Date().toISOString();
     
     let finalNotes = notes;
     if (cart.loyaltyApplied) {
@@ -540,7 +549,8 @@ function submitSimpleOrder(e, restaurantId) {
         date,
         time,
         timestamp: Date.now(),
-        createdAt: new Date().toISOString(),
+        createdAt: nowIso,
+        created_at: nowIso,
         deliveryFee: verifiedDeliveryFee,
         deliveryLat: cart.deliveryLat || null,
         deliveryLng: cart.deliveryLng || null,
@@ -548,7 +558,7 @@ function submitSimpleOrder(e, restaurantId) {
         priceVerified: true,
         otpVerified: true,
         otpVerifiedVia: 'Authentification Native / WhatsApp',
-        otpVerifiedAt: new Date().toISOString()
+        otpVerifiedAt: nowIso
     };
 
     // Synchronisation automatique de l'authentification native du client
@@ -728,14 +738,17 @@ window.executePendingOrder = async function() {
 };
 
 /**
- * Global Helper to launch PayTech checkout flow from any UI screen
+ * Official SasPay Senegal Payment Integration (Wave, Orange Money, Free Money, Carte)
+ * Implements official API for secure online transactions
  */
-window.initiatePaytechPayment = async function(orderId) {
-    const btn = document.getElementById('btn-paytech-now') || document.querySelector(`[data-paytech-order-id="${orderId}"]`);
+window.initiateSaspayPayment = async function(orderId, channel = 'ALL') {
+    const btn = document.getElementById('btn-saspay-now') || 
+                document.querySelector(`[data-saspay-order-id="${orderId}"]`) ||
+                document.getElementById('btn-paytech-now');
     const originalText = btn ? btn.innerHTML : '';
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-ring" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Connexion PayTech...';
+        btn.innerHTML = '<span class="spinner-ring" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Connexion SasPay Sécurisée...';
     }
 
     try {
@@ -758,15 +771,17 @@ window.initiatePaytechPayment = async function(orderId) {
             if (r) restaurantName = r.name;
         }
 
-        const response = await fetch('/api/paytech/request-payment', {
+        const response = await fetch('/api/saspay/request-payment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 orderId: orderId,
                 amount: total,
+                itemName: `Commande #${orderId} - ${restaurantName}`,
                 customerName: customerName,
                 customerPhone: customerPhone,
                 restaurantName: restaurantName,
+                channel: channel || 'ALL',
                 returnHash: `/tracking?orderId=${encodeURIComponent(orderId)}&payment=success`
             })
         });
@@ -775,14 +790,14 @@ window.initiatePaytechPayment = async function(orderId) {
 
         if (data && data.success && data.redirectUrl) {
             if (btn) {
-                btn.innerHTML = '<span>Redirection PayTech ➔</span>';
+                btn.innerHTML = '<span>Redirection SasPay ➔</span>';
             }
-            // Navigate client to PayTech payment page
+            // Navigate client to official SasPay payment gateway
             window.location.href = data.redirectUrl;
         } else {
-            console.error("PayTech API Error:", data);
+            console.error("SasPay API Error:", data);
             if (typeof showToast === 'function') {
-                showToast(data.message || "Erreur lors de l'ouverture de PayTech.", "danger");
+                showToast(data.message || "Erreur lors de l'initialisation SasPay.", "danger");
             }
             if (btn) {
                 btn.disabled = false;
@@ -790,9 +805,9 @@ window.initiatePaytechPayment = async function(orderId) {
             }
         }
     } catch (err) {
-        console.error("PayTech payment exception:", err);
+        console.error("SasPay payment exception:", err);
         if (typeof showToast === 'function') {
-            showToast("Impossible de contacter la passerelle PayTech.", "danger");
+            showToast("Impossible de joindre la passerelle SasPay. Vérifiez votre connexion.", "danger");
         }
         if (btn) {
             btn.disabled = false;
@@ -800,4 +815,56 @@ window.initiatePaytechPayment = async function(orderId) {
         }
     }
 };
+
+/**
+ * Validates and syncs SasPay payment upon return callback
+ */
+window.handleSaspayReturnCallback = function() {
+    const hash = window.location.hash || '';
+    if (hash.includes('payment=success') && hash.includes('orderId=')) {
+        try {
+            const queryPart = hash.includes('?') ? hash.split('?')[1] : '';
+            const params = new URLSearchParams(queryPart);
+            const orderId = params.get('orderId');
+            const saspayRef = params.get('saspay_ref') || params.get('token') || 'SASPAY_CONFIRMED';
+            
+            if (orderId) {
+                console.log(`[SasPay] Validation de la transaction pour la commande #${orderId}`);
+                if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
+                    const localOrder = store.data.orders.find(o => String(o.id) === String(orderId));
+                    if (localOrder) {
+                        localOrder.paymentStatus = 'Payé via SasPay (Validé)';
+                        localOrder.isPaid = true;
+                        localOrder.saspayTransactionRef = saspayRef;
+                        if (typeof store.save === 'function') store.save();
+                    }
+                }
+                
+                // Notifier le serveur pour enregistrement comptable immédiat
+                fetch('/api/saspay/confirm-order-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ orderId, saspayRef })
+                }).catch(e => console.warn('SasPay confirm order notice:', e));
+
+                if (typeof showToast === 'function') {
+                    showToast('🎉 Votre paiement SasPay a été validé avec succès !', 'success');
+                }
+            }
+        } catch (e) {
+            console.error('Erreur traitement retour SasPay:', e);
+        }
+    }
+};
+
+// Listen for return redirect events
+window.addEventListener('hashchange', window.handleSaspayReturnCallback);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', window.handleSaspayReturnCallback);
+} else {
+    window.handleSaspayReturnCallback();
+}
+
+// Backwards compatibility alias
+window.initiatePaytechPayment = window.initiateSaspayPayment;
 

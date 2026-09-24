@@ -34,3 +34,10 @@ IDENTIFIANTS_RESTAURANTS.md
 # Database & Sensitive Scripts (DO NOT PUSH)
 *.sql
 *.py
+
+# Dumps & Temporary Payloads (Prevent GitHub push size issues)
+admin_data.json
+payload.json
+bun.lock
+*.zip
+

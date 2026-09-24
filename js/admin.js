@@ -2820,7 +2820,7 @@ function renderDashboardTabContent(r) {
                                         </div>
                                     </div>
                                     <div style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.4;">
-                                        Transactions officielles certifiées par <strong>Wave Sénégal</strong> et <strong>Orange Money Sénégal</strong> via passerelle PayTech. Facture & quitus d'abonnement immédiats.
+                                        Transactions officielles certifiées par <strong>Wave Sénégal</strong> et <strong>Orange Money Sénégal</strong> via passerelle SasPay. Facture & quitus d'abonnement immédiats.
                                     </div>
                                 </div>
                             </div>
@@ -2962,9 +2962,9 @@ window.openSubscriptionPaymentModal = function(restaurantId, packName, amount, i
                             <a href="https://wave.com/send" target="_blank" class="btn btn-outline btn-sm" style="border-color: #00B4D8; color: #0077B6; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; padding: 0.6rem; border-radius: 10px;">
                                 <i class='ri-external-link-line'></i> Ouvrir Wave Web
                             </a>
-                            <button type="button" onclick="window.paySubscriptionWithPaytech('${r.id}', '${packName}', ${amount})" class="btn btn-secondary btn-sm" style="font-weight: 700; padding: 0.6rem; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                            <button type="button" onclick="window.paySubscriptionWithSaspay('${r.id}', '${packName}', ${amount})" class="btn btn-secondary btn-sm" style="font-weight: 700; padding: 0.6rem; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
                                 <img src="/images/wave_senegal.png" alt="Wave" style="width: 16px; height: 16px; border-radius: 3px;">
-                                <span>Passerelle PayTech</span>
+                                <span>Passerelle SasPay</span>
                             </button>
                         </div>
                     </div>
@@ -3016,9 +3016,9 @@ window.openSubscriptionPaymentModal = function(restaurantId, packName, amount, i
                             <a href="tel:*144#" class="btn btn-outline btn-sm" style="border-color: #FF7900; color: #EA580C; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; padding: 0.6rem; border-radius: 10px;">
                                 <i class='ri-phone-line'></i> Composer #144#
                             </a>
-                            <button type="button" onclick="window.paySubscriptionWithPaytech('${r.id}', '${packName}', ${amount})" class="btn btn-secondary btn-sm" style="font-weight: 700; padding: 0.6rem; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                            <button type="button" onclick="window.paySubscriptionWithSaspay('${r.id}', '${packName}', ${amount})" class="btn btn-secondary btn-sm" style="font-weight: 700; padding: 0.6rem; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
                                 <img src="/images/orange_money_senegal.png" alt="OM" style="width: 16px; height: 16px; border-radius: 3px;">
-                                <span>Passerelle PayTech</span>
+                                <span>Passerelle SasPay</span>
                             </button>
                         </div>
                     </div>
@@ -3346,9 +3346,9 @@ window.superAdminCancelSubscription = async function(restaurantId) {
 };
 
 /**
- * PayTech integration for Restaurant Subscriptions
+ * SasPay integration for Restaurant Subscriptions (with PayTech backwards compatibility alias)
  */
-window.paySubscriptionWithPaytech = async function(restaurantId, packName, amount) {
+window.paySubscriptionWithSaspay = async function(restaurantId, packName, amount) {
     const r = store.getRestaurantById(restaurantId);
     if (!r) {
         if (typeof showToast === 'function') showToast("Établissement non trouvé.", 'danger');
@@ -3360,11 +3360,11 @@ window.paySubscriptionWithPaytech = async function(restaurantId, packName, amoun
     const originalText = btn ? btn.innerHTML : '';
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-ring" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:4px;"></span> Connexion PayTech...';
+        btn.innerHTML = '<span class="spinner-ring" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:4px;"></span> Connexion SasPay...';
     }
 
     try {
-        const response = await fetch('/api/paytech/request-payment', {
+        const response = await fetch('/api/saspay/request-payment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -3380,10 +3380,10 @@ window.paySubscriptionWithPaytech = async function(restaurantId, packName, amoun
 
         const data = await response.json();
         if (data && data.success && data.redirectUrl) {
-            if (btn) btn.innerHTML = '<span>Redirection PayTech <i class="arrow-right-line"></i></span>';
+            if (btn) btn.innerHTML = '<span>Redirection SasPay <i class="arrow-right-line"></i></span>';
             window.location.href = data.redirectUrl;
         } else {
-            console.warn("PayTech subscription notice:", data);
+            console.warn("SasPay subscription notice:", data);
             // Open direct official Wave and Orange Money payment modal
             if (btn) {
                 btn.disabled = false;
@@ -3400,6 +3400,8 @@ window.paySubscriptionWithPaytech = async function(restaurantId, packName, amoun
         window.openSubscriptionPaymentModal(restaurantId, packName, amount, 'wave');
     }
 };
+
+window.paySubscriptionWithPaytech = window.paySubscriptionWithSaspay;
 
 /**
  * Compatibility handler for Aha Moment: redirects to the page flow (no modal)
@@ -5167,8 +5169,8 @@ function renderAdminTabTable() {
         const customersWithOrders = customersList.filter(c => c.ordersCount > 0);
         const recurringCustomers = customersList.filter(c => c.ordersCount >= 2);
 
-        const paytechTxs = window.getPaytechTransactionsList ? window.getPaytechTransactionsList() : [];
-        const confirmedPaytechTxs = paytechTxs.filter(t => t.status === 'PAID');
+        const saspayTxs = window.getSaspayTransactionsList ? window.getSaspayTransactionsList() : (window.getPaytechTransactionsList ? window.getPaytechTransactionsList() : []);
+        const confirmedPaytechTxs = saspayTxs.filter(t => t.status === 'PAID');
         const totalPaytechCollected = confirmedPaytechTxs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
         let totalMRR = 0;
@@ -5524,7 +5526,7 @@ function renderAdminTabTable() {
 
                                 const channelBadge = lastTx && lastTx.paymentMethod 
                                     ? (window.getPaymentBadgeHtml ? window.getPaymentBadgeHtml(lastTx.paymentMethod) : lastTx.paymentMethod)
-                                    : `<span style="font-size:0.78rem; color:var(--text-secondary);">Wave / OM / PayDunya</span>`;
+                                    : `<span style="font-size:0.78rem; color:var(--text-secondary);">Wave / OM / SasPay</span>`;
 
                                 return `
                                     <tr>
@@ -5548,7 +5550,7 @@ function renderAdminTabTable() {
                                             ${channelBadge}
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-secondary" onclick="window.openRecordPaytechModal('${r.id}')" style="font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.55rem; border-radius: 6px;">
+                                            <button class="btn btn-sm btn-secondary" onclick="window.openRecordSaspayModal('${r.id}')" style="font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.55rem; border-radius: 6px;">
                                                 Encaisser
                                             </button>
                                         </td>
@@ -5875,11 +5877,14 @@ function renderAdminTabTable() {
                     const menuCount = (r.menu && Array.isArray(r.menu)) ? r.menu.length : 0;
                     const isPending = r.status === 'pending';
                     const isSuspended = r.status === 'suspended';
+                    const isCancelled = r.status === 'cancelled' || r.subscriptionStatus === 'cancelled';
                     const pack = r.subscriptionPack || 'Aucun (Gratuit)';
 
                     let statusBadge = `<span class="badge badge-success" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;"><i class='ri-checkbox-circle-fill'></i> Actif</span>`;
                     if (isPending) {
                         statusBadge = `<span class="badge badge-warning" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;"><i class='ri-time-line'></i> En attente</span>`;
+                    } else if (isCancelled) {
+                        statusBadge = `<span class="badge" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; background: #fee2e2; color: #991b1b; border: 1px solid #f87171;"><i class='ri-close-circle-line'></i> Résilié</span>`;
                     } else if (isSuspended) {
                         statusBadge = `<span class="badge badge-danger" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;"><i class='ri-forbid-line'></i> Suspendu</span>`;
                     }
@@ -5955,13 +5960,16 @@ function renderAdminTabTable() {
                                     <i class='ri-external-link-line'></i> Fiche
                                 </button>
 
-                                ${isSuspended ? `
+                                ${isSuspended || isCancelled ? `
                                     <button class="btn btn-ghost btn-sm" onclick="reactivateRestaurant('${r.id}')" style="color: var(--success); font-size: 0.78rem; padding: 0.45rem 0.65rem;" title="Réactiver ce restaurant">
-                                        <i class='ri-play-circle-line'></i>
+                                        <i class='ri-play-circle-line'></i> Réactiver
                                     </button>
                                 ` : (r.status === 'active' ? `
-                                    <button class="btn btn-ghost btn-sm" onclick="suspendRestaurant('${r.id}')" style="color: var(--warning); font-size: 0.78rem; padding: 0.45rem 0.65rem;" title="Suspendre temporairement">
+                                    <button class="btn btn-ghost btn-sm" onclick="suspendRestaurant('${r.id}')" style="color: var(--warning); font-size: 0.78rem; padding: 0.45rem 0.65rem;" title="Suspendre / Restreindre">
                                         <i class='ri-pause-circle-line'></i>
+                                    </button>
+                                    <button class="btn btn-ghost btn-sm" onclick="resiliateRestaurant('${r.id}')" style="color: #dc2626; font-size: 0.78rem; padding: 0.45rem 0.65rem;" title="Résilier ce restaurant">
+                                        <i class='ri-forbid-line'></i>
                                     </button>
                                 ` : '')}
 
@@ -6145,8 +6153,8 @@ window.loadAdminActivityLogs = async function() {
             let actorBadge = `<span class="badge" style="background: rgba(100, 116, 139, 0.15); color: #475569; font-size: 0.75rem;">${log.actor || 'System'}</span>`;
             if (log.actor === 'SuperAdmin') {
                 actorBadge = `<span class="badge badge-primary" style="font-size: 0.75rem;">SuperAdmin</span>`;
-            } else if (log.actor === 'PayTech' || log.actor === 'PayTech IPN') {
-                actorBadge = `<span class="badge" style="background: rgba(34, 197, 94, 0.15); color: #16a34a; font-weight: 700; font-size: 0.75rem;">PayTech</span>`;
+            } else if (log.actor === 'SasPay' || log.actor === 'SasPay Webhook' || log.actor === 'PayTech' || log.actor === 'PayTech IPN') {
+                actorBadge = `<span class="badge" style="background: rgba(34, 197, 94, 0.15); color: #16a34a; font-weight: 700; font-size: 0.75rem;">SasPay</span>`;
             }
 
             let entityBadge = `<span class="badge" style="font-size: 0.72rem; text-transform: uppercase;">${log.entity_type}</span>`;
@@ -6604,6 +6612,59 @@ async function suspendRestaurant(id) {
     console.groupEnd();
 }
 
+async function resiliateRestaurant(id) {
+    console.group(`[SuperAdmin] Résiliation du restaurant ID: "${id}"`);
+    const r = store.getRestaurantById(id);
+    if (!r) {
+        console.error(`[SuperAdmin] Restaurant ID "${id}" introuvable dans le Store.`);
+        console.groupEnd();
+        return;
+    }
+
+    if (!confirm(`Confirmez-vous la résiliation définitive du restaurant "${r.name}" ?\nIl sera instantanément masqué du catalogue client et ne pourra plus recevoir de commandes.`)) {
+        console.groupEnd();
+        return;
+    }
+    
+    console.log(`[SuperAdmin] Résiliation de "${r.name}" (${id}). Mise à jour locale optimiste...`);
+    store.updateRestaurant(id, { 
+        status: "cancelled", 
+        subscriptionStatus: "cancelled",
+        hasPaidSubscription: false,
+        isOpenManual: false,
+        suspendReason: 'Résiliation administrative SuperAdmin',
+        suspendedAt: new Date().toISOString()
+    });
+
+    // Real-time Firestore direct synchronization
+    if (typeof window.updateFirestoreRestaurantStatus === 'function') {
+        window.updateFirestoreRestaurantStatus(id, 'cancelled', 'Résiliation administrative SuperAdmin').catch(err => {
+            console.warn("[SuperAdmin] Notice synchro Firestore client resiliate:", err);
+        });
+    }
+
+    try {
+        console.log(`[SuperAdmin] Envoi requête POST /api/admin/restaurants/suspend (cancelled)...`);
+        const resp = await fetch('/api/admin/restaurants/suspend', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ restaurantId: id, status: 'cancelled', reason: 'Résiliation administrative SuperAdmin' })
+        });
+        const data = await resp.json().catch(() => ({}));
+        console.log(`[SuperAdmin] Réponse serveur résiliation:`, data);
+
+        if (typeof store.reFetchRestaurants === 'function') {
+            await store.reFetchRestaurants();
+        }
+    } catch (e) {
+        console.warn("[SuperAdmin] Exception lors de la résiliation côté serveur:", e);
+    }
+
+    showToast(`Restaurant ${r.name} résilié avec succès`, "warning");
+    renderAdminView();
+    console.groupEnd();
+}
+
 async function reactivateRestaurant(id) {
     console.group(`[SuperAdmin] Réactivation du restaurant ID: "${id}"`);
     console.log(`[SuperAdmin] Étape 1/5: Recherche du restaurant dans le Store local...`);
@@ -6714,11 +6775,21 @@ window.updateRestaurantPack = function(id, packName) {
     renderAdminView();
 };
 
-window.deleteRestaurantAdmin = function(id) {
+window.deleteRestaurantAdmin = async function(id) {
     const r = store.getRestaurantById(id);
     if (!r) return;
     if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement le restaurant "${r.name}" du réseau THIES Resto ? Cette action est irréversible.`)) {
         store.deleteRestaurant(id);
+        if (typeof window.updateFirestoreRestaurantStatus === 'function') {
+            window.updateFirestoreRestaurantStatus(id, 'cancelled', 'Suppression définitive').catch(() => {});
+        }
+        try {
+            await fetch('/api/admin/restaurants/reject', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ restaurantId: id, reason: 'Suppression définitive SuperAdmin' })
+            });
+        } catch (e) {}
         showToast(`Restaurant "${r.name}" supprimé avec succès`, "info");
         renderAdminView();
     }
@@ -6744,6 +6815,7 @@ function exitImpersonation() {
 window.approveRestaurant = approveRestaurant;
 window.rejectRestaurant = rejectRestaurant;
 window.suspendRestaurant = suspendRestaurant;
+window.resiliateRestaurant = resiliateRestaurant;
 window.reactivateRestaurant = reactivateRestaurant;
 window.impersonateRestaurant = impersonateRestaurant;
 window.exitImpersonation = exitImpersonation;
@@ -7061,42 +7133,45 @@ window.togglePassVisibility = function(inputId, btn) {
 };
 
 // ==========================================
-// PAYTECH & FINANCIAL REPORTING SYSTEM
+// SASPAY & FINANCIAL REPORTING SYSTEM
 // ==========================================
 
-window.getPaytechTransactionsList = function() {
+window.getSaspayTransactionsList = function() {
     let localTxs = [];
     try {
-        localTxs = JSON.parse(localStorage.getItem('thies_paytech_transactions') || '[]');
+        localTxs = JSON.parse(localStorage.getItem('thies_saspay_transactions') || localStorage.getItem('thies_paytech_transactions') || '[]');
     } catch (e) {
         localTxs = [];
     }
 
     // Async background sync with server
-    if (!window._paytechSyncInProgress) {
-        window._paytechSyncInProgress = true;
-        fetch('/api/paytech/transactions')
+    if (!window._saspaySyncInProgress) {
+        window._saspaySyncInProgress = true;
+        fetch('/api/saspay/transactions')
             .then(res => res.json())
             .then(data => {
-                window._paytechSyncInProgress = false;
+                window._saspaySyncInProgress = false;
                 if (data && data.success && Array.isArray(data.transactions)) {
+                    localStorage.setItem('thies_saspay_transactions', JSON.stringify(data.transactions));
                     localStorage.setItem('thies_paytech_transactions', JSON.stringify(data.transactions));
-                    if (adminActiveTab === 'accounting') {
-                        // Re-render if accounting tab is visible
+                    if (adminActiveTab === 'accounting' || adminActiveTab === 'console') {
                         renderAdminTabTable();
                     }
                 }
             })
             .catch(err => {
-                window._paytechSyncInProgress = false;
+                window._saspaySyncInProgress = false;
             });
     }
 
     return localTxs;
 };
 
+// Backwards compatibility alias
+window.getPaytechTransactionsList = window.getSaspayTransactionsList;
+
 // =========================================================================
-// OFFICIAL PAYMENT LOGOS & BRANDING (Wave, Orange Money, Free Money, Visa/Mastercard, PayDunya)
+// OFFICIAL PAYMENT LOGOS & BRANDING (SasPay, Wave, Orange Money, Free Money, Visa/Mastercard)
 // =========================================================================
 
 window.getPaymentLogoSVG = function(brand, size = 22) {
@@ -7140,10 +7215,10 @@ window.getPaymentLogoSVG = function(brand, size = 22) {
         `;
     }
 
-    // PayDunya / PayTech Gateway Logo (Grouping Wave, Orange Money, Free Money and Card)
-    if (b.includes('paydunya') || b.includes('paytech')) {
+    // SasPay / PayTech Gateway Logo (Grouping Wave, Orange Money, Free Money and Card)
+    if (b.includes('saspay') || b.includes('paytech') || b.includes('paydunya')) {
         return `
-            <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border);" title="Passerelle Sécurisée (Wave Sénégal &amp; Orange Money)">
+            <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border);" title="Passerelle SasPay Sécurisée (Wave Sénégal, Orange Money &amp; Cartes)">
                 <img src="/images/wave_senegal.png" alt="Wave" width="${Math.round(size * 0.85)}" height="${Math.round(size * 0.85)}" style="vertical-align: middle; border-radius: 3px; object-fit: contain;">
                 <img src="/images/orange_money_senegal.png" alt="Orange Money" width="${Math.round(size * 0.85)}" height="${Math.round(size * 0.85)}" style="vertical-align: middle; border-radius: 3px; object-fit: contain;">
             </span>
@@ -7155,10 +7230,10 @@ window.getPaymentLogoSVG = function(brand, size = 22) {
 };
 
 window.getPaymentBadgeHtml = function(channelName) {
-    const raw = (channelName || 'PayDunya').trim();
+    const raw = (channelName || 'SasPay').trim();
     const low = raw.toLowerCase();
 
-    if (low.includes('wave') && !low.includes('paydunya') && !low.includes('paytech')) {
+    if (low.includes('wave') && !low.includes('saspay') && !low.includes('paytech')) {
         return `
             <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(29, 195, 236, 0.1); color: #0284c7; padding: 3px 8px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(29, 195, 236, 0.25);">
                 ${window.getPaymentLogoSVG('wave', 18)}
@@ -7167,7 +7242,7 @@ window.getPaymentBadgeHtml = function(channelName) {
         `;
     }
 
-    if (low.includes('orange') && !low.includes('paydunya') && !low.includes('paytech')) {
+    if (low.includes('orange') && !low.includes('saspay') && !low.includes('paytech')) {
         return `
             <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(255, 121, 0, 0.1); color: #c2410c; padding: 3px 8px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(255, 121, 0, 0.25);">
                 ${window.getPaymentLogoSVG('orange', 18)}
@@ -7176,7 +7251,7 @@ window.getPaymentBadgeHtml = function(channelName) {
         `;
     }
 
-    if (low.includes('free') && !low.includes('paydunya') && !low.includes('paytech')) {
+    if (low.includes('free') && !low.includes('saspay') && !low.includes('paytech')) {
         return `
             <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(226, 27, 36, 0.1); color: #b91c1c; padding: 3px 8px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(226, 27, 36, 0.25);">
                 ${window.getPaymentLogoSVG('free', 18)}
@@ -7194,17 +7269,17 @@ window.getPaymentBadgeHtml = function(channelName) {
         `;
     }
 
-    // PayDunya default or combined
+    // SasPay default or combined
     return `
         <span style="display: inline-flex; align-items: center; gap: 6px; background: rgba(16, 185, 129, 0.08); color: #047857; padding: 3px 8px; border-radius: 8px; font-weight: 700; font-size: 0.8rem; border: 1px solid rgba(16, 185, 129, 0.25);">
-            ${window.getPaymentLogoSVG('paydunya', 16)}
-            <span style="font-weight: 700;">PayDunya</span>
+            ${window.getPaymentLogoSVG('saspay', 16)}
+            <span style="font-weight: 700;">SasPay</span>
         </span>
     `;
 };
 
-window.openRecordPaytechModal = function(defaultRestoId = '') {
-    const existingModal = document.getElementById('record-paytech-modal');
+window.openRecordSaspayModal = function(defaultRestoId = '') {
+    const existingModal = document.getElementById('record-saspay-modal') || document.getElementById('record-paytech-modal');
     if (existingModal) existingModal.remove();
 
     const restos = store.getRestaurants();
@@ -7213,7 +7288,7 @@ window.openRecordPaytechModal = function(defaultRestoId = '') {
     `).join('');
 
     const modal = document.createElement('div');
-    modal.id = 'record-paytech-modal';
+    modal.id = 'record-saspay-modal';
     modal.className = 'modal-backdrop';
     modal.style.position = 'fixed';
     modal.style.inset = '0';
@@ -7234,18 +7309,18 @@ window.openRecordPaytechModal = function(defaultRestoId = '') {
                     </div>
                     <div>
                         <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary); font-weight: 800;">Encaisser un Abonnement SaaS</h3>
-                        <p style="margin: 0.15rem 0 0 0; font-size: 0.78rem; color: var(--text-secondary);">Passerelle PayDunya &amp; Mobile Money (Wave, Orange, Free, Carte)</p>
+                        <p style="margin: 0.15rem 0 0 0; font-size: 0.78rem; color: var(--text-secondary);">Passerelle SasPay &amp; Mobile Money (Wave, Orange Money, Free Money, Carte)</p>
                     </div>
                 </div>
-                <button type="button" onclick="document.getElementById('record-paytech-modal').remove()" style="background: var(--bg-secondary); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; color: var(--text-secondary);">
+                <button type="button" onclick="document.getElementById('record-saspay-modal').remove()" style="background: var(--bg-secondary); border: 1px solid var(--border); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; cursor: pointer; color: var(--text-secondary);">
                     <i class='ri-close-line'></i>
                 </button>
             </div>
 
-            <form onsubmit="window.submitManualPaytechRecord(event)">
+            <form onsubmit="window.submitManualSaspayRecord(event)">
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Restaurant Bénéficiaire <span class="required" style="color:var(--danger);">*</span></label>
-                    <select id="modal-paytech-resto" class="form-control" required style="font-weight: 600; padding: 0.65rem 0.85rem;" onchange="window.updatePaytechModalAmount()">
+                    <select id="modal-saspay-resto" class="form-control" required style="font-weight: 600; padding: 0.65rem 0.85rem;" onchange="window.updateSaspayModalAmount()">
                         <option value="" disabled ${!defaultRestoId ? 'selected' : ''}>Sélectionnez un restaurant à Thiès...</option>
                         ${restoOptions}
                     </select>
@@ -7253,7 +7328,7 @@ window.openRecordPaytechModal = function(defaultRestoId = '') {
 
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Formule SaaS Souscrite <span class="required" style="color:var(--danger);">*</span></label>
-                    <select id="modal-paytech-pack" class="form-control" required style="font-weight: 600; padding: 0.65rem 0.85rem;" onchange="window.updatePaytechModalAmount()">
+                    <select id="modal-saspay-pack" class="form-control" required style="font-weight: 600; padding: 0.65rem 0.85rem;" onchange="window.updateSaspayModalAmount()">
                         <option value="Pack Standard">Pack Standard (9 000 FCFA / mois)</option>
                         <option value="Pack Entreprise">Pack Entreprise (15 000 FCFA / mois)</option>
                         <option value="Pack Annuel VIP">Pack Annuel VIP (100 000 FCFA / an)</option>
@@ -7262,14 +7337,14 @@ window.openRecordPaytechModal = function(defaultRestoId = '') {
 
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Montant Encaissé (FCFA) <span class="required" style="color:var(--danger);">*</span></label>
-                    <input type="number" id="modal-paytech-amount" class="form-control" value="9000" required min="1000" step="500" style="font-weight: 800; font-size: 1.1rem; color: #10b981; padding: 0.65rem 0.85rem;">
+                    <input type="number" id="modal-saspay-amount" class="form-control" value="9000" required min="1000" step="500" style="font-weight: 800; font-size: 1.1rem; color: #10b981; padding: 0.65rem 0.85rem;">
                 </div>
 
                 <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label class="form-label" style="font-weight: 700; font-size: 0.85rem; margin-bottom: 0.4rem; display: block;">Moyen / Passerelle de Paiement</label>
                     
-                    <select id="modal-paytech-channel" class="form-control" style="font-weight: 600; padding: 0.65rem 0.85rem; margin-bottom: 0.6rem;" onchange="window.updateModalPaymentChannelPreview()">
-                        <option value="PayDunya">Passerelle PayDunya (Wave, Orange Money, Free Money, Carte Visa / Mastercard)</option>
+                    <select id="modal-saspay-channel" class="form-control" style="font-weight: 600; padding: 0.65rem 0.85rem; margin-bottom: 0.6rem;" onchange="window.updateModalPaymentChannelPreview()">
+                        <option value="SasPay">Passerelle SasPay (Wave, Orange Money, Free Money, Carte Visa / Mastercard)</option>
                         <option value="Wave Sénégal">Wave Sénégal</option>
                         <option value="Orange Money">Orange Money Sénégal</option>
                         <option value="Free Money">Free Money</option>
@@ -7289,7 +7364,7 @@ window.openRecordPaytechModal = function(defaultRestoId = '') {
                 </div>
 
                 <div style="display: flex; gap: 0.75rem; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 1rem;">
-                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('record-paytech-modal').remove()" style="font-weight: 700; border-radius: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('record-saspay-modal').remove()" style="font-weight: 700; border-radius: 10px;">
                         Annuler
                     </button>
                     <button type="submit" class="btn btn-primary" style="font-weight: 800; border-radius: 10px; padding: 0.6rem 1.25rem; display: inline-flex; align-items: center; gap: 0.4rem;">
@@ -7301,26 +7376,28 @@ window.openRecordPaytechModal = function(defaultRestoId = '') {
     `;
 
     document.body.appendChild(modal);
-    window.updatePaytechModalAmount();
+    window.updateSaspayModalAmount();
     window.updateModalPaymentChannelPreview();
 };
 
+window.openRecordPaytechModal = window.openRecordSaspayModal;
+
 window.updateModalPaymentChannelPreview = function() {
-    const channelSelect = document.getElementById('modal-paytech-channel');
+    const channelSelect = document.getElementById('modal-saspay-channel') || document.getElementById('modal-paytech-channel');
     const container = document.getElementById('modal-payment-logos-container');
     if (!channelSelect || !container) return;
 
     const val = channelSelect.value.toLowerCase();
-    if (val.includes('wave') && !val.includes('paydunya')) {
+    if (val.includes('wave') && !val.includes('saspay') && !val.includes('paytech')) {
         container.innerHTML = `${window.getPaymentLogoSVG('wave', 24)}`;
-    } else if (val.includes('orange') && !val.includes('paydunya')) {
+    } else if (val.includes('orange') && !val.includes('saspay') && !val.includes('paytech')) {
         container.innerHTML = `${window.getPaymentLogoSVG('orange', 24)}`;
-    } else if (val.includes('free') && !val.includes('paydunya')) {
+    } else if (val.includes('free') && !val.includes('saspay') && !val.includes('paytech')) {
         container.innerHTML = `${window.getPaymentLogoSVG('free', 24)}`;
     } else if (val.includes('carte') || val.includes('visa')) {
         container.innerHTML = `${window.getPaymentLogoSVG('visa', 24)}`;
     } else {
-        // PayDunya full bundle
+        // SasPay full bundle
         container.innerHTML = `
             ${window.getPaymentLogoSVG('wave', 22)}
             ${window.getPaymentLogoSVG('orange', 22)}
@@ -7330,9 +7407,9 @@ window.updateModalPaymentChannelPreview = function() {
     }
 };
 
-window.updatePaytechModalAmount = function() {
-    const pack = document.getElementById('modal-paytech-pack');
-    const amountInput = document.getElementById('modal-paytech-amount');
+window.updateSaspayModalAmount = function() {
+    const pack = document.getElementById('modal-saspay-pack') || document.getElementById('modal-paytech-pack');
+    const amountInput = document.getElementById('modal-saspay-amount') || document.getElementById('modal-paytech-amount');
     if (!pack || !amountInput) return;
 
     if (pack.value === 'Pack Standard') amountInput.value = '9000';
@@ -7340,13 +7417,15 @@ window.updatePaytechModalAmount = function() {
     else if (pack.value === 'Pack Annuel VIP') amountInput.value = '100000';
 };
 
-window.submitManualPaytechRecord = async function(event) {
+window.updatePaytechModalAmount = window.updateSaspayModalAmount;
+
+window.submitManualSaspayRecord = async function(event) {
     if (event && event.preventDefault) event.preventDefault();
 
-    const restoId = document.getElementById('modal-paytech-resto').value;
-    const pack = document.getElementById('modal-paytech-pack').value;
-    const amount = Number(document.getElementById('modal-paytech-amount').value) || 9000;
-    const channel = document.getElementById('modal-paytech-channel').value;
+    const restoId = (document.getElementById('modal-saspay-resto') || document.getElementById('modal-paytech-resto')).value;
+    const pack = (document.getElementById('modal-saspay-pack') || document.getElementById('modal-paytech-pack')).value;
+    const amount = Number((document.getElementById('modal-saspay-amount') || document.getElementById('modal-paytech-amount')).value) || 9000;
+    const channel = (document.getElementById('modal-saspay-channel') || document.getElementById('modal-paytech-channel')).value;
 
     const resto = store.getRestaurantById(restoId);
     if (!resto) {
@@ -7366,20 +7445,21 @@ window.submitManualPaytechRecord = async function(event) {
     };
 
     try {
-        // Post to backend
-        await fetch('/api/paytech/record-subscription-success', {
+        // Post to backend SasPay endpoint (fallback to paytech route if needed)
+        await fetch('/api/saspay/record-subscription-success', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
 
         // Also update local list
-        let currentTxs = window.getPaytechTransactionsList();
+        let currentTxs = window.getSaspayTransactionsList();
         currentTxs.unshift({
             ...payload,
             date: new Date().toISOString(),
             status: 'PAID'
         });
+        localStorage.setItem('thies_saspay_transactions', JSON.stringify(currentTxs));
         localStorage.setItem('thies_paytech_transactions', JSON.stringify(currentTxs));
 
         // Update restaurant pack in store
@@ -7390,16 +7470,18 @@ window.submitManualPaytechRecord = async function(event) {
             status: 'active'
         });
 
-        showToast(` Paiement de ${amount.toLocaleString()} FCFA enregistré pour ${resto.name} !`, "success");
-        const modal = document.getElementById('record-paytech-modal');
+        showToast(` Paiement de ${amount.toLocaleString()} FCFA enregistré pour ${resto.name} via SasPay !`, "success");
+        const modal = document.getElementById('record-saspay-modal') || document.getElementById('record-paytech-modal');
         if (modal) modal.remove();
 
         renderAdminView();
     } catch (e) {
-        console.error("Error recording paytech payment:", e);
+        console.error("Error recording SasPay payment:", e);
         showToast("Erreur lors de l'enregistrement", "danger");
     }
 };
+
+window.submitManualPaytechRecord = window.submitManualSaspayRecord;
 
 // =========================================================================
 // EXPORTS : DONNÉES PURES UNIQUEMENT (CSV & PDF)
@@ -7458,9 +7540,9 @@ window.exportPlatformFinancialReportCSV = function() {
     showToast("Données financières exportées en CSV avec succès !", "success");
 };
 
-window.exportPaytechSubscriptionsCSV = function() {
-    const paytechTxs = window.getPaytechTransactionsList();
-    if (paytechTxs.length === 0) {
+window.exportSaspaySubscriptionsCSV = function() {
+    const saspayTxs = window.getSaspayTransactionsList ? window.getSaspayTransactionsList() : window.getPaytechTransactionsList();
+    if (saspayTxs.length === 0) {
         showToast("Aucune transaction à exporter", "warning");
         return;
     }
@@ -7468,13 +7550,13 @@ window.exportPaytechSubscriptionsCSV = function() {
     let csvContent = "\ufeff"; // BOM for Excel UTF-8
     csvContent += "Reference;Restaurant;Pack Souscrit;Montant (FCFA);Moyen de Paiement;Date;Statut\n";
 
-    paytechTxs.forEach(t => {
+    saspayTxs.forEach(t => {
         const row = [
             t.orderId || '',
             `"${(t.restaurantName || t.customerName || '').replace(/"/g, '""')}"`,
             `"${(t.itemName || 'Abonnement').replace(/"/g, '""')}"`,
             t.amount || 0,
-            `"${t.paymentMethod || 'PayDunya'}"`,
+            `"${t.paymentMethod || 'SasPay'}"`,
             t.date || '',
             t.status || 'PAID'
         ].join(';');
@@ -7485,12 +7567,14 @@ window.exportPaytechSubscriptionsCSV = function() {
     const encodedUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUrl);
-    link.setAttribute("download", `donnees_abonnements_thies_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute("download", `donnees_abonnements_saspay_thies_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast("Données des abonnements exportées en CSV !", "success");
+    showToast("Données des abonnements SasPay exportées en CSV !", "success");
 };
+
+window.exportPaytechSubscriptionsCSV = window.exportSaspaySubscriptionsCSV;
 
 // EXPORT PDF / IMPRESSION PURE DONNÉES (Sans capture d'écran, format tabulaire comptable propre)
 window.exportPlatformFinancialReportPDF = function() {
