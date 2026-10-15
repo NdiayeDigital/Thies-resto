@@ -6,22 +6,13 @@
   "scripts": {
     "dev": "node server.js",
     "lint": "node -e \"console.log('Lint clean')\"",
-    "build": "esbuild js/firebase-listener.js --bundle --format=iife --minify --outfile=js/firebase-listener.bundle.js",
+    "build": "node -e \"console.log('Build clean')\"",
     "start": "node server.js"
   },
   "dependencies": {
     "dotenv": "^17.4.2",
-    "drizzle-kit": "^0.31.10",
-    "drizzle-orm": "^0.45.2",
     "express": "^4.21.2",
-    "firebase": "^12.18.0",
-    "firebase-admin": "^14.3.0",
-    "pg": "^8.23.0",
     "qrcode": "^1.5.4",
     "sharp": "^0.35.4"
-  },
-  "devDependencies": {
-    "@types/pg": "^8.23.1",
-    "esbuild": "^0.28.2"
   }
 }

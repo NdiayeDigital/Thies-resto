@@ -6619,10 +6619,6 @@ window.checkUntreatedOrdersFor10MinAlert = function() {
                         }
                     }
 
-                    // 2. Notification Push OneSignal si configuré
-                    if (typeof OneSignalManager !== 'undefined' && OneSignalManager.sendUnprocessedOrderNotification) {
-                        OneSignalManager.sendUnprocessedOrderNotification(order, restoName);
-                    }
 
                     // 3. Alarme sonore d'urgence
                     window.playUrgentReminderSound();

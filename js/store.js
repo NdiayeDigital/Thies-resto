@@ -1542,12 +1542,8 @@ class Store {
                 }
             } catch (e) {}
 
-            // Déclencher la notification Push vers le client
             const resto = this.getRestaurantById(order.restaurantId);
             const restoName = resto ? resto.name : (order.restaurantName || '');
-            if (typeof OneSignalManager !== 'undefined' && OneSignalManager.sendOrderStatusPushNotification) {
-                OneSignalManager.sendOrderStatusPushNotification(order, status, restoName);
-            }
 
             if (supabaseClient && isSuperAdminSession) {
                 // Super Admin utilise la RPC admin sécurisée
@@ -1788,9 +1784,6 @@ class Store {
                     p_phone: phone
                 });
                 if (!error && data) {
-                    if (typeof OneSignalManager !== 'undefined' && OneSignalManager.sendOtpNotification) {
-                        OneSignalManager.sendOtpNotification(phone, data);
-                    }
                     return { success: true, isDemoMode: false, code: data };
                 }
             } catch (err) {

@@ -637,10 +637,6 @@ window.executePendingOrder = async function() {
         
         if (typeof triggerCelebration === 'function') triggerCelebration();
         
-        // Notification OneSignal
-        if (typeof OneSignalManager !== 'undefined' && OneSignalManager.requestPermission) {
-            OneSignalManager.requestPermission();
-        }
 
         // 2. Génération du lien WhatsApp sécurisé et officiel
         let itemsText = (order.items || []).map(i => `${i.qty}x ${i.name}`).join(', ');

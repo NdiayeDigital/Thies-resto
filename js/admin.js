@@ -236,13 +236,40 @@ function renderDashboardShell() {
     const _diffTime = Math.abs(new Date() - _createdAt);
     const _diffDays = Math.ceil(_diffTime / (1000 * 60 * 60 * 24));
     const _packSubscribed = r.subscriptionPack || 'Essai 7 Jours (Gratuit)';
-    const isPaidPack = (_packSubscribed && !_packSubscribed.includes('Gratuit') && !_packSubscribed.includes('Essai') && !_packSubscribed.includes('Aucun')) || r.hasPaidSubscription || r.status === 'active';
-    const isTrialExpired = _diffDays > 7 && !isPaidPack && !isSuperAdminSession && r.status === 'suspended';
+    const isPendingActivation = r.status === 'pending_activation' || r.subscriptionStatus === 'pending_activation';
+    const isPaidPack = (_packSubscribed && !_packSubscribed.includes('Gratuit') && !_packSubscribed.includes('Essai') && !_packSubscribed.includes('Aucun')) || r.hasPaidSubscription || (r.status === 'active' && !isPendingActivation);
+    const isTrialExpired = _diffDays > 7 && !isPaidPack && !isSuperAdminSession && (r.status === 'suspended' || isPendingActivation);
     const daysLeftTrial = Math.max(0, 7 - _diffDays);
 
-    // Alert banner for expired trials or active trial countdown
+    // Alert banner for pending activation, expired trials or active trial countdown
     let trialAlertBanner = '';
-    if (isTrialExpired) {
+    if (isPendingActivation) {
+        trialAlertBanner = `
+            <div style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.1), rgba(16, 185, 129, 0.1)); border: 1.5px solid #0284c7; color: var(--text-primary); padding: 1.15rem 1.35rem; border-radius: 16px; margin: 1rem auto 0 auto; max-width: 1200px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.15);">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(2, 132, 199, 0.15); color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; flex-shrink: 0;">
+                        <i class='ri-time-line'></i>
+                    </div>
+                    <div>
+                        <strong style="font-size: 1.05rem; display: block; color: #0284c7; margin-bottom: 0.2rem;">
+                            ⏳ Règlement soumis — En attente de réactivation par l'administrateur
+                        </strong>
+                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.45;">
+                            Votre paiement d'abonnement (${r.subscriptionPack || 'Abonnement'} - ${(r.subscriptionPendingAmount || 4900).toLocaleString('fr-FR')} FCFA) a bien été transmis. <strong>Veuillez patienter pendant que l'administrateur Thiès Resto vérifie votre paiement et réactive votre compte.</strong>
+                        </p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;">
+                    <span class="badge" style="background: #0284c7; color: white; padding: 0.45rem 0.85rem; border-radius: 20px; font-weight: 700; font-size: 0.8rem;">
+                        <i class='ri-loader-4-line ri-spin'></i> Vérification en cours
+                    </span>
+                    <a href="https://wa.me/221776064596?text=${encodeURIComponent('Bonjour Thiès Resto, je viens d\'effectuer le règlement de mon abonnement pour ' + (r.name || '') + '. Pouvez-vous réactiver mon compte ?')}" target="_blank" class="btn btn-sm" style="background: #25D366; color: white; font-weight: 700; border: none; border-radius: 10px; padding: 0.5rem 0.85rem; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;">
+                        <i class='ri-whatsapp-line'></i> Signaler par WhatsApp
+                    </a>
+                </div>
+            </div>
+        `;
+    } else if (isTrialExpired) {
         trialAlertBanner = `
             <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); color: var(--text-primary); padding: 1rem 1.25rem; border-radius: 14px; margin: 1rem auto 0 auto; max-width: 1200px; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -279,9 +306,11 @@ function renderDashboardShell() {
     }
 
     const isSuspended = r.status === 'suspended';
-    const statusBadgeHtml = isSuspended
-        ? `<span class="badge" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 800; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; display: inline-flex; align-items: center; gap: 0.25rem;"><i class='ri-lock-2-line'></i> SUSPENDU</span>`
-        : `<span class="badge ${r.isOpenManual ? 'badge-success' : 'badge-danger'}" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 700;">${r.isOpenManual ? 'OUVERT' : 'FERMÉ'}</span>`;
+    const statusBadgeHtml = isPendingActivation
+        ? `<span class="badge" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 800; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; display: inline-flex; align-items: center; gap: 0.25rem;"><i class='ri-time-line'></i> EN ATTENTE RÉACTIVATION</span>`
+        : (isSuspended
+            ? `<span class="badge" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 800; background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; display: inline-flex; align-items: center; gap: 0.25rem;"><i class='ri-lock-2-line'></i> SUSPENDU</span>`
+            : `<span class="badge ${r.isOpenManual ? 'badge-success' : 'badge-danger'}" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; border-radius: 6px; font-weight: 700;">${r.isOpenManual ? 'OUVERT' : 'FERMÉ'}</span>`);
 
     let suspendedAlertBanner = '';
     if (isSuspended) {
@@ -500,11 +529,31 @@ function renderDashboardTabContent(r) {
     const _dt = Math.abs(new Date() - _cr);
     const _dd = Math.ceil(_dt / (1000 * 60 * 60 * 24));
     const _pk = r.subscriptionPack || 'Essai 7 Jours (Gratuit)';
-    const isPaid = (_pk && !_pk.includes('Gratuit') && !_pk.includes('Essai') && !_pk.includes('Aucun')) || r.hasPaidSubscription || r.status === 'active';
+    const isPendingAct = r.status === 'pending_activation' || r.subscriptionStatus === 'pending_activation';
+    const isPaid = (_pk && !_pk.includes('Gratuit') && !_pk.includes('Essai') && !_pk.includes('Aucun')) || r.hasPaidSubscription || (r.status === 'active' && !isPendingAct);
     const trialExpired = _dd > 7 && !isPaid && !isSuperAdminSession;
     
-    // Only lock management tabs if trial is explicitly expired and restaurant is not active
+    // Only lock management tabs if trial is explicitly expired or pending activation
     const lockedTabs = ['menu', 'accounting'];
+    if (isPendingAct && lockedTabs.includes(dashboardActiveTab)) {
+        panel.innerHTML = `
+            <div style="text-align: center; padding: 3.5rem 2rem; background: var(--bg-card); border: 1.5px solid #0284c7; border-radius: 20px; max-width: 680px; margin: 1.5rem auto; box-shadow: 0 10px 25px rgba(2, 132, 199, 0.1);">
+                <div style="font-size: 3.5rem; margin-bottom: 1.25rem; color: #0284c7;"><i class='ri-time-line'></i></div>
+                <h2 style="color: var(--text-primary); font-size: 1.7rem; margin-bottom: 0.75rem; font-weight: 800;">Règlement Reçu — En Attente de Réactivation</h2>
+                <p style="color: var(--text-secondary); font-size: 0.95rem; max-width: 520px; margin: 0 auto 1.5rem auto; line-height: 1.6;">Votre règlement d'abonnement a bien été soumis. <strong>Veuillez patienter</strong> pendant que l'administrateur Thiès Resto vérifie la transaction et réactive l'accès complet à votre compte.</p>
+                <div style="background: rgba(2, 132, 199, 0.08); border: 1px solid rgba(2, 132, 199, 0.25); padding: 1rem; border-radius: 12px; margin-bottom: 2rem;">
+                    <p style="color: #0284c7; font-weight: 700; margin: 0; font-size: 0.88rem;"><i class='ri-loader-4-line ri-spin'></i> Validation administrative en cours.</p>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; max-width: 380px; margin: 0 auto;">
+                    <a href="https://wa.me/221776064596?text=${encodeURIComponent('Bonjour Thiès Resto, je viens de payer mon abonnement pour ' + (r.name || '') + '. Pouvez-vous réactiver mon compte ?')}" target="_blank" class="btn btn-success" style="font-weight: 700; background: #25D366; border-color: #25D366; display: flex; align-items: center; justify-content: center; gap: 0.5rem; text-decoration: none; padding: 0.65rem; border-radius: 12px;">
+                        <i class='ri-whatsapp-line'></i> Signaler par WhatsApp
+                    </a>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
     if (trialExpired && lockedTabs.includes(dashboardActiveTab)) {
         const adminWhatsApp = '221776064596';
         const reactivateMsg = encodeURIComponent(`Bonjour Thiès Resto \n\nMa période d'essai gratuit de 7 jours est terminée et je souhaite réactiver mon restaurant.\n\n<i class="store-2-line"></i> Restaurant : ${r.name}\n🆔 Identifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
@@ -2622,188 +2671,150 @@ function renderDashboardTabContent(r) {
 
                         <div style="text-align: center; margin-bottom: 2rem;">
                             <h3 style="margin-bottom: 0.35rem; color: var(--text-primary); font-size: 1.35rem; font-weight: 800;">Choisissez Votre Formule d'Abonnement</h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.92rem;">Activation immédiate après validation du règlement Wave ou Orange Money.</p>
+                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.92rem;">Règlement sécurisé 100% Sénégalais par <strong>Wave</strong> et <strong>Orange Money</strong> via <strong>SasPay</strong>. Réactivation de votre compte par l'administrateur après paiement.</p>
                         </div>
                         
-                        <!-- Pricing Grid -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-                            <!-- 1. Pack Standard -->
-                            <div style="border: 2px solid var(--border); border-radius: 18px; padding: 1.75rem 1.5rem; display: flex; flex-direction: column; transition: transform 0.3s ease; background: var(--bg-secondary);">
+                        <!-- Pricing Grid: 2 Formules Officielles -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem; margin-bottom: 2rem;">
+                            <!-- 1. Formule Mensuelle (4 900 FCFA / mois) -->
+                            <div style="border: 2px solid var(--border); border-radius: 20px; padding: 1.85rem 1.6rem; display: flex; flex-direction: column; transition: transform 0.3s ease; background: var(--bg-secondary); position: relative;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <h4 style="margin: 0; font-size: 1.3rem; color: var(--text-primary);">Pack Standard</h4>
-                                    <span class="badge" style="background: rgba(148,163,184,0.15); color: var(--text-primary); font-size: 0.75rem;">Essentiel</span>
+                                    <h4 style="margin: 0; font-size: 1.35rem; color: var(--text-primary); font-weight: 800;">Abonnement Mensuel</h4>
+                                    <span class="badge" style="background: rgba(2,132,199,0.15); color: #0284c7; font-size: 0.75rem; font-weight: 700;">Formule Mensuelle</span>
                                 </div>
-                                <div style="font-size: 1.85rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">9 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
-                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">L'autonomie complète pour exister en ligne et recevoir des commandes.</p>
+                                <div style="font-size: 2.1rem; font-weight: 900; color: #0284c7; margin-bottom: 0.5rem;">
+                                    4 900 <span style="font-size: 1.05rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span>
+                                </div>
+                                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">L'accès complet et sans engagement pour diffuser votre menu en ligne et recevoir des commandes en direct.</p>
                                 
-                                <!-- Acceptation Mobile Money Sénégal -->
-                                <div style="background: rgba(0,0,0,0.03); border: 1px dashed var(--border); border-radius: 10px; padding: 0.45rem 0.75rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
-                                    <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-secondary);">Règlement par :</span>
+                                <!-- Moyen de règlement SasPay Wave & OM -->
+                                <div style="background: rgba(0,0,0,0.03); border: 1px dashed var(--border); border-radius: 12px; padding: 0.6rem 0.85rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">Règlement SasPay :</span>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700; color: #0284c7;">
-                                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 17px; height: 17px; border-radius: 4px; object-fit: contain;"> Wave
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 700; color: #0284c7;">
+                                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 18px; height: 18px; border-radius: 4px; object-fit: contain;"> Wave
                                         </span>
                                         <span style="color: var(--border);">|</span>
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700; color: #ea580c;">
-                                            <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 17px; height: 17px; border-radius: 4px; object-fit: contain;"> OM
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 700; color: #ea580c;">
+                                            <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 18px; height: 18px; border-radius: 4px; object-fit: contain;"> Orange Money
                                         </span>
                                     </div>
                                 </div>
 
-                                <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6;">
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-checkbox-circle-line'></i> <strong>Menu digital complet & illimité</strong> 24/7</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-checkbox-circle-line'></i> Réception illimitée de commandes & WhatsApp</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-checkbox-circle-line'></i> Tableau de bord de gestion & réservations</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-checkbox-circle-line'></i> QR Code de table HD pour vos clients</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-checkbox-circle-line'></i> Historique des ventes & Suivi comptable</li>
+                                <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65;">
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Menu digital complet & illimité</strong> 24h/24</li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>0% de commission</strong> sur l'ensemble de vos commandes</li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Réception directe WhatsApp</strong> et appel téléphonique</li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>QR Code de table HD</strong> pour votre salle</li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Tableau de bord de gestion</strong>, réservations & avis</li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Historique des ventes</strong> & export comptable des clients</li>
                                 </ul>
 
-                                <div style="display: flex; flex-direction: column; gap: 0.55rem; margin-top: auto;">
-                                    <!-- Bouton Principal avec Vrais Logos Wave & Orange Money -->
-                                    <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Standard', 9000)" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: 800; font-size: 0.92rem; background: linear-gradient(135deg, #0284c7, #2563eb); border: none; padding: 0.8rem 1rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(37,99,235,0.25);">
+                                <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: auto;">
+                                    <!-- Bouton Principal SasPay Mensuel -->
+                                    <button onclick="window.payRestaurantSubscription('${r.id}', 'monthly')" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: 800; font-size: 0.95rem; background: linear-gradient(135deg, #0284c7, #2563eb); border: none; padding: 0.85rem 1rem; border-radius: 12px; box-shadow: 0 4px 14px rgba(37,99,235,0.3); cursor: pointer;">
                                         <span style="display: inline-flex; align-items: center; gap: 4px;">
                                             <img src="/images/wave_senegal.png" alt="Wave" style="width: 20px; height: 20px; border-radius: 4px; background: white; padding: 1px;">
                                             <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 20px; height: 20px; border-radius: 4px; background: white; padding: 1px;">
                                         </span>
-                                        <span>Payer 9 000 F (Wave / Orange Money)</span>
+                                        <span>Payer 4 900 F avec SasPay</span>
                                     </button>
 
-                                    <!-- Actions Directes Wave & Orange Money -->
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
-                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Standard', 9000, 'wave')" class="btn btn-sm" style="background: #E0F7FE; border: 1px solid #00B4D8; color: #0077B6; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
-                                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 15px; height: 15px; border-radius: 3px;">
-                                            <span>Wave</span>
-                                        </button>
-                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Standard', 9000, 'orange')" class="btn btn-sm" style="background: #FFF4EB; border: 1px solid #FF7900; color: #D46000; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
-                                            <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 15px; height: 15px; border-radius: 3px;">
-                                            <span>Orange Money</span>
-                                        </button>
-                                    </div>
-
-                                    <a href="${buildWhatsAppLink('Pack Standard', '9 000')}" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; font-weight: 600; font-size: 0.8rem; padding: 0.5rem; border-radius: 8px;">
-                                        <span><i class='ri-chat-1-line'></i></span> Demander par WhatsApp
+                                    <!-- Lien direct SasPay externe -->
+                                    <a href="https://link.saspay.me/vc0xfajjata" target="_blank" onclick="window.notifySaspayPaymentAttempt('${r.id}', 'Abonnement Mensuel (4 900 FCFA/mois)', 4900)" class="btn btn-sm" style="background: #E0F7FE; border: 1.5px solid #00B4D8; color: #0077B6; font-weight: 700; font-size: 0.82rem; padding: 0.5rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none;">
+                                        <i class='ri-external-link-line'></i> Ouvrir le lien direct SasPay (4 900 F)
                                     </a>
+
+                                    <div style="font-size: 0.76rem; color: var(--text-secondary); text-align: center; margin-top: 0.2rem;">
+                                        <i class='ri-information-line'></i> Après paiement, l'admin réactivera votre compte.
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- 2. Pack Entreprise -->
-                            <div style="border: 2px solid var(--primary); border-radius: 18px; padding: 1.75rem 1.5rem; display: flex; flex-direction: column; position: relative; background: rgba(var(--primary-rgb), 0.03); box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.1);">
-                                <div style="position: absolute; top: -12px; right: 20px; background: var(--primary); color: white; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;"><i class='ri-star-fill'></i> Recommandé</div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <h4 style="margin: 0; font-size: 1.3rem; color: var(--text-primary);">Pack Entreprise</h4>
-                                    <span class="badge" style="background: rgba(242,107,33,0.15); color: var(--primary); font-size: 0.75rem;">Visibilité & Accompagnement</span>
+                            <!-- 2. Formule Annuelle (39 900 FCFA / an) - Recommandé -->
+                            <div style="border: 2.5px solid #10b981; border-radius: 20px; padding: 1.85rem 1.6rem; display: flex; flex-direction: column; background: rgba(16, 185, 129, 0.03); position: relative; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.12);">
+                                <div style="position: absolute; top: -14px; right: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.25rem 0.95rem; border-radius: 20px; font-size: 0.78rem; font-weight: 800; box-shadow: 0 4px 10px rgba(16,185,129,0.35);">
+                                    <i class='ri-star-fill'></i> MEILLEURE OFFRE (~4 MOIS OFFERTS)
                                 </div>
-                                <div style="font-size: 1.85rem; font-weight: 800; color: var(--primary); margin-bottom: 0.5rem;">15 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span></div>
-                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">Accélération des ventes avec promotion réseaux sociaux et accompagnement.</p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                    <h4 style="margin: 0; font-size: 1.35rem; color: var(--text-primary); font-weight: 800;">Abonnement Annuel</h4>
+                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #059669; font-size: 0.75rem; font-weight: 700;">12 Mois</span>
+                                </div>
+                                <div style="font-size: 2.1rem; font-weight: 900; color: #059669; margin-bottom: 0.25rem;">
+                                    39 900 <span style="font-size: 1.05rem; color: var(--text-secondary); font-weight: 600;">FCFA / an</span>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #16a34a; font-weight: 700; margin-bottom: 0.85rem;">
+                                    <span style="text-decoration: line-through; opacity: 0.65; color: var(--text-secondary);">58 800 F</span> • Économisez 18 900 FCFA (soit 3 325 F/mois)
+                                </div>
+                                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">Tranquillité absolue pendant 1 an. Visibilité maximale avec tous les avantages inclus sans souci de renouvellement mensuel.</p>
                                 
-                                <!-- Acceptation Mobile Money Sénégal -->
-                                <div style="background: rgba(0,0,0,0.03); border: 1px dashed var(--border); border-radius: 10px; padding: 0.45rem 0.75rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
-                                    <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-secondary);">Règlement par :</span>
+                                <!-- Moyen de règlement SasPay Wave & OM -->
+                                <div style="background: rgba(0,0,0,0.03); border: 1px dashed var(--border); border-radius: 12px; padding: 0.6rem 0.85rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
+                                    <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">Règlement SasPay :</span>
                                     <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700; color: #0284c7;">
-                                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 17px; height: 17px; border-radius: 4px; object-fit: contain;"> Wave
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 700; color: #0284c7;">
+                                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 18px; height: 18px; border-radius: 4px; object-fit: contain;"> Wave
                                         </span>
                                         <span style="color: var(--border);">|</span>
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700; color: #ea580c;">
-                                            <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 17px; height: 17px; border-radius: 4px; object-fit: contain;"> OM
+                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 700; color: #ea580c;">
+                                            <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 18px; height: 18px; border-radius: 4px; object-fit: contain;"> Orange Money
                                         </span>
                                     </div>
                                 </div>
 
-                                <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-primary); font-size: 0.92rem; line-height: 1.6; font-weight: 500;">
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-checkbox-circle-line'></i> <strong>Tout du Pack Standard inclus</strong></li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-notification-3-line'></i> <strong>Publicités & visibilité</strong> sur les réseaux Thiès Resto</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-rocket-line'></i> <strong>Apparition prioritaire</strong> dans le catalogue</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-group-line'></i> <strong>Accompagnement mensuel dédié</strong> de l'équipe</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-bar-chart-2-line'></i> <strong>Rapport mensuel détaillé</strong> d'activité & ventes</li>
+                                <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-primary); font-size: 0.92rem; line-height: 1.65; font-weight: 500;">
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Tout du Pack Mensuel inclus pendant 1 an complet</strong></li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-gift-fill' style="color: #10b981;"></i> <strong>~4 mois offerts</strong> par rapport au tarif mensuel</li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-vip-crown-fill' style="color: #f59e0b;"></i> <strong>Badge Partenaire Annuel Privilège</strong> dans le catalogue</li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-rocket-fill' style="color: #10b981;"></i> <strong>Apparition prioritaire</strong> en tête de liste à Thiès</li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-customer-service-2-fill' style="color: #10b981;"></i> <strong>Support technique & commercial 7j/7 dédié</strong></li>
+                                    <li style="margin-bottom: 0.55rem;"><i class='ri-camera-fill' style="color: #10b981;"></i> <strong>Assistance à la mise à jour</strong> et valorisation du menu</li>
                                 </ul>
 
-                                <div style="display: flex; flex-direction: column; gap: 0.55rem; margin-top: auto;">
-                                    <!-- Bouton Principal avec Vrais Logos Wave & Orange Money -->
-                                    <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Entreprise', 15000)" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: 800; font-size: 0.92rem; background: linear-gradient(135deg, #0284c7, #2563eb); border: none; box-shadow: 0 4px 14px rgba(37,99,235,0.3); padding: 0.8rem 1rem; border-radius: 12px;">
+                                <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: auto;">
+                                    <!-- Bouton Principal SasPay Annuel -->
+                                    <button onclick="window.payRestaurantSubscription('${r.id}', 'yearly')" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: 800; font-size: 0.95rem; background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 4px 14px rgba(16,185,129,0.35); padding: 0.85rem 1rem; border-radius: 12px; cursor: pointer;">
                                         <span style="display: inline-flex; align-items: center; gap: 4px;">
                                             <img src="/images/wave_senegal.png" alt="Wave" style="width: 20px; height: 20px; border-radius: 4px; background: white; padding: 1px;">
                                             <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 20px; height: 20px; border-radius: 4px; background: white; padding: 1px;">
                                         </span>
-                                        <span>Payer 15 000 F (Wave / Orange Money)</span>
+                                        <span>Payer 39 900 F avec SasPay</span>
                                     </button>
 
-                                    <!-- Actions Directes Wave & Orange Money -->
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
-                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Entreprise', 15000, 'wave')" class="btn btn-sm" style="background: #E0F7FE; border: 1px solid #00B4D8; color: #0077B6; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
-                                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 15px; height: 15px; border-radius: 3px;">
-                                            <span>Wave</span>
-                                        </button>
-                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Entreprise', 15000, 'orange')" class="btn btn-sm" style="background: #FFF4EB; border: 1px solid #FF7900; color: #D46000; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
-                                            <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 15px; height: 15px; border-radius: 3px;">
-                                            <span>Orange Money</span>
-                                        </button>
-                                    </div>
-
-                                    <a href="${buildWhatsAppLink('Pack Entreprise', '15 000')}" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; font-weight: 600; font-size: 0.8rem; padding: 0.5rem; border-radius: 8px;">
-                                        <span><i class='ri-chat-1-line'></i></span> Demander par WhatsApp
+                                    <!-- Lien direct SasPay externe -->
+                                    <a href="https://link.saspay.me/_rditpvthnw" target="_blank" onclick="window.notifySaspayPaymentAttempt('${r.id}', 'Abonnement Annuel (39 900 FCFA/an)', 39900)" class="btn btn-sm" style="background: #ECFDF5; border: 1.5px solid #10B981; color: #047857; font-weight: 700; font-size: 0.82rem; padding: 0.5rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none;">
+                                        <i class='ri-external-link-line'></i> Ouvrir le lien direct SasPay (39 900 F)
                                     </a>
+
+                                    <div style="font-size: 0.76rem; color: var(--text-secondary); text-align: center; margin-top: 0.2rem;">
+                                        <i class='ri-information-line'></i> Après paiement, l'admin réactivera votre compte.
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- 3. Pack Annuel VIP -->
-                            <div style="border: 2px solid #8b5cf6; border-radius: 18px; padding: 1.75rem 1.5rem; display: flex; flex-direction: column; background: rgba(139, 92, 246, 0.04); position: relative; box-shadow: 0 10px 25px rgba(139, 92, 246, 0.08);">
-                                <div style="position: absolute; top: -12px; right: 20px; background: #8b5cf6; color: white; padding: 0.2rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 700;"><i class='ri-vip-crown-line'></i> Offre VIP (2 Mois Offerts)</div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <h4 style="margin: 0; font-size: 1.3rem; color: var(--text-primary);">Pack Annuel VIP</h4>
-                                    <span class="badge" style="background: rgba(139, 92, 246, 0.15); color: #8b5cf6; font-size: 0.75rem;">12 Mois</span>
+                        <!-- Bannière d'instruction explicite Post-Paiement -->
+                        <div style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(16, 185, 129, 0.08)); border: 1.5px solid #0284c7; border-radius: 18px; padding: 1.35rem 1.6rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(2, 132, 199, 0.15); color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0;">
+                                    <i class='ri-time-line'></i>
                                 </div>
-                                <div style="font-size: 1.85rem; font-weight: 800; color: #8b5cf6; margin-bottom: 0.5rem;">100 000 <span style="font-size: 1rem; color: var(--text-secondary); font-weight: 600;">FCFA / an</span></div>
-                                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;"><span style="text-decoration: line-through; opacity: 0.6;">180 000 F</span> • Économisez 80 000 FCFA et profitez du service tout-inclus.</p>
-                                
-                                <!-- Acceptation Mobile Money Sénégal -->
-                                <div style="background: rgba(0,0,0,0.03); border: 1px dashed var(--border); border-radius: 10px; padding: 0.45rem 0.75rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
-                                    <span style="font-size: 0.76rem; font-weight: 700; color: var(--text-secondary);">Règlement par :</span>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700; color: #0284c7;">
-                                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 17px; height: 17px; border-radius: 4px; object-fit: contain;"> Wave
-                                        </span>
-                                        <span style="color: var(--border);">|</span>
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.75rem; font-weight: 700; color: #ea580c;">
-                                            <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 17px; height: 17px; border-radius: 4px; object-fit: contain;"> OM
-                                        </span>
-                                    </div>
+                                <div>
+                                    <strong style="color: #0369a1; font-size: 1rem; display: block; margin-bottom: 0.2rem;">
+                                        Validation et réactivation de votre compte :
+                                    </strong>
+                                    <p style="margin: 0; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.45;">
+                                        Après avoir effectué votre paiement sur <strong>SasPay</strong> (4 900 FCFA mensuel ou 39 900 FCFA annuel), <strong>veuillez patienter</strong> : l'administrateur Thiès Resto vérifie la transaction et réactive immédiatement l'accès complet à votre établissement.
+                                    </p>
                                 </div>
-
-                                <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6;">
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-checkbox-circle-line'></i> <strong>Tout du Pack Entreprise pendant 1 an</strong></li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-camera-line'></i> <strong>Shooting photo & valorisation pro</strong> de vos plats</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-trophy-line'></i> <strong>Badge "Partenaire d'Honneur VIP"</strong> en tête de liste</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-gift-line'></i> <strong>Bonus exclusifs</strong> : Campagnes sponsorisées dédiées</li>
-                                    <li style="margin-bottom: 0.5rem;"><i class='ri-flashlight-line'></i> <strong>Support technique & commercial 7j/7 dédié</strong></li>
-                                </ul>
-
-                                <div style="display: flex; flex-direction: column; gap: 0.55rem; margin-top: auto;">
-                                    <!-- Bouton Principal avec Vrais Logos Wave & Orange Money -->
-                                    <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Annuel VIP', 100000)" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: 800; font-size: 0.92rem; background: linear-gradient(135deg, #7c3aed, #6d28d9); border: none; box-shadow: 0 4px 14px rgba(124,58,237,0.3); padding: 0.8rem 1rem; border-radius: 12px;">
-                                        <span style="display: inline-flex; align-items: center; gap: 4px;">
-                                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 20px; height: 20px; border-radius: 4px; background: white; padding: 1px;">
-                                            <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 20px; height: 20px; border-radius: 4px; background: white; padding: 1px;">
-                                        </span>
-                                        <span>Payer 100 000 F (Wave / Orange Money)</span>
-                                    </button>
-
-                                    <!-- Actions Directes Wave & Orange Money -->
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
-                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Annuel VIP', 100000, 'wave')" class="btn btn-sm" style="background: #E0F7FE; border: 1px solid #00B4D8; color: #0077B6; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
-                                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 15px; height: 15px; border-radius: 3px;">
-                                            <span>Wave</span>
-                                        </button>
-                                        <button onclick="window.openSubscriptionPaymentModal('${r.id}', 'Pack Annuel VIP', 100000, 'orange')" class="btn btn-sm" style="background: #FFF4EB; border: 1px solid #FF7900; color: #D46000; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;">
-                                            <img src="/images/orange_money_senegal.png" alt="Orange Money" style="width: 15px; height: 15px; border-radius: 3px;">
-                                            <span>Orange Money</span>
-                                        </button>
-                                    </div>
-
-                                    <a href="${buildWhatsAppLink('Pack Annuel VIP', '100 000', 'an')}" target="_blank" class="btn btn-outline btn-sm" style="width: 100%; border-color: #8b5cf6; color: #8b5cf6; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; font-weight: 600; font-size: 0.8rem; padding: 0.5rem; border-radius: 8px;">
-                                        <span><i class='ri-chat-1-line'></i></span> Demander par WhatsApp
-                                    </a>
-                                </div>
+                            </div>
+                            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                                <button type="button" onclick="window.confirmSubscriptionPayment('${r.id}', 'Abonnement Mensuel', 4900, 'SasPay')" class="btn btn-sm" style="background: #0284c7; color: white; border: none; font-weight: 700; border-radius: 8px; padding: 0.5rem 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
+                                    <i class='ri-checkbox-circle-line'></i> J'ai déjà payé (4 900 F)
+                                </button>
+                                <button type="button" onclick="window.confirmSubscriptionPayment('${r.id}', 'Abonnement Annuel', 39900, 'SasPay')" class="btn btn-sm" style="background: #10b981; color: white; border: none; font-weight: 700; border-radius: 8px; padding: 0.5rem 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
+                                    <i class='ri-checkbox-circle-line'></i> J'ai déjà payé (39 900 F)
+                                </button>
                             </div>
                         </div>
 
@@ -2813,14 +2824,14 @@ function renderDashboardTabContent(r) {
                                 <i class='ri-shield-check-fill' style="color: #10b981; font-size: 2.2rem; flex-shrink: 0;"></i>
                                 <div>
                                     <div style="font-weight: 800; font-size: 0.98rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-                                        <span>Paiement Sécurisé & Activation Instantanée</span>
+                                        <span>Paiement Sécurisé & Passerelle SasPay</span>
                                         <div style="display: inline-flex; align-items: center; gap: 6px;">
                                             <img src="/images/wave_senegal.png" alt="Wave Sénégal" style="width: 22px; height: 22px; border-radius: 5px; object-fit: contain;" title="Wave Sénégal">
                                             <img src="/images/orange_money_senegal.png" alt="Orange Money Sénégal" style="width: 22px; height: 22px; border-radius: 5px; object-fit: contain;" title="Orange Money Sénégal">
                                         </div>
                                     </div>
                                     <div style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.4;">
-                                        Transactions officielles certifiées par <strong>Wave Sénégal</strong> et <strong>Orange Money Sénégal</strong> via passerelle SasPay. Facture & quitus d'abonnement immédiats.
+                                        Liens officiels SasPay certifiés par <strong>Wave Sénégal</strong> et <strong>Orange Money Sénégal</strong>. Quitus d'abonnement et historique comptable disponibles dans votre espace gérant.
                                     </div>
                                 </div>
                             </div>
@@ -2836,8 +2847,132 @@ function renderDashboardTabContent(r) {
     }
 }
 
+// ============================================================================
+// SASPAY SUBSCRIPTION LINKS & PAYMENT GATEWAY HANDLERS
+// ============================================================================
+window.SASPAY_SUBSCRIPTION_LINKS = {
+    monthly: 'https://link.saspay.me/vc0xfajjata',  // 4 900 FCFA / mois
+    yearly: 'https://link.saspay.me/_rditpvthnw'    // 39 900 FCFA / an
+};
+
 /**
- * Guichet Officiel de Paiement d'Abonnement (Wave Sénégal & Orange Money Sénégal)
+ * Modale d'attente de réactivation administrative après paiement
+ */
+window.showSubscriptionPendingModal = function(packName, amount) {
+    const existing = document.getElementById('subscription-pending-modal');
+    if (existing) existing.remove();
+
+    const formattedAmount = Number(amount || 4900).toLocaleString('fr-FR') + ' FCFA';
+    const resolvedPack = packName || 'Abonnement Restaurant';
+    const adminWhatsApp = '221776064596';
+    const waMsg = encodeURIComponent(`Bonjour Thiès Resto,\n\nJe viens d'effectuer le paiement de mon ${resolvedPack} (${formattedAmount}) via SasPay.\n\nMerci de bien vouloir vérifier la transaction et réactiver mon compte.\n\nCordialement.`);
+
+    const modal = document.createElement('div');
+    modal.id = 'subscription-pending-modal';
+    modal.className = 'modal-backdrop';
+    modal.style.cssText = 'position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); z-index: 10001; display: flex; align-items: center; justify-content: center; padding: 1rem;';
+
+    modal.innerHTML = `
+        <div class="modal-card" style="background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 24px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35); overflow: hidden; text-align: center; padding: 2.25rem 2rem;">
+            <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(2, 132, 199, 0.12); color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
+                <i class='ri-time-line'></i>
+            </div>
+            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.45rem; font-weight: 800; color: var(--text-primary);">
+                Règlement Transmis
+            </h3>
+            <div style="display: inline-block; background: rgba(2, 132, 199, 0.1); color: #0284c7; padding: 0.35rem 0.9rem; border-radius: 20px; font-weight: 700; font-size: 0.88rem; margin-bottom: 1.25rem;">
+                ${resolvedPack} • ${formattedAmount}
+            </div>
+            <div style="background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 16px; padding: 1.25rem; margin-bottom: 1.5rem; text-align: left;">
+                <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
+                    <i class='ri-checkbox-circle-fill' style="color: #16A34A; font-size: 1.4rem; flex-shrink: 0; margin-top: 2px;"></i>
+                    <div>
+                        <div style="font-weight: 800; color: #166534; font-size: 0.95rem; margin-bottom: 0.25rem;">
+                            Demande prise en compte avec succès !
+                        </div>
+                        <p style="margin: 0; color: #15803D; font-size: 0.88rem; line-height: 1.5;">
+                            Merci pour votre paiement. <strong>Veuillez patienter</strong>, l'administrateur Thiès Resto va vérifier la transaction SasPay et <strong>réactiver votre compte dans les plus brefs délais</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <a href="https://wa.me/${adminWhatsApp}?text=${waMsg}" target="_blank" class="btn" style="width: 100%; background: #25D366; color: white; font-weight: 800; font-size: 0.92rem; padding: 0.8rem; border-radius: 12px; border: none; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem; box-shadow: 0 4px 12px rgba(37,211,102,0.3);">
+                    <i class='ri-whatsapp-line' style="font-size: 1.2rem;"></i>
+                    <span>Notifier l'Administrateur par WhatsApp</span>
+                </a>
+                <button type="button" onclick="document.getElementById('subscription-pending-modal').remove(); if(typeof renderDashboardShell==='function') renderDashboardShell();" class="btn btn-secondary" style="width: 100%; font-weight: 700; font-size: 0.88rem; padding: 0.75rem; border-radius: 12px;">
+                    Compris, je patiente
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+};
+
+/**
+ * Paiement direct via lien SasPay (Mensuel 4 900 FCFA ou Annuel 39 900 FCFA)
+ */
+window.payRestaurantSubscription = async function(restaurantId, type) {
+    const r = store.getRestaurantById(restaurantId);
+    if (!r) return;
+
+    const isYearly = type === 'yearly' || type === 'annual' || String(type).toLowerCase().includes('annuel');
+    const amount = isYearly ? 39900 : 4900;
+    const packName = isYearly ? 'Abonnement Annuel (39 900 FCFA/an)' : 'Abonnement Mensuel (4 900 FCFA/mois)';
+    const paymentUrl = isYearly ? window.SASPAY_SUBSCRIPTION_LINKS.yearly : window.SASPAY_SUBSCRIPTION_LINKS.monthly;
+    const subOrderId = `SUB-${(r.slug || r.id).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+
+    // 1. Ouvrir le lien officiel de paiement SasPay dans un nouvel onglet
+    window.open(paymentUrl, '_blank');
+
+    // 2. Mettre à jour l'état local en attente de validation administrative
+    store.updateRestaurant(restaurantId, {
+        subscriptionPack: packName,
+        status: 'pending_activation',
+        hasPaidSubscription: false,
+        subscriptionPaidAt: new Date().toISOString(),
+        subscriptionMethod: 'SasPay (Wave / OM)',
+        subscriptionOrderId: subOrderId,
+        subscriptionStatus: 'pending_activation',
+        subscriptionPendingAmount: amount
+    });
+
+    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === restaurantId) {
+        currentRestaurantSession.status = 'pending_activation';
+        currentRestaurantSession.subscriptionStatus = 'pending_activation';
+        currentRestaurantSession.subscriptionPack = packName;
+    }
+
+    // 3. Notifier l'API centrale
+    try {
+        await fetch('/api/subscriptions/notify-payment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                restaurantId: r.id,
+                restaurantName: r.name,
+                packName: packName,
+                amount: amount,
+                paymentMethod: 'SasPay Link (Wave / OM)',
+                orderId: subOrderId
+            })
+        });
+    } catch (e) {
+        console.warn('Subscription notify notice:', e);
+    }
+
+    // 4. Afficher la modale demandant de patienter pour la réactivation par l'admin
+    window.showSubscriptionPendingModal(packName, amount);
+};
+
+window.notifySaspayPaymentAttempt = function(restaurantId, packName, amount) {
+    window.payRestaurantSubscription(restaurantId, Number(amount) >= 30000 ? 'yearly' : 'monthly');
+};
+
+/**
+ * Guichet Officiel de Paiement d'Abonnement (SasPay / Wave / Orange Money)
  */
 window.openSubscriptionPaymentModal = function(restaurantId, packName, amount, initialMethod = 'wave') {
     const r = store.getRestaurantById(restaurantId);
@@ -2845,6 +2980,11 @@ window.openSubscriptionPaymentModal = function(restaurantId, packName, amount, i
         if (typeof showToast === 'function') showToast("Établissement non trouvé.", 'danger');
         return;
     }
+
+    const isYearly = String(packName || '').toLowerCase().includes('annuel') || Number(amount) >= 30000;
+    const finalAmount = isYearly ? 39900 : 4900;
+    const resolvedPack = isYearly ? 'Abonnement Annuel (39 900 FCFA/an)' : 'Abonnement Mensuel (4 900 FCFA/mois)';
+    const saspayUrl = isYearly ? window.SASPAY_SUBSCRIPTION_LINKS.yearly : window.SASPAY_SUBSCRIPTION_LINKS.monthly;
 
     const existing = document.getElementById('subscription-payment-modal');
     if (existing) existing.remove();
@@ -2854,10 +2994,10 @@ window.openSubscriptionPaymentModal = function(restaurantId, packName, amount, i
         return String(str).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m]);
     };
 
-    const formattedAmount = Number(amount).toLocaleString('fr-FR') + ' FCFA';
-    const period = packName.includes('VIP') || packName.includes('Annuel') ? 'an' : 'mois';
+    const formattedAmount = finalAmount.toLocaleString('fr-FR') + ' FCFA';
+    const period = isYearly ? 'an' : 'mois';
     const adminWhatsApp = '221776064596';
-    const waHelpMsg = encodeURIComponent(`Bonjour Thiès Resto \n\nJe suis en train de régler mon abonnement *${packName}* (${formattedAmount}/${period}) pour *${r.name}* via ${initialMethod === 'orange' ? 'Orange Money' : 'Wave'}.\n\nPouvez-vous m'assister pour la validation ?`);
+    const waHelpMsg = encodeURIComponent(`Bonjour Thiès Resto \n\nJe suis en train de régler mon ${resolvedPack} (${formattedAmount}) pour *${r.name}* via SasPay.\n\nPouvez-vous m'assister pour la réactivation ?`);
     const waLink = `https://wa.me/${adminWhatsApp}?text=${waHelpMsg}`;
 
     const modal = document.createElement('div');
@@ -2872,163 +3012,68 @@ window.openSubscriptionPaymentModal = function(restaurantId, packName, amount, i
             <div style="background: linear-gradient(135deg, #0f172a, #1e293b); color: white; padding: 1.5rem 1.75rem; position: relative;">
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem;">
                     <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.12); padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">
-                        <span><i class='ri-lock-password-line'></i></span> PAIEMENT SÉCURISÉ SÉNÉGAL
+                        <span><i class='ri-lock-password-line'></i></span> SASPAY SÉNÉGAL (WAVE & ORANGE MONEY)
                     </div>
                     <button type="button" onclick="document.getElementById('subscription-payment-modal').remove()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.1rem; transition: background 0.2s;">
                         <i class='ri-close-line'></i>
                     </button>
                 </div>
-                <h3 style="margin: 0 0 0.35rem 0; font-size: 1.35rem; font-weight: 800; color: white;">Règlement de l'Abonnement Mensuel</h3>
+                <h3 style="margin: 0 0 0.35rem 0; font-size: 1.35rem; font-weight: 800; color: white;">Règlement Sécurisé SasPay</h3>
                 <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
-                    <span style="font-size: 0.95rem; opacity: 0.9;"><i class='ri-store-2-line'></i> <strong>${escapeTxt(r.name)}</strong> • ${packName}</span>
+                    <span style="font-size: 0.95rem; opacity: 0.9;"><i class='ri-store-2-line'></i> <strong>${escapeTxt(r.name)}</strong> • ${resolvedPack}</span>
                     <span style="background: #10b981; color: white; font-weight: 800; font-size: 1rem; padding: 0.25rem 0.85rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(16,185,129,0.3);">
                         ${formattedAmount} / ${period}
                     </span>
                 </div>
             </div>
 
-            <!-- Tab Switcher Wave vs Orange Money -->
-            <div style="padding: 1.25rem 1.75rem 0 1.75rem;">
-                <div style="font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.6rem; text-transform: uppercase; letter-spacing: 0.5px;">
-                    Sélectionnez votre moyen de paiement :
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
-                    <!-- Bouton Onglet Wave avec Vrai Logo -->
-                    <button type="button" id="sub-tab-btn-wave" onclick="window.switchSubPaymentTab('wave')" style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; padding: 0.75rem; border-radius: 14px; border: 2px solid ${initialMethod === 'wave' ? '#00B4D8' : 'var(--border)'}; background: ${initialMethod === 'wave' ? '#E0F7FE' : 'var(--bg-secondary)'}; cursor: pointer; transition: all 0.2s;">
-                        <img src="/images/wave_senegal.png" alt="Wave Sénégal" style="width: 30px; height: 30px; border-radius: 7px; object-fit: contain;">
-                        <div style="text-align: left;">
-                            <div style="font-weight: 800; font-size: 0.92rem; color: #0077B6;">Wave Sénégal</div>
-                            <div style="font-size: 0.72rem; color: #0284c7;">Sans aucuns frais (0%)</div>
-                        </div>
-                    </button>
-
-                    <!-- Bouton Onglet Orange Money avec Vrai Logo -->
-                    <button type="button" id="sub-tab-btn-orange" onclick="window.switchSubPaymentTab('orange')" style="display: flex; align-items: center; justify-content: center; gap: 0.6rem; padding: 0.75rem; border-radius: 14px; border: 2px solid ${initialMethod === 'orange' ? '#FF7900' : 'var(--border)'}; background: ${initialMethod === 'orange' ? '#FFF4EB' : 'var(--bg-secondary)'}; cursor: pointer; transition: all 0.2s;">
-                        <img src="/images/orange_money_senegal.png" alt="Orange Money Sénégal" style="width: 30px; height: 30px; border-radius: 7px; object-fit: contain;">
-                        <div style="text-align: left;">
-                            <div style="font-weight: 800; font-size: 0.92rem; color: #D46000;">Orange Money</div>
-                            <div style="font-size: 0.72rem; color: #ea580c;">#144# ou App Max It</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
             <!-- Modal Body Content -->
-            <div style="padding: 1.25rem 1.75rem 1.75rem 1.75rem;">
+            <div style="padding: 1.5rem 1.75rem;">
                 
-                <!-- PANNEAU 1 : WAVE SÉNÉGAL -->
-                <div id="sub-tab-content-wave" style="display: ${initialMethod === 'wave' ? 'block' : 'none'};">
-                    <div style="background: #F0F9FF; border: 1.5px solid #BAE6FD; border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;">
-                        <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1rem;">
-                            <img src="/images/wave_senegal.png" alt="Wave Sénégal" style="width: 48px; height: 48px; border-radius: 12px; object-fit: contain; box-shadow: 0 4px 10px rgba(0, 180, 216, 0.25);">
-                            <div>
-                                <div style="font-weight: 800; font-size: 1.08rem; color: #0369A1;">Paiement officiel Wave Sénégal</div>
-                                <div style="font-size: 0.8rem; color: #0284c7;">Transfert instantané sans frais vers le compte de facturation Thiès Resto</div>
-                            </div>
+                <!-- Encadré Lien SasPay Officiel -->
+                <div style="background: #F0F9FF; border: 1.5px solid #BAE6FD; border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;">
+                    <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1rem;">
+                        <div style="width: 48px; height: 48px; border-radius: 12px; background: white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0, 180, 216, 0.15); flex-shrink: 0;">
+                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 22px; height: 22px; margin-right: 2px;">
+                            <img src="/images/orange_money_senegal.png" alt="OM" style="width: 22px; height: 22px;">
                         </div>
-
-                        <div style="background: white; border: 1px solid #E0F2FE; border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
-                                <div>
-                                    <span style="font-size: 0.75rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Numéro Wave officiel :</span>
-                                    <div style="font-size: 1.35rem; font-weight: 900; color: #0F172A; letter-spacing: 0.5px;">+221 77 606 45 96</div>
-                                </div>
-                                <button type="button" onclick="navigator.clipboard.writeText('776064596'); if(typeof showToast==='function') showToast(&quot;Numéro Wave copié : 776064596&quot;, 'success')" class="btn btn-sm" style="background: #E0F2FE; color: #0369A1; font-weight: 700; border: 1px solid #BAE6FD; border-radius: 8px; padding: 0.45rem 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
-                                    <i class='ri-file-copy-line'></i> Copier le numéro
-                                </button>
-                            </div>
-                            <div style="margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed #E2E8F0; font-size: 0.82rem; color: #475569;">
-                                <i class='ri-lightbulb-line'></i> Note / Référence à renseigner : <strong>Abonnement ${escapeTxt(r.name)}</strong>
-                            </div>
-                        </div>
-
-                        <div style="font-size: 0.84rem; color: #0369A1; line-height: 1.5; margin-bottom: 0.5rem;">
-                            <strong>Étapes de règlement :</strong>
-                            <ol style="margin: 0.35rem 0 0 1.25rem; padding: 0;">
-                                <li>Ouvrez votre application <strong>Wave</strong> sur smartphone.</li>
-                                <li>Effectuez le transfert de <strong>${formattedAmount}</strong> vers le <strong>77 606 45 96</strong>.</li>
-                                <li>Cliquez sur le bouton bleu ci-dessous pour valider immédiatement l'abonnement.</li>
-                            </ol>
+                        <div>
+                            <div style="font-weight: 800; font-size: 1.05rem; color: #0369A1;">Paiement Direct SasPay (${formattedAmount})</div>
+                            <div style="font-size: 0.82rem; color: #0284c7;">Compatible instantanément avec Wave et Orange Money</div>
                         </div>
                     </div>
 
-                    <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                        <button type="button" onclick="window.confirmSubscriptionPayment('${r.id}', '${packName}', ${amount}, 'Wave Sénégal')" class="btn" style="width: 100%; background: linear-gradient(135deg, #00B4D8, #0077B6); color: white; font-weight: 800; font-size: 0.98rem; padding: 0.85rem; border-radius: 12px; border: none; box-shadow: 0 4px 14px rgba(0, 180, 216, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem;">
-                            <img src="/images/wave_senegal.png" alt="Wave" style="width: 22px; height: 22px; border-radius: 4px; background: white; padding: 1px;">
-                            <span>J'AI ENVOYÉ LE TRANSFERT WAVE (${formattedAmount})</span>
-                        </button>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                            <a href="https://wave.com/send" target="_blank" class="btn btn-outline btn-sm" style="border-color: #00B4D8; color: #0077B6; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; padding: 0.6rem; border-radius: 10px;">
-                                <i class='ri-external-link-line'></i> Ouvrir Wave Web
-                            </a>
-                            <button type="button" onclick="window.paySubscriptionWithSaspay('${r.id}', '${packName}', ${amount})" class="btn btn-secondary btn-sm" style="font-weight: 700; padding: 0.6rem; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
-                                <img src="/images/wave_senegal.png" alt="Wave" style="width: 16px; height: 16px; border-radius: 3px;">
-                                <span>Passerelle SasPay</span>
-                            </button>
+                    <div style="background: white; border: 1px solid #E0F2FE; border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
+                        <span style="font-size: 0.75rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Lien de paiement SasPay officiel :</span>
+                        <div style="font-size: 0.95rem; font-weight: 800; color: #0F172A; word-break: break-all; margin-top: 0.25rem;">
+                            <a href="${saspayUrl}" target="_blank" style="color: #0284c7; text-decoration: underline;">${saspayUrl}</a>
                         </div>
+                    </div>
+
+                    <div style="background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 10px; padding: 0.75rem; font-size: 0.82rem; color: #92400E; line-height: 1.45;">
+                        <i class='ri-information-line'></i> <strong>Important :</strong> Après votre paiement sur SasPay, <strong>veuillez patienter</strong> pour que l'administrateur valide votre règlement et réactive votre compte.
                     </div>
                 </div>
 
-                <!-- PANNEAU 2 : ORANGE MONEY SÉNÉGAL -->
-                <div id="sub-tab-content-orange" style="display: ${initialMethod === 'orange' ? 'block' : 'none'};">
-                    <div style="background: #FFF7ED; border: 1.5px solid #FED7AA; border-radius: 16px; padding: 1.25rem; margin-bottom: 1.25rem;">
-                        <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1rem;">
-                            <img src="/images/orange_money_senegal.png" alt="Orange Money Sénégal" style="width: 48px; height: 48px; border-radius: 12px; object-fit: contain; box-shadow: 0 4px 10px rgba(255, 121, 0, 0.25);">
-                            <div>
-                                <div style="font-weight: 800; font-size: 1.08rem; color: #C2410C;">Paiement officiel Orange Money Sénégal</div>
-                                <div style="font-size: 0.8rem; color: #ea580c;">Paiement via syntaxe USSD #144# ou l'application Orange Money (Max It)</div>
-                            </div>
-                        </div>
-
-                        <div style="background: white; border: 1px solid #FFEDD5; border-radius: 12px; padding: 1rem; margin-bottom: 1rem;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap;">
-                                <div>
-                                    <span style="font-size: 0.75rem; color: #64748B; font-weight: 700; text-transform: uppercase;">Numéro Orange Money :</span>
-                                    <div style="font-size: 1.35rem; font-weight: 900; color: #0F172A; letter-spacing: 0.5px;">+221 77 606 45 96</div>
-                                </div>
-                                <button type="button" onclick="navigator.clipboard.writeText('776064596'); if(typeof showToast==='function') showToast(&quot;Numéro Orange Money copié : 776064596&quot;, 'success')" class="btn btn-sm" style="background: #FFEDD5; color: #C2410C; font-weight: 700; border: 1px solid #FED7AA; border-radius: 8px; padding: 0.45rem 0.8rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
-                                    <i class='ri-file-copy-line'></i> Copier le numéro
-                                </button>
-                            </div>
-                            <div style="margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed #E2E8F0; font-size: 0.82rem; color: #475569;">
-                                <i class='ri-lightbulb-line'></i> Note / Référence OM : <strong>Abonnement ${escapeTxt(r.name)}</strong>
-                            </div>
-                        </div>
-
-                        <div style="font-size: 0.84rem; color: #C2410C; line-height: 1.5; margin-bottom: 0.5rem;">
-                            <strong>Étapes de règlement :</strong>
-                            <ol style="margin: 0.35rem 0 0 1.25rem; padding: 0;">
-                                <li>Composez le <strong>#144#</strong> ou ouvrez l'application <strong>Max It</strong>.</li>
-                                <li>Envoyez le montant de <strong>${formattedAmount}</strong> vers le <strong>77 606 45 96</strong>.</li>
-                                <li>Cliquez sur le bouton orange ci-dessous pour confirmer immédiatement votre abonnement.</li>
-                            </ol>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-                        <button type="button" onclick="window.confirmSubscriptionPayment('${r.id}', '${packName}', ${amount}, 'Orange Money Sénégal')" class="btn" style="width: 100%; background: linear-gradient(135deg, #FF7900, #EA580C); color: white; font-weight: 800; font-size: 0.98rem; padding: 0.85rem; border-radius: 12px; border: none; box-shadow: 0 4px 14px rgba(255, 121, 0, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem;">
-                            <img src="/images/orange_money_senegal.png" alt="OM" style="width: 22px; height: 22px; border-radius: 4px; background: white; padding: 1px;">
-                            <span>J'AI ENVOYÉ LE TRANSFERT ORANGE MONEY (${formattedAmount})</span>
-                        </button>
-                        
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                            <a href="tel:*144#" class="btn btn-outline btn-sm" style="border-color: #FF7900; color: #EA580C; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none; padding: 0.6rem; border-radius: 10px;">
-                                <i class='ri-phone-line'></i> Composer #144#
-                            </a>
-                            <button type="button" onclick="window.paySubscriptionWithSaspay('${r.id}', '${packName}', ${amount})" class="btn btn-secondary btn-sm" style="font-weight: 700; padding: 0.6rem; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
-                                <img src="/images/orange_money_senegal.png" alt="OM" style="width: 16px; height: 16px; border-radius: 3px;">
-                                <span>Passerelle SasPay</span>
-                            </button>
-                        </div>
-                    </div>
+                <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                    <!-- Bouton Ouvrir SasPay -->
+                    <button type="button" onclick="window.payRestaurantSubscription('${r.id}', '${isYearly ? 'yearly' : 'monthly'}')" class="btn" style="width: 100%; background: linear-gradient(135deg, #0284c7, #2563eb); color: white; font-weight: 800; font-size: 0.98rem; padding: 0.9rem; border-radius: 12px; border: none; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem;">
+                        <i class='ri-external-link-line' style="font-size: 1.15rem;"></i>
+                        <span>PAYER ${formattedAmount} SUR SASPAY</span>
+                    </button>
+                    
+                    <!-- Bouton J'ai déjà réglé -->
+                    <button type="button" onclick="window.confirmSubscriptionPayment('${r.id}', '${resolvedPack}', ${finalAmount}, 'SasPay')" class="btn btn-outline" style="width: 100%; font-weight: 700; font-size: 0.88rem; padding: 0.75rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
+                        <i class='ri-checkbox-circle-line' style="color: #10b981;"></i>
+                        <span>J'ai déjà effectué le paiement sur SasPay</span>
+                    </button>
                 </div>
 
             </div>
 
             <!-- Footer WhatsApp Support -->
             <div style="background: var(--bg-secondary); border-top: 1px solid var(--border); padding: 0.85rem 1.75rem; display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: var(--text-secondary);">
-                <span>Besoin d'un accompagnement direct ?</span>
+                <span>Besoin d'aide ?</span>
                 <a href="${waLink}" target="_blank" style="color: #16a34a; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem;">
                     <i class='ri-whatsapp-line'></i> Assistance WhatsApp Thiès Resto
                 </a>
@@ -3202,20 +3247,29 @@ window.confirmSubscriptionPayment = async function(restaurantId, packName, amoun
     const r = store.getRestaurantById(restaurantId);
     if (!r) return;
 
+    const isAnnuel = String(packName || '').toLowerCase().includes('annuel') || Number(amount) >= 30000;
+    const finalAmount = Number(amount) || (isAnnuel ? 39900 : 4900);
+    const resolvedPack = isAnnuel ? 'Abonnement Annuel (39 900 FCFA/an)' : 'Abonnement Mensuel (4 900 FCFA/mois)';
+    const channel = paymentMethod || 'SasPay (Wave / OM)';
     const subOrderId = `SUB-${(r.slug || r.id).toUpperCase()}-${Date.now().toString().slice(-6)}`;
-    const finalAmount = Number(amount) || (packName === 'Annuel VIP' ? 99000 : (packName === 'Entreprise' ? 15000 : 9000));
-    const channel = paymentMethod || 'Wave Sénégal';
 
-    // Persist active subscription pack in store
+    // Persist pending activation status in store (awaiting Super-Admin reactivation)
     store.updateRestaurant(restaurantId, {
-        subscriptionPack: packName,
-        status: 'active',
-        hasPaidSubscription: true,
+        subscriptionPack: resolvedPack,
+        status: 'pending_activation',
+        hasPaidSubscription: false,
         subscriptionPaidAt: new Date().toISOString(),
         subscriptionMethod: channel,
         subscriptionOrderId: subOrderId,
-        subscriptionStatus: 'active'
+        subscriptionStatus: 'pending_activation',
+        subscriptionPendingAmount: finalAmount
     });
+
+    if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === restaurantId) {
+        currentRestaurantSession.status = 'pending_activation';
+        currentRestaurantSession.subscriptionStatus = 'pending_activation';
+        currentRestaurantSession.subscriptionPack = resolvedPack;
+    }
 
     // Notify backend and Super Admin central activity log
     try {
@@ -3225,7 +3279,7 @@ window.confirmSubscriptionPayment = async function(restaurantId, packName, amoun
             body: JSON.stringify({
                 restaurantId: r.id,
                 restaurantName: r.name,
-                packName: packName,
+                packName: resolvedPack,
                 amount: finalAmount,
                 paymentMethod: channel,
                 orderId: subOrderId
@@ -3238,12 +3292,20 @@ window.confirmSubscriptionPayment = async function(restaurantId, packName, amoun
     if (modal) modal.remove();
 
     if (typeof showToast === 'function') {
-        showToast(` Règlement validé ! Votre abonnement ${packName} (${channel}) est actif et transmis au Super-Admin.`, 'success', 6000);
+        showToast(`Règlement de ${finalAmount.toLocaleString('fr-FR')} FCFA soumis ! Veuillez patienter pendant que l'administrateur valide votre paiement et réactive votre compte.`, 'info', 7000);
+    }
+
+    // Afficher la modale demandant explicitement de patienter pour la réactivation du compte
+    if (typeof window.showSubscriptionPendingModal === 'function') {
+        window.showSubscriptionPendingModal(resolvedPack, finalAmount);
     }
 
     // Refresh views immediately
     if (typeof renderSubscriptionManager === 'function') {
         renderSubscriptionManager();
+    }
+    if (typeof renderDashboardShell === 'function') {
+        renderDashboardShell();
     }
     if (typeof renderAdminDashboard === 'function') {
         renderAdminDashboard();
@@ -3255,21 +3317,28 @@ window.superAdminConfirmSubscription = async function(restaurantId, packName, am
     const r = store.getRestaurantById(restaurantId);
     if (!r) return;
 
-    const pack = packName || r.subscriptionPack || 'Standard';
-    const finalAmount = Number(amount) || (pack === 'Annuel VIP' ? 99000 : (pack === 'Entreprise' ? 15000 : 9000));
-    const channel = paymentMethod || r.subscriptionMethod || 'Wave Sénégal';
+    const isAnnuel = String(packName || r.subscriptionPack || '').toLowerCase().includes('annuel') || Number(amount) >= 30000;
+    const finalAmount = Number(amount) || (isAnnuel ? 39900 : 4900);
+    const pack = isAnnuel ? 'Abonnement Annuel (39 900 FCFA/an)' : 'Abonnement Mensuel (4 900 FCFA/mois)';
+    const channel = paymentMethod || r.subscriptionMethod || 'SasPay (Wave / OM)';
 
-    if (!confirm(`Confirmer et valider officiellement l'abonnement "${pack}" (${finalAmount.toLocaleString()} FCFA via ${channel}) pour "${r.name}" ?`)) {
+    if (!confirm(`Confirmer et valider officiellement l'abonnement "${pack}" (${finalAmount.toLocaleString('fr-FR')} FCFA via ${channel}) pour "${r.name}" et réactiver le compte ?`)) {
         return;
     }
 
+    const nowIso = new Date().toISOString();
     store.updateRestaurant(restaurantId, {
         status: 'active',
         hasPaidSubscription: true,
         subscriptionPack: pack,
-        subscriptionPaidAt: new Date().toISOString(),
+        subscriptionPaidAt: nowIso,
         subscriptionMethod: channel,
-        subscriptionStatus: 'active'
+        subscriptionStatus: 'active',
+        subscriptionPendingAmount: null,
+        createdAt: nowIso,
+        approvedAt: nowIso,
+        suspendReason: null,
+        suspendedAt: null
     });
 
     try {
@@ -3346,59 +3415,11 @@ window.superAdminCancelSubscription = async function(restaurantId) {
 };
 
 /**
- * SasPay integration for Restaurant Subscriptions (with PayTech backwards compatibility alias)
+ * SasPay integration for Restaurant Subscriptions (delegates to official links 4900/39900 FCFA)
  */
 window.paySubscriptionWithSaspay = async function(restaurantId, packName, amount) {
-    const r = store.getRestaurantById(restaurantId);
-    if (!r) {
-        if (typeof showToast === 'function') showToast("Établissement non trouvé.", 'danger');
-        return;
-    }
-
-    const subRef = `SUB-${r.slug || r.id}-${Date.now()}`;
-    const btn = event?.target?.closest('button');
-    const originalText = btn ? btn.innerHTML : '';
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-ring" style="width:14px;height:14px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:4px;"></span> Connexion SasPay...';
-    }
-
-    try {
-        const response = await fetch('/api/saspay/request-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                orderId: subRef,
-                amount: amount,
-                itemName: `Abonnement ${packName} - ${r.name}`,
-                customerName: r.name,
-                customerPhone: r.phone || '',
-                restaurantName: r.name,
-                returnHash: `/dashboard?tab=subscription&payment=success&pack=${encodeURIComponent(packName)}`
-            })
-        });
-
-        const data = await response.json();
-        if (data && data.success && data.redirectUrl) {
-            if (btn) btn.innerHTML = '<span>Redirection SasPay <i class="arrow-right-line"></i></span>';
-            window.location.href = data.redirectUrl;
-        } else {
-            console.warn("SasPay subscription notice:", data);
-            // Open direct official Wave and Orange Money payment modal
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-            window.openSubscriptionPaymentModal(restaurantId, packName, amount, 'wave');
-        }
-    } catch (err) {
-        console.warn("Subscription payment notice:", err);
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-        window.openSubscriptionPaymentModal(restaurantId, packName, amount, 'wave');
-    }
+    const isYearly = String(packName || '').toLowerCase().includes('annuel') || Number(amount) >= 30000;
+    return window.payRestaurantSubscription(restaurantId, isYearly ? 'yearly' : 'monthly');
 };
 
 window.paySubscriptionWithPaytech = window.paySubscriptionWithSaspay;
@@ -3799,21 +3820,8 @@ function changeOrderStatus(orderId, nextStatus) {
         pushText = `Bonjour ${o.customerName} \n\nNous sommes désolés, votre commande n°${o.id} chez *${restoName}* a été *annulée* par le restaurant. <i class='ri-close-circle-line'></i>\n\nVeuillez nous excuser pour ce désagrément. N'hésitez pas à passer une nouvelle commande.`;
     }
     
-    // Déclencher Push OneSignal
-    if (typeof OneSignalManager !== 'undefined' && OneSignalManager.sendOrderStatusPushNotification) {
-        OneSignalManager.sendOrderStatusPushNotification(o, nextStatus, restoName);
-    }
-    
-    // Déclencher proxy backend pour notification Push / SMS automatique
-    try {
-        fetch('/api/onesignal/notify-order-status', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ order: o, status: nextStatus, restaurantName: restoName })
-        }).catch(() => {});
-    } catch(e) {}
-
-    showToast(`Commande mise à jour vers : ${nextStatus}. Client notifié automatiquement (Push & WhatsApp) <i class='ri-smartphone-line'></i>`, nextStatus === 'Annulée' ? 'warning' : 'success');
+    // Notification sonore et toast
+    showToast(`Commande mise à jour vers : ${nextStatus}. Client notifié automatiquement <i class='ri-smartphone-line'></i>`, nextStatus === 'Annulée' ? 'warning' : 'success');
     
     // Reload dashboard list
     switchDashboardTab('orders');
@@ -4467,16 +4475,7 @@ window.testRestaurantPushNotification = async function() {
             try { playNotificationSound(); } catch (e) { console.warn("Audio play error:", e); }
         }
 
-        // 2. OneSignal integration trigger if available
-        if (window.OneSignalManager && typeof window.OneSignalManager.requestPermission === 'function') {
-            try {
-                window.OneSignalManager.requestPermission();
-            } catch (e) {
-                console.warn("OneSignal permission error:", e);
-            }
-        }
-
-        // 3. Browser native Notification API request
+        // 2. Browser native Notification API request
         let perm = 'default';
         if (typeof Notification !== 'undefined') {
             if (Notification.permission === 'granted') {
@@ -5181,12 +5180,12 @@ function renderAdminTabTable() {
             const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
             const diffDays = Math.ceil(Math.abs(new Date() - createdAt) / (1000 * 60 * 60 * 24));
             const daysLeft = Math.max(0, 7 - diffDays);
-            const pack = r.subscriptionPack || 'Pack Standard';
+            const pack = r.subscriptionPack || 'Abonnement Mensuel';
 
             let monthlyRevenue = 0;
-            if (pack === 'Pack Standard' || pack === 'Pack Simple') monthlyRevenue = 9000;
-            else if (pack === 'Pack Entreprise' || pack === 'Pack Startup') monthlyRevenue = 15000;
-            else if (pack === 'Pack Annuel VIP' || pack === 'Pack Annuel') monthlyRevenue = Math.round(100000 / 12);
+            if (pack.includes('Annuel') || pack.includes('39 900')) monthlyRevenue = Math.round(39900 / 12);
+            else if (pack.includes('Mensuel') || pack.includes('4 900') || pack.includes('Standard')) monthlyRevenue = 4900;
+            else if (pack.includes('Entreprise')) monthlyRevenue = 15000;
 
             if (r.status === 'active' || r.status === 'suspended') {
                 totalMRR += monthlyRevenue;
@@ -5500,12 +5499,12 @@ function renderAdminTabTable() {
                                 const createdAt = new Date(r.createdAt || '2026-06-25T00:00:00Z');
                                 const diffDays = Math.ceil(Math.abs(new Date() - createdAt) / (1000 * 60 * 60 * 24));
                                 const daysLeft = Math.max(0, 7 - diffDays);
-                                const pack = r.subscriptionPack || 'Pack Standard';
+                                const pack = r.subscriptionPack || 'Abonnement Mensuel';
 
                                 let monthlyFee = 0;
-                                if (pack === 'Pack Standard' || pack === 'Pack Simple') monthlyFee = 9000;
-                                else if (pack === 'Pack Entreprise' || pack === 'Pack Startup') monthlyFee = 15000;
-                                else if (pack === 'Pack Annuel VIP' || pack === 'Pack Annuel') monthlyFee = Math.round(100000 / 12);
+                                if (pack.includes('Annuel') || pack.includes('39 900')) monthlyFee = Math.round(39900 / 12);
+                                else if (pack.includes('Mensuel') || pack.includes('4 900') || pack.includes('Standard')) monthlyFee = 4900;
+                                else if (pack.includes('Entreprise')) monthlyFee = 15000;
 
                                 const rTxs = confirmedPaytechTxs.filter(t => 
                                     (t.restaurantName && r.name && t.restaurantName.toLowerCase() === r.name.toLowerCase()) || 
@@ -5876,12 +5875,15 @@ function renderAdminTabTable() {
                     const cleanPhone = (r.whatsapp || '').replace(/[^0-9]/g, '');
                     const menuCount = (r.menu && Array.isArray(r.menu)) ? r.menu.length : 0;
                     const isPending = r.status === 'pending';
+                    const isPendingActivation = r.status === 'pending_activation' || r.subscriptionStatus === 'pending_activation';
                     const isSuspended = r.status === 'suspended';
                     const isCancelled = r.status === 'cancelled' || r.subscriptionStatus === 'cancelled';
                     const pack = r.subscriptionPack || 'Aucun (Gratuit)';
 
                     let statusBadge = `<span class="badge badge-success" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;"><i class='ri-checkbox-circle-fill'></i> Actif</span>`;
-                    if (isPending) {
+                    if (isPendingActivation) {
+                        statusBadge = `<span class="badge" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc;"><i class='ri-time-line'></i> Paiement Reçu (${r.subscriptionPendingAmount ? Number(r.subscriptionPendingAmount).toLocaleString() + ' F' : 'SasPay'})</span>`;
+                    } else if (isPending) {
                         statusBadge = `<span class="badge badge-warning" style="font-size: 0.72rem; padding: 0.25rem 0.55rem;"><i class='ri-time-line'></i> En attente</span>`;
                     } else if (isCancelled) {
                         statusBadge = `<span class="badge" style="font-size: 0.72rem; padding: 0.25rem 0.55rem; background: #fee2e2; color: #991b1b; border: 1px solid #f87171;"><i class='ri-close-circle-line'></i> Résilié</span>`;
@@ -5923,10 +5925,9 @@ function renderAdminTabTable() {
                                     <div style="display: flex; justify-content: space-between; align-items: center;">
                                         <span style="color: var(--text-secondary);"><i class='ri-vip-crown-line'></i> Formule SaaS :</span>
                                         <select onchange="updateRestaurantPack('${r.id}', this.value)" style="font-size: 0.75rem; font-weight: 700; background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border); border-radius: 6px; padding: 0.15rem 0.35rem;">
-                                            <option value="Aucun (Gratuit)" ${pack.includes('Gratuit') ? 'selected' : ''}>Aucun (Gratuit)</option>
-                                            <option value="Pack Standard (9 000 FCFA/mois)" ${pack.includes('Standard') ? 'selected' : ''}>Pack Standard</option>
-                                            <option value="Pack Entreprise (25 000 FCFA/mois)" ${pack.includes('Entreprise') ? 'selected' : ''}>Pack Entreprise</option>
-                                            <option value="Pack Annuel VIP (150 000 FCFA/an)" ${pack.includes('Annuel') ? 'selected' : ''}>Pack VIP Annuel</option>
+                                            <option value="Aucun (Gratuit)" ${pack.includes('Gratuit') || pack.includes('Aucun') ? 'selected' : ''}>Aucun (Gratuit)</option>
+                                            <option value="Abonnement Mensuel (4 900 FCFA/mois)" ${pack.includes('Mensuel') || pack.includes('Standard') ? 'selected' : ''}>Abonnement Mensuel (4 900 F/mois)</option>
+                                            <option value="Abonnement Annuel (39 900 FCFA/an)" ${pack.includes('Annuel') ? 'selected' : ''}>Abonnement Annuel (39 900 F/an)</option>
                                         </select>
                                     </div>
                                     <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border); padding-top: 0.35rem; font-family: monospace; font-size: 0.75rem;">
@@ -5946,7 +5947,11 @@ function renderAdminTabTable() {
                             </div>
 
                             <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; border-top: 1px solid var(--border); padding-top: 0.75rem;">
-                                ${isPending ? `
+                                ${isPendingActivation ? `
+                                    <button class="btn btn-sm" onclick="superAdminConfirmSubscription('${r.id}', '${(r.subscriptionPack || 'Abonnement Mensuel').replace(/'/g, "\\'")}', ${r.subscriptionPendingAmount || 4900}, '${(r.subscriptionMethod || 'SasPay').replace(/'/g, "\\'")}')" style="background: #16a34a; color: white; font-weight: 800; font-size: 0.8rem; padding: 0.45rem 0.75rem; border: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem;" title="Valider le paiement SasPay et réactiver le compte">
+                                        <i class='ri-check-double-line'></i> Réactiver le Compte
+                                    </button>
+                                ` : (isPending ? `
                                     <button class="btn btn-primary btn-sm" onclick="approveRestaurant('${r.id}')" style="flex: 1; font-weight: 800; font-size: 0.8rem; padding: 0.45rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;">
                                         <i class='ri-checkbox-circle-line'></i> Activer
                                     </button>
@@ -5954,7 +5959,7 @@ function renderAdminTabTable() {
                                     <button class="btn btn-primary btn-sm" onclick="impersonateRestaurant('${r.id}')" style="flex: 1; font-weight: 700; font-size: 0.78rem; padding: 0.45rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;" title="Gérer le menu et les commandes">
                                         <i class='ri-dashboard-line'></i> Espace Gérant
                                     </button>
-                                `}
+                                `)}
 
                                 <button class="btn btn-outline btn-sm" onclick="router.navigate('/r/${r.slug}')" style="font-size: 0.78rem; padding: 0.45rem 0.65rem; display: inline-flex; align-items: center; gap: 0.25rem;" title="Voir la fiche publique">
                                     <i class='ri-external-link-line'></i> Fiche
@@ -6582,13 +6587,6 @@ async function suspendRestaurant(id) {
         suspendedAt: new Date().toISOString()
     });
 
-    // Real-time Firestore direct synchronization to trigger onSnapshot on all client instances
-    if (typeof window.updateFirestoreRestaurantStatus === 'function') {
-        window.updateFirestoreRestaurantStatus(id, 'suspended', 'Suspension manuelle SuperAdmin').catch(err => {
-            console.warn("[SuperAdmin] Notice synchro Firestore client:", err);
-        });
-    }
-
     try {
         console.log(`[SuperAdmin] Envoi requête POST /api/admin/restaurants/suspend...`);
         const resp = await fetch('/api/admin/restaurants/suspend', {
@@ -6635,13 +6633,6 @@ async function resiliateRestaurant(id) {
         suspendReason: 'Résiliation administrative SuperAdmin',
         suspendedAt: new Date().toISOString()
     });
-
-    // Real-time Firestore direct synchronization
-    if (typeof window.updateFirestoreRestaurantStatus === 'function') {
-        window.updateFirestoreRestaurantStatus(id, 'cancelled', 'Résiliation administrative SuperAdmin').catch(err => {
-            console.warn("[SuperAdmin] Notice synchro Firestore client resiliate:", err);
-        });
-    }
 
     try {
         console.log(`[SuperAdmin] Envoi requête POST /api/admin/restaurants/suspend (cancelled)...`);
@@ -6690,13 +6681,6 @@ async function reactivateRestaurant(id) {
         suspendedAt: null
     });
     console.log(`[SuperAdmin] Store local mis à jour: statut='active', hasPaidSubscription=true, createdAt='${nowIso}'.`);
-
-    // Real-time Firestore direct synchronization to trigger onSnapshot on all client instances
-    if (typeof window.updateFirestoreRestaurantStatus === 'function') {
-        window.updateFirestoreRestaurantStatus(id, 'active').catch(err => {
-            console.warn("[SuperAdmin] Notice synchro Firestore client reactivate:", err);
-        });
-    }
 
     try {
         // 2. Call server/database endpoint
@@ -6780,9 +6764,6 @@ window.deleteRestaurantAdmin = async function(id) {
     if (!r) return;
     if (confirm(`Êtes-vous sûr de vouloir supprimer définitivement le restaurant "${r.name}" du réseau THIES Resto ? Cette action est irréversible.`)) {
         store.deleteRestaurant(id);
-        if (typeof window.updateFirestoreRestaurantStatus === 'function') {
-            window.updateFirestoreRestaurantStatus(id, 'cancelled', 'Suppression définitive').catch(() => {});
-        }
         try {
             await fetch('/api/admin/restaurants/reject', {
                 method: 'POST',
@@ -7329,9 +7310,8 @@ window.openRecordSaspayModal = function(defaultRestoId = '') {
                 <div class="form-group" style="margin-bottom: 1rem;">
                     <label class="form-label" style="font-weight: 700; font-size: 0.85rem;">Formule SaaS Souscrite <span class="required" style="color:var(--danger);">*</span></label>
                     <select id="modal-saspay-pack" class="form-control" required style="font-weight: 600; padding: 0.65rem 0.85rem;" onchange="window.updateSaspayModalAmount()">
-                        <option value="Pack Standard">Pack Standard (9 000 FCFA / mois)</option>
-                        <option value="Pack Entreprise">Pack Entreprise (15 000 FCFA / mois)</option>
-                        <option value="Pack Annuel VIP">Pack Annuel VIP (100 000 FCFA / an)</option>
+                        <option value="Abonnement Mensuel">Abonnement Mensuel (4 900 FCFA / mois)</option>
+                        <option value="Abonnement Annuel">Abonnement Annuel (39 900 FCFA / an)</option>
                     </select>
                 </div>
 
@@ -7412,9 +7392,8 @@ window.updateSaspayModalAmount = function() {
     const amountInput = document.getElementById('modal-saspay-amount') || document.getElementById('modal-paytech-amount');
     if (!pack || !amountInput) return;
 
-    if (pack.value === 'Pack Standard') amountInput.value = '9000';
-    else if (pack.value === 'Pack Entreprise') amountInput.value = '15000';
-    else if (pack.value === 'Pack Annuel VIP') amountInput.value = '100000';
+    if (String(pack.value).toLowerCase().includes('annuel')) amountInput.value = '39900';
+    else amountInput.value = '4900';
 };
 
 window.updatePaytechModalAmount = window.updateSaspayModalAmount;

@@ -135,7 +135,6 @@
             msgStr.includes('Timeout') || 
             msgStr.includes('geolocation') || 
             msgStr.includes('ResizeObserver') ||
-            msgStr.includes('OneSignal') ||
             msgStr.includes('Script error')) {
             return true;
         }
@@ -162,7 +161,6 @@
             reasonStr.includes('Timeout') || 
             reasonStr.includes('Supabase') ||
             reasonStr.includes('geolocation') ||
-            reasonStr.includes('OneSignal') ||
             reasonStr.includes('AbortError')) {
             event.preventDefault();
             return;

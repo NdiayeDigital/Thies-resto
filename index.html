@@ -21,7 +21,7 @@
         window.thiesRestoErrors = [];
         window.__earlyErrorHandler = function(msg, url, line, col, error) {
             const errorText = String((msg || '') + ' ' + ((error && error.stack) || ''));
-            if (errorText.includes('thies-resto.com') || errorText.includes('OneSignal') || errorText.includes('ResizeObserver')) {
+            if (errorText.includes('thies-resto.com') || errorText.includes('ResizeObserver')) {
                 return true;
             }
             const safeMsg = typeof window.maskSensitiveData === 'function' ? window.maskSensitiveData(msg) : msg;
@@ -32,7 +32,7 @@
         window.onerror = window.__earlyErrorHandler;
         window.addEventListener('unhandledrejection', function(event) {
             const reasonMsg = String((event.reason && (event.reason.message || event.reason.toString())) || '');
-            if (reasonMsg.includes('thies-resto.com') || reasonMsg.includes('OneSignal')) {
+            if (reasonMsg.includes('thies-resto.com')) {
                 event.preventDefault();
                 return;
             }
@@ -164,20 +164,7 @@
     <!-- DOMPurify for secure innerHTML data rendering -->
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.9/dist/purify.min.js" defer></script>
 
-    <!-- OneSignal SDK -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          await OneSignal.init({
-            appId: "1475ba26-4ce8-4e66-8631-5cbdb9a0b3fe"
-          });
-        } catch (e) {
-          console.warn("[OneSignal] Initialisation OneSignal:", e);
-        }
-      });
-    </script>
+
 </head>
 
 <body>
@@ -676,8 +663,6 @@
     <script defer src="js/phone-validator.js"></script>
     <script defer src="js/data.js?v=7"></script>
     <script defer src="js/store.js?v=7"></script>
-    <!-- Firebase Firestore Real-Time Synchronizer & onSnapshot Listener -->
-    <script defer src="js/firebase-listener.bundle.js?v=3"></script>
     <script defer src="js/customer-auth.js"></script>
     <script defer src="js/otpClient.js"></script>
     <script defer src="js/router.js?v=7"></script>
@@ -686,7 +671,6 @@
     <script defer src="js/ui-checkout.js"></script>
     <script defer src="js/ui-vendor.js"></script>
     <script defer src="js/ui-faq.js"></script>
-    <script defer src="js/onesignal-wrapper.js"></script>
     <script defer src="app.js"></script>
 
     <script>
