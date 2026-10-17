@@ -177,5 +177,5 @@
         event.preventDefault();
     });
 
-    originalConsole.log("[GlobalLogger] Masquage des données sensibles et observabilité activés ✓");
+    originalConsole.log("[GlobalLogger] Masquage des données sensibles et observabilité activés.");
 })();

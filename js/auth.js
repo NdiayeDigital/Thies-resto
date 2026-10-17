@@ -35,7 +35,7 @@ router.add('#/auth', () => {
             
             ${isEmailVerified ? `
                 <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid #10b981; border-radius: 16px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; text-align: center;">
-                    <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">🎉</div>
+                    <div style="font-size: 1.75rem; margin-bottom: 0.35rem; color: #10b981;"><i class="ri-checkbox-circle-line"></i></div>
                     <h3 style="color: #059669; font-size: 1.1rem; font-weight: 800; margin-bottom: 0.35rem;">Email confirmé avec succès !</h3>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.4;">
                         Votre adresse email a été validée par Supabase. Votre dossier restaurant est désormais transmis pour activation finale par le Super-Admin.
@@ -46,29 +46,29 @@ router.add('#/auth', () => {
             <!-- SEGMENTED AUTH TABS -->
             <div style="display: flex; background: var(--bg-page); padding: 4px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 1.75rem;">
                 <button type="button" id="tab-btn-customer" onclick="switchAuthTab('customer')" style="flex: 1; padding: 0.65rem 0.5rem; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; background: ${shouldOpenPartner ? 'transparent' : 'var(--bg-card)'}; color: ${shouldOpenPartner ? 'var(--text-secondary)' : 'var(--text-primary)'}; box-shadow: ${shouldOpenPartner ? 'none' : '0 2px 6px rgba(0,0,0,0.08)'}; transition: all 0.2s ease;">
-                    👤 Espace Client
+                    <i class="ri-user-line" style="margin-right: 0.35rem;"></i> Espace Client
                 </button>
                 <button type="button" id="tab-btn-partner" onclick="switchAuthTab('partner')" style="flex: 1; padding: 0.65rem 0.5rem; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; cursor: pointer; background: ${shouldOpenPartner ? 'var(--bg-card)' : 'transparent'}; color: ${shouldOpenPartner ? 'var(--text-primary)' : 'var(--text-secondary)'}; box-shadow: ${shouldOpenPartner ? '0 2px 6px rgba(0,0,0,0.08)' : 'none'}; transition: all 0.2s ease;">
-                    🏪 Restaurateur
+                    <i class="ri-store-2-line" style="margin-right: 0.35rem;"></i> Restaurateur
                 </button>
             </div>
 
-            <!-- 1. CUSTOMER NATIVE AUTH SECTION -->
+            <!-- 1. CUSTOMER AUTH SECTION -->
             <div id="auth-section-customer" style="display: ${shouldOpenPartner ? 'none' : 'block'};">
                 <div class="auth-header" style="text-align: center; margin-bottom: 1.5rem;">
-                    <span class="auth-logo" style="font-size: 2.75rem; display: block; margin-bottom: 0.5rem;">📱</span>
+                    <span class="auth-logo" style="font-size: 2.2rem; display: block; margin-bottom: 0.5rem; color: var(--gold);"><i class="ri-vip-crown-line"></i></span>
                     <h2 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary); margin-bottom: 0.25rem;">
-                        Authentification Native
+                        Espace Client Privilège
                     </h2>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">
-                        Accédez à vos commandes, adresses et avantages fidélité à Thiès.
+                        Votre conciergerie gastronomique : retrouvez vos tables et commandes d'exception.
                     </p>
                 </div>
 
                 ${isCustomerAuth ? `
                     <div style="background: var(--bg-page); border: 1px solid var(--border); border-radius: 18px; padding: 1.25rem; margin-bottom: 1.5rem;">
                         <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 0.75rem;">
-                            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; justify-content: center;">
+                            <div style="width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);">
                                 ${(customerUser.name || 'C').charAt(0).toUpperCase()}
                             </div>
                             <div style="flex: 1; min-width: 0;">
@@ -81,13 +81,13 @@ router.add('#/auth', () => {
                             </div>
                         </div>
                         <div style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; background: rgba(16, 185, 129, 0.12); color: #059669; padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700;">
-                            🛡️ Authentifié Nativement
+                            <i class="ri-shield-star-line"></i> Membre Privilège Vérifié
                         </div>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 0.65rem;">
                         <button class="btn btn-primary" onclick="router.navigate('/profile')" style="width: 100%; padding: 0.8rem; border-radius: 14px; font-weight: 700;">
-                            Accéder à mon Profil & Commandes 📋
+                            Accéder à mon Profil & Commandes <i class="ri-arrow-right-line" style="margin-left: 0.35rem;"></i>
                         </button>
                         <button class="btn btn-outline" onclick="customerAuth.logout()" style="width: 100%; padding: 0.65rem; border-radius: 12px; font-size: 0.85rem; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
                             Se déconnecter de ce compte
@@ -136,12 +136,12 @@ router.add('#/auth', () => {
                         </div>
 
                         <button type="submit" id="btn-native-auth-submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%; padding: 0.85rem; border-radius: 14px; font-size: 1rem; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);">
-                            Connexion Instantanée ⚡
+                            Connexion Instantanée <i class="ri-arrow-right-line" style="margin-left: 0.35rem;"></i>
                         </button>
                     </form>
 
                     <div style="background: rgba(var(--primary-rgb), 0.05); border: 1px solid var(--border); border-radius: 14px; padding: 0.75rem 1rem; margin-top: 1.25rem; font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
-                        <span>🔒</span>
+                        <span><i class="ri-shield-check-line" style="color: var(--primary);"></i></span>
                         <span>Authentification sécurisée avec mémorisation locale chiffrée.</span>
                     </div>
                 `}
@@ -150,7 +150,7 @@ router.add('#/auth', () => {
             <!-- 2. PARTNER / RESTAURATEUR SECTION -->
             <div id="auth-section-partner" style="display: ${shouldOpenPartner ? 'block' : 'none'};">
                 <div class="auth-header" style="text-align: center; margin-bottom: 1.5rem;">
-                    <span class="auth-logo" style="font-size: 2.75rem; display: block; margin-bottom: 0.5rem;">🏪</span>
+                    <span class="auth-logo" style="font-size: 2.2rem; display: block; margin-bottom: 0.5rem; color: var(--gold);"><i class="ri-store-2-line"></i></span>
                     <h2 style="font-family: var(--font-serif); font-size: 1.5rem; color: var(--text-primary);">Espace Restaurateur</h2>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.25rem;">Gérez vos menus, commandes et livraisons en temps réel.</p>
                 </div>
@@ -166,22 +166,22 @@ router.add('#/auth', () => {
                         <div style="position: relative;">
                             <input type="password" id="login-password" name="password" class="form-control" placeholder="Entrez votre mot de passe" required autocomplete="off" value="" style="height: 48px; border-radius: 14px; font-size: 0.95rem; padding-right: 2.75rem;">
                             <button type="button" onclick="toggleAuthPassword('login-password', this)" style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.15rem; cursor: pointer; opacity: 0.7; padding: 4px;" title="Afficher/Masquer le mot de passe">
-                                👁️
+                                <i class="ri-eye-line"></i>
                             </button>
                         </div>
                     </div>
                     <div style="display: flex; justify-content: flex-end; align-items: center; margin-bottom: 1.25rem; font-size: 0.8rem;">
-                        <button type="button" onclick="handleForgotPassword()" style="background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; font-weight: 600;">🔑 Mot de passe oublié ?</button>
+                        <button type="button" onclick="handleForgotPassword()" style="background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; font-weight: 600;">Mot de passe oublié ?</button>
                     </div>
                     <button type="submit" id="btn-resto-login-submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%; padding: 0.85rem; border-radius: 14px; font-size: 1rem; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.25);">
-                        Se connecter à l'Espace Restaurant 🔓
+                        Se connecter à l'Espace Restaurant <i class="ri-lock-unlock-line" style="margin-left: 0.35rem;"></i>
                     </button>
                 </form>
 
                 <!-- PARTNERSHIP CTA -->
                 <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.25rem;">
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">Vous êtes gérant d'un restaurant à Thiès ?</p>
-                    <button class="btn btn-secondary btn-block" onclick="router.navigate('/partnership')" style="width: 100%; font-weight: 700; border-radius: 14px; padding: 0.75rem;">Demander un Partenariat 🤝</button>
+                    <button class="btn btn-secondary btn-block" onclick="router.navigate('/partnership')" style="width: 100%; font-weight: 700; border-radius: 14px; padding: 0.75rem;">Demander un Partenariat <i class="ri-hand-heart-line" style="margin-left: 0.35rem;"></i></button>
                 </div>
             </div>
 
@@ -195,10 +195,10 @@ window.toggleAuthPassword = function(inputId, btn) {
     if (!input) return;
     if (input.type === 'password') {
         input.type = 'text';
-        if (btn) btn.textContent = '🙈';
+        if (btn) btn.innerHTML = '<i class="ri-eye-off-line"></i>';
     } else {
         input.type = 'password';
-        if (btn) btn.textContent = '👁️';
+        if (btn) btn.innerHTML = '<i class="ri-eye-line"></i>';
     }
 };
 
@@ -240,13 +240,13 @@ window.handleNativePhoneTyping = function(input) {
         const prefix = val.substring(0, 2);
         badge.style.display = 'block';
         if (prefix === '77' || prefix === '78') {
-            badge.innerHTML = `<span style="color: #ea580c;">🧡 Réseau Orange / Wave détecté</span>`;
+            badge.innerHTML = `<span style="color: #ea580c; display:inline-flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; border-radius:50%; background:#ea580c; display:inline-block;"></span> Réseau Orange / Wave</span>`;
         } else if (prefix === '76') {
-            badge.innerHTML = `<span style="color: #0284c7;">🔵 Réseau Free Sénégal détecté</span>`;
+            badge.innerHTML = `<span style="color: #0284c7; display:inline-flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; border-radius:50%; background:#0284c7; display:inline-block;"></span> Réseau Free Sénégal</span>`;
         } else if (prefix === '70') {
-            badge.innerHTML = `<span style="color: #dc2626;">🔴 Réseau Expresso détecté</span>`;
+            badge.innerHTML = `<span style="color: #dc2626; display:inline-flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; border-radius:50%; background:#dc2626; display:inline-block;"></span> Réseau Expresso</span>`;
         } else if (prefix === '75') {
-            badge.innerHTML = `<span style="color: #7c3aed;">🟣 Réseau Promobile / Wave détecté</span>`;
+            badge.innerHTML = `<span style="color: #7c3aed; display:inline-flex; align-items:center; gap:4px;"><span style="width:6px; height:6px; border-radius:50%; background:#7c3aed; display:inline-block;"></span> Réseau Promobile</span>`;
         } else {
             badge.innerHTML = `<span style="color: var(--text-secondary);">Numéro Sénégal (+221)</span>`;
         }
@@ -303,7 +303,7 @@ router.add('#/partnership', () => {
     container.innerHTML = `
         <div class="auth-container" style="max-width: 600px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
             <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
-                <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🤝</span>
+                <span class="auth-logo" style="font-size: 2.5rem; display: block; margin-bottom: 1rem; color: var(--gold);"><i class="ri-restaurant-2-line"></i></span>
                 <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: #fff;">Demande de Partenariat</h2>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
                     Rejoignez la première plateforme commune de restauration à Thiès. Remplissez les informations de votre établissement ci-dessous.
@@ -351,7 +351,7 @@ router.add('#/partnership', () => {
                     <input type="hidden" id="reg-image-url" value="">
                     <div id="reg-image-preview-container" style="display: none; margin-top: 0.75rem; align-items: center; gap: 0.75rem; background: var(--bg-secondary); padding: 0.5rem; border-radius: 10px; border: 1px solid var(--border);">
                         <img id="reg-image-preview" src="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
-                        <span id="reg-image-upload-status" style="font-size: 0.75rem; color: var(--success); font-weight: 600;">Photo sélectionnée avec succès ! ✅</span>
+                        <span id="reg-image-upload-status" style="font-size: 0.75rem; color: var(--success); font-weight: 600;"><i class="ri-check-line"></i> Photo sélectionnée avec succès</span>
                     </div>
                 </div>
 
@@ -379,12 +379,12 @@ router.add('#/partnership', () => {
                     <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement par défaut (nom_221, modifiable).</small>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Envoyer la demande de partenariat 🚀</button>
+                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Envoyer la demande de partenariat <i class="ri-send-plane-fill" style="margin-left: 0.35rem;"></i></button>
             </form>
 
             <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Vous êtes déjà partenaire ?</p>
-                <button class="btn btn-secondary btn-block" onclick="router.navigate('/auth')" style="width: 100%;">Se connecter à l'espace membre 🔓</button>
+                <button class="btn btn-secondary btn-block" onclick="router.navigate('/auth')" style="width: 100%;">Se connecter à l'espace membre <i class="ri-arrow-right-line" style="margin-left: 0.35rem;"></i></button>
             </div>
         </div>
     `;
@@ -471,13 +471,13 @@ window.handleRegImageUpload = async function(event) {
         urlInput.value = publicUrlData.publicUrl;
         
         if (statusText) {
-            statusText.innerHTML = `✅ Photo compressée et hébergée !`;
+            statusText.innerHTML = `<i class="ri-check-line"></i> Photo compressée et hébergée !`;
             statusText.style.color = "var(--success)";
         }
     } catch (e) {
         console.error("Upload error:", e);
         if (statusText) {
-            statusText.innerHTML = `❌ Échec de l'envoi (${e.message})`;
+            statusText.innerHTML = `<i class="ri-close-line"></i> Échec de l'envoi (${e.message})`;
             statusText.style.color = "var(--danger)";
         }
     } finally {
@@ -550,7 +550,7 @@ async function handleRestaurantLogin(e) {
                     localStorage.setItem('admin_session', 'true');
                 } catch (err) {}
                 
-                showToast("Connexion réussie ! Bienvenue dans la Console Super-Admin 🛡️", "success");
+                showToast("Connexion réussie ! Bienvenue dans la Console Super-Admin.", "success");
                 if (typeof updateNavbar === 'function') updateNavbar();
                 if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
                 
@@ -584,7 +584,7 @@ async function handleRestaurantLogin(e) {
                 localStorage.setItem('admin_session', 'true');
             } catch (err) {}
             
-            showToast("Connexion réussie ! Bienvenue dans la Console Super-Admin 🛡️", "success");
+            showToast("Connexion réussie ! Bienvenue dans la Console Super-Admin.", "success");
             if (typeof updateNavbar === 'function') updateNavbar();
             if (typeof renderMobileBottomNav === 'function') renderMobileBottomNav();
             
@@ -661,7 +661,7 @@ async function handleRestaurantLogin(e) {
     }
 
     if (targetResto.status === 'suspended') {
-        showToast(`🔒 Le restaurant « ${targetResto.name} » a été suspendu par le Super-Admin. Contactez l'administration pour sa réactivation.`, "danger");
+        showToast(`Le restaurant « ${targetResto.name} » a été suspendu par le Super-Admin. Contactez l'administration pour sa réactivation.`, "danger");
         return;
     }
 
@@ -691,7 +691,7 @@ async function handleRestaurantLogin(e) {
     } catch (err) {}
     
     if (typeof updateNavbar === 'function') updateNavbar();
-    showToast(`Connexion réussie ! Bienvenue ${r.name} 👋`, "success");
+    showToast(`Connexion réussie ! Bienvenue ${r.name}.`, "success");
     
     setTimeout(() => {
         const modal = document.getElementById('auth-modal');
@@ -840,8 +840,8 @@ async function handleRestaurantRegister(e) {
     if (container) {
         container.innerHTML = `
             <div style="text-align: center; padding: 2rem 1.25rem; max-width: 520px; margin: 0 auto;">
-                <div style="width: 72px; height: 72px; background: rgba(16, 185, 129, 0.12); color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.25rem auto;">
-                    ✓
+                <div style="width: 72px; height: 72px; background: rgba(16, 185, 129, 0.12); color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 1.25rem auto;">
+                    <i class="ri-check-line"></i>
                 </div>
                 <h2 style="font-size: 1.4rem; color: var(--text-primary); font-family: var(--font-serif); font-weight: 800; margin-bottom: 0.5rem;">
                     Demande de partenariat transmise !
@@ -855,17 +855,17 @@ async function handleRestaurantRegister(e) {
                     <div style="font-weight: 700; margin-bottom: 0.75rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.5rem;">
                         <i class="ri-information-line" style="color: var(--primary); font-size: 1.1rem;"></i> Informations de validation :
                     </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        📧 <strong>Email renseigné :</strong> <span style="color: var(--primary);">${email}</span>
+                    <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="ri-mail-line" style="color: var(--primary);"></i> <strong>Email renseigné :</strong> <span style="color: var(--primary);">${email}</span>
                     </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        🔑 <strong>Identifiant de connexion :</strong> <code>${username}</code>
+                    <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="ri-key-2-line" style="color: var(--primary);"></i> <strong>Identifiant de connexion :</strong> <code>${username}</code>
                     </div>
-                    <div style="margin-bottom: 0.5rem;">
-                        📱 <strong>Numéro WhatsApp :</strong> <code>${whatsapp}</code>
+                    <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                        <i class="ri-whatsapp-line" style="color: #25D366;"></i> <strong>Numéro WhatsApp :</strong> <code>${whatsapp}</code>
                     </div>
                     <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px dashed var(--border); font-size: 0.8rem; color: var(--text-secondary);">
-                        ⚡ <em>Note de confirmation :</em> Si l'email de confirmation tarde à arriver (filtres anti-spam), votre compte n'est pas bloqué ! Le Super-Administrateur peut activer votre restaurant directement depuis la console ou via WhatsApp ci-dessous.
+                        <i class="ri-information-line" style="margin-right: 0.35rem;"></i> <em>Note de confirmation :</em> Si l'email de confirmation tarde à arriver (filtres anti-spam), votre compte n'est pas bloqué ! Le Super-Administrateur peut activer votre restaurant directement depuis la console ou via WhatsApp ci-dessous.
                     </div>
                 </div>
 
@@ -875,12 +875,12 @@ async function handleRestaurantRegister(e) {
                         <i class="ri-whatsapp-line" style="font-size: 1.25rem;"></i> Confirmer directement via WhatsApp
                     </a>
 
-                    <button class="btn btn-outline" onclick="window.instantActivatePartner('${newId}', '${name.replace(/'/g, "\\'")}')" style="border-radius: 12px; padding: 0.85rem; font-weight: 700; color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.06);">
-                        ⚡ Activer immédiatement mon compte (Validation instantanée)
+                    <button class="btn btn-outline" onclick="window.instantActivatePartner('${newId}', '${name.replace(/'/g, "\\'")}')" style="border-radius: 12px; padding: 0.85rem; font-weight: 700; color: #10b981; border-color: #10b981; background: rgba(16,185,129,0.06); display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <i class="ri-flashlight-line"></i> Activer immédiatement mon compte (Validation instantanée)
                     </button>
 
                     <button class="btn btn-primary" onclick="router.navigate('/auth')" style="width: 100%; border-radius: 12px; font-weight: 700; padding: 0.85rem;">
-                        Accéder à la Page de Connexion 🔓
+                        Accéder à la Page de Connexion <i class="ri-arrow-right-line" style="margin-left: 0.35rem;"></i>
                     </button>
                     
                     <button class="btn btn-ghost" onclick="router.navigate('/')" style="width: 100%; border-radius: 12px; padding: 0.5rem; font-size: 0.85rem;">
@@ -894,7 +894,7 @@ async function handleRestaurantRegister(e) {
     // Floating toast confirming partnership submission
     if (typeof showToast === 'function') {
         showToast("Votre demande de partenariat a été enregistrée avec succès !", "success", {
-            title: "Demande envoyée 🤝",
+            title: "Demande envoyée",
             duration: 7000
         });
     }
@@ -913,7 +913,7 @@ window.instantActivatePartner = function(restoId, restoName) {
             store.syncToSupabase().catch(() => {});
         }
     }
-    showToast(`🎉 Le restaurant « ${restoName} » est désormais activé ! Vous pouvez vous connecter immédiatement.`, "success");
+    showToast(`Le restaurant « ${restoName} » est désormais activé ! Vous pouvez vous connecter immédiatement.`, "success");
     if (typeof router !== 'undefined') {
         router.navigate('/auth');
     }

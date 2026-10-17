@@ -6,10 +6,10 @@ function renderCheckoutTab(r) {
     if (!cart.items || cart.items.length === 0) {
         container.innerHTML = `
             <div style="text-align: center; padding: 4rem 1rem;">
-                <span style="font-size: 3.5rem; display: block; margin-bottom: 0.75rem;">🛒</span>
+                <span style="font-size: 3rem; display: block; margin-bottom: 0.75rem; color: var(--gold);"><i class="ri-shopping-bag-3-line"></i></span>
                 <h3 style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">Votre panier est vide</h3>
                 <p style="color: var(--text-secondary); margin: 0 auto 1.5rem auto; max-width: 320px; font-size: 0.95rem;">Découvrez notre sélection de plats frais du jour et faites votre choix !</p>
-                <button class="btn btn-primary" onclick="switchRestoTab('menu')" style="padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600;">Voir le Menu 🍽️</button>
+                <button class="btn btn-primary" onclick="switchRestoTab('menu')" style="padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600;">Voir le Menu <i class="ri-arrow-right-line" style="margin-left: 0.35rem;"></i></button>
             </div>
         `;
         return;
@@ -36,7 +36,7 @@ function renderCheckoutTab(r) {
                         <button class="qty-btn" onclick="updateCartQty('${item.id}', 1)" title="Augmenter" style="width: 30px; height: 30px; border: none; background: transparent; cursor: pointer; font-size: 1.1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; color: var(--text-primary);">+</button>
                     </div>
                     <button type="button" onclick="removeCartItem('${item.id}')" title="Supprimer cet article" style="width: 34px; height: 34px; border-radius: 10px; border: 1px solid rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.08); color: #ef4444; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; transition: all 0.2s ease;">
-                        🗑️
+                        <i class="ri-delete-bin-line"></i>
                     </button>
                 </div>
             </div>
@@ -52,7 +52,7 @@ function renderCheckoutTab(r) {
                     <span>${Number(cart.subtotal).toLocaleString('fr-FR')} FCFA</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: var(--success); font-weight: 600;">
-                    <span>🎁 Réduction Fidélité</span>
+                    <span><i class="ri-gift-line" style="margin-right: 0.35rem;"></i> Réduction Fidélité</span>
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                         <span>-2,500 FCFA</span>
                         <button type="button" class="btn btn-link btn-xs" onclick="removeLoyaltyReward()" style="padding: 0; color: #ef4444; text-decoration: underline; font-size: 0.75rem;">Retirer</button>
@@ -95,8 +95,8 @@ function renderCheckoutTab(r) {
                 <span>Votre Panier</span>
                 <span style="font-size: 0.8rem; background: var(--accent-light); color: var(--accent); padding: 2px 8px; border-radius: 12px; font-weight: 700;">${totalItemCount}</span>
             </h2>
-            <button type="button" class="btn btn-outline-danger btn-xs" onclick="clearCart()" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 8px; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); background: transparent; cursor: pointer;">
-                🗑️ Vider le panier
+            <button type="button" class="btn btn-outline-danger btn-xs" onclick="clearCart()" style="font-size: 0.8rem; padding: 4px 10px; border-radius: 8px; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 0.35rem;">
+                <i class="ri-delete-bin-line"></i> Vider le panier
             </button>
         </div>
         
@@ -130,7 +130,7 @@ function renderCheckoutTab(r) {
                     <span id="order-phone-icon" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; opacity: 0.85;"></span>
                 </div>
                 <div id="order-phone-feedback" style="margin-top: 0.35rem; font-size: 0.78rem; min-height: 1.2rem; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s ease;">
-                    <span style="color: var(--text-secondary);">💡 Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>
+                    <span style="color: var(--text-secondary); display: inline-flex; align-items: center; gap: 0.35rem;"><i class="ri-information-line"></i> Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>
                 </div>
             </div>
             
@@ -140,21 +140,21 @@ function renderCheckoutTab(r) {
                     <label class="delivery-radio-card">
                         <input type="radio" name="order-mode" value="Sur place" onchange="toggleAddressField(false)">
                         <div class="delivery-card-content">
-                            <span class="delivery-icon">🍽️</span>
+                            <span class="delivery-icon"><i class="ri-restaurant-line"></i></span>
                             <span>Sur Place</span>
                         </div>
                     </label>
                     <label class="delivery-radio-card">
                         <input type="radio" name="order-mode" value="A emporter" checked onchange="toggleAddressField(false)">
                         <div class="delivery-card-content">
-                            <span class="delivery-icon">🛍️</span>
+                            <span class="delivery-icon"><i class="ri-shopping-bag-line"></i></span>
                             <span>A Emporter</span>
                         </div>
                     </label>
                     <label class="delivery-radio-card">
                         <input type="radio" name="order-mode" value="Livraison" onchange="toggleAddressField(true)">
                         <div class="delivery-card-content">
-                            <span class="delivery-icon">🛵</span>
+                            <span class="delivery-icon"><i class="ri-e-bike-2-line"></i></span>
                             <span>Livraison</span>
                         </div>
                     </label>
@@ -169,7 +169,7 @@ function renderCheckoutTab(r) {
                     </button>
                 </div>
                 <div id="live-gps-status" style="display: none; font-size: 0.85rem; color: #059669; font-weight: 600; margin-bottom: 0.75rem; background: rgba(16, 185, 129, 0.1); padding: 0.5rem 0.85rem; border-radius: 10px; border: 1px solid rgba(16, 185, 129, 0.2);">
-                    ✅ Position GPS exacte enregistrée pour le livreur
+                    <i class="ri-check-line" style="margin-right: 0.35rem;"></i> Position GPS exacte enregistrée pour le livreur
                 </div>
                 <div id="delivery-fee-display" style="font-weight: bold; color: var(--primary); margin-bottom: 0.85rem; display: none;">Frais de livraison : <span id="fee-val">0</span> FCFA</div>
                 
@@ -189,7 +189,7 @@ function renderCheckoutTab(r) {
                         <input type="radio" name="order-payment" value="Espèces à la livraison" checked style="accent-color: var(--primary); transform: scale(1.15);">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.25rem;">
-                                <strong style="color: var(--text-primary); font-size: 0.98rem;">💵 Espèces à la livraison (Cash on Delivery)</strong>
+                                <strong style="color: var(--text-primary); font-size: 0.98rem;"><i class="ri-money-dollar-circle-line" style="margin-right: 0.35rem; color: #10b981;"></i> Espèces à la livraison (Cash on Delivery)</strong>
                                 <span class="badge" style="background: #10B981; color: white; font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Standard & Immédiat</span>
                             </div>
                             <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.25rem;">Règlement en liquide de la totalité (repas + livraison) directement en main propre au livreur à l'arrivée.</div>
@@ -234,7 +234,7 @@ function renderCheckoutTab(r) {
             </div>
             
             <button type="submit" id="btn-submit-order" class="btn btn-primary btn-block" style="font-weight: 700; font-size: 1rem; padding: 0.85rem 1.5rem; border-radius: 14px; box-shadow: 0 4px 14px rgba(255, 107, 0, 0.25);">
-                Envoyer ma commande au restaurant 🛵
+                Envoyer ma commande au restaurant <i class="ri-send-plane-fill" style="margin-left: 0.35rem;"></i>
             </button>
         </form>
     `;
@@ -318,13 +318,13 @@ window.locateClientLive = async function() {
             totalEls.forEach(el => el.innerText = Number(cart.total).toLocaleString('fr-FR') + " FCFA");
 
             if (btn) {
-                btn.innerHTML = '<i class="ri-check-line"></i> <span>Position GPS capturée ✅</span>';
+                btn.innerHTML = '<i class="ri-check-line"></i> <span>Position GPS capturée</span>';
                 btn.classList.remove('btn-outline');
                 btn.classList.add('btn-success');
             }
             if (statusEl) {
                 statusEl.style.display = 'block';
-                statusEl.innerHTML = `✅ Coordonnées GPS capturées (${lat.toFixed(4)}, ${lng.toFixed(4)}) • Distance ~${dist.toFixed(1)} km`;
+                statusEl.innerHTML = `<i class="ri-check-line" style="margin-right: 0.35rem;"></i> Coordonnées GPS capturées (${lat.toFixed(4)}, ${lng.toFixed(4)}) • Distance ~${dist.toFixed(1)} km`;
             }
 
             const addressInput = document.getElementById('order-address');
@@ -333,7 +333,7 @@ window.locateClientLive = async function() {
             }
 
             if (typeof showToast === 'function') {
-                showToast("📍 Votre position GPS exacte a été enregistrée pour la livraison !", "success");
+                showToast("Votre position GPS exacte a été enregistrée pour la livraison !", "success");
             }
             if (navigator.vibrate) navigator.vibrate(60);
         },
@@ -556,12 +556,11 @@ function submitSimpleOrder(e, restaurantId) {
         deliveryLng: cart.deliveryLng || null,
         loyaltyApplied: cart.loyaltyApplied || false,
         priceVerified: true,
-        otpVerified: true,
-        otpVerifiedVia: 'Authentification Native / WhatsApp',
+        otpVerifiedVia: 'Commande Vérifiée / WhatsApp',
         otpVerifiedAt: nowIso
     };
 
-    // Synchronisation automatique de l'authentification native du client
+    // Synchronisation automatique du compte client
     if (typeof customerAuth !== 'undefined') {
         customerAuth.login({
             phone: phone,
@@ -569,7 +568,7 @@ function submitSimpleOrder(e, restaurantId) {
             lastname: lastname,
             name: `${firstname} ${lastname}`.trim(),
             address: order.address || '',
-            authMethod: 'Authentification Native'
+            authMethod: 'Compte Privilège Thiès Resto'
         });
     }
 
@@ -642,16 +641,17 @@ window.executePendingOrder = async function() {
         let itemsText = (order.items || []).map(i => `${i.qty}x ${i.name}`).join(', ');
         let gpsLink = '';
         if (order.deliveryLat && order.deliveryLng) {
-            gpsLink = `📍 *Position GPS en direct* : https://www.google.com/maps?q=${order.deliveryLat},${order.deliveryLng}\n`;
+            gpsLink = `*Position GPS en direct* : https://www.google.com/maps?q=${order.deliveryLat},${order.deliveryLng}\n`;
         }
-        const waText = `Bonjour ${r.name}, voici ma commande officielle n°*${securedOrderId}* sur THIES Resto.\n\n👤 *Client* : ${firstname} ${lastname} (${phone})\n🍽️ *Plats* : ${itemsText}\n🛵 *Mode* : ${mode}\n${order.address ? `📍 *Adresse* : ${order.address}\n` : ''}${gpsLink}💰 *Total à payer* : ${certifiedTotal} FCFA\n\nMerci de confirmer la réception !`;
+        const clientIdentifier = `${firstname} ${lastname}`.trim() || phone;
+        const waText = `🔔 *THIÈS RESTO - NOUVELLE COMMANDE REÇUE !*\n\nVous venez de recevoir une commande de *"${clientIdentifier}"* (${phone}).\n\n*Commande n°* : *${securedOrderId}*\n*Plats commandés* : ${itemsText}\n*Mode* : ${mode}\n${order.address ? `*Adresse de livraison* : ${order.address}\n` : ''}${gpsLink}*Total certifié à régler* : *${certifiedTotal} FCFA*\n\nMerci de confirmer la bonne réception et le lancement en cuisine !`;
         const waLink = `https://wa.me/${(r.whatsapp || '').replace(/\+/g, '').replace(/\s+/g, '')}?text=${encodeURIComponent(waText)}`;
 
         if (container) {
             container.innerHTML = `
                 <div class="confirmation-screen" style="max-width: 480px; margin: 1.5rem auto 0; background: var(--bg-card); padding: 2.2rem 1.75rem; border-radius: 24px; box-shadow: var(--shadow); border: 1px solid var(--border); text-align: center;">
                     <div style="width: 68px; height: 68px; border-radius: 50%; background: rgba(16, 185, 129, 0.12); color: #059669; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; margin: 0 auto 1rem;">
-                        ⏳
+                        <i class="ri-check-line"></i>
                     </div>
                     <h2 style="font-family: var(--font-serif); font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem;">
                         Commande Transmise !
@@ -667,30 +667,30 @@ window.executePendingOrder = async function() {
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; color: #d97706; font-weight: 700;">
-                                <span>⏳ 1.</span> <span>En attente de confirmation par le restaurant</span>
+                                <span>1.</span> <span>En attente de confirmation par le restaurant</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
-                                <span>👨‍🍳 2.</span> <span>Mise en cuisine par le restaurant</span>
+                                <span>2.</span> <span>Mise en cuisine par le restaurant</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
-                                <span>🛵 3.</span> <span>Départ en livraison (notifié par le restaurant)</span>
+                                <span>3.</span> <span>Départ en livraison (notifié par le restaurant)</span>
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--text-secondary);">
-                                <span>✅ 4.</span> <span>Confirmation de réception par vous (Client)</span>
+                                <span>4.</span> <span>Confirmation de réception par vous (Client)</span>
                             </div>
                         </div>
                     </div>
 
                     <div style="background: var(--bg-page); padding: 1.1rem; border-radius: 16px; font-size: 0.9rem; text-align: left; margin-bottom: 1.25rem; border: 1px solid var(--border);">
                         <div style="font-weight: 700; margin-bottom: 0.6rem; color: var(--text-primary); border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; display: flex; justify-content: space-between;">
-                            <span>📋 Récapitulatif</span>
+                            <span><i class="ri-file-list-3-line" style="margin-right: 0.35rem;"></i> Récapitulatif</span>
                             <span style="color: var(--accent);">${mode}</span>
                         </div>
                         <div style="display: flex; flex-direction: column; gap: 0.35rem; color: var(--text-secondary); font-size: 0.88rem;">
-                            <div>👤 <strong>Client :</strong> ${firstname} ${lastname} (${phone})</div>
-                            <div>🍽️ <strong>Articles :</strong> ${itemsText}</div>
-                            <div>💳 <strong>Paiement :</strong> <span style="color: var(--text-primary); font-weight: 600;">${order.paymentMethod || 'Non spécifié'}</span></div>
-                            ${order.address ? `<div>📍 <strong>Adresse :</strong> ${order.address}</div>` : ''}
+                            <div><strong>Client :</strong> ${firstname} ${lastname} (${phone})</div>
+                            <div><strong>Articles :</strong> ${itemsText}</div>
+                            <div><strong>Paiement :</strong> <span style="color: var(--text-primary); font-weight: 600;">${order.paymentMethod || 'Non spécifié'}</span></div>
+                            ${order.address ? `<div><strong>Adresse :</strong> ${order.address}</div>` : ''}
                             <div style="margin-top: 0.4rem; font-size: 1rem; color: var(--text-primary); font-weight: 700; border-top: 1px dashed var(--border); padding-top: 0.5rem; display: flex; justify-content: space-between;">
                                 <span>Total certifié :</span>
                                 <span style="color: var(--accent); font-size: 1.15rem;">${certifiedTotal} FCFA</span>
@@ -700,16 +700,16 @@ window.executePendingOrder = async function() {
 
                     <div style="background: rgba(37, 211, 102, 0.08); padding: 1.25rem; border-radius: 18px; margin-bottom: 1.25rem; border: 1px solid rgba(37, 211, 102, 0.25); text-align: center;">
                         <p style="color: #047857; font-weight: 600; font-size: 0.92rem; margin-bottom: 0.9rem; line-height: 1.4;">
-                            📲 Envoyez le récapitulatif officiel sur le WhatsApp du restaurant pour notifier le gérant :
+                            Envoyez le récapitulatif officiel sur le WhatsApp du restaurant pour notifier le gérant :
                         </p>
                         <a href="${waLink}" target="_blank" rel="noopener noreferrer" class="btn btn-success" style="width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem 1rem; border-radius: 14px; font-weight: 700; font-size: 1rem; text-decoration: none; box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);">
-                            <span style="font-size: 1.25rem;">💬</span> Ouvrir WhatsApp du Restaurant
+                            <i class="ri-whatsapp-line" style="font-size: 1.25rem;"></i> Ouvrir WhatsApp du Restaurant
                         </a>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 0.6rem;">
                         <button class="btn btn-primary" onclick="router.navigate('/tracking')" style="width: 100%; padding: 0.75rem; border-radius: 12px; font-weight: 600;">
-                            🛵 Suivre l'avancement en direct
+                            Suivre l'avancement en direct <i class="ri-arrow-right-line" style="margin-left: 0.35rem;"></i>
                         </button>
                         <button class="btn btn-secondary" onclick="router.navigate('/')" style="width: 100%; padding: 0.65rem; border-radius: 12px; font-size: 0.88rem;">
                             Retourner à l'accueil
@@ -723,144 +723,16 @@ window.executePendingOrder = async function() {
         if (container) {
             container.innerHTML = `
                 <div style="text-align: center; padding: 3rem 1rem; max-width: 420px; margin: 2rem auto; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border);">
-                    <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                    <div style="font-size: 2.5rem; margin-bottom: 1rem; color: #ef4444;"><i class="ri-error-warning-line"></i></div>
                     <h3 style="color: var(--text-primary); font-size: 1.3rem; margin-bottom: 0.5rem;">Une erreur est survenue</h3>
                     <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem;">Nous n'avons pas pu finaliser automatiquement l'étape. Veuillez cliquer ci-dessous pour réessayer.</p>
-                    <button class="btn btn-primary" onclick="window.executePendingOrder()" style="padding: 0.75rem 1.5rem; border-radius: 12px;">🔄 Réessayer la validation</button>
+                    <button class="btn btn-primary" onclick="window.executePendingOrder()" style="padding: 0.75rem 1.5rem; border-radius: 12px;"><i class="ri-refresh-line" style="margin-right: 0.35rem;"></i> Réessayer la validation</button>
                 </div>
             `;
         }
     }
 };
 
-/**
- * Official SasPay Senegal Payment Integration (Wave, Orange Money, Free Money, Carte)
- * Implements official API for secure online transactions
- */
-window.initiateSaspayPayment = async function(orderId, channel = 'ALL') {
-    const btn = document.getElementById('btn-saspay-now') || 
-                document.querySelector(`[data-saspay-order-id="${orderId}"]`) ||
-                document.getElementById('btn-paytech-now');
-    const originalText = btn ? btn.innerHTML : '';
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-ring" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:6px;"></span> Connexion SasPay Sécurisée...';
-    }
+// Règlement des commandes à la livraison (Espèces, Wave direct ou Orange Money)
 
-    try {
-        let order = null;
-        if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
-            order = store.data.orders.find(o => String(o.id) === String(orderId));
-        }
-        if (!order) {
-            const history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
-            order = history.find(o => String(o.id) === String(orderId));
-        }
-
-        const total = order ? (order.total || order.certifiedTotal || 0) : (window.cart?.total || 0);
-        const customerName = order?.customerName || localStorage.getItem('customerName') || 'Client';
-        const customerPhone = order?.customerPhone || localStorage.getItem('customerPhone') || '';
-        
-        let restaurantName = 'THIES Resto';
-        if (order && order.restaurantId && store?.getRestaurantById) {
-            const r = store.getRestaurantById(order.restaurantId);
-            if (r) restaurantName = r.name;
-        }
-
-        const response = await fetch('/api/saspay/request-payment', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                orderId: orderId,
-                amount: total,
-                itemName: `Commande #${orderId} - ${restaurantName}`,
-                customerName: customerName,
-                customerPhone: customerPhone,
-                restaurantName: restaurantName,
-                channel: channel || 'ALL',
-                returnHash: `/tracking?orderId=${encodeURIComponent(orderId)}&payment=success`
-            })
-        });
-
-        const data = await response.json();
-
-        if (data && data.success && data.redirectUrl) {
-            if (btn) {
-                btn.innerHTML = '<span>Redirection SasPay ➔</span>';
-            }
-            // Navigate client to official SasPay payment gateway
-            window.location.href = data.redirectUrl;
-        } else {
-            console.error("SasPay API Error:", data);
-            if (typeof showToast === 'function') {
-                showToast(data.message || "Erreur lors de l'initialisation SasPay.", "danger");
-            }
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = originalText;
-            }
-        }
-    } catch (err) {
-        console.error("SasPay payment exception:", err);
-        if (typeof showToast === 'function') {
-            showToast("Impossible de joindre la passerelle SasPay. Vérifiez votre connexion.", "danger");
-        }
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
-        }
-    }
-};
-
-/**
- * Validates and syncs SasPay payment upon return callback
- */
-window.handleSaspayReturnCallback = function() {
-    const hash = window.location.hash || '';
-    if (hash.includes('payment=success') && hash.includes('orderId=')) {
-        try {
-            const queryPart = hash.includes('?') ? hash.split('?')[1] : '';
-            const params = new URLSearchParams(queryPart);
-            const orderId = params.get('orderId');
-            const saspayRef = params.get('saspay_ref') || params.get('token') || 'SASPAY_CONFIRMED';
-            
-            if (orderId) {
-                console.log(`[SasPay] Validation de la transaction pour la commande #${orderId}`);
-                if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
-                    const localOrder = store.data.orders.find(o => String(o.id) === String(orderId));
-                    if (localOrder) {
-                        localOrder.paymentStatus = 'Payé via SasPay (Validé)';
-                        localOrder.isPaid = true;
-                        localOrder.saspayTransactionRef = saspayRef;
-                        if (typeof store.save === 'function') store.save();
-                    }
-                }
-                
-                // Notifier le serveur pour enregistrement comptable immédiat
-                fetch('/api/saspay/confirm-order-payment', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderId, saspayRef })
-                }).catch(e => console.warn('SasPay confirm order notice:', e));
-
-                if (typeof showToast === 'function') {
-                    showToast('🎉 Votre paiement SasPay a été validé avec succès !', 'success');
-                }
-            }
-        } catch (e) {
-            console.error('Erreur traitement retour SasPay:', e);
-        }
-    }
-};
-
-// Listen for return redirect events
-window.addEventListener('hashchange', window.handleSaspayReturnCallback);
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', window.handleSaspayReturnCallback);
-} else {
-    window.handleSaspayReturnCallback();
-}
-
-// Backwards compatibility alias
-window.initiatePaytechPayment = window.initiateSaspayPayment;
 

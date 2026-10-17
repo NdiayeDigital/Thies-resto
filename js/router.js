@@ -105,7 +105,6 @@ class Router {
         // ----------------------------------------------------
         
         // 1. GUEST / UNAUTHENTICATED ATTEMPT TO ACCESS #/admin:
-        // Must be authenticated with valid token & session in sessionStorage, otherwise redirect immediately to #/admin-login
         const isAccessingAdminConsole = hash === '#/admin' || (hash.startsWith('#/admin') && hash !== '#/admin-login');
         if (isAccessingAdminConsole) {
             const hasValidAdminAuth = Boolean(
@@ -114,7 +113,6 @@ class Router {
                 sessionStorage.getItem('admin_session') === 'true'
             );
             if (!hasValidAdminAuth) {
-                // Clear any lingering / corrupt state
                 if (typeof isSuperAdminSession !== 'undefined') isSuperAdminSession = false;
                 if (typeof window !== 'undefined') window.isSuperAdminSession = false;
                 try {
@@ -129,57 +127,15 @@ class Router {
             }
         }
 
-        // Common complete suite of restaurant manager views
-        const allRestoAllowedRoutes = [
-            '#/dashboard',
-            '#/dashboard-orders',
-            '#/dashboard-reservations',
-            '#/dashboard-dishes',
-            '#/dashboard-menu',
-            '#/dashboard-add-menu',
-            '#/dashboard-daily-menu',
-            '#/dashboard-reports',
-            '#/dashboard-accounting',
-            '#/dashboard-account',
-            '#/dashboard-subscription',
-            '#/dashboard-reviews',
-            '#/politique-admin'
-        ];
-
-        // 2. SUPER ADMIN LOCK-IN: Super-Admin can access Admin console or full impersonation dashboard
-        if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
-            const allowedAdminRoutes = [
-                '#/admin',
-                '#/admin-login',
-                '#/politique-admin'
-            ];
-            const allowedImpersonationRoutes = [
-                ...allRestoAllowedRoutes,
-                '#/admin'
-            ];
-
-            if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
-                if (!allowedImpersonationRoutes.includes(hash)) {
-                    this.navigate('/dashboard');
-                    return;
-                }
-            } else {
-                if (!allowedAdminRoutes.includes(hash)) {
-                    this.navigate('/admin');
-                    return;
-                }
-            }
-        }
-
-        // 3. RESTAURANT PARTNER LOCK-IN: Restaurant manager can access all manager tabs until logged out
-        else if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
-            const allowedRestoRoutes = [
-                ...allRestoAllowedRoutes,
-                '#/auth'
-            ];
-
-            if (!allowedRestoRoutes.includes(hash)) {
-                this.navigate('/dashboard');
+        // 2. UNAUTHENTICATED ATTEMPT TO ACCESS RESTAURANT DASHBOARD:
+        const isAccessingDashboard = hash.startsWith('#/dashboard');
+        if (isAccessingDashboard) {
+            const hasRestoAuth = Boolean(
+                (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) ||
+                (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession)
+            );
+            if (!hasRestoAuth) {
+                this.navigate('/auth');
                 return;
             }
         }
@@ -192,26 +148,34 @@ class Router {
             container.scrollTop = 0;
         }
         
-        // Parse params for restaurant view: #/r/la-licorne
+        // Parse params for restaurant view: #/r/:slug or #/restaurant/:slug or group
         let matched = false;
         
-        // Match group route first: #/r/:slug/group/:groupId
-        const groupMatch = hash.match(/^#\/r\/([^/]+)\/group\/([^/]+)$/);
+        // Match group route first: #/r/:slug/group/:groupId or #/restaurant/:slug/group/:groupId
+        const groupMatch = hash.match(/^#\/(?:r|restaurant|resto)\/([^/]+)\/group\/([^/]+)$/);
         if (groupMatch) {
             const slug = groupMatch[1];
             const groupId = groupMatch[2];
             if (this.routes['#/r/:slug']) {
-                this.routes['#/r/:slug'](slug, 'group', groupId);
+                try {
+                    this.routes['#/r/:slug'](slug, 'group', groupId);
+                } catch (err) {
+                    console.error("Router error on restaurant group route:", err);
+                }
                 matched = true;
             }
         }
         
         if (!matched) {
-            const restoMatch = hash.match(/^#\/r\/([^/]+)$/);
+            const restoMatch = hash.match(/^#\/(?:r|restaurant|resto)\/([^/]+)$/);
             if (restoMatch) {
                 const slug = restoMatch[1];
                 if (this.routes['#/r/:slug']) {
-                    this.routes['#/r/:slug'](slug, 'menu');
+                    try {
+                        this.routes['#/r/:slug'](slug, 'menu');
+                    } catch (err) {
+                        console.error("Router error on restaurant route:", err);
+                    }
                     matched = true;
                 }
             }
@@ -221,7 +185,26 @@ class Router {
             const cleanRouteKey = hash.split('?')[0];
             const handler = this.routes[hash] || this.routes[cleanRouteKey] || this.routes['#/404'];
             if (handler) {
-                handler();
+                try {
+                    handler();
+                } catch (err) {
+                    console.error("Router execution error on route " + hash + ":", err);
+                    const mainEl = document.getElementById('main-content');
+                    if (mainEl) {
+                        mainEl.innerHTML = `
+                            <div style="text-align: center; padding: 4rem 1.5rem; max-width: 600px; margin: 0 auto;">
+                                <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(var(--primary-rgb), 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1.5rem;">
+                                    <i class="ri-refresh-line"></i>
+                                </div>
+                                <h2 style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 0.75rem; color: var(--text-primary);">Contenu temporairement indisponible</h2>
+                                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">Nous actualisons actuellement nos services gastronomiques. Veuillez recharger ou revenir à la sélection.</p>
+                                <button class="btn btn-primary" onclick="router.navigate('/')" style="font-weight: 700; border-radius: 12px; padding: 0.65rem 1.5rem;">
+                                    Retour aux restaurants
+                                </button>
+                            </div>
+                        `;
+                    }
+                }
             } else {
                 this.navigate('/');
             }

@@ -207,33 +207,33 @@
             const modalHtml = `
                 <div id="customer-auth-modal" style="position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; padding: 1rem; animation: fadeIn 0.2s ease;">
                     <div style="background: var(--bg-card); max-width: 440px; width: 100%; border-radius: 24px; padding: 2rem 1.5rem; border: 1px solid var(--border); box-shadow: var(--shadow); position: relative;">
-                        <button type="button" onclick="document.getElementById('customer-auth-modal').remove()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; line-height: 1;">✕</button>
+                        <button type="button" onclick="document.getElementById('customer-auth-modal').remove()" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.3rem; color: var(--text-secondary); cursor: pointer; line-height: 1;"><i class="ri-close-line"></i></button>
                         
                         <div style="text-align: center; margin-bottom: 1.5rem;">
-                            <div style="width: 56px; height: 56px; border-radius: 16px; background: rgba(var(--primary-rgb), 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin: 0 auto 0.75rem;">
-                                👤
+                            <div style="width: 56px; height: 56px; border-radius: 16px; background: rgba(var(--primary-rgb), 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; margin: 0 auto 0.75rem;">
+                                <i class="ri-user-line"></i>
                             </div>
-                            <h3 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.25rem;">
-                                ${isAuth ? 'Mon Compte Client' : 'Authentification Native'}
+                            <h3 style="font-size: 1.35rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.25rem; font-family: var(--font-serif);">
+                                ${isAuth ? 'Mon Compte Privilège' : 'Connexion Espace Privilège'}
                             </h3>
                             <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
-                                ${isAuth ? 'Gérez vos coordonnées et vos commandes' : 'Connectez-vous en 1 clic pour commander et suivre vos plats'}
+                                ${isAuth ? 'Gérez vos coordonnées et vos commandes gastronomiques' : 'Accédez instantanément à vos restaurants favoris et commandes'}
                             </p>
                         </div>
 
                         ${isAuth ? `
                             <div style="background: var(--bg-page); border: 1px solid var(--border); border-radius: 16px; padding: 1rem; margin-bottom: 1.25rem;">
                                 <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary); color: #fff; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.12);">
                                         ${(user.name || 'C').charAt(0).toUpperCase()}
                                     </div>
                                     <div>
                                         <div style="font-weight: 700; color: var(--text-primary); font-size: 1rem;">${user.name || 'Gourmet de Thiès'}</div>
-                                        <div style="font-size: 0.85rem; color: var(--text-secondary);">${user.phone}</div>
+                                        <div style="font-size: 0.85rem; color: var(--text-secondary); font-family: monospace;">${user.phone}</div>
                                     </div>
                                 </div>
-                                <div style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; background: rgba(16, 185, 129, 0.12); color: #059669; padding: 0.2rem 0.6rem; border-radius: 20px; font-weight: 700;">
-                                    🛡️ Authentification Native Active
+                                <div style="display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; background: rgba(16, 185, 129, 0.12); color: #059669; padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 700;">
+                                    <i class="ri-shield-star-line"></i> Membre Privilège Vérifié
                                 </div>
                             </div>
 
@@ -270,7 +270,7 @@
                                 </div>
 
                                 <button type="submit" id="btn-modal-auth-submit" class="btn btn-primary btn-block" style="width: 100%; padding: 0.8rem; border-radius: 14px; font-weight: 700; font-size: 0.95rem;">
-                                    ✅ Valider et Se Connecter
+                                    <i class="ri-check-line" style="margin-right: 0.35rem;"></i> Valider et Se Connecter
                                 </button>
                             </form>
                         `}
@@ -374,4 +374,4 @@
     window.cleanCustomerPhone = cleanCustomerPhone;
     window.validateSenegalPhone = validateSenegalPhone;
 
-})(window);
+})(typeof window !== 'undefined' ? window : this);

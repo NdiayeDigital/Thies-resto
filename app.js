@@ -88,7 +88,7 @@ router.add('#/partnership', () => {
     container.innerHTML = `
         <div class="auth-container" style="max-width: 600px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); box-shadow: var(--shadow);">
             <div class="auth-header" style="text-align: center; margin-bottom: 2rem;">
-                <span class="auth-logo" style="font-size: 3rem; display: block; margin-bottom: 1rem;">🤝</span>
+                <span class="auth-logo" style="font-size: 2.5rem; display: block; margin-bottom: 1rem; color: var(--gold);"><i class="ri-restaurant-2-line"></i></span>
                 <h2 style="font-family: var(--font-serif); font-size: 1.75rem; color: var(--text-primary);">Demande de Partenariat</h2>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
                     Rejoignez la première plateforme commune de restauration à Thiès. Remplissez les informations de votre établissement ci-dessous.
@@ -136,7 +136,7 @@ router.add('#/partnership', () => {
                     <input type="hidden" id="reg-image-url" value="">
                     <div id="reg-image-preview-container" style="display: none; margin-top: 0.75rem; align-items: center; gap: 0.75rem; background: var(--bg-secondary); padding: 0.5rem; border-radius: 10px; border: 1px solid var(--border);">
                         <img id="reg-image-preview" src="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
-                        <span id="reg-image-upload-status" style="font-size: 0.75rem; color: var(--success); font-weight: 600;">Photo sélectionnée avec succès ! ✅</span>
+                        <span id="reg-image-upload-status" style="font-size: 0.75rem; color: var(--success); font-weight: 600;">Photo sélectionnée avec succès !</span>
                     </div>
                 </div>
 
@@ -164,12 +164,12 @@ router.add('#/partnership', () => {
                     <small style="color: var(--text-secondary); font-size: 0.75rem; display: block; margin-top: 0.25rem;">Généré automatiquement par défaut (nom_221, modifiable).</small>
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Envoyer la demande de partenariat 🚀</button>
+                <button type="submit" class="btn btn-primary btn-block" style="font-weight: 700; width: 100%;">Envoyer la demande de partenariat</button>
             </form>
 
             <div style="text-align: center; margin-top: 1.5rem; border-top: 1px solid var(--border); padding-top: 1.5rem;">
                 <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">Vous êtes déjà partenaire ?</p>
-                <button class="btn btn-secondary btn-block" onclick="router.navigate('/auth')" style="width: 100%;">Se connecter à l'espace membre 🔓</button>
+                <button class="btn btn-secondary btn-block" onclick="router.navigate('/auth')" style="width: 100%;">Se connecter à l'espace membre</button>
             </div>
         </div>
     `;
@@ -256,13 +256,13 @@ window.handleRegImageUpload = async function(event) {
         urlInput.value = publicUrlData.publicUrl;
         
         if (statusText) {
-            statusText.innerHTML = `✅ Photo compressée et hébergée !`;
+            statusText.innerHTML = `Photo compressée et hébergée !`;
             statusText.style.color = "var(--success)";
         }
     } catch (e) {
         console.error("Upload error:", e);
         if (statusText) {
-            statusText.innerHTML = `❌ Échec de l'envoi (${e.message})`;
+            statusText.innerHTML = `Échec de l'envoi (${e.message})`;
             statusText.style.color = "var(--danger)";
         }
     } finally {
@@ -386,32 +386,36 @@ window.resetCart = resetCart;
 
 function clearCart() {
     if (!cart.items || cart.items.length === 0) return;
-    const confirmed = confirm("Voulez-vous vraiment vider l'ensemble de votre panier ?");
-    if (!confirmed) return;
     
-    const restoId = cart.restaurantId;
-    resetCart();
-    
-    if (restoId) {
-        const r = store.getRestaurantById(restoId);
-        if (r && typeof renderCheckoutTab === 'function') {
-            renderCheckoutTab(r);
+    const executeClear = () => {
+        const restoId = cart.restaurantId;
+        resetCart();
+        
+        if (restoId) {
+            const r = store.getRestaurantById(restoId);
+            if (r && typeof renderCheckoutTab === 'function') {
+                renderCheckoutTab(r);
+            }
+        } else {
+            const panel = document.getElementById('checkout-content-container');
+            if (panel) {
+                panel.innerHTML = `
+                    <div style="text-align: center; padding: 4rem 1rem;">
+                        <span style="font-size: 3rem; color: var(--gold);"><i class="ri-shopping-bag-3-line"></i></span>
+                        <h3 style="font-family: var(--font-serif); margin-top: 1rem; color: var(--text-primary);">Votre panier est vide</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Découvrez notre sélection gastronomique et composez votre commande.</p>
+                        <a href="#/" class="btn btn-primary" style="font-weight: 700;">Parcourir les restaurants</a>
+                    </div>
+                `;
+            }
         }
+        if (typeof showToast === 'function') showToast("Votre panier a été vidé", "info");
+    };
+
+    if (typeof showConfirmModal === 'function') {
+        showConfirmModal("Vider le panier", "Voulez-vous vraiment vider l'ensemble des articles de votre panier ?", executeClear);
     } else {
-        const panel = document.getElementById('checkout-content-container');
-        if (panel) {
-            panel.innerHTML = `
-                <div style="text-align: center; padding: 4rem 1rem;">
-                    <span style="font-size: 3rem;">🛒</span>
-                    <h3 style="margin-top: 1rem;">Votre panier est vide</h3>
-                    <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">Parcourez notre menu du jour et ajoutez des délices !</p>
-                    <button class="btn btn-primary" onclick="switchRestoTab('menu')">Voir le Menu</button>
-                </div>
-            `;
-        }
-    }
-    if (typeof showToast === 'function') {
-        showToast("Votre panier a été vidé", "info");
+        executeClear();
     }
 }
 window.clearCart = clearCart;
@@ -439,7 +443,7 @@ function removeCartItem(dishId) {
             if (container) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 4rem 1rem;">
-                        <span style="font-size: 3rem;">🛒</span>
+                        <span style="font-size: 3rem; color: var(--gold);"><i class="ri-shopping-bag-3-line"></i></span>
                         <h3 style="margin-top: 1rem;">Votre panier est vide</h3>
                         <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">Parcourez notre menu du jour et ajoutez des délices !</p>
                         <button class="btn btn-primary" onclick="switchRestoTab('menu')">Voir le Menu</button>
@@ -495,7 +499,7 @@ function toggleTheme() {
     try { localStorage.setItem('THIES_THEME', next); } catch(e) {}
     updateThemeToggleUI(next);
     if (typeof showToast === 'function') {
-        showToast(next === 'dark' ? 'Mode Sombre activé 🌙' : 'Mode Clair activé ☀️', 'info', 1800);
+        showToast(next === 'dark' ? 'Mode Sombre activé' : 'Mode Clair activé', 'info', 1800);
     }
 }
 window.toggleTheme = toggleTheme;
@@ -503,7 +507,7 @@ window.toggleTheme = toggleTheme;
 function updateThemeToggleUI(theme) {
     const icon = document.getElementById('theme-toggle-icon');
     const label = document.getElementById('theme-toggle-label');
-    if (icon) icon.textContent = theme === 'light' ? '🌙' : '☀️';
+    if (icon) icon.innerHTML = theme === 'light' ? '<i class="ri-moon-line"></i>' : '<i class="ri-sun-line"></i>';
     if (label) label.textContent = theme === 'light' ? 'Mode Sombre' : 'Mode Clair';
     
     // Dynamically update mobile browser address bar color
@@ -558,10 +562,10 @@ function checkSlugAvailabilityRealtime(val) {
     const exists = store.getRestaurants().some(r => r.username === cleanVal || r.slug === cleanVal);
     if (exists) {
         badge.className = 'slug-status taken';
-        badge.innerHTML = '❌ Cet identifiant est déjà pris';
+        badge.innerHTML = '<span style="color: #ef4444; display: inline-flex; align-items: center; gap: 4px;"><i class="ri-close-circle-line"></i> Cet identifiant est déjà pris</span>';
     } else {
         badge.className = 'slug-status available';
-        badge.innerHTML = '✅ Cet identifiant est disponible';
+        badge.innerHTML = '<span style="color: #10b981; display: inline-flex; align-items: center; gap: 4px;"><i class="ri-check-circle-line"></i> Cet identifiant est disponible</span>';
     }
 }
 
@@ -661,16 +665,16 @@ window.toggleFavorite = function(restaurantId, event) {
     document.querySelectorAll(`[data-fav-resto-id="${restaurantId}"]`).forEach(btn => {
         if (added) {
             btn.classList.add('is-fav', 'active');
-            btn.innerHTML = '❤️';
+            btn.innerHTML = '<i class="ri-heart-fill" style="color: #ef4444;"></i>';
         } else {
             btn.classList.remove('is-fav', 'active');
-            btn.innerHTML = '🤍';
+            btn.innerHTML = '<i class="ri-heart-line"></i>';
         }
     });
 
     if (typeof showToast === 'function') {
         if (added) {
-            showToast("Ajouté aux favoris ❤️", "success");
+            showToast("Ajouté aux favoris", "success");
         } else {
             showToast("Retiré des favoris", "info");
         }
@@ -846,6 +850,7 @@ window.renderMobileBottomNav = function() {
             <a href="#" id="bottom-nav-orders" class="nav-item" onclick="router.navigate('/tracking'); updateBottomNavActive('orders'); return false;">
                 <div class="nav-icon"><i class="ri-file-list-3-line"></i></div>
                 <span>Commandes</span>
+                <span id="mobile-nav-orders-dot" class="nav-live-dot" style="display: none;"></span>
             </a>
             <a href="#" id="bottom-nav-profile" class="nav-item" onclick="router.navigate('/profile'); updateBottomNavActive('profile'); return false;">
                 <div class="nav-icon"><i class="ri-user-3-line"></i></div>
@@ -853,6 +858,29 @@ window.renderMobileBottomNav = function() {
             </a>
         `;
     }
+    if (typeof window.checkActiveOrdersLiveDot === 'function') {
+        window.checkActiveOrdersLiveDot();
+    }
+};
+
+window.checkActiveOrdersLiveDot = function() {
+    try {
+        const dot = document.getElementById('mobile-nav-orders-dot');
+        if (!dot) return;
+        let hasActive = false;
+        try {
+            const hist = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+            hasActive = hist.some(o => o.status && o.status !== 'Livrée' && o.status !== 'Livré' && o.status !== 'Annulée');
+        } catch(e) {}
+        const trackingOrderId = localStorage.getItem('trackingOrderId');
+        if (trackingOrderId && typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
+            const cur = store.data.orders.find(o => String(o.id) === String(trackingOrderId));
+            if (cur && cur.status && cur.status !== 'Livrée' && cur.status !== 'Livré' && cur.status !== 'Annulée') {
+                hasActive = true;
+            }
+        }
+        dot.style.display = hasActive ? 'block' : 'none';
+    } catch(e) {}
 };
 
 window.updateBottomNavActive = function(tabName) {
@@ -862,6 +890,29 @@ window.updateBottomNavActive = function(tabName) {
     const target = document.getElementById('bottom-nav-' + tabName) || document.getElementById('bottom-nav-resto-' + tabName);
     if (target) {
         target.classList.add('active');
+    }
+
+    // Switch client icons between outline and solid fill (native iOS/Android feel)
+    const iconMap = {
+        'home': { active: 'ri-home-5-fill', inactive: 'ri-home-5-line' },
+        'explore': { active: 'ri-compass-3-fill', inactive: 'ri-compass-3-line' },
+        'favorites': { active: 'ri-heart-3-fill', inactive: 'ri-heart-3-line' },
+        'orders': { active: 'ri-file-list-3-fill', inactive: 'ri-file-list-3-line' },
+        'profile': { active: 'ri-user-3-fill', inactive: 'ri-user-3-line' }
+    };
+    Object.keys(iconMap).forEach(key => {
+        const el = document.getElementById('bottom-nav-' + key);
+        if (el) {
+            const iconEl = el.querySelector('.nav-icon i');
+            if (iconEl) {
+                const isActive = (key === tabName);
+                iconEl.className = isActive ? iconMap[key].active : iconMap[key].inactive;
+            }
+        }
+    });
+
+    if (typeof window.checkActiveOrdersLiveDot === 'function') {
+        window.checkActiveOrdersLiveDot();
     }
 };
 
@@ -902,9 +953,56 @@ window.updateBottomNavFromRoute = function(hash) {
     window.updateFavoritesBadge();
 };
 
-// ---------- NOTIFICATION SOUND ----------
-function playNotificationSound() {
+// ---------- 5-STAR LUXURY NOTIFICATION CHIME (WEB AUDIO API & SYNTHESIS) ----------
+function playNotificationSound(type = 'chime') {
     try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+            const ctx = new AudioCtx();
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+            const now = ctx.currentTime;
+            
+            // First harmonic: 880 Hz (A5 crystal bell note)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(880, now);
+            gain1.gain.setValueAtTime(0.2, now);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.46);
+
+            // Second harmonic: 1320 Hz (E6 resonance)
+            const osc2 = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(1320, now + 0.08);
+            gain2.gain.setValueAtTime(0.25, now + 0.08);
+            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.75);
+            osc2.connect(gain2);
+            gain2.connect(ctx.destination);
+            osc2.start(now + 0.08);
+            osc2.stop(now + 0.76);
+
+            // Third harmonic: 1760 Hz (A6 sparkle)
+            const osc3 = ctx.createOscillator();
+            const gain3 = ctx.createGain();
+            osc3.type = 'sine';
+            osc3.frequency.setValueAtTime(1760, now + 0.16);
+            gain3.gain.setValueAtTime(0.18, now + 0.16);
+            gain3.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+            osc3.connect(gain3);
+            gain3.connect(ctx.destination);
+            osc3.start(now + 0.16);
+            osc3.stop(now + 0.91);
+            return;
+        }
+
+        // Fallback to audio element if Web Audio API unavailable
         let audio = document.getElementById('notification-sound');
         if (!audio) {
             audio = document.createElement('audio');
@@ -915,14 +1013,14 @@ function playNotificationSound() {
         audio.currentTime = 0;
         const playPromise = audio.play();
         if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.warn("Notification audio blocked by browser autoplay settings:", error);
-            });
+            playPromise.catch(() => {});
         }
     } catch(e) {
-        console.warn("Failed to play notification sound:", e);
+        // Silent failover to prevent console disruption
     }
 }
+window.playNotificationSound = playNotificationSound;
+window.playLuxuryChime = playNotificationSound;
 
 // ---------- ORDER POLLING (Supabase Realtime WebSockets) ----------
 let orderChannel = null;
@@ -946,9 +1044,26 @@ function startOrderPolling(restaurantId) {
                         } else if (typeof playNotificationSound === 'function') {
                             playNotificationSound();
                         }
+                        if (navigator.vibrate) {
+                            try { navigator.vibrate([300, 150, 300, 150, 300]); } catch(e) {}
+                        }
                         newIncoming.forEach(o => {
+                            const clientLabel = (o.customerName && o.customerName.trim()) 
+                                ? o.customerName.trim() 
+                                : (o.customerPhone || 'un client');
+                            const totalFormatted = (Number(o.total || 0)).toLocaleString();
+                            const notifMsg = `🔔 Vous venez de recevoir une commande de "${clientLabel}" (Commande n°${o.orderNumber || o.id} • ${totalFormatted} FCFA) !`;
                             if (typeof showToast === 'function') {
-                                showToast(`🔔 NOUVELLE COMMANDE REÇUE : Commande n°${o.orderNumber || o.id} de ${o.customerName || 'Client'} (${Number(o.total || 0).toLocaleString()} FCFA) !`, 'success', 8000);
+                                showToast(notifMsg, 'success', 10000);
+                            }
+                            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                                try {
+                                    new Notification('🔔 Nouvelle commande reçue !', {
+                                        body: `Vous venez de recevoir une commande de "${clientLabel}" (${totalFormatted} FCFA).`,
+                                        icon: '/icon.png',
+                                        tag: 'order-' + (o.id || Date.now())
+                                    });
+                                } catch(e) {}
                             }
                             store.data.orders.unshift(o);
                         });
@@ -990,11 +1105,11 @@ function startOrderPolling(restaurantId) {
                             } else {
                                 playNotificationSound();
                             }
-                            if (typeof showToast === 'function') showToast(`🔔 Nouvelle commande reçue !`, 'success');
+                            if (typeof showToast === 'function') showToast(`Nouvelle commande reçue !`, 'success');
                             
                             // Trigger Push Notification if permission granted
                             if ("Notification" in window && Notification.permission === "granted") {
-                                new Notification("Nouvelle Commande 🔔", { 
+                                new Notification("Nouvelle Commande", { 
                                     body: `Commande reçue de ${newOrder.customer_name} pour ${newOrder.total} FCFA`,
                                     icon: "icon.png" 
                                 });
@@ -1118,9 +1233,9 @@ function checkSlugAvailability() {
     if (slug.length < 3) { badge.innerHTML = ''; return; }
     const exists = store.getRestaurants().find(r => r.username === slug || r.slug === slug);
     if (exists) {
-        badge.innerHTML = '<span class="slug-status taken">❌ Identifiant déjà pris</span>';
+        badge.innerHTML = '<span class="slug-status taken"><i class="ri-close-circle-line"></i> Identifiant déjà pris</span>';
     } else {
-        badge.innerHTML = '<span class="slug-status available">✅ Disponible</span>';
+        badge.innerHTML = '<span class="slug-status available"><i class="ri-check-line"></i> Disponible</span>';
     }
 }
 
@@ -1155,11 +1270,11 @@ window.showToast = function(message, type = 'info', options = {}) {
     } else if (options.icon) {
         iconContent = `<div class="toast-icon-wrap">${options.icon}</div>`;
     } else {
-        let defaultIcon = 'ℹ️';
-        if (type === 'success') defaultIcon = '✓';
-        else if (type === 'cart') defaultIcon = '🛒';
-        else if (type === 'danger' || type === 'error') defaultIcon = '✕';
-        else if (type === 'warning') defaultIcon = '⚠️';
+        let defaultIcon = '<i class="ri-information-line"></i>';
+        if (type === 'success') defaultIcon = '<i class="ri-check-line"></i>';
+        else if (type === 'cart') defaultIcon = '<i class="ri-shopping-cart-line"></i>';
+        else if (type === 'danger' || type === 'error') defaultIcon = '<i class="ri-close-line"></i>';
+        else if (type === 'warning') defaultIcon = '<i class="ri-alert-line"></i>';
         iconContent = `<div class="toast-icon-wrap">${defaultIcon}</div>`;
     }
 
@@ -1187,7 +1302,7 @@ window.showToast = function(message, type = 'info', options = {}) {
             </div>
             <div class="toast-actions-wrap">
                 ${actionBtnHtml}
-                <button type="button" class="toast-close-btn" aria-label="Fermer la notification">✕</button>
+                <button type="button" class="toast-close-btn" aria-label="Fermer la notification"><i class="ri-close-line"></i></button>
             </div>
         </div>
         <div class="toast-progress-track">
@@ -1196,6 +1311,13 @@ window.showToast = function(message, type = 'info', options = {}) {
     `;
 
     container.appendChild(toast);
+
+    // Play 5-star luxury concierge chime on notification
+    if (!options.silent && (type === 'success' || type === 'cart' || options.sound)) {
+        if (typeof window.playNotificationSound === 'function') {
+            window.playNotificationSound();
+        }
+    }
 
     // Close button
     const closeBtn = toast.querySelector('.toast-close-btn');
@@ -1260,10 +1382,10 @@ window.showCartToast = function(dish, qty = 1, restaurant = null) {
     }
 
     window.showToast(`${qty > 1 ? qty + 'x ' : ''}${dish.name} • ${itemPrice} FCFA`, 'cart', {
-        title: 'Ajouté au panier ! 🛒',
+        title: 'Ajouté au panier !',
         image: dish.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=100&auto=format&fit=crop&q=60',
         duration: 4500,
-        actionText: 'Voir le panier ➔',
+        actionText: 'Voir le panier →',
         onAction: () => {
             if (typeof openCartTab === 'function') {
                 openCartTab();
@@ -1288,7 +1410,7 @@ window.showConfirmModal = function(title, message, onConfirm, onCancel = null) {
     
     modal.innerHTML = `
         <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; max-width: 400px; width: 100%; padding: 2rem; box-shadow: var(--shadow); text-align: center; animation: scaleUp 0.2s ease-out;">
-            <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚠️</div>
+            <div style="font-size: 2.5rem; margin-bottom: 1rem; color: #ef4444;"><i class="ri-error-warning-line"></i></div>
             <h3 style="font-family: var(--font-serif); margin-bottom: 0.75rem; color: var(--text-primary); font-size: 1.3rem;">${sanitizeHTML(title)}</h3>
             <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin-bottom: 2rem;">${sanitizeHTML(message)}</p>
             <div style="display: flex; gap: 0.75rem; justify-content: center;">
@@ -1329,7 +1451,7 @@ window.alertModal = window.showAlertModal = function(title, contentHtml) {
         <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; max-width: 480px; width: 100%; padding: 1.75rem; box-shadow: var(--shadow-lg); animation: scaleUp 0.2s ease-out; position: relative;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
                 <h3 style="font-family: var(--font-serif); font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin: 0;">${title}</h3>
-                <button id="info-modal-close" style="background: var(--bg-input); border: 1px solid var(--border); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); font-size: 1.1rem;">✕</button>
+                <button id="info-modal-close" style="background: var(--bg-input); border: 1px solid var(--border); border-radius: 50%; width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-secondary); font-size: 1.1rem;"><i class="ri-close-line"></i></button>
             </div>
             <div style="margin-bottom: 1.5rem; max-height: 65vh; overflow-y: auto;">
                 ${contentHtml}
@@ -1394,15 +1516,15 @@ function validateSenegalPhoneNumber(rawPhone) {
     if (national.length >= 2) {
         const prefix = national.substring(0, 2);
         if (prefix === '77' || prefix === '78') {
-            op = { code: prefix, name: 'Orange', color: '#ff7900', bg: 'rgba(255, 121, 0, 0.12)', icon: '🟠' };
+            op = { code: prefix, name: 'Orange', color: '#ff7900', bg: 'rgba(255, 121, 0, 0.12)', dotColor: '#ff7900' };
         } else if (prefix === '76') {
-            op = { code: prefix, name: 'Free Sénégal', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.12)', icon: '🔴' };
+            op = { code: prefix, name: 'Free Sénégal', color: '#dc2626', bg: 'rgba(220, 38, 38, 0.12)', dotColor: '#dc2626' };
         } else if (prefix === '70') {
-            op = { code: prefix, name: 'Expresso', color: '#0284c7', bg: 'rgba(2, 132, 199, 0.12)', icon: '🔵' };
+            op = { code: prefix, name: 'Expresso', color: '#0284c7', bg: 'rgba(2, 132, 199, 0.12)', dotColor: '#0284c7' };
         } else if (prefix === '75') {
-            op = { code: prefix, name: 'Promobile / Wave', color: '#9333ea', bg: 'rgba(147, 51, 234, 0.12)', icon: '🟣' };
+            op = { code: prefix, name: 'Promobile / Wave', color: '#9333ea', bg: 'rgba(147, 51, 234, 0.12)', dotColor: '#9333ea' };
         } else if (prefix === '33') {
-            op = { code: prefix, name: 'Ligne Fixe', color: '#4b5563', bg: 'rgba(75, 85, 99, 0.12)', icon: '☎️' };
+            op = { code: prefix, name: 'Ligne Fixe', color: '#4b5563', bg: 'rgba(75, 85, 99, 0.12)', dotColor: '#4b5563' };
         }
     }
 
@@ -1439,7 +1561,7 @@ function validateSenegalPhoneNumber(rawPhone) {
             nationalNumber: national,
             clean: '+221' + national,
             formatted,
-            message: '❌ Préfixe invalide (les mobiles commencent par 70, 75, 76, 77 ou 78)'
+            message: 'Préfixe invalide (les mobiles commencent par 70, 75, 76, 77 ou 78)'
         };
     }
 
@@ -1451,13 +1573,13 @@ function validateSenegalPhoneNumber(rawPhone) {
             nationalNumber: national,
             clean: '+221' + national,
             formatted,
-            message: `❌ Trop long (${national.length}/9 chiffres) : un numéro sénégalais comporte exactement 9 chiffres`
+            message: `Trop long (${national.length}/9 chiffres) : un numéro sénégalais comporte exactement 9 chiffres`
         };
     }
 
     if (national.length < 9) {
         const remaining = 9 - national.length;
-        const opLabel = op ? `${op.icon} ${op.name}` : 'Saisie...';
+        const opLabel = op ? op.name : 'Saisie...';
         return {
             isValid: false,
             state: 'typing',
@@ -1466,7 +1588,7 @@ function validateSenegalPhoneNumber(rawPhone) {
             clean: '+221' + national,
             formatted,
             remaining,
-            message: `⏳ ${opLabel} • encore ${remaining} chiffre${remaining > 1 ? 's' : ''} requis`
+            message: `${opLabel} • encore ${remaining} chiffre${remaining > 1 ? 's' : ''} requis`
         };
     }
 
@@ -1478,7 +1600,7 @@ function validateSenegalPhoneNumber(rawPhone) {
         nationalNumber: national,
         clean: '+221' + national,
         formatted,
-        message: `✅ Numéro valide (${op ? op.icon + ' ' + op.name : 'Sénégal'})`
+        message: `Numéro valide (${op ? op.name : 'Sénégal'})`
     };
 }
 window.validateSenegalPhoneNumber = validateSenegalPhoneNumber;
@@ -1500,7 +1622,7 @@ function attachRealtimePhoneValidation(inputEl, feedbackEl, badgeEl, iconEl) {
             inputEl.style.borderColor = 'var(--border)';
             inputEl.style.boxShadow = 'none';
             if (feedbackEl) {
-                feedbackEl.innerHTML = `<span style="color: var(--text-secondary); font-size: 0.76rem;">💡 Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>`;
+                feedbackEl.innerHTML = `<span style="color: var(--text-secondary); font-size: 0.76rem;">Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>`;
             }
             if (badgeEl) badgeEl.innerHTML = '';
             if (iconEl) iconEl.innerHTML = '';
@@ -1511,9 +1633,9 @@ function attachRealtimePhoneValidation(inputEl, feedbackEl, badgeEl, iconEl) {
                 feedbackEl.innerHTML = `<span style="color: #059669; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem;">${res.message} • ${res.formatted}</span>`;
             }
             if (badgeEl && res.operator) {
-                badgeEl.innerHTML = `<span style="background: ${res.operator.bg}; color: ${res.operator.color}; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; border: 1px solid ${res.operator.color}40;">${res.operator.icon} ${res.operator.name}</span>`;
+                badgeEl.innerHTML = `<span style="background: ${res.operator.bg}; color: ${res.operator.color}; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; border: 1px solid ${res.operator.color}40; display: inline-flex; align-items: center;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${res.operator.color};margin-right:5px;"></span>${res.operator.name}</span>`;
             }
-            if (iconEl) iconEl.innerHTML = '✅';
+            if (iconEl) iconEl.innerHTML = '<i class="ri-check-line" style="color:#10b981;"></i>';
         } else if (res.state === 'typing') {
             inputEl.style.borderColor = '#f59e0b';
             inputEl.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.12)';
@@ -1521,11 +1643,11 @@ function attachRealtimePhoneValidation(inputEl, feedbackEl, badgeEl, iconEl) {
                 feedbackEl.innerHTML = `<span style="color: #d97706; font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">${res.message}</span>`;
             }
             if (badgeEl && res.operator) {
-                badgeEl.innerHTML = `<span style="background: ${res.operator.bg}; color: ${res.operator.color}; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; border: 1px solid ${res.operator.color}40;">${res.operator.icon} ${res.operator.name}</span>`;
+                badgeEl.innerHTML = `<span style="background: ${res.operator.bg}; color: ${res.operator.color}; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700; border: 1px solid ${res.operator.color}40; display: inline-flex; align-items: center;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${res.operator.color};margin-right:5px;"></span>${res.operator.name}</span>`;
             } else if (badgeEl) {
                 badgeEl.innerHTML = '';
             }
-            if (iconEl) iconEl.innerHTML = '✍️';
+            if (iconEl) iconEl.innerHTML = '<i class="ri-edit-line"></i>';
         } else if (res.state === 'invalid_prefix') {
             inputEl.style.borderColor = '#ef4444';
             inputEl.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
@@ -1535,7 +1657,7 @@ function attachRealtimePhoneValidation(inputEl, feedbackEl, badgeEl, iconEl) {
             if (badgeEl) {
                 badgeEl.innerHTML = `<span style="background: rgba(220, 38, 38, 0.1); color: #dc2626; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700;">Invalide</span>`;
             }
-            if (iconEl) iconEl.innerHTML = '❌';
+            if (iconEl) iconEl.innerHTML = '<i class="ri-close-line" style="color:#ef4444;"></i>';
         } else if (res.state === 'too_long') {
             inputEl.style.borderColor = '#ef4444';
             inputEl.style.boxShadow = '0 0 0 3px rgba(239, 68, 68, 0.15)';
@@ -1545,7 +1667,7 @@ function attachRealtimePhoneValidation(inputEl, feedbackEl, badgeEl, iconEl) {
             if (badgeEl) {
                 badgeEl.innerHTML = `<span style="background: rgba(220, 38, 38, 0.1); color: #dc2626; padding: 2px 8px; border-radius: 8px; font-size: 0.72rem; font-weight: 700;">Trop long</span>`;
             }
-            if (iconEl) iconEl.innerHTML = '⚠️';
+            if (iconEl) iconEl.innerHTML = '<i class="ri-alert-line" style="color:#f59e0b;"></i>';
         }
         return res;
     };
@@ -1596,7 +1718,7 @@ window.updateStartupVerificationUI = function() {
     if (window.userLat && window.userLng) {
         if (geoLabel) geoLabel.textContent = "Thiès (GPS Actif)";
         if (geoBtn) {
-            geoBtn.textContent = "✓ OK";
+            geoBtn.textContent = "OK";
             geoBtn.classList.add('active');
         }
     } else {
@@ -1611,17 +1733,17 @@ window.updateStartupVerificationUI = function() {
 
     if (isSuperAdminSession) {
         if (authLabel) authLabel.textContent = "Super-Admin";
-        if (authStatusText) authStatusText.textContent = "Connecté 👑";
+        if (authStatusText) authStatusText.textContent = "Connecté";
         if (authDot) authDot.className = "micro-dot red";
     } else if (currentRestaurantSession) {
         if (authLabel) authLabel.textContent = currentRestaurantSession.name || "Restaurateur";
-        if (authStatusText) authStatusText.textContent = "Partenaire 🏪";
+        if (authStatusText) authStatusText.textContent = "Partenaire";
         if (authDot) authDot.className = "micro-dot green";
     } else {
         const storedPhone = localStorage.getItem('thies_resto_user_phone') || localStorage.getItem('client_phone');
         if (storedPhone) {
             if (authLabel) authLabel.textContent = "Client";
-            if (authStatusText) authStatusText.textContent = "Vérifié ✓";
+            if (authStatusText) authStatusText.textContent = "Vérifié";
             if (authDot) authDot.className = "micro-dot green";
         } else {
             if (authLabel) authLabel.textContent = "";
@@ -1817,21 +1939,21 @@ window.renderDailySpecialsHomeSection = function() {
                     
                     <!-- Tag Spécifique -->
                     <div style="position: absolute; top: 8px; left: 8px; background: linear-gradient(135deg, #F26B21 0%, #D9531E 100%); color: #ffffff; padding: 0.2rem 0.6rem; border-radius: 16px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3px; box-shadow: 0 2px 8px rgba(242,107,33,0.35); display: flex; align-items: center; gap: 0.25rem;">
-                        <span>⭐</span>
+                        <span><i class="ri-award-line"></i></span>
                         <span>${tagText}</span>
                     </div>
 
                     <!-- Note & Statut -->
                     <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); color: #fff; padding: 0.15rem 0.45rem; border-radius: 8px; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; gap: 0.2rem;">
-                        <span style="color: #FFC107;">★</span> ${dish.restaurantRating || '4.8'}
+                        <i class="ri-star-fill" style="color: #FFC107;"></i> ${dish.restaurantRating || '4.8'}
                     </div>
                 </div>
 
                 <div style="padding: 0.85rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
                     <div>
                         <!-- Restaurant Link -->
-                        <a href="#/restaurant/${restaurantSlug}" onclick="router.navigate('/restaurant/${restaurantSlug}'); return false;" style="font-size: 0.78rem; color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; margin-bottom: 0.25rem;">
-                            <span>🏪</span> <span>${dish.restaurantName || 'Restaurant Thiès'}</span>
+                        <a href="#/r/${restaurantSlug}" onclick="router.navigate('/r/${restaurantSlug}'); return false;" style="font-size: 0.78rem; color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; margin-bottom: 0.25rem;">
+                            <span><i class="ri-store-2-line"></i></span> <span>${dish.restaurantName || 'Restaurant Thiès'}</span>
                         </a>
                         
                         <!-- Dish Name -->
@@ -1853,7 +1975,7 @@ window.renderDailySpecialsHomeSection = function() {
                         </div>
 
                         <button onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" class="btn btn-primary ripple" style="padding: 0.45rem 0.85rem; border-radius: 10px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem; box-shadow: 0 3px 10px rgba(242,107,33,0.3);">
-                            <span>🛒</span>
+                            <span><i class="ri-shopping-cart-line"></i></span>
                             <span>Commander</span>
                         </button>
                     </div>
@@ -1868,13 +1990,13 @@ window.renderDailySpecialsHomeSection = function() {
             <div class="section-header" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.65rem; margin-bottom: 1rem;">
                 <div>
                     <div style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.7rem; background: rgba(242, 107, 33, 0.1); border-radius: 16px; color: var(--primary); font-size: 0.75rem; font-weight: 700; margin-bottom: 0.3rem; border: 1px solid rgba(242,107,33,0.2);">
-                        <span>🔥</span> <span>Sélection Fraîche</span>
+                        <span><i class="ri-fire-line" style="color: #ef4444;"></i></span> <span>Sélection Fraîche</span>
                     </div>
                     <h2 class="section-title" style="margin: 0; font-size: 1.35rem;">Les Plats du Jour du Moment</h2>
                     <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0.2rem 0 0 0;">Spécialités fraîches et suggestions du jour disponibles immédiatement en commande directe</p>
                 </div>
                 <button onclick="scrollToCatalog()" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.45rem 0.9rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
-                    <span>Voir les restos</span> <span>➔</span>
+                    <span>Voir les restos</span> <span>→</span>
                 </button>
             </div>
 
@@ -1899,7 +2021,7 @@ window.renderDailySpecialsHtml = function(dishes, isInnerOnly = false) {
     dailyList.forEach(dish => {
         const tag = dish.tag || 'Plat du jour';
         const formattedPrice = Number(dish.price || 0).toLocaleString() + ' FCFA';
-        const restoUrl = `#/restaurant/${dish.restaurantSlug}`;
+        const restoUrl = `#/r/${dish.restaurantSlug}`;
         const defaultFallback = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
         const imgUrl = dish.image || defaultFallback;
         const rating = (Number(dish.restaurantRating) || 4.5).toFixed(1);
@@ -1908,21 +2030,21 @@ window.renderDailySpecialsHtml = function(dishes, isInnerOnly = false) {
             <div class="daily-special-card hover-3d" id="daily-dish-card-${dish.id}" onclick="if (event.target.closest('.daily-special-resto-name') || event.target.closest('.daily-special-view-btn') || event.target.closest('.daily-special-order-btn')) return; openProductModal('${dish.restaurantId}', '${dish.id}')">
                 <div class="daily-special-img-wrapper">
                     <img src="${imgUrl}" alt="${dish.name}" class="daily-special-img" loading="lazy" onerror="this.src='${defaultFallback}'">
-                    <span class="daily-special-tag-badge" title="Plat du jour">⭐ ${tag}</span>
+                    <span class="daily-special-tag-badge" title="Plat du jour"><i class="ri-award-line"></i> ${tag}</span>
                     <span class="daily-special-price-badge">${formattedPrice}</span>
                 </div>
                 <div class="daily-special-body">
                     <div class="daily-special-resto-row">
                         <a href="${restoUrl}" class="daily-special-resto-name" title="Voir le restaurant ${dish.restaurantName}">
-                            <span>📍</span> <span>${dish.restaurantName}</span>
+                            <span><i class="ri-map-pin-line"></i></span> <span>${dish.restaurantName}</span>
                         </a>
-                        <span class="daily-special-rating">★ ${rating}</span>
+                        <span class="daily-special-rating"><i class="ri-star-fill" style="color: #FFC107;"></i> ${rating}</span>
                     </div>
                     <h3 class="daily-special-name">${dish.name}</h3>
                     <p class="daily-special-desc">${dish.description || 'Spécialité préparée fraîchement ce jour avec des ingrédients locaux de qualité.'}</p>
                     <div class="daily-special-footer">
                         <button type="button" class="daily-special-order-btn" onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" title="Commander ce plat directement" style="width: 100%; justify-content: center;">
-                            <span>⚡</span> <span>Commander ce plat</span>
+                            <span><i class="ri-flashlight-line"></i></span> <span>Commander ce plat</span>
                         </button>
                     </div>
                 </div>
@@ -1935,9 +2057,9 @@ window.renderDailySpecialsHtml = function(dishes, isInnerOnly = false) {
             <div class="daily-specials-header">
                 <div class="daily-specials-title-group">
                     <div class="daily-specials-pill">
-                        <span>🔥</span> <span>Sélection Fraîche du Jour</span>
+                        <span><i class="ri-fire-line" style="color: #ef4444;"></i></span> <span>Sélection Fraîche du Jour</span>
                     </div>
-                    <h2 class="daily-specials-title">Les Plats du Jour du Moment 🍲</h2>
+                    <h2 class="daily-specials-title">Les Plats du Jour du Moment</h2>
                     <p class="daily-specials-subtitle">Cuisinés ce matin par nos chefs partenaires. Commandez en direct en 1-clic !</p>
                 </div>
                 <div class="daily-specials-controls">
@@ -2033,30 +2155,30 @@ router.add('#/', () => {
                 <!-- Center Hero Card: Title, Description, Search and Actions -->
                 <div class="hero-left-col hover-3d" style="padding: 2.5rem 2rem; border-radius: 24px; background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--border); box-shadow: var(--shadow); max-width: 800px; margin: 0 auto; width: 100%;">
                     <div class="hero-greeting-badge" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1.1rem; border-radius: 30px; background: rgba(242, 107, 33, 0.12); border: 1px solid rgba(242, 107, 33, 0.3); color: var(--primary); font-weight: 700; font-size: 0.85rem; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 1.5px;">
-                        <span>✨</span> <span>${greeting}</span>
+                        <span>${greeting}</span>
                     </div>
                     <h1 class="hero-title" style="color: var(--text-primary); text-shadow: 0 4px 20px rgba(0,0,0,0.8); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.25rem; line-height: 1.25;">Découvrez les Meilleures Tables de <span style="color: var(--primary);">Thiès</span></h1>
                     <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; max-width: 640px; margin-left: auto; margin-right: auto;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
                     
                     <div class="search-container hover-3d" style="margin: 0 auto 1.25rem auto; width: 100%; max-width: 500px; position: relative;">
                         <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="debouncedApplyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.1rem 3rem 1.1rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth); font-size: 16px;">
-                        <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher">🔍</button>
+                        <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher"><i class="ri-search-line"></i></button>
                     </div>
 
                     <!-- HERO QUICK FILTER TAGS -->
                     <div class="hero-quick-tags" style="margin-bottom: 1.5rem;">
                         <span style="font-weight: 600; opacity: 0.85; font-size: 0.85rem;">Filtres rapides :</span>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Fast-Food')">🍔 Fast-Food</button>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Dibiterie')">🔥 Dibiterie</button>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Traditionnel')">🍲 Traditionnel</button>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Gastronomique')">✨ Gastronomique</button>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Pâtisserie')">🥐 Pâtisserie</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Fast-Food')"><i class="ri-restaurant-2-line"></i> Fast-Food</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Dibiterie')"><i class="ri-fire-line"></i> Dibiterie</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Traditionnel')"><i class="ri-bowl-line"></i> Traditionnel</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Gastronomique')"><i class="ri-award-line"></i> Gastronomique</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Pâtisserie')"><i class="ri-cup-line"></i> Pâtisserie</button>
                     </div>
 
                     <div class="hero-actions-container" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 0.5rem; width: 100%;">
                         <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); min-height: 48px; padding: 0.9rem 2.2rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
                             <i class="ri-restaurant-2-line"></i>
-                            <span>Explorer nos Menus 🍽️</span>
+                            <span>Explorer nos Menus</span>
                         </button>
                     </div>
                 </div>
@@ -2071,7 +2193,7 @@ router.add('#/', () => {
             <div class="reference-row-cards">
                 <!-- Left Card: Zero Account -->
                 <div class="ref-card-text">
-                    <div class="ref-card-icon-circle">🚫</div>
+                    <div class="ref-card-icon-circle"><i class="ri-forbid-line"></i></div>
                     <h3>Zéro Inscription</h3>
                     <p>Commandez et réservez sans jamais avoir besoin de créer un compte. Aucun mot de passe à retenir.</p>
                 </div>
@@ -2083,7 +2205,7 @@ router.add('#/', () => {
                 
                 <!-- Right Card: Direct WhatsApp -->
                 <div class="ref-card-text">
-                    <div class="ref-card-icon-circle">💬</div>
+                    <div class="ref-card-icon-circle"><i class="ri-chat-3-line"></i></div>
                     <h3>Direct WhatsApp</h3>
                     <p>Votre panier est transformé en un message structuré envoyé en un clic au restaurateur pour confirmation.</p>
                 </div>
@@ -2093,7 +2215,7 @@ router.add('#/', () => {
         <!-- PROMO SPECIAL DEAL CARD (Ref Mockup) -->
         <div class="promo-banner-card">
             <div class="promo-banner-content">
-                <div class="promo-badge-tag">🔥 Bon Plan Thiès</div>
+                <div class="promo-badge-tag"><i class="ri-fire-line"></i> Bon Plan Thiès</div>
                 <h2 class="promo-banner-title">Jusqu'à -40% sur vos plats préférés</h2>
                 <p class="promo-banner-desc">Découvrez les offres gourmandes du moment chez les restaurants partenaires de Thiès.</p>
                 <button type="button" class="promo-banner-btn" onclick="scrollToCatalogAndFilter('Fast-Food')">
@@ -2124,32 +2246,32 @@ router.add('#/', () => {
             <div class="quick-filters-wrapper">
                 <div class="filter-bar" id="filter-bar" role="tablist" aria-label="Filtres rapides de restaurants">
                     <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')" data-category="Tous" role="tab" aria-selected="${activeFilter === 'Tous'}">
-                        <span class="filter-icon">🍽️</span>
+                        <span class="filter-icon"><i class="ri-restaurant-line"></i></span>
                         <span class="filter-label">Tous</span>
                         <span class="filter-badge" id="count-all"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Fast-Food' ? 'active' : ''}" onclick="setFilter('Fast-Food')" data-category="Fast-Food" role="tab" aria-selected="${activeFilter === 'Fast-Food'}">
-                        <span class="filter-icon">🍔</span>
+                        <span class="filter-icon"><i class="ri-restaurant-2-line"></i></span>
                         <span class="filter-label">Fast-Food</span>
                         <span class="filter-badge" id="count-fastfood"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Dibiterie' ? 'active' : ''}" onclick="setFilter('Dibiterie')" data-category="Dibiterie" role="tab" aria-selected="${activeFilter === 'Dibiterie'}">
-                        <span class="filter-icon">🔥</span>
+                        <span class="filter-icon"><i class="ri-fire-line"></i></span>
                         <span class="filter-label">Dibiterie</span>
                         <span class="filter-badge" id="count-dibiterie"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')" data-category="Traditionnel" role="tab" aria-selected="${activeFilter === 'Traditionnel'}">
-                        <span class="filter-icon">🍲</span>
+                        <span class="filter-icon"><i class="ri-bowl-line"></i></span>
                         <span class="filter-label">Traditionnel</span>
                         <span class="filter-badge" id="count-traditionnel"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')" data-category="Gastronomique" role="tab" aria-selected="${activeFilter === 'Gastronomique'}">
-                        <span class="filter-icon">✨</span>
+                        <span class="filter-icon"><i class="ri-star-line"></i></span>
                         <span class="filter-label">Gastronomique</span>
                         <span class="filter-badge" id="count-gastronomique"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')" data-category="Pâtisserie" role="tab" aria-selected="${activeFilter === 'Pâtisserie'}">
-                        <span class="filter-icon">🥐</span>
+                        <span class="filter-icon"><i class="ri-cup-line"></i></span>
                         <span class="filter-label">Pâtisserie</span>
                         <span class="filter-badge" id="count-patisserie"></span>
                     </button>
@@ -2160,13 +2282,13 @@ router.add('#/', () => {
             <div class="filter-controls-row">
                 <div id="active-filter-indicator" class="active-filter-indicator" style="${activeFilter !== 'Tous' ? 'display: inline-flex;' : 'display: none;'}">
                     <span id="active-filter-text">${activeFilter !== 'Tous' ? 'Filtre actif : ' + activeFilter : ''}</span>
-                    <button type="button" class="btn-clear-filter" onclick="setFilter('Tous')" title="Réinitialiser">✕ Réinitialiser</button>
+                    <button type="button" class="btn-clear-filter" onclick="setFilter('Tous')" title="Réinitialiser"><i class="ri-close-line"></i> Réinitialiser</button>
                 </div>
                 <div class="sort-bar" style="margin: 0; padding: 0;">
                     <label for="sort-select">Trier par :</label>
                     <select class="sort-select" id="sort-select" onchange="activeSortBy = this.value; applyFilters();">
                         <option value="default" ${activeSortBy === 'default' ? 'selected' : ''}>Recommandé</option>
-                        <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note ★</option>
+                        <option value="rating" ${activeSortBy === 'rating' ? 'selected' : ''}>Meilleure note</option>
                         <option value="reviews" ${activeSortBy === 'reviews' ? 'selected' : ''}>Nombre d'avis</option>
                         <option value="name" ${activeSortBy === 'name' ? 'selected' : ''}>Nom de A à Z</option>
                     </select>
@@ -2177,11 +2299,11 @@ router.add('#/', () => {
 
             <!-- RESTAURANT SUGGESTION CTA -->
             <div style="background: rgba(207, 168, 83, 0.1); border: 1px dashed var(--primary); border-radius: 16px; padding: 2rem; text-align: center; max-width: 600px; margin: 3rem auto 1rem auto;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🤔</div>
+                <div style="font-size: 2rem; margin-bottom: 0.5rem; color: var(--text-secondary);"><i class="ri-question-line"></i></div>
                 <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.2rem;">Votre restaurant préféré n'est pas là ?</h3>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">Nous ajoutons continuellement de nouvelles tables à Thiès. Aidez-nous à découvrir les meilleures !</p>
                 <a href="https://wa.me/221776064596?text=Bonjour,%20j'aimerais%20suggérer%20ce%20restaurant%20sur%20Thiès%20Resto%20:%20[Insérez le nom]" target="_blank" class="btn btn-primary" style="background: var(--bg-card); color: var(--primary); border: 1px solid var(--primary); text-decoration: none;">
-                    Suggérer un restaurant 💡
+                    Suggérer un restaurant
                 </a>
             </div>
         </section>
@@ -2246,14 +2368,14 @@ router.add('#/', () => {
 
         <!-- ONBOARDING COMMENT CA MARCHE -->
         <section class="how-it-works" id="how-it-works-section">
-            <span class="study-title-tag">💡 Mode d'emploi</span>
+            <span class="study-title-tag">Mode d'emploi</span>
             <h2 class="section-title" style="text-align:center; margin-bottom: 0.5rem; color: var(--text-primary);">Comment fonctionne la plateforme ?</h2>
             <p class="study-subtitle">Découvrez la simplicité et la flexibilité de THIES Resto à travers nos trois services phares.</p>
             
             <div class="how-it-works-tabs">
-                <button class="hw-tab-btn active" onclick="switchHowItWorksTab('hw-order')">🛍️ Commander un plat</button>
-                <button class="hw-tab-btn" onclick="switchHowItWorksTab('hw-reserve')">📅 Réserver une table</button>
-                <button class="hw-tab-btn" onclick="switchHowItWorksTab('hw-group')">👥 Commande de groupe</button>
+                <button class="hw-tab-btn active" onclick="switchHowItWorksTab('hw-order')"><i class="ri-shopping-bag-line" style="margin-right: 0.35rem;"></i> Commander un plat</button>
+                <button class="hw-tab-btn" onclick="switchHowItWorksTab('hw-reserve')"><i class="ri-calendar-line" style="margin-right: 0.35rem;"></i> Réserver une table</button>
+                <button class="hw-tab-btn" onclick="switchHowItWorksTab('hw-group')"><i class="ri-group-line" style="margin-right: 0.35rem;"></i> Commande de groupe</button>
             </div>
 
             <!-- Tab 1: Commander -->
@@ -2261,25 +2383,25 @@ router.add('#/', () => {
                 <div class="timeline-steps">
                     <div class="timeline-card">
                         <div class="timeline-badge">1</div>
-                        <span class="timeline-icon">🏪</span>
+                        <span class="timeline-icon"><i class="ri-store-2-line"></i></span>
                         <h3>Sélection du restaurant</h3>
                         <p>Choisissez parmi les meilleurs établissements de Thiès, filtrez par envie et ouvrez la carte du jour.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">2</div>
-                        <span class="timeline-icon">🛒</span>
+                        <span class="timeline-icon"><i class="ri-shopping-cart-line"></i></span>
                         <h3>Panier instantané</h3>
                         <p>Ajoutez vos plats préférés, spécifiez vos préférences et validez en un clic, sans création de compte fastidieuse.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">3</div>
-                        <span class="timeline-icon">💬</span>
+                        <span class="timeline-icon"><i class="ri-whatsapp-line"></i></span>
                         <h3>Envoi WhatsApp</h3>
                         <p>Votre commande est transmise de manière ultra-rapide par WhatsApp au restaurant. Payez en espèces ou Wave à la livraison.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">4</div>
-                        <span class="timeline-icon">🎁</span>
+                        <span class="timeline-icon"><i class="ri-gift-line"></i></span>
                         <h3>Fidélité cumulée</h3>
                         <p>Cumulez automatiquement 5 points fidélité à chaque commande livrée pour obtenir des plats offerts.</p>
                     </div>
@@ -2291,25 +2413,25 @@ router.add('#/', () => {
                 <div class="timeline-steps">
                     <div class="timeline-card">
                         <div class="timeline-badge">1</div>
-                        <span class="timeline-icon">📅</span>
+                        <span class="timeline-icon"><i class="ri-calendar-line"></i></span>
                         <h3>Choix de la date</h3>
                         <p>Sélectionnez votre restaurant préféré, l'onglet "Réserver", définissez la date, l'heure et le nombre de convives.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">2</div>
-                        <span class="timeline-icon">👤</span>
+                        <span class="timeline-icon"><i class="ri-user-line"></i></span>
                         <h3>Détails du contact</h3>
                         <p>Entrez vos coordonnées de contact pour que le gérant puisse bloquer et préparer votre table attitrée.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">3</div>
-                        <span class="timeline-icon">✨</span>
+                        <span class="timeline-icon"><i class="ri-vip-crown-line"></i></span>
                         <h3>Confirmation reçue</h3>
                         <p>Le restaurateur valide votre créneau directement sur son tableau de bord et vous envoie une confirmation par message.</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">4</div>
-                        <span class="timeline-icon">🍽️</span>
+                        <span class="timeline-icon"><i class="ri-restaurant-line"></i></span>
                         <h3>Installez-vous !</h3>
                         <p>Présentez-vous au restaurant à l'heure convenue : votre table est prête et des points fidélité vous sont offerts.</p>
                     </div>
@@ -2321,25 +2443,25 @@ router.add('#/', () => {
                 <div class="timeline-steps">
                     <div class="timeline-card">
                         <div class="timeline-badge">1</div>
-                        <span class="timeline-icon">👥</span>
+                        <span class="timeline-icon"><i class="ri-group-line"></i></span>
                         <h3>Création du groupe</h3>
                         <p>Lancez un panier partagé pour vos collègues de bureau ou vos amis en cliquant sur "Commande de Groupe".</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">2</div>
-                        <span class="timeline-icon">🔗</span>
+                        <span class="timeline-icon"><i class="ri-links-line"></i></span>
                         <h3>Partage du lien</h3>
                         <p>Copiez et envoyez le lien unique généré dans votre discussion de groupe (WhatsApp, Slack, etc.).</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">3</div>
-                        <span class="timeline-icon">🍕</span>
+                        <span class="timeline-icon"><i class="ri-restaurant-line"></i></span>
                         <h3>Choix individuels</h3>
                         <p>Chaque membre ajoute ses plats préférés depuis son propre appareil. Le restaurant reçoit le tout regroupé et clair !</p>
                     </div>
                     <div class="timeline-card">
                         <div class="timeline-badge">4</div>
-                        <span class="timeline-icon">👑</span>
+                        <span class="timeline-icon"><i class="ri-award-line"></i></span>
                         <h3>Validation & Envoi</h3>
                         <p>L'initiateur du groupe valide le panier commun et l'envoie par WhatsApp. Le restaurant livre tout en une fois !</p>
                     </div>
@@ -2351,13 +2473,13 @@ router.add('#/', () => {
         <!-- ========== LOYALTY CARD SECTION ========== -->
         <section class="loyalty-checker-section" style="padding: 2.5rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border); margin: 2rem auto; max-width: 1200px;">
             <div style="max-width: 800px; margin: 0 auto; text-align: center;">
-                <span class="study-title-tag" style="background: rgba(207, 168, 83, 0.1); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(207, 168, 83, 0.2);">🎁 Programme de Fidélisation</span>
+                <span class="study-title-tag" style="background: rgba(207, 168, 83, 0.1); color: var(--primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(207, 168, 83, 0.2);"><i class="ri-gift-line" style="margin-right: 0.35rem;"></i> Programme de Fidélisation</span>
                 <h2 style="font-family: var(--font-serif); font-size: 2rem; color: var(--text-primary); margin: 0.75rem 0 0.5rem 0;">Consultez votre Statut & Plats Offerts</h2>
                 <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.5rem;">Saisissez votre numéro WhatsApp pour suivre vos points fidélité (5 pts/commande livrée, 5 pts/réservation) et réclamer vos cadeaux.</p>
                 
                 <div style="display: flex; gap: 0.75rem; justify-content: center; max-width: 480px; margin: 0 auto 1.5rem auto;">
                     <input type="tel" id="loyalty-phone" class="form-control" placeholder="+221 77 123 45 67" style="margin-bottom: 0;">
-                    <button class="btn btn-primary" onclick="checkLoyaltyPoints()" style="white-space: nowrap;">Consulter ➔</button>
+                    <button class="btn btn-primary" onclick="checkLoyaltyPoints()" style="white-space: nowrap;">Consulter →</button>
                 </div>
                 
                 <div id="loyalty-result-card" style="display: none; margin-top: 1.5rem; animation: fadeIn 0.4s ease;">
@@ -2369,7 +2491,7 @@ router.add('#/', () => {
         <!-- ========== ÉTUDE DE TERRAIN & NOTRE SOLUTION ========== -->
         <section class="field-study-section" id="field-study-section">
             <div style="text-align: center;">
-                <span class="study-title-tag">📊 Analyse & Impact</span>
+                <span class="study-title-tag">Analyse & Impact</span>
                 <h2 class="section-title" style="margin-bottom: 0.5rem; color: var(--text-primary);">L'Étude de Terrain & Notre Solution</h2>
                 <p class="study-subtitle">Comment THIES Resto répond à la réalité chiffrée de la restauration à Thiès.</p>
             </div>
@@ -2408,7 +2530,7 @@ router.add('#/', () => {
 
                     <div class="solution-carousel-wrapper">
                         <div class="solution-feature-card">
-                            <span class="solution-icon">✨</span>
+                            <span class="solution-icon"><i class="ri-award-line"></i></span>
                             <div class="solution-text">
                                 <h3>1. Vitrine Digitale Gratuite & Propre</h3>
                                 <p>Chaque partenaire bénéficie d'une page personnalisée, moderne, rapide et optimisée pour le référencement local à Thiès.</p>
@@ -2416,7 +2538,7 @@ router.add('#/', () => {
                         </div>
 
                         <div class="solution-feature-card">
-                            <span class="solution-icon">⚡</span>
+                            <span class="solution-icon"><i class="ri-flashlight-line"></i></span>
                             <div class="solution-text">
                                 <h3>2. Précommande & Réservation Express</h3>
                                 <p>Les clients commandent et réservent à l'avance, ce qui réduit de moitié les temps d'attente souvent pointés du doigt.</p>
@@ -2424,7 +2546,7 @@ router.add('#/', () => {
                         </div>
 
                         <div class="solution-feature-card">
-                            <span class="solution-icon">📶</span>
+                            <span class="solution-icon"><i class="ri-wifi-line"></i></span>
                             <div class="solution-text">
                                 <h3>3. Mode Hybride (SMS en Secours)</h3>
                                 <p>En cas de coupure ou faiblesse du réseau internet à Thiès, la commande bascule automatiquement par SMS classique sécurisé.</p>
@@ -2432,7 +2554,7 @@ router.add('#/', () => {
                         </div>
 
                         <div class="solution-feature-card">
-                            <span class="solution-icon">📱</span>
+                            <span class="solution-icon"><i class="ri-smartphone-line"></i></span>
                             <div class="solution-text">
                                 <h3>4. Centralisation WhatsApp & 0% Commission</h3>
                                 <p>Commandes directes et structurées sur WhatsApp avec notification sonore et récapitulatif sans aucune commission sur les plats.</p>
@@ -2464,7 +2586,7 @@ router.add('#/', () => {
         hideLoadingOverlay();
         document.getElementById('main-content').innerHTML = `
             <div style="text-align: center; padding: 5rem 1rem;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">🔌</div>
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: var(--text-secondary);"><i class="ri-wifi-off-line"></i></div>
                 <h2 style="color: var(--danger); margin-bottom: 1rem;">Erreur de connexion</h2>
                 <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 2rem;">
                     Impossible de charger le catalogue. Veuillez vérifier votre connexion internet et réessayer.
@@ -2709,7 +2831,7 @@ window.applyFilters = function applyFilters() {
     if (restos.length === 0) {
         grid.innerHTML = `
             <div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 3.5rem 1.5rem; background: var(--bg-card); border-radius: 16px; border: 1.5px dashed var(--border);">
-                <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🍽️</div>
+                <div style="font-size: 2.5rem; margin-bottom: 0.75rem; color: var(--gold);"><i class="ri-restaurant-2-line"></i></div>
                 <h3 style="color: var(--text-primary); margin-bottom: 0.5rem; font-size: 1.2rem; font-weight: 700;">Aucun restaurant trouvé</h3>
                 <p style="margin-bottom: 1.25rem; font-size: 0.95rem; max-width: 450px; margin-left: auto; margin-right: auto;">Aucun établissement ne correspond au filtre <strong>"${activeFilter}"</strong>${query ? ` et à la recherche "${query}"` : ''}.</p>
                 <button type="button" class="btn btn-primary" onclick="setFilter('Tous'); if(document.getElementById('search-input-field')) { document.getElementById('search-input-field').value=''; applyFilters(); }" style="padding: 0.65rem 1.5rem; font-size: 0.9rem; border-radius: 25px; font-weight: 600;">
@@ -2741,16 +2863,20 @@ window.applyFilters = function applyFilters() {
         const coverUrl = r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
         let distanceBadge = '';
         if (r._tempDistance) {
-            distanceBadge = `<div style="position: absolute; top: 1rem; left: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;">📍 ${r._tempDistance} km</div>`;
+            distanceBadge = `<div style="position: absolute; top: 1rem; left: 1rem; background: var(--bg-card); color: var(--text-primary); padding: 0.35rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 2;"><i class="ri-map-pin-line" style="margin-right: 0.25rem;"></i> ${r._tempDistance} km</div>`;
         }
 
         const isFav = window.isFavorite ? window.isFavorite(r.id) : false;
+        const ratingVal = (Number(r.rating) || 5.0).toFixed(1);
+        const isTopRated = Number(ratingVal) >= 4.8;
+        const curatedTag = isTopRated ? 'Table d\'Exception' : 'Sélection Thiès';
             
         cardsHtml += `
-            <div class="restaurant-card hover-3d glass-panel" onclick="router.navigate('/r/${r.slug}')">
+            <div class="restaurant-card luxury-resto-card hover-3d glass-panel" onclick="router.navigate('/r/${r.slug}')">
                 ${distanceBadge}
+                <div class="luxury-curated-badge">${curatedTag}</div>
                 <button type="button" class="card-fav-btn ${isFav ? 'is-fav active' : ''}" data-fav-resto-id="${r.id}" onclick="toggleFavorite('${r.id}', event)" aria-label="Ajouter aux favoris">
-                    ${isFav ? '❤️' : '🤍'}
+                    ${isFav ? '<i class="ri-heart-fill" style="color:#ef4444;"></i>' : '<i class="ri-heart-line"></i>'}
                 </button>
                 <div class="restaurant-card-header">
                     <img src="${coverUrl}" class="restaurant-card-img" alt="${r.name}" loading="lazy" decoding="async" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
@@ -2762,14 +2888,14 @@ window.applyFilters = function applyFilters() {
                 <div class="restaurant-card-body">
                     <div class="restaurant-card-top-row">
                         <h3 class="restaurant-card-name" title="${r.name}">${r.name}</h3>
-                        <span class="stars-rating">★ ${(Number(r.rating) || 5.0).toFixed(1)}</span>
+                        <span class="stars-rating luxury-stars"><i class="ri-star-fill" style="color: #F59E0B; margin-right: 2px;"></i> ${ratingVal}</span>
                     </div>
                     <p class="restaurant-card-address">
-                        <span>📍</span> <span class="restaurant-card-address-text">${r.address}</span>
+                        <i class="ri-map-pin-2-fill" style="color: var(--primary); font-size: 0.9rem;"></i> <span class="restaurant-card-address-text">${r.address}</span>
                     </p>
                     <div class="restaurant-card-footer">
-                        <span class="restaurant-card-cuisine">${r.category}</span>
-                        <span class="restaurant-card-reviews">${r.reviewsCount} avis</span>
+                        <span class="restaurant-card-cuisine"><i class="ri-restaurant-line" style="margin-right: 3px;"></i>${r.category}</span>
+                        <span class="restaurant-card-reviews"><i class="ri-chat-smile-2-line" style="margin-right: 3px;"></i>${r.reviewsCount || 0} avis certifiés</span>
                     </div>
                 </div>
             </div>
@@ -3049,37 +3175,37 @@ function renderRestaurantView(r, activeTab = 'menu', groupId = null) {
         </button>
 
         <div class="restaurant-details-header">
-            <div class="restaurant-logo-large">🍽️</div>
+            <div class="restaurant-logo-large"><i class="ri-restaurant-2-line"></i></div>
             <h1 class="restaurant-name-title">${r.name}</h1>
             
             <div class="restaurant-status-row">
                 ${statusBadge}
                 <button type="button" onclick="switchRestoTab('reviews')" style="background: none; border: none; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 0.35rem;" title="Voir les avis clients">
-                    <span class="stars-rating" style="color: #F59E0B; font-weight: 700;">★ ${(Number(r.rating) || 5.0).toFixed(1)}</span>
+                    <span class="stars-rating" style="color: #F59E0B; font-weight: 700;"><i class="ri-star-fill" style="color: #F59E0B; margin-right: 2px;"></i> ${(Number(r.rating) || 5.0).toFixed(1)}</span>
                     <span style="color: var(--text-secondary); text-decoration: underline;">(${r.reviewsCount || (r.reviews ? r.reviews.length : 0)} avis)</span>
                 </button>
             </div>
             
             <p class="restaurant-meta-info">
-                🕒 Horaires : ${r.openHours}${closedDaysText} | 📍 ${r.address}
+                <i class="ri-time-line" style="margin-right: 0.25rem;"></i> Horaires : ${r.openHours}${closedDaysText} | <i class="ri-map-pin-line" style="margin-right: 0.25rem;"></i> ${r.address}
             </p>
             
             <div class="restaurant-meta-actions">
                 <a href="https://wa.me/${r.whatsapp.replace(/\+/g, '')}" target="_blank" class="btn btn-outline btn-sm" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-                    💬 Contacter WhatsApp
+                    Contacter WhatsApp
                 </a>
                 <button class="btn btn-primary btn-sm" onclick="shareRestaurant('${r.name}', '${r.slug}')" style="display: inline-flex; align-items: center; gap: 0.4rem;">
-                    📤 Partager à un ami
+                    Partager à un ami
                 </button>
             </div>
         </div>
 
         <nav class="tabs-nav">
-            <button class="tab-btn ${activeTab === 'menu' ? 'active' : ''}" onclick="switchRestoTab('menu')">Menu du Jour 🍕</button>
-            <button class="tab-btn ${activeTab === 'checkout' ? 'active' : ''}" id="tab-checkout-btn" onclick="switchRestoTab('checkout')">Commander 🛒</button>
-            <button class="tab-btn ${activeTab === 'group' ? 'active' : ''}" onclick="switchRestoTab('group')">Commande de Groupe 👥</button>
-            <button class="tab-btn ${activeTab === 'booking' ? 'active' : ''}" onclick="switchRestoTab('booking')">Réserver une Table 📅</button>
-            <button class="tab-btn ${activeTab === 'reviews' ? 'active' : ''}" onclick="switchRestoTab('reviews')">Avis Clients (${r.reviews ? r.reviews.length : 0}) 💬</button>
+            <button class="tab-btn ${activeTab === 'menu' ? 'active' : ''}" onclick="switchRestoTab('menu')">Menu du Jour</button>
+            <button class="tab-btn ${activeTab === 'checkout' ? 'active' : ''}" id="tab-checkout-btn" onclick="switchRestoTab('checkout')">Commander</button>
+            <button class="tab-btn ${activeTab === 'group' ? 'active' : ''}" onclick="switchRestoTab('group')">Commande de Groupe</button>
+            <button class="tab-btn ${activeTab === 'booking' ? 'active' : ''}" onclick="switchRestoTab('booking')">Réserver une Table</button>
+            <button class="tab-btn ${activeTab === 'reviews' ? 'active' : ''}" onclick="switchRestoTab('reviews')">Avis Clients (${r.reviews ? r.reviews.length : 0}) </button>
         </nav>
 
         <div class="tab-content">
@@ -3181,7 +3307,7 @@ function renderDishesTab(r) {
         } else if (!isAvailable) {
             actionBtn = `<button class="btn btn-danger btn-block" disabled>Rupture de Stock</button>`;
         } else {
-            actionBtn = `<button class="btn btn-primary btn-block" onclick="openProductModal('${r.id}', '${d.id}')">Choisir & Ajouter 🛒</button>`;
+            actionBtn = `<button class="btn btn-primary btn-block" onclick="openProductModal('${r.id}', '${d.id}')">Choisir & Ajouter</button>`;
         }
 
         const outOfStockBadge = !isAvailable ? `<span style="position:absolute; top:10px; left:10px; background:var(--danger); color:white; padding:4px 8px; border-radius:4px; font-weight:bold; font-size:0.8rem; z-index:10;">ÉPUISÉ</span>` : '';
@@ -3225,12 +3351,10 @@ window.openProductModal = function(restaurantId, dishId) {
         <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--bg-primary); z-index: 9999; display: flex; flex-direction: column; animation: slideUp 0.3s ease-out; overflow-y: auto; color: var(--text-primary);">
             <!-- Header -->
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; position: absolute; top: 0; left: 0; width: 100%; z-index: 10;">
-                <button onclick="document.getElementById('product-detail-modal').remove()" aria-label="Fermer" style="background: var(--bg-glass, rgba(0,0,0,0.3)); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 50%; color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; backdrop-filter: blur(8px);">
-                    ✕
+                <button onclick="document.getElementById('product-detail-modal').remove()" aria-label="Fermer" style="background: var(--bg-glass, rgba(0,0,0,0.3)); border: 1px solid var(--border); width: 45px; height: 45px; border-radius: 50%; color: var(--text-primary); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; cursor: pointer; backdrop-filter: blur(8px);"><i class="ri-close-line"></i>
                 </button>
                 <div style="position: relative;" onclick="document.getElementById('product-detail-modal').remove(); openCartTab();">
-                    <button aria-label="Voir le panier" style="background: var(--primary); border: none; width: 45px; height: 45px; border-radius: 50%; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; box-shadow: var(--shadow-sm);">
-                        🛒
+                    <button aria-label="Voir le panier" style="background: var(--primary); border: none; width: 45px; height: 45px; border-radius: 50%; color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; cursor: pointer; box-shadow: var(--shadow-sm);"><i class="ri-shopping-cart-line"></i>
                     </button>
                     <span style="position: absolute; top: -5px; right: -5px; background: var(--danger, #EF4444); color: #ffffff; font-size: 0.75rem; font-weight: 800; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.3);">
                         ${cart.items.length}
@@ -3283,46 +3407,63 @@ window.addModalItemToCart = function(restaurantId, dishId) {
     const dish = r.menu.find(d => String(d.id) === String(dishId));
     if (!dish) return;
     
+    const proceedAddWithOptions = () => {
+        cart.restaurantId = restaurantId;
+        if (!Array.isArray(cart.items)) {
+            cart.items = [];
+        }
+
+        const existingItem = cart.items.find(i => String(i.id) === String(dishId));
+        if (existingItem) {
+            existingItem.qty = Number(existingItem.qty || 0) + qty;
+        } else {
+            cart.items.push({
+                id: dish.id,
+                name: dish.name,
+                price: Number(dish.price),
+                qty: qty,
+                image: dish.image || ''
+            });
+        }
+
+        recalculateCart();
+        saveCart();
+        
+        if (document.getElementById('panel-checkout')) {
+            renderCheckoutTab(r);
+        }
+        updateFloatingCartBar(r);
+        pulseCartBar();
+        
+        showCartToast(dish, qty, r);
+    };
+
     // Check for multi-restaurant cart safety (with safe string conversion)
     if (cart.restaurantId && String(cart.restaurantId) !== String(restaurantId) && cart.items && cart.items.length > 0) {
         const oldResto = store.getRestaurantById(cart.restaurantId);
         const oldName = oldResto ? oldResto.name : "un autre restaurant";
-        const confirmClear = confirm(`Votre panier contient déjà des plats de "${oldName}". Voulez-vous vider votre panier actuel pour commander chez "${r.name}" ?`);
-        if (!confirmClear) return;
-        cart.items = [];
-        cart.subtotal = 0;
-        cart.total = 0;
-        cart.loyaltyApplied = false;
+        if (typeof showConfirmModal === 'function') {
+            showConfirmModal(
+                "Changer de restaurant",
+                `Votre panier contient déjà des plats de "${oldName}". Souhaitez-vous le vider pour commander chez "${r.name}" ?`,
+                () => {
+                    cart.items = [];
+                    cart.subtotal = 0;
+                    cart.total = 0;
+                    cart.loyaltyApplied = false;
+                    proceedAddWithOptions();
+                }
+            );
+            return;
+        } else {
+            cart.items = [];
+            cart.subtotal = 0;
+            cart.total = 0;
+            cart.loyaltyApplied = false;
+        }
     }
 
-    cart.restaurantId = restaurantId;
-    if (!Array.isArray(cart.items)) {
-        cart.items = [];
-    }
-
-    const existingItem = cart.items.find(i => String(i.id) === String(dishId));
-    if (existingItem) {
-        existingItem.qty = Number(existingItem.qty || 0) + qty;
-    } else {
-        cart.items.push({
-            id: dish.id,
-            name: dish.name,
-            price: Number(dish.price),
-            qty: qty,
-            image: dish.image || ''
-        });
-    }
-
-    recalculateCart();
-    saveCart();
-    
-    if (document.getElementById('panel-checkout')) {
-        renderCheckoutTab(r);
-    }
-    updateFloatingCartBar(r);
-    pulseCartBar();
-    
-    showCartToast(dish, qty, r);
+    proceedAddWithOptions();
 };
 
 // Cart updates
@@ -3333,8 +3474,6 @@ function addToCart(restaurantId, dishId) {
     if (r.status === 'suspended') {
         if (typeof showToast === 'function') {
             showToast(`« ${r.name} » est actuellement suspendu et n'accepte pas de commande.`, 'danger');
-        } else {
-            alert(`« ${r.name} » est actuellement suspendu et n'accepte pas de commande.`);
         }
         return;
     }
@@ -3342,46 +3481,63 @@ function addToCart(restaurantId, dishId) {
     const dish = r.menu.find(d => String(d.id) === String(dishId));
     if (!dish) return;
     
+    const proceedAdd = () => {
+        cart.restaurantId = restaurantId;
+        if (!Array.isArray(cart.items)) {
+            cart.items = [];
+        }
+        
+        const existing = cart.items.find(item => String(item.id) === String(dishId));
+        if (existing) {
+            existing.qty = Number(existing.qty || 0) + 1;
+        } else {
+            cart.items.push({
+                id: dish.id,
+                name: dish.name,
+                price: Number(dish.price),
+                qty: 1,
+                image: dish.image || ''
+            });
+        }
+        
+        recalculateCart();
+        saveCart();
+        
+        if (document.getElementById('panel-checkout')) {
+            renderCheckoutTab(r);
+        }
+        updateFloatingCartBar(r);
+        pulseCartBar();
+        
+        showCartToast(dish, 1, r);
+    };
+
     // Check for multi-restaurant cart safety
     if (cart.restaurantId && String(cart.restaurantId) !== String(restaurantId) && cart.items && cart.items.length > 0) {
         const oldResto = store.getRestaurantById(cart.restaurantId);
         const oldName = oldResto ? oldResto.name : "un autre restaurant";
-        const confirmClear = confirm(`Votre panier contient déjà des plats de "${oldName}". Voulez-vous vider votre panier actuel pour commander chez "${r.name}" ?`);
-        if (!confirmClear) {
+        if (typeof showConfirmModal === 'function') {
+            showConfirmModal(
+                "Changer de restaurant",
+                `Votre panier contient déjà des plats de "${oldName}". Souhaitez-vous le vider pour commander chez "${r.name}" ?`,
+                () => {
+                    cart.items = [];
+                    cart.subtotal = 0;
+                    cart.total = 0;
+                    cart.loyaltyApplied = false;
+                    proceedAdd();
+                }
+            );
             return;
+        } else {
+            cart.items = [];
+            cart.subtotal = 0;
+            cart.total = 0;
+            cart.loyaltyApplied = false;
         }
-        cart.items = [];
-        cart.subtotal = 0;
-        cart.total = 0;
-        cart.loyaltyApplied = false;
     }
     
-    cart.restaurantId = restaurantId;
-    if (!Array.isArray(cart.items)) {
-        cart.items = [];
-    }
-    
-    const existing = cart.items.find(item => String(item.id) === String(dishId));
-    if (existing) {
-        existing.qty = Number(existing.qty || 0) + 1;
-    } else {
-        cart.items.push({
-            id: dish.id,
-            name: dish.name,
-            price: Number(dish.price),
-            qty: 1,
-            image: dish.image || ''
-        });
-    }
-    
-    recalculateCart();
-    saveCart();
-    updateFloatingCartBar(r);
-    pulseCartBar();
-    if (document.getElementById('panel-checkout')) {
-        renderCheckoutTab(r);
-    }
-    showCartToast(dish, 1, r);
+    proceedAdd();
 }
 window.addToCart = addToCart;
 
@@ -3410,7 +3566,7 @@ function updateCartQty(dishId, change) {
             if (container) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 4rem 1rem;">
-                        <span style="font-size: 3rem;">🛒</span>
+                        <span style="font-size: 3rem; color: var(--gold);"><i class="ri-shopping-bag-3-line"></i></span>
                         <h3 style="margin-top: 1rem;">Votre panier est vide</h3>
                         <p style="color: var(--text-secondary); margin: 0.5rem 0 1.5rem 0;">Parcourez notre menu du jour et ajoutez des délices !</p>
                         <button class="btn btn-primary" onclick="switchRestoTab('menu')">Voir le Menu</button>
@@ -3497,7 +3653,7 @@ function renderGroupTab(r, groupId = null) {
         // No group order active yet, show setup screen
         container.innerHTML = `
             <div class="group-setup">
-                <div class="group-setup-icon">👥</div>
+                <div class="group-setup-icon"><i class="ri-group-line"></i></div>
                 <h3 style="margin-bottom: 0.75rem;">Commande de Groupe</h3>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.5rem;">
                     Commandez avec vos collègues ou amis ! Créez un panier partagé, envoyez le lien sur WhatsApp, et laissez chacun choisir son plat en direct.
@@ -3507,7 +3663,7 @@ function renderGroupTab(r, groupId = null) {
                     <input type="text" id="group-creator-name" class="form-control" placeholder="Mariama Diop" required>
                 </div>
                 <button class="btn btn-primary" onclick="window.startGroupOrder('${r.slug}')">
-                    Lancer une commande de groupe 🚀
+                    Lancer une commande de groupe <i class="ri-arrow-right-line" style="margin-left: 0.35rem;"></i>
                 </button>
             </div>
         `;
@@ -3544,7 +3700,7 @@ function renderGroupTab(r, groupId = null) {
                 </div>
                 <div style="text-align: right;">
                     <div style="font-weight: 700; color: var(--primary);">${pSubtotal} FCFA</div>
-                    <button class="btn btn-danger btn-sm btn-icon" style="padding: 0.15rem 0.35rem; font-size: 0.7rem; margin-top: 0.25rem;" onclick="window.removeParticipant(${pIdx}, '${r.slug}', '${groupId}')">❌</button>
+                    <button class="btn btn-danger btn-sm btn-icon" style="padding: 0.15rem 0.35rem; font-size: 0.7rem; margin-top: 0.25rem;" onclick="window.removeParticipant(${pIdx}, '${r.slug}', '${groupId}')"><i class="ri-close-line"></i></button>
                 </div>
             </div>
         `;
@@ -3571,8 +3727,8 @@ function renderGroupTab(r, groupId = null) {
                     <div style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 0.25rem;">Lien à partager aux collègues :</div>
                     <div class="group-share-link" id="group-link-display">${groupLink}</div>
                 </div>
-                <button class="btn btn-secondary btn-sm" onclick="copyGroupLink()">Copier 📋</button>
-                <a href="${waShareLink}" target="_blank" class="btn btn-success btn-sm">Partager 💬</a>
+                <button class="btn btn-secondary btn-sm" onclick="copyGroupLink()">Copier</button>
+                <a href="${waShareLink}" target="_blank" class="btn btn-success btn-sm">Partager</a>
             </div>
 
             <div class="group-participants">
@@ -3608,7 +3764,7 @@ function renderGroupTab(r, groupId = null) {
                         <span id="group-phone-icon" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; opacity: 0.85;"></span>
                     </div>
                     <div id="group-phone-feedback" style="margin-top: 0.35rem; font-size: 0.78rem; min-height: 1.2rem; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s ease;">
-                        <span style="color: var(--text-secondary);">💡 Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>
+                        <span style="color: var(--text-secondary);">Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>
                     </div>
                 </div>
 
@@ -3618,21 +3774,21 @@ function renderGroupTab(r, groupId = null) {
                         <label class="delivery-radio-card">
                             <input type="radio" name="group-mode" value="Sur place" onchange="toggleGroupAddressField(false)">
                             <div class="delivery-card-content">
-                                <span class="delivery-icon">🍽️</span>
+                                <span class="delivery-icon"><i class="ri-restaurant-line"></i></span>
                                 <span>Sur Place</span>
                             </div>
                         </label>
                         <label class="delivery-radio-card">
                             <input type="radio" name="group-mode" value="A emporter" checked onchange="toggleGroupAddressField(false)">
                             <div class="delivery-card-content">
-                                <span class="delivery-icon">🛍️</span>
+                                <span class="delivery-icon"><i class="ri-shopping-bag-line"></i></span>
                                 <span>A Emporter</span>
                             </div>
                         </label>
                         <label class="delivery-radio-card">
                             <input type="radio" name="group-mode" value="Livraison" onchange="toggleGroupAddressField(true)">
                             <div class="delivery-card-content">
-                                <span class="delivery-icon">🛵</span>
+                                <span class="delivery-icon"><i class="ri-e-bike-2-line"></i></span>
                                 <span>Livraison</span>
                             </div>
                         </label>
@@ -3645,7 +3801,7 @@ function renderGroupTab(r, groupId = null) {
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-block" ${grandTotal === 0 ? 'disabled' : ''}>
-                    Valider et envoyer la commande groupée (${grandTotal} FCFA) 👥
+                    Valider et envoyer la commande groupée (${grandTotal} FCFA)
                 </button>
             </form>
         </div>
@@ -3829,15 +3985,7 @@ function submitGroupOrder(e, restaurantId, grandTotal) {
         }
     });
 
-    const waText = `Bonjour ${r.name}, voici la commande de groupe n°*${orderId}* (ID Groupe: ${activeGroupOrder.id}) sur THIES Resto de la part de *${payeeName}* (${phone}).
-
-👥 *Détails des participants* :
-${partListStr}
-💰 *Total cumulé* : ${grandTotal} FCFA
-🛵 *Mode* : ${mode}
-${address ? `📍 *Adresse de livraison* : ${address}` : ''}
-
-Merci de nous confirmer la réception et le départ en préparation !`;
+    const waText = `🔔 *THIÈS RESTO - COMMANDE DE GROUPE REÇUE !*\n\nVous venez de recevoir une commande de *"${payeeName}"* (${phone}).\n*Commande n°* : *${orderId}*\n\n*Détails des participants* :\n${partListStr}\n*Total cumulé certifié* : *${grandTotal} FCFA*\n*Mode* : ${mode}\n${address ? `*Adresse de livraison* : ${address}\n` : ''}\nMerci de confirmer la réception et le départ en préparation !`;
 
     const waLink = `https://wa.me/${r.whatsapp.replace(/\+/g, '')}?text=${encodeURIComponent(waText)}`;
     const smsLink = getSMSLink(r.whatsapp, waText);
@@ -3852,16 +4000,16 @@ Merci de nous confirmer la réception et le départ en préparation !`;
     
     const connectionAlert = isOffline 
         ? `<div style="background: rgba(220, 53, 69, 0.15); color: #ff6b6b; padding: 0.75rem; border-radius: 12px; font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(220, 53, 69, 0.3); text-align: center; font-weight: 500;">
-            🔌 Vous êtes HORS-LIGNE. Veuillez envoyer le récapitulatif groupé par SMS classique sécurisé ci-dessous.
+            Vous êtes HORS-LIGNE. Veuillez envoyer le récapitulatif groupé par SMS classique sécurisé ci-dessous.
            </div>`
-        : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Pour assurer une confirmation immédiate, veuillez transmettre le récapitulatif groupé par WhatsApp.</p>`;
+        : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">Pour assurer une confirmation immédiate, veuillez transmettre le récapitulatif groupé par WhatsApp.</p>`;
 
     triggerCelebration();
 
     const container = document.getElementById('group-content-container');
     container.innerHTML = `
         <div class="confirmation-screen">
-            <div class="confirmation-icon">👥✅</div>
+            <div class="confirmation-icon"><i class="ri-check-line"></i></div>
             <h2>Commande de Groupe validée !</h2>
             <p style="color: var(--text-secondary); margin: 1rem 0;">La commande groupée n° <strong>${orderId}</strong> a été enregistrée.</p>
             <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
@@ -3871,10 +4019,10 @@ Merci de nous confirmer la réception et le départ en préparation !`;
             ${connectionAlert}
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <a href="${waLink}" target="_blank" class="btn ${waBtnClass}">
-                    💬 Confirmer par WhatsApp
+                    <i class="ri-whatsapp-line" style="margin-right: 0.35rem;"></i> Confirmer par WhatsApp
                 </a>
                 <a href="${smsLink}" class="btn ${smsBtnClass}">
-                    📱 Option Secours : Envoyer par SMS classique
+                    Option Secours : Envoyer par SMS classique
                 </a>
                 <button class="btn btn-dark" onclick="router.navigate('/')">
                     Retourner à l'accueil
@@ -3944,7 +4092,7 @@ function renderBookingTab(r) {
                     <span id="booking-phone-icon" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 1rem; pointer-events: none; opacity: 0.85;"></span>
                 </div>
                 <div id="booking-phone-feedback" style="margin-top: 0.35rem; font-size: 0.78rem; min-height: 1.2rem; display: flex; align-items: center; gap: 0.35rem; transition: all 0.2s ease;">
-                    <span style="color: var(--text-secondary);">💡 Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>
+                    <span style="color: var(--text-secondary);">Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>
                 </div>
             </div>
             
@@ -3972,7 +4120,7 @@ function renderBookingTab(r) {
             </div>
             
             <button type="submit" class="btn btn-primary btn-block">
-                Réserver ma table 📅
+                Réserver ma table <i class="ri-calendar-check-line" style="margin-left: 0.35rem;"></i>
             </button>
         </form>
     `;
@@ -4062,7 +4210,7 @@ function submitBooking(e, restaurantId) {
     // Format WhatsApp message
     const formattedDate = new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     const waText = `Bonjour ${r.name}, je souhaite réserver une table pour *${guests} personnes* le *${formattedDate}* à *${time}* au nom de *${firstname} ${lastname}* (${phone}).
-${note ? `📝 *Note particulière* : ${note}` : ''}
+${note ? `*Note particulière* : ${note}` : ''}
  
 Merci de me confirmer la disponibilité !`;
 
@@ -4076,16 +4224,16 @@ Merci de me confirmer la disponibilité !`;
     
     const connectionAlert = isOffline 
         ? `<div style="background: rgba(220, 53, 69, 0.15); color: #ff6b6b; padding: 0.75rem; border-radius: 12px; font-size: 0.85rem; margin-bottom: 1rem; border: 1px solid rgba(220, 53, 69, 0.3); text-align: center; font-weight: 500;">
-            🔌 Vous êtes HORS-LIGNE. Veuillez envoyer la demande par SMS classique sécurisé ci-dessous.
+            Vous êtes HORS-LIGNE. Veuillez envoyer la demande par SMS classique sécurisé ci-dessous.
            </div>`
-        : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">⚠️ Le restaurant doit valider votre réservation. Envoyez le récapitulatif par WhatsApp pour bloquer votre table immédiatement.</p>`;
+        : `<p style="font-size: 0.85rem; color: var(--accent); margin-bottom: 1.5rem;">Le restaurant doit valider votre réservation. Envoyez le récapitulatif par WhatsApp pour bloquer votre table immédiatement.</p>`;
 
     triggerCelebration();
 
     const container = document.getElementById('booking-content-container');
     container.innerHTML = `
         <div class="confirmation-screen">
-            <div class="confirmation-icon">📅✅</div>
+            <div class="confirmation-icon"><i class="ri-calendar-check-line"></i></div>
             <h2>Réservation Enregistrée !</h2>
             <p style="color: var(--text-secondary); margin: 1rem 0;">Votre demande de réservation n° <strong>${bookingId}</strong> est bien enregistrée.</p>
             <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 12px; font-size: 0.9rem; text-align: left; margin: 1.5rem 0;">
@@ -4096,10 +4244,10 @@ Merci de me confirmer la disponibilité !`;
             ${connectionAlert}
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <a href="${waLink}" target="_blank" class="btn ${waBtnClass}">
-                    💬 Confirmer par WhatsApp
+                    <i class="ri-whatsapp-line" style="margin-right: 0.35rem;"></i> Confirmer par WhatsApp
                 </a>
                 <a href="${smsLink}" class="btn ${smsBtnClass}">
-                    📱 Option Secours : Envoyer par SMS classique
+                    Option Secours : Envoyer par SMS classique
                 </a>
                 <button class="btn btn-dark" onclick="router.navigate('/')">
                     Retourner à l'accueil
@@ -4136,7 +4284,7 @@ function renderReviewsTab(r) {
         breakdownHtml += `
             <div class="review-breakdown-bar">
                 <span style="width: 45px; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 2px;">
-                    ${star} <span style="color: #F59E0B; font-size: 0.85rem;">★</span>
+                    ${star} <i class="ri-star-fill" style="color: #F59E0B; font-size: 0.85rem;"></i>
                 </span>
                 <div class="review-progress-track">
                     <div class="review-progress-fill" style="width: ${pct}%;"></div>
@@ -4150,7 +4298,7 @@ function renderReviewsTab(r) {
     if (totalReviews === 0) {
         listHtml = `
             <div style="text-align: center; color: var(--text-secondary); padding: 3rem 1rem; background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border);">
-                <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">🌟</div>
+                <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: #F59E0B;"><i class="ri-star-fill"></i></div>
                 <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.25rem;">Soyez le premier à donner votre avis !</h4>
                 <p style="font-size: 0.85rem; max-width: 400px; margin: 0 auto;">Partagez votre expérience culinaire avec la communauté thiessoise.</p>
             </div>
@@ -4158,7 +4306,7 @@ function renderReviewsTab(r) {
     } else {
         reviews.forEach(rev => {
             const numRating = Math.min(5, Math.max(1, Math.round(Number(rev.rating) || 5)));
-            const stars = '★'.repeat(numRating) + '☆'.repeat(5 - numRating);
+            const stars = `<span style="color:#F59E0B;">${'<i class="ri-star-fill"></i>'.repeat(numRating)}${'<i class="ri-star-line"></i>'.repeat(5 - numRating)}</span>`;
             const replyBlock = rev.reply 
                 ? `<div class="review-reply"><div class="review-reply-author">Réponse du restaurant ${r.name}</div>${rev.reply}</div>` 
                 : '';
@@ -4204,7 +4352,7 @@ function renderReviewsTab(r) {
             <div class="rating-big-box" style="border-right: none; padding-right: 0; text-align: center;">
                 <div class="rating-big-num" style="color: var(--primary); font-size: 3rem;">${avg}</div>
                 <div class="stars-rating" style="font-size: 1.1rem; color: #F59E0B; margin: 0.35rem 0;">
-                    ${'★'.repeat(Math.round(Number(avg)))}${'☆'.repeat(5 - Math.round(Number(avg)))}
+                    ${'<i class="ri-star-fill" style="color:#F59E0B;"></i>'.repeat(Math.round(Number(avg)))}${'<i class="ri-star-line" style="color:#F59E0B;"></i>'.repeat(5 - Math.round(Number(avg)))}
                 </div>
                 <div style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">
                     Basé sur ${totalReviews} avis client${totalReviews > 1 ? 's' : ''}
@@ -4217,20 +4365,20 @@ function renderReviewsTab(r) {
 
         <div style="margin-bottom: 2.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0;">✍️ Laisser un avis et une note</h3>
+                <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0;">Laisser un avis et une note</h3>
             </div>
             <form id="review-form" onsubmit="submitReview(event, '${r.id}')" style="background: var(--bg-card); padding: 1.5rem; border-radius: 18px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
                 <div class="form-group" style="margin-bottom: 1.25rem;">
                     <label class="form-label" style="font-weight: 700; margin-bottom: 0.5rem; display: block;">Votre note pour ${r.name} <span class="required" style="color: var(--accent);">*</span></label>
                     <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
                         <div class="stars-selector" id="stars-selector-container">
-                            <span onclick="setStarsSelector(1)" title="1 étoile - Décevant">★</span>
-                            <span onclick="setStarsSelector(2)" title="2 étoiles - Moyen">★</span>
-                            <span onclick="setStarsSelector(3)" title="3 étoiles - Bon">★</span>
-                            <span onclick="setStarsSelector(4)" title="4 étoiles - Très bon">★</span>
-                            <span onclick="setStarsSelector(5)" title="5 étoiles - Excellent">★</span>
+                            <span onclick="setStarsSelector(1)" title="1 étoile - Décevant"><i class="ri-star-fill"></i></span>
+                            <span onclick="setStarsSelector(2)" title="2 étoiles - Moyen"><i class="ri-star-fill"></i></span>
+                            <span onclick="setStarsSelector(3)" title="3 étoiles - Bon"><i class="ri-star-fill"></i></span>
+                            <span onclick="setStarsSelector(4)" title="4 étoiles - Très bon"><i class="ri-star-fill"></i></span>
+                            <span onclick="setStarsSelector(5)" title="5 étoiles - Excellent"><i class="ri-star-fill"></i></span>
                         </div>
-                        <span id="star-rating-label" style="font-weight: 700; font-size: 0.9rem; color: #92400E; background: #FEF3C7; padding: 0.2rem 0.6rem; border-radius: 8px;">5/5 - Excellent ⭐</span>
+                        <span id="star-rating-label" style="font-weight: 700; font-size: 0.9rem; color: #92400E; background: #FEF3C7; padding: 0.2rem 0.6rem; border-radius: 8px; display: inline-flex; align-items: center; gap: 0.25rem;"><i class="ri-star-fill" style="color: #d97706;"></i> 5/5 - Excellent</span>
                     </div>
                     <input type="hidden" id="review-rating-val" value="5">
                 </div>
@@ -4246,13 +4394,13 @@ function renderReviewsTab(r) {
                 </div>
                 
                 <button type="submit" class="btn btn-primary" style="font-weight: 700; padding: 0.75rem 1.5rem;">
-                    ✨ Publier mon avis
+                    Publier mon avis <i class="ri-check-line" style="margin-left: 0.35rem;"></i>
                 </button>
             </form>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
-            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0;">💬 Tous les retours clients (${totalReviews})</h3>
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0;">Tous les retours clients (${totalReviews})</h3>
         </div>
         <div class="reviews-list">
             ${listHtml}
@@ -4265,11 +4413,11 @@ function renderReviewsTab(r) {
 
 let currentSelectedRating = 5;
 const RATING_LABELS = {
-    1: "1/5 - Décevant 😞",
-    2: "2/5 - Moyen 😐",
-    3: "3/5 - Bon 🙂",
-    4: "4/5 - Très bon ! 😊",
-    5: "5/5 - Excellent ! 🌟"
+    1: "1/5 - Décevant",
+    2: "2/5 - Moyen",
+    3: "3/5 - Bon",
+    4: "4/5 - Très bon !",
+    5: "5/5 - Excellent !"
 };
 
 function setStarsSelector(num) {
@@ -4339,7 +4487,7 @@ function submitReview(e, restaurantId) {
         reviewsCount: r.reviewsCount
     });
 
-    showToast("✨ Merci ! Votre avis et votre note ont été publiés.", "success");
+    showToast("Merci ! Votre avis et votre note ont été publiés.", "success");
     
     // Re-render restaurant view on reviews tab
     renderRestaurantView(r, 'reviews');
@@ -4366,7 +4514,7 @@ router.add('#/politique-client', () => {
     document.getElementById('main-content').innerHTML = `
         <section class="policy-page-container" style="max-width: 800px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 28px; box-shadow: var(--shadow);">
             <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
-                <span class="study-title-tag">⚖️ Mentions Légales</span>
+                <span class="study-title-tag">Mentions Légales</span>
                 <h1 style="font-family: var(--font-serif); font-size: 2rem; color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.25rem;">Politique d'utilisation — Espace Client</h1>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; font-style: italic;">Cette politique s'applique à toute personne utilisant la plateforme Thiès Resto pour consulter un menu, passer une commande, participer à une commande de groupe, réserver une table ou laisser un avis.</p>
             </div>
@@ -4432,7 +4580,7 @@ router.add('#/politique-admin', () => {
     document.getElementById('main-content').innerHTML = `
         <section class="policy-page-container" style="max-width: 800px; margin: 3rem auto; padding: 2.5rem; background: var(--bg-card); border: 1px solid var(--border); border-radius: 28px; box-shadow: var(--shadow);">
             <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1.5rem;">
-                <span class="study-title-tag">⚖️ Charte Resto</span>
+                <span class="study-title-tag">Charte Resto</span>
                 <h1 style="font-family: var(--font-serif); font-size: 2rem; color: var(--text-primary); margin-top: 0.5rem; margin-bottom: 0.25rem;">Politique d'utilisation — Espace Administrateur</h1>
                 <p style="color: var(--text-secondary); font-size: 0.9rem; font-style: italic;">Cette politique s'applique au restaurant utilisant son tableau de bord Thiès Resto pour gérer son menu, ses commandes, ses réservations et ses avis clients.</p>
             </div>
@@ -4500,8 +4648,7 @@ router.add('#/livreurs', () => {
     document.getElementById('main-content').innerHTML = `
         <div style="max-width: 650px; margin: 3rem auto; padding: 2.5rem 1.5rem; text-align: center; animation: fadeIn 0.3s ease;">
             <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 3rem 2rem; box-shadow: var(--shadow);">
-                <div style="width: 80px; height: 80px; background: rgba(var(--primary-rgb), 0.12); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;">
-                    🛵
+                <div style="width: 80px; height: 80px; background: rgba(var(--primary-rgb), 0.12); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem;"><i class="ri-e-bike-2-line"></i>
                 </div>
                 
                 <span class="badge" style="background: #FEF3C7; color: #92400E; font-size: 0.85rem; font-weight: 800; padding: 0.4rem 1rem; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; margin-bottom: 1rem; border: 1px solid rgba(245, 158, 11, 0.3);">
@@ -4518,7 +4665,7 @@ router.add('#/livreurs', () => {
 
                 <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem; text-align: left; margin-bottom: 2rem;">
                     <div style="font-weight: 700; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
-                        <span>📋</span> <span>Vous souhaitez rejoindre notre réseau de livreurs ?</span>
+                        <span><i class="ri-file-text-line"></i></span> <span>Vous souhaitez rejoindre notre réseau de livreurs ?</span>
                     </div>
                     <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0; line-height: 1.5;">
                         Contactez directement la coordination logistique pour enregistrer votre moto / scooter et être prioritaire dès le lancement officiel de l'interface livreur.
@@ -4527,7 +4674,7 @@ router.add('#/livreurs', () => {
 
                 <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
                     <a href="https://wa.me/221776064596?text=${encodeURIComponent("Bonjour THIES Resto, je souhaite postuler comme livreur partenaire à Thiès.")}" target="_blank" class="btn btn-primary" style="font-weight: 700; border-radius: 12px; padding: 0.75rem 1.5rem; display: inline-flex; align-items: center; gap: 0.5rem; text-decoration: none;">
-                        💬 Rejoindre la flotte sur WhatsApp
+                        <i class="ri-whatsapp-line" style="margin-right: 0.35rem;"></i> Rejoindre la flotte sur WhatsApp
                     </a>
                     <button class="btn btn-secondary" onclick="router.navigate('/')" style="font-weight: 600; border-radius: 12px; padding: 0.75rem 1.25rem;">
                         Retour à l'accueil
@@ -4539,47 +4686,86 @@ router.add('#/livreurs', () => {
 });
 
 // ----------------------------------------------------
-// Order Tracking View
+// Order Tracking View (Synchronisé en Direct avec Admin)
 // ----------------------------------------------------
-router.add('#/tracking', () => {
+const renderLiveTrackingScreen = (params) => {
     document.getElementById('floating-cart-bar').style.display = 'none';
     
-    // Set up realtime listener object if not exists
+    // Clear any existing tracking interval
+    if (window._trackingLiveTimer) {
+        clearInterval(window._trackingLiveTimer);
+        window._trackingLiveTimer = null;
+    }
+
     if (!window.trackingSubscriptions) window.trackingSubscriptions = {};
     
+    const routeOrderId = (params && params.id) || (new URLSearchParams(window.location.hash.split('?')[1] || '').get('id')) || '';
+    if (routeOrderId) {
+        localStorage.setItem('trackingOrderId', String(routeOrderId));
+    }
+
+    const savedOrderId = localStorage.getItem('trackingOrderId') || '';
     const userPhone = (typeof customerAuth !== 'undefined' && customerAuth.getUser().phone) 
         || localStorage.getItem('customerPhone') 
         || localStorage.getItem('trackingPhone') 
         || '';
 
+    const initialInputValue = userPhone || savedOrderId || routeOrderId;
+
     document.getElementById('main-content').innerHTML = `
-        <div style="max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem; text-align: center; animation: fadeIn 0.4s ease;">
-            <div style="font-size: 3rem; margin-bottom: 0.75rem;">📍</div>
-            <h2 style="color: var(--text-primary); margin-bottom: 0.4rem; font-size: 1.75rem; font-weight: 800;">Suivi de Commande en Direct</h2>
-            <p style="color: var(--text-secondary); margin-bottom: 1.75rem; font-size: 0.92rem; line-height: 1.5;">
-                Suivez la progression de votre repas : <strong>Réception ➔ Mise en cuisine ➔ Livraison ➔ Confirmation par vous</strong>.
+        <div style="max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem 4rem; text-align: center; animation: fadeIn 0.3s ease;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem; color: var(--primary);"><i class="ri-map-pin-time-line"></i></div>
+            <h2 style="color: var(--text-primary); margin-bottom: 0.4rem; font-size: 1.65rem; font-weight: 800; font-family: var(--font-serif, inherit);">Suivi de Commande en Direct</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.4rem; font-size: 0.9rem; line-height: 1.5;">
+                Synchronisation automatique et instantanée avec le restaurant et le livreur sans actualiser la page.
             </p>
             
-            <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow);">
-                <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
-                    <input type="tel" id="tracking-phone" class="form-control" placeholder="+221 77 123 45 67" value="${userPhone}" style="margin-bottom: 0; font-weight: 600;">
-                    <button class="btn btn-primary" onclick="window.fetchOrderTracking()" style="white-space: nowrap; font-weight: 700; padding: 0.65rem 1.25rem;">Suivre 🔍</button>
+            <div style="background: var(--bg-card); padding: 1.5rem; border-radius: 20px; border: 1.5px solid var(--border); box-shadow: var(--shadow);">
+                <form onsubmit="event.preventDefault(); window.fetchOrderTracking(false);" style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; gap: 0.6rem;">
+                        <input type="text" id="tracking-phone" class="form-control" placeholder="Numéro de téléphone (+221...) ou N° Commande" value="${initialInputValue}" style="margin-bottom: 0; font-weight: 600; font-size: 0.92rem; padding: 0.75rem 1rem;">
+                        <button type="submit" class="btn btn-primary" style="white-space: nowrap; font-weight: 700; padding: 0.75rem 1.25rem; display: inline-flex; align-items: center; gap: 0.35rem;">
+                            <i class="ri-search-line"></i> Suivre
+                        </button>
+                    </div>
+                </form>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 0.45rem; font-size: 0.78rem; color: #10B981; font-weight: 600;">
+                    <span class="nav-live-dot" style="position: static; display: inline-block;"></span>
+                    <span>Synchronisé en direct avec la cuisine • Sans actualiser la page</span>
                 </div>
-                <div id="tracking-result-container" style="text-align: left; margin-top: 1.5rem;">
+                <div id="tracking-result-container" style="text-align: left; margin-top: 1.25rem;">
                     <!-- Tracking results will appear here -->
                 </div>
             </div>
         </div>
     `;
 
-    if (userPhone) {
+    if (initialInputValue) {
         setTimeout(() => {
             if (typeof window.fetchOrderTracking === 'function') {
-                window.fetchOrderTracking();
+                window.fetchOrderTracking(false);
             }
-        }, 100);
+        }, 80);
     }
-});
+
+    // Active continuous background sync every 2.5s while on the tracking view
+    window._trackingLiveTimer = setInterval(async () => {
+        if (!window.location.hash.startsWith('#/tracking')) {
+            clearInterval(window._trackingLiveTimer);
+            window._trackingLiveTimer = null;
+            return;
+        }
+        if (typeof store !== 'undefined' && typeof store.syncLiveServerData === 'function') {
+            await store.syncLiveServerData();
+        }
+        if (typeof window.fetchOrderTracking === 'function') {
+            window.fetchOrderTracking(true);
+        }
+    }, 2500);
+};
+
+router.add('#/tracking', renderLiveTrackingScreen);
+router.add('#/tracking/:id', renderLiveTrackingScreen);
 
 window.confirmCustomerDelivery = async function(orderId) {
     if (!orderId) return;
@@ -4633,7 +4819,7 @@ window.confirmCustomerDelivery = async function(orderId) {
         }
 
         if (typeof showToast === 'function') {
-            showToast("🎉 Merci ! Votre confirmation de réception a été transmise en direct au restaurant. Bon appétit !", "success", {
+            showToast("Merci ! Votre confirmation de réception a été transmise en direct au restaurant. Bon appétit !", "success", {
                 title: "Commande Réceptionnée & Livrée !",
                 duration: 8000
             });
@@ -4652,7 +4838,7 @@ window.confirmCustomerDelivery = async function(orderId) {
         console.error("Erreur lors de la confirmation client de livraison:", err);
         btns.forEach(btn => {
             btn.disabled = false;
-            btn.innerHTML = '✅ J\'ai bien reçu ma commande';
+            btn.innerHTML = '<i class="ri-check-line"></i> J\'ai bien reçu ma commande';
         });
         if (typeof showToast === 'function') {
             showToast("Impossible de confirmer pour l'instant. Veuillez réessayer.", "danger");
@@ -4660,72 +4846,134 @@ window.confirmCustomerDelivery = async function(orderId) {
     }
 };
 
-window.fetchOrderTracking = async function() {
-    const rawPhone = document.getElementById('tracking-phone')?.value.trim() || '';
-    if (!rawPhone) {
-        showToast("Veuillez saisir votre numéro de téléphone", "warning");
-        return;
-    }
-    const phone = cleanPhoneNumber(rawPhone);
+window.fetchOrderTracking = async function(isLiveUpdate = false) {
+    const rawInput = (document.getElementById('tracking-phone')?.value || '').trim() 
+        || localStorage.getItem('customerPhone') 
+        || localStorage.getItem('trackingPhone') 
+        || localStorage.getItem('trackingOrderId') 
+        || '';
+    
+    const savedOrderId = (localStorage.getItem('trackingOrderId') || '').trim();
     const container = document.getElementById('tracking-result-container');
     if (!container) return;
     
-    container.innerHTML = '<div style="text-align:center; padding: 2rem 0;"><div class="spinner-ring" style="width:34px;height:34px;border-width:3px; margin: 0 auto 0.75rem;"></div><div style="font-size: 0.88rem; color: var(--text-secondary);">Recherche de votre dernière commande et de votre historique...</div></div>';
+    if (!rawInput && !savedOrderId) {
+        if (!isLiveUpdate && typeof showToast === 'function') {
+            showToast("Veuillez saisir votre numéro de téléphone ou votre numéro de commande", "warning");
+        }
+        return;
+    }
+
+    const isExplicitId = rawInput && (rawInput.toUpperCase().startsWith('CMD-') || rawInput.startsWith('#') || (rawInput.length >= 8 && !rawInput.startsWith('+') && !rawInput.startsWith('7') && isNaN(Number(rawInput))));
+    const orderIdToLookup = isExplicitId ? rawInput.replace(/^#/, '') : savedOrderId;
+    const phone = !isExplicitId ? cleanPhoneNumber(rawInput) : '';
+
+    if (phone) {
+        try { localStorage.setItem('trackingPhone', phone); } catch (e) {}
+    }
+
+    // Only show full loading spinner on initial manual submit when no card exists yet
+    if (!isLiveUpdate && !container.querySelector('.active-track-hero')) {
+        container.innerHTML = '<div style="text-align:center; padding: 2.5rem 0;"><div class="spinner-ring" style="width:34px;height:34px;border-width:3px; margin: 0 auto 0.75rem;"></div><div style="font-size: 0.88rem; color: var(--text-secondary);"><i class="ri-wifi-line" style="margin-right: 0.35rem;"></i> Synchronisation en direct avec la cuisine...</div></div>';
+    }
     
     let allOrders = [];
     
     try {
-        // 1. Récupération depuis Supabase
-        if (supabaseClient) {
+        // 1. Direct query of target order ID from server API for 100% authoritative status
+        if (orderIdToLookup) {
+            try {
+                const singleRes = await fetch(`/api/orders/${encodeURIComponent(orderIdToLookup)}`);
+                if (singleRes.ok) {
+                    const singleData = await singleRes.json();
+                    if (singleData && singleData.order) {
+                        allOrders.push(singleData.order);
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // 2. Récupération directe depuis l'API centrale en direct (synchronisation immédiate avec l'admin)
+        try {
+            const apiRes = await fetch('/api/orders');
+            if (apiRes.ok) {
+                const apiData = await apiRes.json();
+                if (apiData && Array.isArray(apiData.orders)) {
+                    apiData.orders.forEach(so => {
+                        const oPhone = cleanPhoneNumber(so.customerPhone || '');
+                        const matchPhone = phone && oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
+                        const matchId = orderIdToLookup && (String(so.id) === String(orderIdToLookup) || String(so.orderNumber) === String(orderIdToLookup));
+                        if (matchPhone || matchId) {
+                            const existingIdx = allOrders.findIndex(x => String(x.id) === String(so.id));
+                            if (existingIdx === -1) allOrders.push(so);
+                            else allOrders[existingIdx] = { ...allOrders[existingIdx], ...so };
+                        }
+                    });
+                }
+            }
+        } catch (apiErr) {}
+
+        // 3. Récupération depuis Supabase si téléphone disponible
+        if (supabaseClient && phone) {
             try {
                 const { data, error } = await supabaseClient.rpc('get_order_tracking', {
                     p_phone: phone
                 });
                 if (!error && Array.isArray(data)) {
-                    data.forEach(o => { if (o && o.id) allOrders.push(o); });
+                    data.forEach(o => { 
+                        if (o && o.id) {
+                            const existingIdx = allOrders.findIndex(x => String(x.id) === String(o.id));
+                            if (existingIdx === -1) allOrders.push(o);
+                            else allOrders[existingIdx] = { ...allOrders[existingIdx], ...o };
+                        } 
+                    });
                 }
-            } catch (err) {
-                console.warn("Supabase tracking fetch notice:", err);
-            }
+            } catch (err) {}
         }
         
-        // 2. Récupération depuis la mémoire locale du store
+        // 4. Récupération depuis la mémoire locale du store
         if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
             const memoryOrders = store.data.orders.filter(o => {
                 const oPhone = cleanPhoneNumber(o.customerPhone || '');
-                return oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
+                const matchPhone = phone && oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
+                const matchId = orderIdToLookup && (String(o.id) === String(orderIdToLookup) || String(o.orderNumber) === String(orderIdToLookup));
+                return matchPhone || matchId;
             });
             memoryOrders.forEach(mo => {
-                if (!allOrders.some(x => String(x.id) === String(mo.id))) {
-                    allOrders.push(mo);
-                }
+                const existingIdx = allOrders.findIndex(x => String(x.id) === String(mo.id));
+                if (existingIdx === -1) allOrders.push(mo);
+                else allOrders[existingIdx] = { ...allOrders[existingIdx], ...mo };
             });
         }
         
-        // 3. Récupération depuis l'historique persistent (localStorage)
+        // 5. Récupération depuis l'historique persistent (localStorage)
         try {
             const localHistory = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
             localHistory.forEach(localItem => {
                 const oPhone = cleanPhoneNumber(localItem.customerPhone || '');
-                if (oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)))) {
-                    if (!allOrders.some(x => String(x.id) === String(localItem.id))) {
-                        allOrders.push(localItem);
-                    }
+                const matchPhone = phone && oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
+                const matchId = orderIdToLookup && (String(localItem.id) === String(orderIdToLookup) || String(localItem.orderNumber) === String(orderIdToLookup));
+                if (matchPhone || matchId) {
+                    const existingIdx = allOrders.findIndex(x => String(x.id) === String(localItem.id));
+                    if (existingIdx === -1) allOrders.push(localItem);
+                    else allOrders[existingIdx] = { ...allOrders[existingIdx], ...localItem };
                 }
             });
         } catch (e) {}
 
         if (!allOrders || allOrders.length === 0) {
-            container.innerHTML = `
-                <div style="text-align:center; padding: 2.5rem 1rem; color: var(--text-secondary); background: var(--bg-page); border-radius: 18px; border: 1px dashed var(--border); margin-top: 1rem;">
-                    <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem;">🔍</span>
-                    <h4 style="color: var(--text-primary); margin: 0 0 0.35rem; font-size: 1.1rem; font-weight: 700;">Aucune commande trouvée</h4>
-                    <p style="margin: 0 0 1.25rem; font-size: 0.88rem; line-height: 1.4;">Aucune commande enregistrée pour le numéro <strong>${phone}</strong>.</p>
-                    <button class="btn btn-primary" onclick="router.navigate('/')" style="border-radius: 12px; font-weight: 700; padding: 0.6rem 1.25rem; font-size: 0.9rem;">
-                        Commander maintenant 🍲
-                    </button>
-                </div>
-            `;
+            if (!container.querySelector('.active-track-hero')) {
+                container.innerHTML = `
+                    <div style="text-align:center; padding: 2.5rem 1rem; color: var(--text-secondary); background: var(--bg-page); border-radius: 18px; border: 1px dashed var(--border); margin-top: 1rem;">
+                        <span style="font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: var(--primary);"><i class="ri-search-eye-line"></i></span>
+                        <h4 style="color: var(--text-primary); margin: 0 0 0.35rem; font-size: 1.1rem; font-weight: 700;">Aucune commande trouvée</h4>
+                        <p style="margin: 0 0 1.25rem; font-size: 0.88rem; line-height: 1.4;">Aucune commande active enregistrée pour <strong>${phone || rawInput}</strong>.</p>
+                        <button class="btn btn-primary" onclick="router.navigate('/')" style="border-radius: 12px; font-weight: 700; padding: 0.6rem 1.25rem; font-size: 0.9rem;">
+                            Commander maintenant
+                        </button>
+                    </div>
+                `;
+            }
             return;
         }
 
@@ -4737,27 +4985,36 @@ window.fetchOrderTracking = async function() {
             return String(b.id).localeCompare(String(a.id), undefined, { numeric: true });
         });
 
-        // =========================================================================
-        // RÈGLE : Suivi en direct strict de la DERNIÈRE commande active
-        // Lorsque la commande est terminée (Livrée ou Annulée), un résumé clair et épuré est affiché.
-        // On n'affiche plus l'historique complet pour ne pas alourdir la page.
-        // =========================================================================
         const latestOrder = allOrders[0];
+
+        // Vérification de changement de statut pour déclencher l'alerte temps réel
+        const prevStatus = window._lastTrackedOrderStatus;
+        const statusChanged = Boolean(prevStatus && prevStatus !== latestOrder.status);
+        window._lastTrackedOrderStatus = latestOrder.status;
+
+        if (statusChanged) {
+            if (typeof playNotificationSound === 'function') playNotificationSound();
+            if (navigator.vibrate) {
+                try { navigator.vibrate([120, 60, 120]); } catch (e) {}
+            }
+            if (typeof showToast === 'function') {
+                const toastType = (latestOrder.status === 'Livrée' || latestOrder.status === 'Livré') ? 'success' : (latestOrder.status === 'Annulée' ? 'danger' : 'info');
+                showToast(`Mise à jour en direct : Votre commande est maintenant « ${latestOrder.status} »`, toastType, {
+                    title: "Statut Commande Mis à Jour",
+                    duration: 6000
+                });
+            }
+        }
 
         // Sauvegarder l'ID de la commande suivie
         if (latestOrder && latestOrder.id) {
             try {
                 localStorage.setItem('trackingOrderId', String(latestOrder.id));
-                localStorage.setItem('trackingPhone', String(phone));
+                if (latestOrder.customerPhone) localStorage.setItem('trackingPhone', String(cleanPhoneNumber(latestOrder.customerPhone)));
             } catch (e) {}
         }
 
-        const ageMinutes = (store && typeof store.getOrderAgeMinutes === 'function')
-            ? store.getOrderAgeMinutes(latestOrder)
-            : 0;
-        const isProlongedWait = latestOrder.status === 'En attente' && ageMinutes >= 20;
-
-        const r = store.getRestaurantById(latestOrder.restaurant_id || latestOrder.restaurantId);
+        const r = (typeof store !== 'undefined' && store.getRestaurantById) ? store.getRestaurantById(latestOrder.restaurant_id || latestOrder.restaurantId) : null;
         const rName = r ? r.name : (latestOrder.restaurantName || 'Restaurant de Thiès');
         const rWhatsapp = r ? (r.whatsapp || r.phone) : null;
         
@@ -4770,50 +5027,50 @@ window.fetchOrderTracking = async function() {
         const isCancelled = latestOrder.status === 'Annulée';
 
         let statusColor = '#f59e0b';
-        let statusIcon = '⏳';
+        let statusIcon = '<i class="ri-time-line"></i>';
         let stepPercent = 15;
         let statusLabel = 'En attente de confirmation';
         let stepDescription = 'Votre commande a été transmise. En attente de confirmation par le restaurant.';
 
         if (isEnAttente) {
             statusColor = '#f59e0b';
-            statusIcon = '⏳';
+            statusIcon = '<i class="ri-time-line"></i>';
             stepPercent = 15;
             statusLabel = 'En attente (Restaurant)';
-            stepDescription = 'Votre commande a été transmise. Le restaurant doit confirmer la réception.';
+            stepDescription = 'Votre commande a été transmise au restaurant. Confirmation en cours.';
         } else if (isRecue) {
             statusColor = '#0284c7';
-            statusIcon = '📥';
+            statusIcon = '<i class="ri-inbox-line"></i>';
             stepPercent = 35;
             statusLabel = 'Reçue & Acceptée';
             stepDescription = 'Le restaurant a bien réceptionné votre commande ! Elle va être mise en cuisine.';
         } else if (isEnCuisine) {
-            statusColor = 'var(--primary)';
-            statusIcon = '👨‍🍳';
+            statusColor = '#EA580C';
+            statusIcon = '<i class="ri-restaurant-2-line"></i>';
             stepPercent = 55;
             statusLabel = 'En cuisine (Préparation)';
             stepDescription = 'Vos plats sont en cours de cuisson et de préparation par le chef.';
         } else if (isPretPourLivraison) {
             statusColor = '#0d9488';
-            statusIcon = '📦';
+            statusIcon = '<i class="ri-box-3-line"></i>';
             stepPercent = 75;
             statusLabel = 'Prêt pour livraison';
-            stepDescription = 'Vos plats sont prêts et emballés ! En attente de prise en charge par le livreur.';
+            stepDescription = 'Vos plats sont prêts et emballés ! Prise en charge par le livreur en cours.';
         } else if (isEnLivraison) {
             statusColor = '#0284c7';
-            statusIcon = '🛵';
+            statusIcon = '<i class="ri-e-bike-2-line"></i>';
             stepPercent = 90;
             statusLabel = 'En cours de livraison';
             stepDescription = 'Le livreur est en route ! Dès que vous recevez vos plats, confirmez ci-dessous.';
         } else if (isLivree) {
             statusColor = '#059669';
-            statusIcon = '✅';
+            statusIcon = '<i class="ri-check-line"></i>';
             stepPercent = 100;
             statusLabel = 'Livrée avec succès';
             stepDescription = 'Commande réceptionnée et validée avec succès. Bon appétit !';
         } else if (isCancelled) {
             statusColor = 'var(--danger)';
-            statusIcon = '❌';
+            statusIcon = '<i class="ri-close-line"></i>';
             stepPercent = 100;
             statusLabel = 'Commande annulée';
             stepDescription = latestOrder.cancelReason || 'Cette commande a été annulée.';
@@ -4822,26 +5079,102 @@ window.fetchOrderTracking = async function() {
         const isOtpVerified = latestOrder.otpVerified !== false;
         const totalFormatted = Number(latestOrder.total || latestOrder.certifiedTotal || 0).toLocaleString();
 
+        const getStepsLabelsHtml = (pct, cancelled) => `
+            <span style="${pct >= 15 ? 'color: var(--text-primary); font-weight: 700;' : ''}"><i class="ri-send-plane-line" style="margin-right:2px;"></i> Transmise</span>
+            <span style="${pct >= 35 ? 'color: var(--text-primary); font-weight: 700;' : ''}">Reçue</span>
+            <span style="${pct >= 55 ? 'color: var(--text-primary); font-weight: 700;' : ''}">En cuisine</span>
+            <span style="${pct >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">Prêt</span>
+            <span style="${pct >= 90 ? 'color: var(--text-primary); font-weight: 700;' : ''}">Livraison</span>
+            <span style="${pct >= 100 ? (cancelled ? 'color: var(--danger); font-weight: 700;' : 'color: #059669; font-weight: 700;') : ''}">${cancelled ? 'Annulée' : 'Livrée'}</span>
+        `;
+
+        const getActionAreaHtml = (orderObj, delivering, delivered, restoObj) => {
+            if (delivering) {
+                return `
+                    <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(32, 201, 151, 0.08); border: 2px solid #20c997; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.15);">
+                        <div style="font-size: 1.75rem; margin-bottom: 0.35rem; color: var(--primary);"><i class="ri-e-bike-2-line"></i></div>
+                        <h4 style="margin: 0 0 0.35rem; font-size: 1.05rem; color: #059669; font-weight: 800;">
+                            Le livreur est arrivé ?
+                        </h4>
+                        <p style="margin: 0 0 1rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.4;">
+                            Confirmez que vous avez bien reçu votre repas en mains propres pour finaliser la commande.
+                        </p>
+                        <button type="button" id="btn-confirm-delivery-${orderObj.id}" data-confirm-order-id="${orderObj.id}" class="btn btn-success" onclick="confirmCustomerDelivery('${orderObj.id}')" style="width: 100%; font-weight: 800; padding: 0.9rem 1.25rem; border-radius: 14px; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #20c997; border-color: #20c997; box-shadow: 0 4px 14px rgba(32, 201, 151, 0.35);">
+                            <i class="ri-check-line" style="margin-right: 0.35rem;"></i> J'ai bien reçu ma commande
+                        </button>
+                    </div>
+                `;
+            } else if (delivered) {
+                return `
+                    <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(16, 185, 129, 0.1); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 16px; text-align: center;">
+                        <div style="font-size: 1.8rem; margin-bottom: 0.25rem; color: #10b981;"><i class="ri-checkbox-circle-line"></i></div>
+                        <div style="font-size: 1.05rem; font-weight: 800; color: #059669; margin-bottom: 0.25rem;">
+                            Commande livrée & réception validée !
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
+                            Le restaurant a bien comptabilisé votre réception. Bon appétit !
+                        </div>
+                        ${restoObj ? `
+                            <a href="#/r/${restoObj.slug || restoObj.id}" class="btn btn-outline btn-sm" style="font-weight: 700; border-radius: 10px; font-size: 0.82rem; padding: 0.4rem 0.85rem; display: inline-flex; align-items: center;">
+                                <i class="ri-star-line" style="margin-right: 0.35rem;"></i> Donner un avis / Recommander chez ${restoObj.name}
+                            </a>
+                        ` : ''}
+                    </div>
+                `;
+            }
+            return '';
+        };
+
+        // Smooth in-place DOM update if card already exists (NO screen blinking or reload!)
+        const existingCard = container.querySelector('#track-card-' + latestOrder.id);
+        if (existingCard && isLiveUpdate) {
+            const badge = existingCard.querySelector('.track-status-badge');
+            if (badge) {
+                badge.style.color = statusColor;
+                badge.style.borderColor = statusColor;
+                badge.innerHTML = `<span>${statusIcon}</span> <span class="track-status-text">${statusLabel}</span>`;
+            }
+            const progressBar = existingCard.querySelector('.track-progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${stepPercent}%`;
+                progressBar.style.background = statusColor;
+            }
+            const banner = existingCard.querySelector('.track-step-banner');
+            if (banner) {
+                banner.innerHTML = `<span style="font-size: 1.25rem;">${statusIcon}</span><span style="line-height: 1.4;">${stepDescription}</span>`;
+            }
+            const stepsRow = existingCard.querySelector('.track-steps-labels');
+            if (stepsRow) {
+                stepsRow.innerHTML = getStepsLabelsHtml(stepPercent, isCancelled);
+            }
+            const actionArea = existingCard.querySelector('.track-action-area');
+            if (actionArea) {
+                actionArea.innerHTML = getActionAreaHtml(latestOrder, isEnLivraison, isLivree, r);
+            }
+            if (typeof window.checkActiveOrdersLiveDot === 'function') {
+                window.checkActiveOrdersLiveDot();
+            }
+            return;
+        }
+
         let html = `
-            <!-- =========================================================================
-                 1. CARTE PRINCIPALE : SUIVI DE LA DERNIÈRE COMMANDE UNIQUE
-                 ========================================================================= -->
-            <div class="active-track-hero" id="track-card-${latestOrder.id}">
+            <div class="active-track-hero" id="track-card-${latestOrder.id}" style="animation: fadeIn 0.3s ease;">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
                     <div>
-                        <div class="track-pill-latest">
-                            <span>📍</span> <span>Dernière Commande en Direct</span>
+                        <div class="track-pill-latest" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.75rem; border-radius: 20px; background: rgba(234, 88, 12, 0.12); color: #ea580c; font-weight: 700; font-size: 0.78rem; margin-bottom: 0.5rem;">
+                            <span class="nav-live-dot" style="position: static; display: inline-block;"></span>
+                            <span>Suivi en Direct Synchronisé</span>
                         </div>
                         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
                             <span style="font-size: 0.9rem; font-weight: 800; color: var(--text-primary); font-family: monospace;">#${latestOrder.id}</span>
                             ${isOtpVerified ? `
                                 <span style="display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.72rem; color: #059669; font-weight: 700; background: rgba(16, 185, 129, 0.12); padding: 2px 8px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.25);">
-                                    🛡️ Authentifiée
+                                    <i class="ri-shield-check-line"></i> Vérifiée
                                 </span>
                             ` : ''}
-                            ${latestOrder.date ? `<span style="font-size: 0.78rem; color: var(--text-secondary);">📅 ${latestOrder.date}</span>` : ''}
+                            ${latestOrder.date ? `<span style="font-size: 0.78rem; color: var(--text-secondary);"><i class="ri-calendar-line" style="margin-right: 0.25rem;"></i> ${latestOrder.date}</span>` : ''}
                         </div>
-                        <h3 style="margin: 0; color: var(--text-primary); font-size: 1.3rem; font-weight: 800;">${rName}</h3>
+                        <h3 style="margin: 0; color: var(--text-primary); font-size: 1.3rem; font-weight: 800; font-family: var(--font-serif, inherit);">${rName}</h3>
                     </div>
                     <div class="track-status-badge" style="background: rgba(255,255,255,0.06); padding: 0.45rem 0.95rem; border-radius: 20px; font-size: 0.85rem; font-weight: 800; color: ${statusColor}; border: 1.5px solid ${statusColor}; display: flex; align-items: center; gap: 0.4rem;">
                         <span>${statusIcon}</span> <span class="track-status-text">${statusLabel}</span>
@@ -4856,26 +5189,14 @@ window.fetchOrderTracking = async function() {
                     </div>
                     ${totalFormatted !== '0' ? `
                         <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.92rem; font-weight: 700; color: var(--text-primary);">
-                            <span>Total de la commande :</span>
+                            <span>Total :</span>
                             <span style="color: var(--primary); font-size: 1.05rem;">${totalFormatted} FCFA</span>
-                        </div>
-                    ` : ''}
-                    ${latestOrder.paymentMethod ? `
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.35rem; padding-top: 0.35rem; border-top: 1px dashed var(--border);">
-                            <span>💳 Règlement :</span>
-                            <span style="font-weight: 700; color: var(--text-primary);">${latestOrder.paymentMethod}</span>
-                        </div>
-                    ` : ''}
-                    ${latestOrder.paymentStatus ? `
-                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                            <span>Statut paiement :</span>
-                            <span style="font-weight: 700; color: ${latestOrder.isPaid || (latestOrder.paymentStatus && latestOrder.paymentStatus.includes('Payé')) ? '#059669' : '#d97706'};">${latestOrder.paymentStatus}</span>
                         </div>
                     ` : ''}
                 </div>
 
                 <!-- Step explanation banner -->
-                <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.15rem; font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.6rem;">
+                <div class="track-step-banner" style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.15rem; font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.6rem;">
                     <span style="font-size: 1.25rem;">${statusIcon}</span>
                     <span style="line-height: 1.4;">${stepDescription}</span>
                 </div>
@@ -4885,65 +5206,39 @@ window.fetchOrderTracking = async function() {
                     <div style="height: 8px; background: var(--bg-secondary); border-radius: 10px; overflow: hidden; margin-bottom: 0.6rem; border: 1px solid var(--border);">
                         <div class="track-progress-bar" style="height: 100%; width: ${stepPercent}%; background: ${statusColor}; transition: width 0.5s ease-out, background 0.5s ease-out;"></div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; gap: 2px;">
-                        <span style="${stepPercent >= 15 ? 'color: var(--text-primary); font-weight: 700;' : ''}">⏳ Transmise</span>
-                        <span style="${stepPercent >= 35 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📥 Reçue</span>
-                        <span style="${stepPercent >= 55 ? 'color: var(--text-primary); font-weight: 700;' : ''}">👨‍🍳 En cuisine</span>
-                        <span style="${stepPercent >= 75 ? 'color: var(--text-primary); font-weight: 700;' : ''}">📦 Prêt</span>
-                        <span style="${stepPercent >= 90 ? 'color: var(--text-primary); font-weight: 700;' : ''}">🛵 Livraison</span>
-                        <span style="${stepPercent >= 100 ? (isCancelled ? 'color: var(--danger); font-weight: 700;' : 'color: #059669; font-weight: 700;') : ''}">${isCancelled ? '❌ Annulée' : '✅ Livrée'}</span>
+                    <div class="track-steps-labels" style="display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-secondary); font-weight: 600; gap: 2px;">
+                        ${getStepsLabelsHtml(stepPercent, isCancelled)}
                     </div>
                 </div>
 
-                <!-- Client Delivery Confirmation Action (ACTIVE ONLY IN PHASE DE LIVRAISON) -->
-                ${isEnLivraison ? `
-                    <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(32, 201, 151, 0.08); border: 2px solid #20c997; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(32, 201, 151, 0.15);">
-                        <div style="font-size: 1.75rem; margin-bottom: 0.35rem;">🛵 📦</div>
-                        <h4 style="margin: 0 0 0.35rem; font-size: 1.05rem; color: #059669; font-weight: 800;">
-                            Le livreur est arrivé ?
-                        </h4>
-                        <p style="margin: 0 0 1rem; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.4;">
-                            Confirmez que vous avez bien reçu votre repas en mains propres pour finaliser la commande.
-                        </p>
-                        <button type="button" id="btn-confirm-delivery-${latestOrder.id}" data-confirm-order-id="${latestOrder.id}" class="btn btn-success ripple hover-3d" onclick="confirmCustomerDelivery('${latestOrder.id}')" style="width: 100%; font-weight: 800; padding: 0.9rem 1.25rem; border-radius: 14px; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; background: #20c997; border-color: #20c997; box-shadow: 0 4px 14px rgba(32, 201, 151, 0.35);">
-                            ✅ J'ai bien reçu ma commande
-                        </button>
-                    </div>
-                ` : isLivree ? `
-                    <div style="margin-top: 1.25rem; padding: 1.25rem; background: rgba(16, 185, 129, 0.1); border: 1.5px solid rgba(16, 185, 129, 0.35); border-radius: 16px; text-align: center;">
-                        <div style="font-size: 1.8rem; margin-bottom: 0.25rem;">🎉 🍽️</div>
-                        <div style="font-size: 1.05rem; font-weight: 800; color: #059669; margin-bottom: 0.25rem;">
-                            Commande livrée & réception validée !
-                        </div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem;">
-                            Le restaurant a bien comptabilisé votre réception. Bon appétit !
-                        </div>
-                        ${r ? `
-                            <a href="#/restaurant/${r.slug || r.id}" class="btn btn-outline btn-sm" style="font-weight: 700; border-radius: 10px; font-size: 0.82rem; padding: 0.4rem 0.85rem;">
-                                ⭐ Donner un avis / Recommander chez ${r.name}
-                            </a>
-                        ` : ''}
-                    </div>
-                ` : ''}
+                <!-- Client Delivery Confirmation Action -->
+                <div class="track-action-area">
+                    ${getActionAreaHtml(latestOrder, isEnLivraison, isLivree, r)}
+                </div>
 
                 <!-- Contact Restaurant Help / Assistance -->
                 <div style="margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: flex-end; flex-wrap: wrap;">
                     ${rWhatsapp ? `
                         <a href="https://wa.me/${String(rWhatsapp).replace(/\+/g, '').replace(/\s+/g, '')}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
-                            <span>💬</span> <span>WhatsApp Restaurant</span>
+                            <span><i class="ri-chat-1-line"></i></span> <span>WhatsApp Restaurant</span>
                         </a>
                     ` : ''}
                     ${r ? `
-                        <a href="#/restaurant/${r.slug || r.id}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
-                            <span>🏪</span> <span>Voir la carte</span>
+                        <a href="#/r/${r.slug || r.id}" class="btn btn-secondary btn-sm" style="font-size: 0.78rem; border-radius: 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 0.3rem;">
+                            <span><i class="ri-store-2-line"></i></span> <span>Voir la carte</span>
                         </a>
                     ` : ''}
                 </div>
             </div>
         `;
 
-        // Afficher uniquement la carte de suivi de la dernière commande active
+        // Mettre à jour l'affichage
         container.innerHTML = html;
+
+        // Mise à jour de l'indicateur actif dans le menu du bas
+        if (typeof window.checkActiveOrdersLiveDot === 'function') {
+            window.checkActiveOrdersLiveDot();
+        }
 
         // Setup Realtime Listener specifically for the active latest order
         if (supabaseClient && !window.trackingSubscriptions[latestOrder.id]) {
@@ -4952,22 +5247,22 @@ window.fetchOrderTracking = async function() {
                     'postgres_changes',
                     { event: 'UPDATE', schema: 'public', table: 'orders', filter: 'id=eq.' + latestOrder.id },
                     (payload) => {
-                        console.log('Order update tracked in realtime:', payload);
-                        if (payload.new && payload.old && payload.new.status !== payload.old.status) {
+                        if (payload.new && payload.new.status && payload.new.status !== latestOrder.status) {
                             if (typeof playNotificationSound === 'function') playNotificationSound();
-                            window.fetchOrderTracking();
+                            window.fetchOrderTracking(true);
                             if (typeof showToast === 'function') {
-                                showToast(`🔔 Mise à jour : Votre commande est maintenant "${payload.new.status}" !`, "success");
+                                showToast(`Mise à jour : Votre commande est maintenant « ${payload.new.status} »`, "success");
                             }
                         }
                     }
                 )
                 .subscribe();
         }
-        
     } catch (err) {
         console.error("fetchOrderTracking error:", err);
-        container.innerHTML = '<p style="color: var(--danger); text-align: center;">Une erreur est survenue lors de la récupération.</p>';
+        if (!container.querySelector('.active-track-hero')) {
+            container.innerHTML = '<p style="color: var(--danger); text-align: center; padding: 2rem 0;">Une erreur est survenue lors de la synchronisation de votre commande.</p>';
+        }
     }
 };
 // ----------------------------------------------------
@@ -4982,23 +5277,23 @@ router.add('#/explore', () => {
     container.innerHTML = `
         <div class="explore-screen" style="max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 3rem; animation: fadeIn 0.3s ease;">
             <div style="margin-bottom: 1.5rem;">
-                <h1 style="font-family: var(--font-serif); font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem;">Explorer à Thiès 🔍</h1>
+                <h1 style="font-family: var(--font-serif); font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem;">Explorer à Thiès</h1>
                 <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">Recherchez un plat, une spécialité ou trouvez les restaurants les plus proches.</p>
             </div>
 
             <!-- Search input -->
             <div class="search-container" style="margin-bottom: 1.25rem; width: 100%; position: relative;">
                 <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="debouncedApplyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1rem 3rem 1rem 1.25rem; width: 100%; font-size: 16px;">
-                <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher">🔍</button>
+                <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher"><i class="ri-search-line"></i></button>
             </div>
 
             <!-- Action button for GPS -->
             <div style="display: flex; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
                 <button type="button" class="btn btn-secondary btn-sm" onclick="geolocateRestaurants()" style="border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem;">
-                    📍 Restaurants autour de moi
+                    <i class="ri-map-pin-user-line" style="margin-right: 0.35rem; color: var(--primary);"></i> Restaurants autour de moi
                 </button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="router.navigate('/favorites')" style="border-radius: 20px; display: inline-flex; align-items: center; gap: 0.4rem;">
-                    ❤️ Mes Favoris
+                    <i class="ri-heart-3-line" style="color: #ef4444; margin-right: 0.35rem;"></i> Mes Favoris
                 </button>
             </div>
 
@@ -5006,32 +5301,32 @@ router.add('#/explore', () => {
             <div class="quick-filters-wrapper" style="margin-bottom: 1.5rem;">
                 <div class="filter-bar" id="filter-bar" role="tablist">
                     <button class="filter-btn ${activeFilter === 'Tous' ? 'active' : ''}" onclick="setFilter('Tous')" data-category="Tous">
-                        <span class="filter-icon">🍽️</span>
+                        <span class="filter-icon"><i class="ri-restaurant-line"></i></span>
                         <span class="filter-label">Tous</span>
                         <span class="filter-badge" id="count-all"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Fast-Food' ? 'active' : ''}" onclick="setFilter('Fast-Food')" data-category="Fast-Food">
-                        <span class="filter-icon">🍔</span>
+                        <span class="filter-icon"><i class="ri-restaurant-2-line"></i></span>
                         <span class="filter-label">Fast-Food</span>
                         <span class="filter-badge" id="count-fastfood"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Dibiterie' ? 'active' : ''}" onclick="setFilter('Dibiterie')" data-category="Dibiterie">
-                        <span class="filter-icon">🔥</span>
+                        <span class="filter-icon"><i class="ri-fire-line"></i></span>
                         <span class="filter-label">Dibiterie</span>
                         <span class="filter-badge" id="count-dibiterie"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Traditionnel' ? 'active' : ''}" onclick="setFilter('Traditionnel')" data-category="Traditionnel">
-                        <span class="filter-icon">🍲</span>
+                        <span class="filter-icon"><i class="ri-bowl-line"></i></span>
                         <span class="filter-label">Traditionnel</span>
                         <span class="filter-badge" id="count-traditionnel"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Gastronomique' ? 'active' : ''}" onclick="setFilter('Gastronomique')" data-category="Gastronomique">
-                        <span class="filter-icon">✨</span>
+                        <span class="filter-icon"><i class="ri-star-line"></i></span>
                         <span class="filter-label">Gastronomique</span>
                         <span class="filter-badge" id="count-gastronomique"></span>
                     </button>
                     <button class="filter-btn ${activeFilter === 'Pâtisserie' ? 'active' : ''}" onclick="setFilter('Pâtisserie')" data-category="Pâtisserie">
-                        <span class="filter-icon">🥐</span>
+                        <span class="filter-icon"><i class="ri-cup-line"></i></span>
                         <span class="filter-label">Pâtisserie</span>
                         <span class="filter-badge" id="count-patisserie"></span>
                     </button>
@@ -5071,13 +5366,13 @@ function renderFavoritesView() {
     if (favRestos.length === 0) {
         contentHtml = `
             <div style="text-align: center; padding: 4rem 1.5rem; background: var(--bg-card); border-radius: 24px; border: 1.5px dashed var(--border); max-width: 500px; margin: 2rem auto;">
-                <div style="font-size: 3.5rem; margin-bottom: 1rem; animation: floatCloche 3s ease-in-out infinite;">❤️</div>
+                <div style="font-size: 3.5rem; margin-bottom: 1rem; color: #ef4444;"><i class="ri-heart-line"></i></div>
                 <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin-bottom: 0.5rem;">Aucun favori pour le moment</h2>
                 <p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1.75rem;">
                     Ajoutez vos restaurants préférés en cliquant sur l'icône cœur pour les retrouver en un clin d'œil ici.
                 </p>
                 <button type="button" class="btn btn-primary" onclick="router.navigate('/')" style="border-radius: 25px; padding: 0.75rem 1.75rem; font-weight: 700;">
-                    Découvrir nos restaurants 🍽️
+                    Découvrir nos restaurants
                 </button>
             </div>
         `;
@@ -5093,8 +5388,7 @@ function renderFavoritesView() {
             
             cardsHtml += `
                 <div class="restaurant-card hover-3d glass-panel" onclick="router.navigate('/r/${r.slug}')">
-                    <button type="button" class="card-fav-btn is-fav active" data-fav-resto-id="${r.id}" onclick="toggleFavorite('${r.id}', event)" aria-label="Retirer des favoris">
-                        ❤️
+                    <button type="button" class="card-fav-btn is-fav active" data-fav-resto-id="${r.id}" onclick="toggleFavorite('${r.id}', event)" aria-label="Retirer des favoris"><i class="ri-heart-line" style="color: #ef4444; font-size: 2.5rem;"></i>
                     </button>
                     <div class="restaurant-card-header">
                         <img src="${coverUrl}" class="restaurant-card-img" alt="${r.name}" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60'">
@@ -5106,10 +5400,10 @@ function renderFavoritesView() {
                     <div class="restaurant-card-body">
                         <div class="restaurant-card-top-row">
                             <h3 class="restaurant-card-name" title="${r.name}">${r.name}</h3>
-                            <span class="stars-rating">★ ${(Number(r.rating) || 5.0).toFixed(1)}</span>
+                            <span class="stars-rating"><i class="ri-star-fill" style="color: #F59E0B; margin-right: 2px;"></i> ${(Number(r.rating) || 5.0).toFixed(1)}</span>
                         </div>
                         <p class="restaurant-card-address">
-                            <span>📍</span> <span class="restaurant-card-address-text">${r.address}</span>
+                            <span><i class="ri-map-pin-line"></i></span> <span class="restaurant-card-address-text">${r.address}</span>
                         </p>
                         <div class="restaurant-card-footer">
                             <span class="restaurant-card-cuisine">${r.category}</span>
@@ -5131,7 +5425,7 @@ function renderFavoritesView() {
         <div class="favorites-container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.75rem;">
                 <div>
-                    <h1 style="font-family: var(--font-serif); font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem;">Mes Favoris ❤️</h1>
+                    <h1 style="font-family: var(--font-serif); font-size: 1.75rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.25rem;">Mes Favoris</h1>
                     <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem;">${favRestos.length} restaurant${favRestos.length > 1 ? 's' : ''} enregistré${favRestos.length > 1 ? 's' : ''}</p>
                 </div>
                 <button type="button" class="btn btn-secondary btn-sm" onclick="router.navigate('/')" style="border-radius: 20px;">
@@ -5207,7 +5501,7 @@ router.add('#/profile', () => {
                         <h3 style="font-size: 1rem; font-weight: 800; margin: 0 0 0.15rem; color: var(--text-primary);">Coordonnées &amp; Identifiants</h3>
                         <p style="font-size: 0.78rem; color: var(--text-secondary); margin: 0;">Utilisées pour vos commandes à Thiès.</p>
                     </div>
-                    <button type="button" onclick="window.closeProfileEditForm()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); padding: 0.25rem;" title="Fermer">✕</button>
+                    <button type="button" onclick="window.closeProfileEditForm()" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-secondary); padding: 0.25rem;" title="Fermer"><i class="ri-close-line"></i></button>
                 </div>
 
                 <div style="padding: 1rem 1.25rem 1.25rem;">
@@ -5314,10 +5608,10 @@ window.toggleProfileEditForm = function() {
 
 window.showAffiliateProgramModal = function(source = 'general') {
     const supportPhone = '221776064596';
-    const waText = encodeURIComponent(`Bonjour l'équipe THIES Resto 👋\n\nJe souhaite rejoindre le *Programme Affilié & Ambassadeur* de la plateforme à Thiès (Réf: ${source}).\n\n👤 Mon Nom : \n📱 Téléphone WhatsApp : \n📍 Quartier à Thiès : \n\nMerci de m'indiquer la démarche et mes liens de parrainage !`);
+    const waText = encodeURIComponent(`Bonjour l'équipe THIES Resto\n\nJe souhaite rejoindre le *Programme Affilié & Ambassadeur* de la plateforme à Thiès (Réf: ${source}).\n\nMon Nom : \nTéléphone WhatsApp : \nQuartier à Thiès : \n\nMerci de m'indiquer la démarche et mes liens de parrainage !`);
     const waLink = `https://wa.me/${supportPhone}?text=${waText}`;
 
-    alertModal("Programme Affilié & Ambassadeur 🤝", `
+    alertModal("Programme Affilié & Ambassadeur", `
         <div style="text-align: left; padding: 0.25rem 0;">
             <div style="background: linear-gradient(135deg, #F26B21, #F59E0B); color: white; padding: 1.25rem; border-radius: 18px; margin-bottom: 1.25rem; box-shadow: 0 4px 15px rgba(242,107,33,0.3);">
                 <div style="font-size: 0.78rem; font-weight: 800; background: rgba(255,255,255,0.25); color: white; display: inline-block; padding: 2px 10px; border-radius: 12px; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
@@ -5330,12 +5624,12 @@ window.showAffiliateProgramModal = function(source = 'general') {
             </div>
 
             <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.75rem 0;">
-                📋 Conditions &amp; Avantages du Programme
+                Conditions &amp; Avantages du Programme
             </h4>
 
             <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-bottom: 1.5rem;">
                 <div style="padding: 0.75rem 0.9rem; background: var(--bg-input); border-radius: 14px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
-                    <span style="font-size: 1.3rem; margin-top: 1px;">👥</span>
+                    <span style="font-size: 1.3rem; margin-top: 1px; color: var(--primary);"><i class="ri-group-line"></i></span>
                     <div>
                         <strong style="color: var(--text-primary); font-size: 0.9rem;">1. Inscription Ouverte &amp; Gratuite</strong>
                         <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; line-height: 1.35;">
@@ -5345,7 +5639,7 @@ window.showAffiliateProgramModal = function(source = 'general') {
                 </div>
 
                 <div style="padding: 0.75rem 0.9rem; background: var(--bg-input); border-radius: 14px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
-                    <span style="font-size: 1.3rem; margin-top: 1px;">💰</span>
+                    <span style="font-size: 1.3rem; margin-top: 1px; color: #10b981;"><i class="ri-money-dollar-circle-line"></i></span>
                     <div>
                         <strong style="color: var(--text-primary); font-size: 0.9rem;">2. Commissions Transparentes &amp; Immédiates</strong>
                         <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; line-height: 1.35;">
@@ -5355,7 +5649,7 @@ window.showAffiliateProgramModal = function(source = 'general') {
                 </div>
 
                 <div style="padding: 0.75rem 0.9rem; background: var(--bg-input); border-radius: 14px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
-                    <span style="font-size: 1.3rem; margin-top: 1px;">🌊</span>
+                    <span style="font-size: 1.3rem; margin-top: 1px; color: #0083cb;"><i class="ri-water-percent-line"></i></span>
                     <div>
                         <strong style="color: var(--text-primary); font-size: 0.9rem;">3. Paiement Direct Wave / Orange Money</strong>
                         <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; line-height: 1.35;">
@@ -5365,7 +5659,7 @@ window.showAffiliateProgramModal = function(source = 'general') {
                 </div>
 
                 <div style="padding: 0.75rem 0.9rem; background: var(--bg-input); border-radius: 14px; display: flex; align-items: flex-start; gap: 0.75rem; border: 1px solid var(--border);">
-                    <span style="font-size: 1.3rem; margin-top: 1px;">🚀</span>
+                    <span style="font-size: 1.3rem; margin-top: 1px; color: var(--gold);"><i class="ri-flashlight-line"></i></span>
                     <div>
                         <strong style="color: var(--text-primary); font-size: 0.9rem;">4. Accompagnement &amp; Outils Promo</strong>
                         <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem; line-height: 1.35;">
@@ -5431,23 +5725,27 @@ window.showPromoDiscountsModal = function() {
                 <p style="margin: 0; font-size: 0.85rem; opacity: 0.9;">Commandez directement auprès de nos restaurants partenaires à Thiès sans intermédiaire.</p>
             </div>
             <p style="color: var(--text-secondary); font-size: 0.9rem;">
-                💡 Les réductions sont directement appliquées sur les tarifs affichés dans les menus des restaurants partenaires.
+                Les réductions sont directement appliquées sur les tarifs affichés dans les menus des restaurants partenaires.
             </p>
         </div>
     `);
 };
 
 window.clearLocalCustomerData = function() {
-    if (confirm("Voulez-vous vraiment effacer vos coordonnées locales et vos favoris ?")) {
-        localStorage.removeItem('customerName');
-        localStorage.removeItem('customerPhone');
-        localStorage.removeItem('customerAddress');
-        localStorage.removeItem('customerEmail');
-        localStorage.removeItem('THIES_FAVORITES');
-        localStorage.removeItem('THIES_ORDER_HISTORY');
-        showToast("Données locales effacées avec succès", "success");
-        router.navigate('/profile');
-    }
+    showConfirmModal(
+        "Effacer les données locales",
+        "Voulez-vous vraiment effacer vos coordonnées enregistrées et vos favoris sur cet appareil ?",
+        () => {
+            localStorage.removeItem('customerName');
+            localStorage.removeItem('customerPhone');
+            localStorage.removeItem('customerAddress');
+            localStorage.removeItem('customerEmail');
+            localStorage.removeItem('THIES_FAVORITES');
+            localStorage.removeItem('THIES_ORDER_HISTORY');
+            showToast("Données locales effacées avec succès", "success");
+            router.navigate('/profile');
+        }
+    );
 };
 
 window.saveProfile = function(e) {
@@ -5510,10 +5808,10 @@ if ('serviceWorker' in navigator) {
 
 // Global Connection State Listeners
 window.addEventListener('offline', () => {
-    showToast("🔌 Vous êtes hors-ligne. Vous pouvez toujours commander via l'option SMS classique !", "warning");
+    showToast("Vous êtes hors-ligne. Vous pouvez toujours commander via l'option SMS classique !", "warning");
 });
 window.addEventListener('online', () => {
-    showToast("📶 Connexion Internet rétablie. Thiès à Table est de nouveau connecté au réseau.", "success");
+    showToast("Connexion Internet rétablie. Thiès à Table est de nouveau connecté au réseau.", "success");
 });
 
 // SMS Link Helper
@@ -5724,14 +6022,14 @@ window.setupRealtimeSubscriptions = function() {
               
               if ('Notification' in window && Notification.permission === 'granted') {
                   navigator.serviceWorker.ready.then(reg => {
-                      reg.showNotification('🔔 Nouvelle Commande!', {
+                      reg.showNotification('Nouvelle Commande!', {
                           body: `${newOrder.customerName} a commandé pour ${newOrder.total} FCFA.`,
                           icon: '/icon.png',
                           vibrate: [200, 100, 200]
                       });
                   });
               } else {
-                  showToast(`🔔 Nouvelle commande de ${newOrder.total} FCFA!`, "success");
+                  showToast(`Nouvelle commande de ${newOrder.total} FCFA!`, "success");
               }
               
               if (window.location.hash === '#/dashboard') {
@@ -5783,7 +6081,7 @@ window.submitCustomerReview = async function(restaurantId, customerName) {
         showToast("Merci pour votre avis !", "success");
         document.getElementById('checkout-review-section').innerHTML = `
             <div style="text-align:center; padding: 2rem;">
-                <h3 style="color: var(--success); margin-bottom: 0.5rem;">✅ Avis publié avec succès</h3>
+                <h3 style="color: var(--success); margin-bottom: 0.5rem;">Avis publié avec succès</h3>
                 <p style="color: var(--text-secondary); font-size: 0.9rem;">Votre retour a bien été pris en compte. Merci !</p>
             </div>
         `;
@@ -5797,7 +6095,7 @@ window.addEventListener('offline', () => {
         banner = document.createElement('div');
         banner.id = 'offline-banner';
         banner.style.cssText = 'position:fixed;top:0;left:0;width:100%;background:var(--danger);color:white;text-align:center;padding:12px;z-index:999999;font-weight:bold;font-size:0.9rem;box-shadow:0 4px 6px rgba(0,0,0,0.2);animation:slideDown 0.3s ease-out;';
-        banner.innerHTML = '⚠️ Vous êtes hors connexion. Veuillez vérifier votre réseau.';
+        banner.innerHTML = 'Vous êtes hors connexion. Veuillez vérifier votre réseau.';
         document.body.appendChild(banner);
     }
     banner.style.display = 'block';
@@ -5884,7 +6182,7 @@ if (typeof supabaseClient !== 'undefined' && supabaseClient) {
                 const updated = payload.new;
                 if (!updated) return;
                 
-                console.log('🔄 Realtime: menu_item mis à jour:', updated.name, '→', updated.is_available ? 'Disponible' : 'Rupture');
+                console.log('[Realtime]: menu_item mis à jour:', updated.name, '→', updated.is_available ? 'Disponible' : 'Rupture');
                 
                 // 1. Mettre à jour le cache local
                 const resto = store.data.restaurants.find(r => r.id === updated.restaurant_id);
@@ -5938,7 +6236,7 @@ if (typeof supabaseClient !== 'undefined' && supabaseClient) {
         )
         .subscribe();
     
-    console.log('📡 Realtime menu_items : Abonnement activé');
+    console.log('[Realtime] menu_items : Abonnement activé');
 }
 
 function updateNav() {
@@ -5947,20 +6245,20 @@ function updateNav() {
     
     if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
         if (navActions) navActions.innerHTML = `
-            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;" class="desktop-only">👤 ${currentRestaurantSession.name || 'Connecté'}</span>
+            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;" class="desktop-only"><i class="ri-user-line" style="margin-right: 0.25rem;"></i> ${currentRestaurantSession.name || 'Connecté'}</span>
             <button class="btn btn-outline desktop-only" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="handleLogout()">Déconnexion</button>
         `;
         if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'block';
     } else if (typeof isSuperAdminSession !== 'undefined' && isSuperAdminSession) {
         if (navActions) navActions.innerHTML = `
-            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;" class="desktop-only">👑 Admin</span>
+            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-right: 0.5rem;" class="desktop-only"><i class="ri-shield-star-line" style="margin-right: 0.25rem; color: var(--gold);"></i> Admin</span>
             <button class="btn btn-outline desktop-only" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="handleLogout()">Déconnexion</button>
         `;
         if (mobileLogoutBtn) mobileLogoutBtn.style.display = 'block';
     } else {
         if (navActions) navActions.innerHTML = `
             <button class="btn btn-secondary btn-sm" onclick="router.navigate('/auth')" title="Espace Resto / Connexion Restaurateur" aria-label="Espace Resto" style="display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 0.9rem; border-radius: 12px; font-weight: 600; font-size: 0.85rem;">
-                <span style="font-size: 1.05rem; line-height: 1;">🏪</span>
+                <span style="font-size: 1.05rem; line-height: 1;"><i class="ri-store-2-line"></i></span>
                 <span>Espace Resto</span>
             </button>
         `;
@@ -6240,41 +6538,41 @@ window.setupRealtime = function() {
                         }
 
                         // Build friendly status message & toast configuration
-                        let toastTitle = '🔔 Suivi de Commande';
+                        let toastTitle = 'Suivi de Commande';
                         let toastMessage = `Votre commande n°${orderId} chez ${restaurantName} est : ${newStatus}`;
                         let toastType = 'info';
-                        let toastIcon = '🔔';
+                        let toastIcon = 'info';
 
                         if (newStatus === 'Reçue') {
-                            toastTitle = '📥 Commande Reçue & Acceptée !';
+                            toastTitle = 'Commande Reçue & Acceptée !';
                             toastMessage = `Le restaurant ${restaurantName} a bien validé la réception de votre commande n°${orderId}.`;
                             toastType = 'info';
-                            toastIcon = '📥';
+                            toastIcon = 'inbox';
                         } else if (newStatus === 'Confirmée' || newStatus === 'En préparation' || newStatus === 'En cuisine') {
-                            toastTitle = '👨‍🍳 Commande En Cuisine !';
+                            toastTitle = 'Commande En Cuisine !';
                             toastMessage = `Excellente nouvelle ! Votre commande n°${orderId} chez ${restaurantName} est en cours de préparation en cuisine.`;
                             toastType = 'info';
-                            toastIcon = '👨‍🍳';
+                            toastIcon = 'restaurant';
                         } else if (newStatus === 'Prêt pour livraison' || newStatus === 'Prête') {
-                            toastTitle = '📦 Prêt pour Livraison !';
+                            toastTitle = 'Prêt pour Livraison !';
                             toastMessage = `Vos plats chez ${restaurantName} sont prêts et emballés pour la livraison !`;
                             toastType = 'success';
-                            toastIcon = '📦';
+                            toastIcon = 'package';
                         } else if (newStatus === 'En cours de livraison' || newStatus === 'En livraison' || newStatus === 'Partie en livraison') {
-                            toastTitle = '🛵 Commande en Route !';
+                            toastTitle = 'Commande en Route !';
                             toastMessage = `Le livreur est en route avec votre repas chaud de ${restaurantName} !`;
                             toastType = 'info';
-                            toastIcon = '🛵';
+                            toastIcon = 'delivery';
                         } else if (newStatus === 'Livrée') {
-                            toastTitle = '🎉 Commande Livrée !';
-                            toastMessage = `Votre commande n°${orderId} chez ${restaurantName} a été livrée. Bon appétit ! 🍽️`;
+                            toastTitle = 'Commande Livrée !';
+                            toastMessage = `Votre commande n°${orderId} chez ${restaurantName} a été livrée. Bon appétit !`;
                             toastType = 'success';
-                            toastIcon = '✅';
+                            toastIcon = 'success';
                         } else if (newStatus === 'Annulée') {
-                            toastTitle = '⚠️ Commande Annulée';
+                            toastTitle = 'Commande Annulée';
                             toastMessage = `Votre commande n°${orderId} chez ${restaurantName} a été annulée par le restaurant.`;
                             toastType = 'danger';
-                            toastIcon = '✕';
+                            toastIcon = 'danger';
                         }
 
                         // Also trigger system/desktop Web Notification if tab is hidden/backgrounded
@@ -6335,22 +6633,42 @@ window.setupRealtime = function() {
                 }
 
                 if (window.location.hash === '#/dashboard' && typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
-                    if (newOrder.restaurant_id === currentRestaurantSession.id) {
+                    if (String(newOrder.restaurant_id || newOrder.restaurantId) === String(currentRestaurantSession.id)) {
                         if (eventType === 'INSERT') {
-                            playNotificationSound();
+                            if (typeof window.playOrderAlertSound === 'function') {
+                                window.playOrderAlertSound();
+                            } else if (typeof playNotificationSound === 'function') {
+                                playNotificationSound();
+                            }
+                            if (navigator.vibrate) {
+                                try { navigator.vibrate([300, 150, 300, 150, 300]); } catch(e) {}
+                            }
+                            const clientLabel = (newOrder.customer_name && String(newOrder.customer_name).trim()) 
+                                ? String(newOrder.customer_name).trim() 
+                                : (newOrder.customer_phone || newOrder.customerPhone || 'un client');
+                            const notifMsg = `🔔 Vous venez de recevoir une commande de "${clientLabel}" (Commande #${orderId} • ${Number(newOrder.total || 0).toLocaleString()} FCFA) !`;
                             if (typeof showToast === 'function') {
-                                showToast(`🔔 NOUVELLE COMMANDE REÇUE : #${orderId} (${newOrder.total || 0} FCFA)`, "success", {
-                                    title: "Nouvelle Commande !",
-                                    duration: 8000
+                                showToast(notifMsg, "success", {
+                                    title: "Nouvelle Commande Reçue !",
+                                    duration: 10000
                                 });
+                            }
+                            if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                                try {
+                                    new Notification('🔔 Nouvelle commande reçue !', {
+                                        body: `Vous venez de recevoir une commande de "${clientLabel}" (${Number(newOrder.total || 0).toLocaleString()} FCFA).`,
+                                        icon: '/icon.png',
+                                        tag: 'order-' + orderId
+                                    });
+                                } catch(e) {}
                             }
                         } else if (eventType === 'UPDATE') {
                             if (newStatus === 'Livrée' || newStatus === 'Livré') {
                                 playNotificationSound();
                                 if (typeof showToast === 'function') {
-                                    showToast(`🎉 Le client a confirmé la bonne réception de la commande #${orderId} ! Statut : Livrée.`, "success", {
-                                        title: "📦 Commande Réceptionnée & Livrée !",
-                                        icon: "✅",
+                                    showToast(`Le client a confirmé la bonne réception de la commande #${orderId} ! Statut : Livrée.`, "success", {
+                                        title: "Commande Réceptionnée & Livrée !",
+                                        icon: "success",
                                         duration: 8500
                                     });
                                 }
@@ -6428,7 +6746,7 @@ window.addEventListener('thies:order-status-changed', (e) => {
                 try { navigator.vibrate([120, 60, 120]); } catch (err) {}
             }
 
-            let toastTitle = detail.title || '🔔 Suivi de Commande';
+            let toastTitle = detail.title || 'Suivi de Commande';
             let toastMessage = detail.body || `Votre commande n°${orderId} chez ${restoName} est : ${newStatus}`;
             let toastType = (newStatus === 'Livrée' || newStatus === 'Livré' || newStatus === 'Prêt pour livraison') ? 'success' : (newStatus === 'Annulée' ? 'danger' : 'info');
 
@@ -6450,13 +6768,27 @@ window.addEventListener('thies:order-status-changed', (e) => {
             }
 
             // Rafraîchir l'écran de suivi si le client est actuellement dessus
-            if (window.location.hash === '#/tracking' && typeof window.fetchOrderTracking === 'function') {
-                window.fetchOrderTracking();
+            if (window.location.hash.startsWith('#/tracking') && typeof window.fetchOrderTracking === 'function') {
+                window.fetchOrderTracking(true);
             }
+        } else if (window.location.hash.startsWith('#/tracking') && typeof window.fetchOrderTracking === 'function') {
+            window.fetchOrderTracking(true);
         }
     } catch (listenerErr) {
         console.warn("thies:order-status-changed listener error:", listenerErr);
     }
+});
+
+// Synchronisation instantanée automatique avec les commandes serveur/admin
+window.addEventListener('thies_orders_live_update', () => {
+    try {
+        if (typeof window.checkActiveOrdersLiveDot === 'function') {
+            window.checkActiveOrdersLiveDot();
+        }
+        if (window.location.hash.startsWith('#/tracking') && typeof window.fetchOrderTracking === 'function') {
+            window.fetchOrderTracking(true);
+        }
+    } catch (err) {}
 });
 
 window.playNotificationSound = function() {
@@ -6598,7 +6930,7 @@ window.checkUntreatedOrdersFor10MinAlert = function() {
                     // 1. Notification Push Système Navigateur (Web Push API)
                     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
                         try {
-                            const notif = new Notification("⚠️ RAPPEL : Commande non traitée (+10 min)", {
+                            const notif = new Notification("RAPPEL : Commande non traitée (+10 min)", {
                                 body: `La commande #${order.id} (${Number(order.total || 0).toLocaleString()} FCFA) chez ${restoName} attend d'être traitée depuis ${elapsed} minutes !`,
                                 icon: 'icon.png',
                                 badge: 'icon.png',
@@ -6628,8 +6960,8 @@ window.checkUntreatedOrdersFor10MinAlert = function() {
 
                     // 4. Toast d'alerte haute priorité avec bouton d'action directe
                     if (typeof showToast === 'function') {
-                        showToast(`⚠️ URGENT : La commande #${order.id} (${order.customerName || 'Client'}) attend depuis ${elapsed} minutes sans traitement !`, "danger", {
-                            title: "🚨 Commande Non Traitée (>10 min)",
+                        showToast(`URGENT : La commande #${order.id} (${order.customerName || 'Client'}) attend depuis ${elapsed} minutes sans traitement !`, "danger", {
+                            title: "Commande Non Traitée (>10 min)",
                             icon: "⏰",
                             duration: 12000,
                             actionText: "Traiter Immédiatement",
@@ -6854,7 +7186,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
         banner.id = 'pwa-install-banner';
         banner.innerHTML = `
             <div style="flex: 1;">
-                <strong style="display:block; margin-bottom: 2px;">Installez Thies Resto 🚀</strong>
+                <strong style="display:block; margin-bottom: 2px;">Installez Thies Resto</strong>
                 <span style="font-size: 0.8rem; color: var(--text-secondary);">Pour commander plus rapidement.</span>
             </div>
             <div>
@@ -6943,7 +7275,7 @@ window.exitPlatform = function() {
     // Fallback: clear display or redirect to blank screen
     document.body.innerHTML = `
         <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0B0D11; color: #9CA3AF; font-family: sans-serif; text-align: center; padding: 2rem;">
-            <div style="font-size: 3rem; margin-bottom: 1rem;">👋</div>
+            <div style="font-size: 3rem; margin-bottom: 1rem; color: var(--primary);"><i class="ri-user-smile-line"></i></div>
             <h1 style="color: #F9FAFB; font-size: 1.5rem; margin-bottom: 0.5rem;">Application fermée</h1>
             <p style="max-width: 400px; font-size: 0.95rem; margin-bottom: 2rem;">Vous avez quitté THIES Resto suite au refus des conditions d'utilisation. Vous pouvez fermer cet onglet.</p>
             <button onclick="location.reload()" style="background: #f26b21; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 10px; font-weight: 600; cursor: pointer;">Rouvrir l'application</button>

@@ -184,14 +184,13 @@ class Store {
             customers: []
         };
         
-        // Nettoyer le cache local de toutes anciennes données factices
+        // Nettoyer les transactions d'abonnements
         try {
             if (typeof localStorage !== 'undefined') {
-                const savedTxs = JSON.parse(localStorage.getItem('thies_saspay_transactions') || localStorage.getItem('thies_paytech_transactions') || '[]');
+                const savedTxs = JSON.parse(localStorage.getItem('thies_subscription_transactions') || '[]');
                 if (Array.isArray(savedTxs)) {
                     const realTxs = savedTxs.filter(t => t.orderId && !t.orderId.includes('171800000000'));
-                    localStorage.setItem('thies_saspay_transactions', JSON.stringify(realTxs));
-                    localStorage.setItem('thies_paytech_transactions', JSON.stringify(realTxs));
+                    localStorage.setItem('thies_subscription_transactions', JSON.stringify(realTxs));
                 }
             }
         } catch(e) {}
@@ -239,10 +238,56 @@ class Store {
                                 detail: { restaurants: this.data.restaurants, updatedRestaurant: target }
                             }));
                         }
+                    } else if (msg.type === 'ORDER_STATUS_CHANGED' && msg.orderId) {
+                        const target = this.data.orders.find(o => String(o.id) === String(msg.orderId));
+                        if (target) {
+                            target.status = msg.status;
+                            if (msg.cancelReason) target.cancelReason = msg.cancelReason;
+                            this.save();
+                        }
+                        // Update local history
+                        try {
+                            let history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+                            let historyUpdated = false;
+                            history.forEach(item => {
+                                if (String(item.id) === String(msg.orderId)) {
+                                    item.status = msg.status;
+                                    if (msg.cancelReason) item.cancelReason = msg.cancelReason;
+                                    historyUpdated = true;
+                                }
+                            });
+                            if (historyUpdated) {
+                                localStorage.setItem('THIES_ORDER_HISTORY', JSON.stringify(history));
+                            }
+                        } catch (e) {}
+
+                        window.dispatchEvent(new CustomEvent('thies:order-status-changed', {
+                            detail: {
+                                orderId: msg.orderId,
+                                newStatus: msg.status,
+                                cancelReason: msg.cancelReason,
+                                order: msg.order || target,
+                                restaurantName: msg.restaurantName
+                            }
+                        }));
+                        window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
+                            detail: {
+                                newOrders: [],
+                                hasStatusChange: true,
+                                allOrders: this.data.orders,
+                                updatedOrderId: msg.orderId,
+                                newStatus: msg.status
+                            }
+                        }));
                     }
                 };
                 window._thiesSyncChannel = syncChannel;
             } catch(e) {}
+        }
+
+        // Server-Sent Events (SSE) Live Order Stream for real-time tracking sync without page reload
+        if (typeof window !== 'undefined' && window.EventSource) {
+            this.initServerLiveOrdersStream();
         }
 
         // Auto-check and cancel stale/unacknowledged orders (only when tab is active)
@@ -652,13 +697,19 @@ class Store {
                         }
                         
                         return {
+                            ...localR,
                             ...dbR,
                             menu: (dbR.menu && dbR.menu.length > 0) ? dbR.menu : (localR ? localR.menu : []),
                             username: (localR && localR.username) ? localR.username : ('id_' + baseName),
                             password: (localR && localR.password) ? localR.password : (baseName + '221'),
                             status: (localR && localR.status) ? localR.status : (dbR.status || 'active'),
-                            subscriptionPack: (localR && localR.subscriptionPack) ? localR.subscriptionPack : 'Aucun (Gratuit)',
-                            createdAt: (localR && localR.createdAt) ? localR.createdAt : '2026-06-25T00:00:00Z',
+                            isOpenManual: (localR && localR.isOpenManual !== undefined) ? localR.isOpenManual : (dbR.isOpenManual !== undefined ? dbR.isOpenManual : true),
+                            subscriptionPack: (localR && localR.subscriptionPack) ? localR.subscriptionPack : (dbR.subscription_pack || 'Aucun (Gratuit)'),
+                            hasPaidSubscription: (localR && localR.hasPaidSubscription !== undefined) ? localR.hasPaidSubscription : (dbR.hasPaidSubscription !== undefined ? dbR.hasPaidSubscription : true),
+                            subscriptionStatus: (localR && localR.subscriptionStatus) ? localR.subscriptionStatus : (dbR.subscriptionStatus || 'active'),
+                            suspendReason: (localR && localR.suspendReason) ? localR.suspendReason : dbR.suspendReason,
+                            suspendedAt: (localR && localR.suspendedAt) ? localR.suspendedAt : dbR.suspendedAt,
+                            createdAt: (localR && localR.createdAt) ? localR.createdAt : (dbR.created_at || '2026-06-25T00:00:00Z'),
                             coverImage: dbR.coverImage || fallbackCover
                         };
                     });
@@ -757,7 +808,14 @@ class Store {
                                 timestamp: isNaN(ts) ? Date.now() : ts
                             };
                         });
-                        this.data.orders = mappedOrders.sort((a,b) => b.id.localeCompare(a.id));
+                        const existingLocalOrders = this.data.orders || [];
+                        const mergedOrders = [...mappedOrders];
+                        existingLocalOrders.forEach(localO => {
+                            if (!mergedOrders.some(mo => String(mo.id) === String(localO.id))) {
+                                mergedOrders.unshift(localO);
+                            }
+                        });
+                        this.data.orders = mergedOrders.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
                     }
                     if (adminData.reservations) {
                         const mappedReservations = adminData.reservations.map(r => ({
@@ -1458,12 +1516,6 @@ class Store {
         if (!order.created_at) {
             order.created_at = order.createdAt;
         }
-        
-        if (window.clientTracker) {
-            const behaviorStr = window.clientTracker.getBehaviorReport();
-            // Append to internal note for admin visibility (not necessarily to WhatsApp to not spam the restaurant)
-            order.note = order.note ? order.note + ' | [Analytics: ' + behaviorStr + ']' : '[Analytics: ' + behaviorStr + ']';
-        }
         this.data.orders.unshift(order);
 
         this.save();
@@ -1545,6 +1597,27 @@ class Store {
             const resto = this.getRestaurantById(order.restaurantId);
             const restoName = resto ? resto.name : (order.restaurantName || '');
 
+            // Direct server synchronization for instant propagation
+            try {
+                const token = sessionStorage.getItem('admin_token') || sessionStorage.getItem('restaurant_token') || '';
+                const adminPass = sessionStorage.getItem('admin_password') || '';
+                fetch(`/api/orders/${encodeURIComponent(orderId)}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                        ...(adminPass ? { 'x-admin-password': adminPass } : {})
+                    },
+                    body: JSON.stringify({
+                        status,
+                        cancelReason,
+                        customerPhone: order.customerPhone,
+                        adminPassword: adminPass
+                    })
+                }).catch(() => {});
+            } catch (e) {}
+
             if (supabaseClient && isSuperAdminSession) {
                 // Super Admin utilise la RPC admin sécurisée
                 const adminPass = sessionStorage.getItem('admin_password') || '';
@@ -1562,6 +1635,41 @@ class Store {
                 });
             } else {
                 this.pushOrderToSupabase(order);
+            }
+
+            // Dispatch locally and across tabs for instant real-time order tracking without page reload
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('thies:order-status-changed', {
+                    detail: {
+                        orderId,
+                        newStatus: status,
+                        cancelReason,
+                        order,
+                        restaurantName: restoName
+                    }
+                }));
+                window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
+                    detail: {
+                        newOrders: [],
+                        hasStatusChange: true,
+                        allOrders: this.data.orders,
+                        updatedOrderId: orderId,
+                        newStatus: status
+                    }
+                }));
+
+                if (window._thiesSyncChannel) {
+                    try {
+                        window._thiesSyncChannel.postMessage({
+                            type: 'ORDER_STATUS_CHANGED',
+                            orderId,
+                            status,
+                            cancelReason,
+                            restaurantName: restoName,
+                            order
+                        });
+                    } catch(e) {}
+                }
             }
         }
     }
@@ -1655,9 +1763,11 @@ class Store {
                 .getPublicUrl(fileName);
                 
             return publicUrlData.publicUrl;
-        } catch (error) {
-            console.error('Error uploading image:', error);
-            alert("Erreur lors de l'upload de l'image. Avez-vous créé le bucket 'images' en mode public sur Supabase ?");
+        } catch (uploadErr) {
+            console.error("Upload error:", uploadErr);
+            if (typeof window !== 'undefined' && typeof window.showToast === 'function') {
+                window.showToast("Erreur lors de l'upload de l'image. Vérifiez votre connexion internet.", "danger");
+            }
             return null;
         }
     }
@@ -1978,6 +2088,102 @@ class Store {
         }
 
         return { success: syncErrors === 0, syncErrors };
+    }
+
+    initServerLiveOrdersStream() {
+        if (typeof window === 'undefined' || !window.EventSource) return;
+        if (window._serverOrdersLiveStream) {
+            try { window._serverOrdersLiveStream.close(); } catch(e) {}
+        }
+
+        try {
+            const es = new EventSource('/api/orders/live-stream');
+            window._serverOrdersLiveStream = es;
+
+            es.onmessage = (event) => {
+                if (!event.data) return;
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'ORDER_STATUS_CHANGED' && data.orderId) {
+                        const target = this.data.orders.find(o => String(o.id) === String(data.orderId));
+                        if (target) {
+                            target.status = data.status;
+                            if (data.cancelReason) target.cancelReason = data.cancelReason;
+                            this.save();
+                        } else if (data.order) {
+                            this.data.orders.unshift(data.order);
+                            this.save();
+                        }
+
+                        // Update local customer history
+                        try {
+                            let history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+                            let historyUpdated = false;
+                            history.forEach(item => {
+                                if (String(item.id) === String(data.orderId)) {
+                                    item.status = data.status;
+                                    if (data.cancelReason) item.cancelReason = data.cancelReason;
+                                    historyUpdated = true;
+                                }
+                            });
+                            if (historyUpdated) {
+                                localStorage.setItem('THIES_ORDER_HISTORY', JSON.stringify(history));
+                            }
+                        } catch (e) {}
+
+                        // Dispatch local events
+                        window.dispatchEvent(new CustomEvent('thies:order-status-changed', {
+                            detail: {
+                                orderId: data.orderId,
+                                newStatus: data.status,
+                                cancelReason: data.cancelReason,
+                                order: data.order || target,
+                                restaurantName: data.order?.restaurantName || (target ? target.restaurantName : '')
+                            }
+                        }));
+
+                        window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
+                            detail: {
+                                newOrders: [],
+                                hasStatusChange: true,
+                                allOrders: this.data.orders,
+                                updatedOrderId: data.orderId,
+                                newStatus: data.status
+                            }
+                        }));
+
+                        // If user is on live tracking page, update immediately without reload!
+                        if (window.location.hash.startsWith('#/tracking') && typeof window.fetchOrderTracking === 'function') {
+                            window.fetchOrderTracking(true);
+                        }
+                    } else if (data.type === 'NEW_ORDER' && data.order) {
+                        const exists = this.data.orders.some(o => String(o.id) === String(data.order.id));
+                        if (!exists) {
+                            this.data.orders.unshift(data.order);
+                            this.save();
+                        }
+
+                        window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
+                            detail: {
+                                newOrders: [data.order],
+                                allOrders: this.data.orders
+                            }
+                        }));
+                    }
+                } catch (e) {}
+            };
+
+            es.onerror = () => {
+                try { es.close(); } catch(e) {}
+                setTimeout(() => {
+                    if (window._serverOrdersLiveStream === es) {
+                        this.initServerLiveOrdersStream();
+                    }
+                }, 4000);
+            };
+        } catch (err) {
+            console.warn('[Live Sync] EventSource initialization notice:', err);
+        }
     }
 }
 

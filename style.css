@@ -4074,20 +4074,27 @@ footer { padding: 2.5rem 1.5rem 2rem; }
 
 #catalog-section { padding-top: 2rem; margin-top: 1rem; position: relative; z-index: 10; }
 
-/* ========== MOBILE BOTTOM NAVIGATION ========== */
+/* ========== MOBILE BOTTOM NAVIGATION (NATIVE DESIGN) ========== */
 .mobile-bottom-nav {
     display: none;
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid var(--border);
-    z-index: 999;
-    padding-bottom: env(safe-area-inset-bottom);
-    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.4);
+    width: 100%;
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: #FFFFFF;
+    border-top: 1px solid #E5E7EB;
+    z-index: 1000;
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] .mobile-bottom-nav,
+html[data-theme="dark"] .mobile-bottom-nav {
+    background: #111827;
+    border-top: 1px solid #1F2937;
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .mobile-bottom-nav .nav-item {
@@ -4096,43 +4103,44 @@ footer { padding: 2.5rem 1.5rem 2rem; }
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0.5rem 0;
-    color: var(--text-secondary);
+    padding: 0.35rem 0;
+    color: #64748B;
     text-decoration: none;
-    transition: var(--transition-smooth);
+    transition: color 0.15s ease;
 }
 
-.mobile-bottom-nav .nav-item.active,
-.mobile-bottom-nav .nav-item:hover {
-    color: var(--primary);
+[data-theme="dark"] .mobile-bottom-nav .nav-item {
+    color: #94A3B8;
 }
 
-.mobile-bottom-nav .icon {
-    font-size: 1.25rem;
-    margin-bottom: 0.1rem;
+.mobile-bottom-nav .nav-item.active {
+    color: #EA580C;
 }
 
-.mobile-bottom-nav .label {
-    font-size: 0.65rem;
-    font-weight: 600;
+.mobile-bottom-nav .nav-icon {
+    font-size: 1.35rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobile-bottom-nav .nav-item span {
+    font-size: 0.66rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.1px;
+    margin-top: 2px;
+}
+
+.mobile-bottom-nav .nav-item.active span {
+    font-weight: 700;
 }
 
 .mobile-bottom-nav .icon-wrapper {
     position: relative;
     display: inline-block;
 }
-
-.mobile-bottom-nav .badge-qty {
-    position: absolute;
-    top: -5px;
-    right: -10px;
-    background: var(--primary);
-    color: white;
-    font-size: 0.55rem;
-    font-weight: bold;
-    padding: 2px 5px;
-    border-radius: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 @media (max-width: 768px) {
@@ -5098,66 +5106,8 @@ footer { padding: 2.5rem 1.5rem 2rem; }
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 70px;
-    background: var(--glass-bg);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
     z-index: 1000;
-    justify-content: space-around;
-    align-items: center;
-    padding-bottom: env(safe-area-inset-bottom);
 }
-
-.mobile-bottom-nav .nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 0.75rem;
-    font-weight: 500;
-    flex: 1;
-    height: 100%;
-    position: relative;
-    transition: var(--transition-smooth);
-}
-
-.mobile-bottom-nav .nav-item .nav-icon {
-    font-size: 1.4rem;
-    margin-bottom: 3px;
-    transition: var(--transition-bounce);
-}
-
-.mobile-bottom-nav .nav-item.active {
-    color: var(--primary);
-}
-
-.mobile-bottom-nav .nav-item.active .nav-icon {
-    transform: translateY(-4px) scale(1.1);
-}
-
-.mobile-bottom-nav .cart-badge {
-    position: absolute;
-    top: 6px;
-    right: 25%;
-    background: var(--primary);
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 10px;
-    border: 2px solid var(--bg-primary);
-}
-
-@media (max-width: 768px) {
-    .mobile-bottom-nav {
-        display: flex;
-    }
-    body {
-        padding-bottom: 80px; /* space for bottom nav */
-    }
     .floating-cart-bar {
         top: 70px !important;
         right: 12px !important;
@@ -5760,8 +5710,7 @@ footer { padding: 2.5rem 1.5rem 2rem; }
 
 /* MOBILE PERFORMANCE FIX: Reduce heavy backdrop filters on small screens */
 @media (max-width: 768px) {
-    .navbar,
-    .mobile-bottom-nav {
+    .navbar {
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
     }
@@ -5867,69 +5816,7 @@ footer { padding: 2.5rem 1.5rem 2rem; }
     }
 }
 
-/* Mobile Bottom Navigation Theme & Polish */
-.mobile-bottom-nav {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: calc(58px + env(safe-area-inset-bottom, 0px));
-    padding-bottom: max(6px, env(safe-area-inset-bottom, 0px));
-    z-index: 1000;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.25);
-}
-
-[data-theme="dark"] .mobile-bottom-nav,
-html[data-theme="dark"] .mobile-bottom-nav {
-    background: rgba(26, 26, 26, 0.96) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-:root:not([data-theme="dark"]) .mobile-bottom-nav,
-html:not([data-theme="dark"]) .mobile-bottom-nav {
-    background: rgba(255, 255, 255, 0.96) !important;
-    border-top: 1px solid #E5E7EB !important;
-}
-
-@media (max-width: 768px) {
-    .mobile-bottom-nav {
-        display: flex !important;
-        justify-content: space-around;
-        align-items: center;
-    }
-    
-    .mobile-bottom-nav .nav-item {
-        flex: 1;
-        min-height: 48px;
-        min-width: 44px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        color: var(--text-secondary);
-        text-decoration: none;
-        transition: var(--transition-smooth);
-        position: relative;
-    }
-    
-    .mobile-bottom-nav .nav-item.active,
-    .mobile-bottom-nav .nav-item:hover {
-        color: var(--primary) !important;
-    }
-    
-    .mobile-bottom-nav .nav-icon {
-        font-size: 1.25rem;
-        line-height: 1;
-    }
-    
-    .mobile-bottom-nav span {
-        font-size: 0.68rem;
-        font-weight: 600;
-    }
-}
+/* Mobile Bottom Navigation is declared authoritatively below */
 
 /* Category Filter Bar Horizontal Scroll on Mobile */
 .category-filter-bar, .filters-container, .filter-pills-row {
@@ -6497,7 +6384,7 @@ body[data-theme="dark"] .restaurant-card-name {
 }
 
 /* ==========================================================================
-   5-TAB MOBILE BOTTOM NAVIGATION POLISH
+   AUTHENTIC NATIVE MOBILE BOTTOM NAVIGATION (HUMAN-DESIGNED, ZERO-AI ARTIFACTS)
    ========================================================================== */
 .mobile-bottom-nav {
     display: none;
@@ -6506,74 +6393,99 @@ body[data-theme="dark"] .restaurant-card-name {
     left: 0;
     right: 0;
     width: 100%;
-    height: calc(60px + env(safe-area-inset-bottom, 0px));
+    height: calc(56px + env(safe-area-inset-bottom, 0px));
     padding-bottom: env(safe-area-inset-bottom, 0px);
-    background: rgba(255, 255, 255, 0.96) !important;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-top: 1px solid rgba(0, 0, 0, 0.08) !important;
+    background: #FFFFFF !important;
+    border-top: 1px solid #E5E7EB !important;
     z-index: 1000;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.04);
     justify-content: space-around;
     align-items: center;
 }
 
 [data-theme="dark"] .mobile-bottom-nav,
 html[data-theme="dark"] .mobile-bottom-nav {
-    background: rgba(26, 26, 26, 0.96) !important;
-    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+    background: #111827 !important;
+    border-top: 1px solid #1F2937 !important;
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.2);
 }
 
 .mobile-bottom-nav .nav-item {
     flex: 1;
-    min-height: 52px;
+    height: 52px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 3px;
-    color: #6B7280;
+    color: #64748B;
     text-decoration: none;
     position: relative;
-    transition: color 0.2s ease, transform 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s ease;
 }
 
 [data-theme="dark"] .mobile-bottom-nav .nav-item {
-    color: #9CA3AF;
+    color: #94A3B8;
 }
 
 .mobile-bottom-nav .nav-icon {
     font-size: 1.35rem;
     line-height: 1;
-    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: none !important;
+    transform: none !important;
 }
 
 .mobile-bottom-nav .nav-item span {
-    font-size: 0.68rem;
-    font-weight: 600;
-    letter-spacing: 0.2px;
+    font-size: 0.66rem;
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.1px;
 }
 
 .mobile-bottom-nav .nav-item.active {
-    color: #F26B21 !important;
+    color: #EA580C !important;
 }
 
-.mobile-bottom-nav .nav-item.active .nav-icon {
-    transform: translateY(-2px) scale(1.12);
+.mobile-bottom-nav .nav-item.active span {
+    font-weight: 700;
+}
+
+.mobile-bottom-nav .nav-item:active {
+    opacity: 0.7;
 }
 
 .mobile-bottom-nav .nav-badge {
     position: absolute;
-    top: 4px;
+    top: 5px;
     right: 22%;
-    background: #F26B21;
+    background: #EA580C;
     color: #ffffff;
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 700;
     padding: 1px 5px;
     border-radius: 10px;
-    border: 2px solid var(--bg-primary);
+    line-height: 1.2;
+    min-width: 16px;
+    text-align: center;
+}
+
+.mobile-bottom-nav .nav-live-dot {
+    position: absolute;
+    top: 6px;
+    right: 26%;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10B981;
+}
+
+[data-theme="dark"] .mobile-bottom-nav .nav-live-dot {
+    background: #10B981;
 }
 
 @media (max-width: 768px) {
@@ -6581,7 +6493,7 @@ html[data-theme="dark"] .mobile-bottom-nav {
         display: flex !important;
     }
     body {
-        padding-bottom: 70px !important;
+        padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
     }
     .floating-cart-bar {
         top: 70px !important;
@@ -7090,8 +7002,8 @@ html[data-theme="dark"] .mobile-bottom-nav {
     }
 
     .mobile-bottom-nav {
-        background: var(--bg-glass) !important;
-        border-color: var(--border) !important;
+        background: #111827 !important;
+        border-color: #1F2937 !important;
     }
 
     /* Dropdowns & Popups */
@@ -8819,13 +8731,138 @@ html[data-theme="dark"] .mobile-bottom-nav {
     }
 }
 
+/* ==========================================================================
+   5-STAR RESTAURANT LUXURY DESIGN SYSTEM (THIÈS RESTO PRESTIGE)
+   ========================================================================== */
+.luxury-resto-card {
+    border-radius: 22px !important;
+    border: 1px solid rgba(229, 231, 235, 0.8) !important;
+    background: var(--bg-card) !important;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
 
+[data-theme="dark"] .luxury-resto-card {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: rgba(28, 32, 43, 0.85) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
 
+.luxury-resto-card:hover {
+    transform: translateY(-6px) scale(1.015) !important;
+    box-shadow: 0 20px 35px -8px rgba(242, 107, 33, 0.18), 0 0 0 1px rgba(212, 175, 55, 0.35) !important;
+    border-color: rgba(212, 175, 55, 0.5) !important;
+}
 
+.luxury-curated-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    background: rgba(17, 24, 39, 0.85);
+    color: #FBBF24;
+    border: 1px solid rgba(251, 191, 36, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    text-transform: uppercase;
+}
 
+[data-theme="dark"] .luxury-curated-badge {
+    background: rgba(15, 17, 23, 0.9);
+    border-color: rgba(251, 191, 36, 0.5);
+    color: #FDE68A;
+}
 
+.luxury-stars {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(245, 158, 11, 0.12);
+    color: #D97706 !important;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
 
+[data-theme="dark"] .luxury-stars {
+    background: rgba(245, 158, 11, 0.2);
+    color: #FBBF24 !important;
+    border-color: rgba(245, 158, 11, 0.35);
+}
 
+.restaurant-card-name {
+    font-family: 'Playfair Display', 'Outfit', Georgia, serif !important;
+    font-size: 1.25rem !important;
+    letter-spacing: -0.01em;
+}
 
+.restaurant-name-title {
+    font-family: 'Playfair Display', 'Outfit', Georgia, serif !important;
+    letter-spacing: -0.02em;
+}
 
+.dish-title {
+    font-family: 'Playfair Display', 'Outfit', Georgia, serif !important;
+    font-size: 1.15rem !important;
+    letter-spacing: -0.01em;
+}
 
+.dish-price-tag {
+    background: linear-gradient(135deg, #111827 0%, #1F2937 100%) !important;
+    color: #FBBF24 !important;
+    border: 1px solid rgba(251, 191, 36, 0.3) !important;
+    font-weight: 800 !important;
+    border-radius: 12px !important;
+    padding: 5px 11px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+[data-theme="dark"] .dish-price-tag {
+    background: linear-gradient(135deg, #1F2937 0%, #111827 100%) !important;
+    color: #FDE68A !important;
+    border-color: rgba(251, 191, 36, 0.4) !important;
+}
+
+/* 5-STAR LUXURY TOAST NOTIFICATIONS */
+.toast-item {
+    border-radius: 20px !important;
+    border: 1px solid rgba(242, 107, 33, 0.2) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+}
+
+[data-theme="dark"] .toast-item {
+    border-color: rgba(242, 107, 33, 0.25) !important;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45) !important;
+}
+
+.toast-item.toast-success {
+    border-left: 4px solid #10B981 !important;
+}
+
+.toast-item.toast-cart {
+    border-left: 4px solid #F59E0B !important;
+}
+
+.toast-item.toast-danger,
+.toast-item.toast-error {
+    border-left: 4px solid #EF4444 !important;
+}
+
+.toast-item.toast-info {
+    border-left: 4px solid #3B82F6 !important;
+}

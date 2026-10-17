@@ -14,7 +14,7 @@ window.renderVendorLogin = function(slug) {
     container.innerHTML = `
         <div style="max-width: 400px; margin: 4rem auto; padding: 2rem; background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border); box-shadow: var(--shadow);">
             <div style="text-align: center; margin-bottom: 2rem;">
-                <div style="font-size: 3rem; margin-bottom: 1rem;">👨‍🍳</div>
+                <div style="font-size: 2.5rem; margin-bottom: 1rem; color: var(--gold);"><i class="ri-restaurant-2-line"></i></div>
                 <h2>Espace Restaurateur</h2>
                 <p style="color: var(--text-secondary); margin-top: 0.5rem;">Connexion pour <strong>${restoName}</strong></p>
             </div>
@@ -56,7 +56,7 @@ window.submitVendorLogin = async function(slug) {
     } catch (err) {
         hideLoadingOverlay();
         if (err.rateLimited) {
-            errorEl.innerHTML = `🔒 <strong>Compte temporairement bloqué</strong><br><span style="font-size: 0.85rem;">Trop de tentatives. Réessayez dans 15 minutes.</span>`;
+            errorEl.innerHTML = `<i class="ri-lock-2-line" style="margin-right: 0.35rem; color: var(--danger);"></i><strong>Compte temporairement bloqué</strong><br><span style="font-size: 0.85rem;">Trop de tentatives. Réessayez dans 15 minutes.</span>`;
             errorEl.style.display = 'block';
             errorEl.style.background = 'rgba(255,0,0,0.08)';
             errorEl.style.padding = '1rem';

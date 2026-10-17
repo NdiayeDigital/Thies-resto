@@ -144,7 +144,7 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     
     <!-- Google Fonts loaded directly via link to eliminate CSS @import cascade waterfall -->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&display=swap">
 
     <!-- Professional Icons (Remix Icon) -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -168,15 +168,15 @@
 </head>
 
 <body>
-    <!-- ========== SPLASH / WELCOME SCREEN (THIES Resto / Bon Appétit) ========== -->
-    <div id="splash-screen" class="splash-screen" aria-label="Écran de bienvenue">
+    <!-- ========== SPLASH / WELCOME SCREEN (Bypassed for instant direct catalogue access) ========== -->
+    <div id="splash-screen" class="splash-screen hidden" style="display: none;" aria-label="Écran de bienvenue">
         <div class="splash-content">
             <!-- THIES Resto Official Logo -->
             <div class="splash-logo-wrap">
                 <div class="splash-logo-circle">
                     <img src="icon.png" alt="THIES Resto Logo" class="splash-logo-img" fetchpriority="high">
                 </div>
-                <div class="splash-badge-sub">🍽️ Bon Appétit</div>
+                <div class="splash-badge-sub"><i class="ri-restaurant-line" style="margin-right: 0.35rem;"></i> Bon Appétit</div>
             </div>
 
             <!-- Brand Titles -->
@@ -185,9 +185,9 @@
 
             <!-- Feature Pills -->
             <div class="splash-features">
-                <span class="splash-pill">⚡ Livraison Rapide</span>
-                <span class="splash-pill">🍲 Plats du Jour</span>
-                <span class="splash-pill">💬 Direct WhatsApp</span>
+                <span class="splash-pill"><i class="ri-flashlight-line" style="margin-right: 0.35rem; color: var(--gold);"></i> Service Express</span>
+                <span class="splash-pill"><i class="ri-restaurant-2-line" style="margin-right: 0.35rem; color: var(--gold);"></i> Plats d'Exception</span>
+                <span class="splash-pill"><i class="ri-whatsapp-line" style="margin-right: 0.35rem; color: #25D366;"></i> Direct WhatsApp</span>
             </div>
 
             <!-- Action Button -->
@@ -236,7 +236,7 @@
                         style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1.5px solid var(--primary);">
                     <span class="logo-text" style="font-size: 1.1rem;">THIES Resto</span>
                 </div>
-                <button class="close-drawer-btn" onclick="toggleMobileMenu()" aria-label="Fermer le menu">✕</button>
+                <button class="close-drawer-btn" onclick="toggleMobileMenu()" aria-label="Fermer le menu"><i class="ri-close-line"></i></button>
             </div>
             <div class="drawer-links">
                 <!-- Dynamic actions populated by JS -->
@@ -247,13 +247,6 @@
         <main id="main-content">
             <!-- DYNAMIC SKELETON PRELOADER -->
             <div id="initial-skeleton" style="padding: 2rem 1.5rem; max-width: 1240px; margin: 0 auto;">
-                <!-- Live Supabase sync indicator pill -->
-                <div style="text-align: center; margin-bottom: 1.5rem;">
-                    <div class="supabase-sync-indicator">
-                        <span class="supabase-live-dot"></span>
-                        <span>Connexion instantanée aux restaurants de Thiès...</span>
-                    </div>
-                </div>
 
                 <!-- Hero Section Skeleton -->
                 <div class="skeleton-hero-card">
@@ -636,6 +629,7 @@
         <a href="#" id="bottom-nav-orders" class="nav-item" onclick="router.navigate('/tracking'); updateBottomNavActive('orders'); return false;">
             <div class="nav-icon"><i class="ri-file-list-3-line"></i></div>
             <span>Commandes</span>
+            <span id="mobile-nav-orders-dot" class="nav-live-dot" style="display: none;"></span>
         </a>
         <a href="#" id="bottom-nav-profile" class="nav-item" onclick="router.navigate('/profile'); updateBottomNavActive('profile'); return false;">
             <div class="nav-icon"><i class="ri-user-3-line"></i></div>
@@ -649,13 +643,13 @@
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const domReadyTime = performance.now();
-            console.log(`⚡ [Performance DOM] DOMContentLoaded déclenché en ${Math.round(domReadyTime)}ms`);
+            console.log(`[Performance DOM] DOMContentLoaded déclenché en ${Math.round(domReadyTime)}ms`);
         });
         window.addEventListener('load', () => {
             const pageLoadedTime = performance.now();
             const perfNav = performance.getEntriesByType('navigation')[0];
             const domInteractive = perfNav ? Math.round(perfNav.domInteractive) : Math.round(pageLoadedTime);
-            console.log(`🚀 [Performance DOM] DOM Interactive: ${domInteractive}ms | Page Complète: ${Math.round(pageLoadedTime)}ms`);
+            console.log(`[Performance DOM] DOM Interactive: ${domInteractive}ms | Page Complète: ${Math.round(pageLoadedTime)}ms`);
         });
     </script>
 
@@ -678,10 +672,10 @@
             const input = document.getElementById(inputId);
             if (input.type === 'password') {
                 input.type = 'text';
-                iconElement.textContent = '🙈';
+                iconElement.innerHTML = '<i class="ri-eye-off-line"></i>';
             } else {
                 input.type = 'password';
-                iconElement.textContent = '👁️';
+                iconElement.innerHTML = '<i class="ri-eye-line"></i>';
             }
         }
     </script>
@@ -699,7 +693,7 @@
         <div class="cgu-floating-card" role="dialog" aria-modal="true" aria-labelledby="cgu-modal-title">
             <div class="cgu-card-header">
                 <div class="cgu-badge">
-                    <span class="cgu-badge-icon">⚖️</span>
+                    <span class="cgu-badge-icon"><i class="ri-scales-3-line"></i></span>
                     <span>Conditions d'Utilisation (CGU)</span>
                 </div>
                 <h2 id="cgu-modal-title" class="cgu-title">Bienvenue sur THIES Resto</h2>
@@ -708,28 +702,28 @@
 
             <div class="cgu-summary-container">
                 <div class="cgu-summary-header">
-                    <span>📋</span>
+                    <span><i class="ri-file-text-line"></i></span>
                     <strong>Résumé des conditions d'utilisation :</strong>
                 </div>
                 <ul class="cgu-summary-list">
                     <li>
-                        <span class="cgu-bullet-icon">🍽️</span>
+                        <span class="cgu-bullet-icon"><i class="ri-restaurant-line"></i></span>
                         <div><strong>Mise en relation directe :</strong> Accès direct aux restaurants partenaires de Thiès, sans commission sur vos repas.</div>
                     </li>
                     <li>
-                        <span class="cgu-bullet-icon">📲</span>
+                        <span class="cgu-bullet-icon"><i class="ri-smartphone-line"></i></span>
                         <div><strong>Commandes &amp; Réservations :</strong> Vos demandes sont transmises en direct au restaurateur via WhatsApp et tableau de bord.</div>
                     </li>
                     <li>
-                        <span class="cgu-bullet-icon">🏪</span>
+                        <span class="cgu-bullet-icon"><i class="ri-store-2-line"></i></span>
                         <div><strong>Responsabilité :</strong> La préparation, la qualité des plats, les prix et la livraison relèvent de la responsabilité exclusive du restaurant partenaire sélectionné.</div>
                     </li>
                     <li>
-                        <span class="cgu-bullet-icon">🔒</span>
+                        <span class="cgu-bullet-icon"><i class="ri-shield-check-line"></i></span>
                         <div><strong>Protection des données :</strong> Vos informations (nom, téléphone, adresse) servent uniquement au traitement de votre commande et à votre fidélité (CDP Sénégal), sans revente à des tiers.</div>
                     </li>
                     <li>
-                        <span class="cgu-bullet-icon">💵</span>
+                        <span class="cgu-bullet-icon"><i class="ri-bank-card-line"></i></span>
                         <div><strong>Paiement direct :</strong> Règlement en direct à la livraison ou sur place (espèces ou mobile money selon l'établissement).</div>
                     </li>
                 </ul>
@@ -751,7 +745,7 @@
                     Refuser
                 </button>
                 <button type="button" class="btn btn-primary cgu-btn-accept" onclick="acceptCGU()">
-                    Accepter et continuer ✓
+                    Accepter et continuer
                 </button>
             </div>
             
@@ -762,13 +756,13 @@
     <!-- ========== SCREEN DISPLAYED IF CGU REFUSED (QUIT/BLOCKED) ========== -->
     <div id="cgu-refused-screen" class="cgu-refused-screen" style="display: none;">
         <div class="cgu-refused-card">
-            <div class="cgu-refused-icon">🚫</div>
+            <div class="cgu-refused-icon"><i class="ri-shield-keyhole-line"></i></div>
             <h2>Accès Non Autorisé</h2>
             <p>Vous avez refusé les <strong>Conditions Générales d'Utilisation (CGU)</strong> de THIES Resto.</p>
             <p class="cgu-refused-explain">Conformément aux règles de fonctionnement du service, l'utilisation de l'application est suspendue sans acceptation préalable.</p>
             <div class="cgu-refused-actions">
                 <button class="btn btn-primary" onclick="reopenCGUModal()">
-                    ⚖️ Réexaminer et accepter les conditions
+                    <i class="ri-scales-3-line" style="margin-right: 0.35rem;"></i> Réexaminer et accepter les conditions
                 </button>
                 <button class="btn btn-outline" onclick="exitPlatform()">
                     Quitter l'application
@@ -780,8 +774,8 @@
     <!-- ========== GEOLOCATION PROMPT MODAL (COMPACT) ========== -->
     <div id="geo-modal" class="geo-modal" style="display: none;" onclick="if(event.target===this) closeGeoModal();">
         <div class="geo-modal-content">
-            <button class="geo-modal-close" onclick="closeGeoModal()" aria-label="Fermer">✕</button>
-            <div class="geo-icon">📍</div>
+            <button class="geo-modal-close" onclick="closeGeoModal()" aria-label="Fermer"><i class="ri-close-line"></i></button>
+            <div class="geo-icon"><i class="ri-map-pin-2-line"></i></div>
             <div class="geo-body">
                 <h3>Restaurants à proximité</h3>
                 <p>Activez votre position pour afficher les adresses et délais de livraison précis à Thiès.</p>

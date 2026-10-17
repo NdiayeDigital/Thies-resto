@@ -9,12 +9,12 @@
 
     // Opérateurs mobiles du Sénégal
     const OPERATORS = [
-        { prefix: /^77/, name: 'Orange', color: '#ff7900', bg: 'rgba(255, 121, 0, 0.12)', icon: '🟠' },
-        { prefix: /^78/, name: 'Orange', color: '#ff7900', bg: 'rgba(255, 121, 0, 0.12)', icon: '🟠' },
-        { prefix: /^76/, name: 'Free', color: '#e60000', bg: 'rgba(230, 0, 0, 0.12)', icon: '🔴' },
-        { prefix: /^70/, name: 'Expresso', color: '#0083cb', bg: 'rgba(0, 131, 203, 0.12)', icon: '🔵' },
-        { prefix: /^75/, name: 'Promobile', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)', icon: '🟢' },
-        { prefix: /^33/, name: 'Fixe Sonatel', color: '#6366f1', bg: 'rgba(99, 102, 241, 0.12)', icon: '☎️' }
+        { prefix: /^77/, name: 'Orange', color: '#ff7900', bg: 'rgba(255, 121, 0, 0.12)', dotColor: '#ff7900' },
+        { prefix: /^78/, name: 'Orange', color: '#ff7900', bg: 'rgba(255, 121, 0, 0.12)', dotColor: '#ff7900' },
+        { prefix: /^76/, name: 'Free', color: '#e60000', bg: 'rgba(230, 0, 0, 0.12)', dotColor: '#e60000' },
+        { prefix: /^70/, name: 'Expresso', color: '#0083cb', bg: 'rgba(0, 131, 203, 0.12)', dotColor: '#0083cb' },
+        { prefix: /^75/, name: 'Promobile', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)', dotColor: '#10b981' },
+        { prefix: /^33/, name: 'Fixe Sonatel', color: '#6366f1', bg: 'rgba(99, 102, 241, 0.12)', dotColor: '#6366f1' }
     ];
 
     /**
@@ -120,7 +120,7 @@
             clean: `+221 ${formatSenegalDisplay(clean)}`,
             waNumber: formatForWhatsApp(clean),
             operator: op,
-            message: `Numéro ${op.name} validé ✅`
+            message: `Numéro ${op.name} validé`
         };
     }
 
@@ -151,14 +151,14 @@
                 if (res.operator) {
                     badge.style.display = 'inline-flex';
                     badge.style.alignItems = 'center';
-                    badge.style.gap = '4px';
+                    badge.style.gap = '5px';
                     badge.style.padding = '2px 8px';
                     badge.style.borderRadius = '10px';
                     badge.style.fontSize = '0.75rem';
                     badge.style.fontWeight = '700';
                     badge.style.color = res.operator.color;
                     badge.style.background = res.operator.bg;
-                    badge.innerHTML = `${res.operator.icon} ${res.operator.name}`;
+                    badge.innerHTML = `<span style="width: 7px; height: 7px; border-radius: 50%; background: ${res.operator.dotColor}; display: inline-block;"></span> ${res.operator.name}`;
                 } else if (digits.length >= 2) {
                     badge.style.display = 'inline-flex';
                     badge.style.padding = '2px 8px';
@@ -175,13 +175,13 @@
             // Mise à jour de l'icône de statut
             if (icon) {
                 if (res.isValid) {
-                    icon.innerHTML = '✅';
+                    icon.innerHTML = '<i class="ri-check-line" style="color: #10b981; font-weight: bold;"></i>';
                     icon.style.opacity = '1';
                 } else if (res.isPartial) {
-                    icon.innerHTML = '✏️';
+                    icon.innerHTML = '<i class="ri-edit-line" style="color: var(--text-secondary);"></i>';
                     icon.style.opacity = '0.6';
                 } else if (digits.length > 0) {
-                    icon.innerHTML = '⚠️';
+                    icon.innerHTML = '<i class="ri-error-warning-line" style="color: #ef4444;"></i>';
                     icon.style.opacity = '0.8';
                 } else {
                     icon.innerHTML = '';
@@ -192,19 +192,19 @@
             if (feedback) {
                 if (res.isValid) {
                     feedback.style.color = '#059669';
-                    feedback.innerHTML = `<span>✅ Numéro ${res.operator ? res.operator.name : 'Sénégal'} certifié (9 chiffres)</span>`;
+                    feedback.innerHTML = `<span style="display:inline-flex; align-items:center; gap:0.35rem;"><i class="ri-checkbox-circle-line"></i> Numéro ${res.operator ? res.operator.name : 'Sénégal'} certifié (9 chiffres)</span>`;
                     input.style.borderColor = '#10b981';
                 } else if (res.isPartial) {
                     feedback.style.color = 'var(--text-secondary)';
-                    feedback.innerHTML = `<span>💡 ${res.message}</span>`;
+                    feedback.innerHTML = `<span style="display:inline-flex; align-items:center; gap:0.35rem;"><i class="ri-information-line"></i> ${res.message}</span>`;
                     input.style.borderColor = 'var(--border)';
                 } else if (digits.length > 0) {
                     feedback.style.color = '#ef4444';
-                    feedback.innerHTML = `<span>⚠️ ${res.message}</span>`;
+                    feedback.innerHTML = `<span style="display:inline-flex; align-items:center; gap:0.35rem;"><i class="ri-alert-line"></i> ${res.message}</span>`;
                     input.style.borderColor = '#ef4444';
                 } else {
                     feedback.style.color = 'var(--text-secondary)';
-                    feedback.innerHTML = `<span>💡 Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>`;
+                    feedback.innerHTML = `<span style="display:inline-flex; align-items:center; gap:0.35rem;"><i class="ri-information-line"></i> Format Sénégal : 77, 78, 76, 70, 75 (9 chiffres)</span>`;
                     input.style.borderColor = 'var(--border)';
                 }
             }
@@ -233,4 +233,4 @@
     window.cleanPhoneNumber = cleanSenegalDigits;
     window.formatPhoneNumber = formatSenegalDisplay;
 
-})(window);
+})(typeof window !== 'undefined' ? window : this);
