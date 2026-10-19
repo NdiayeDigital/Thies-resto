@@ -2446,449 +2446,191 @@ function renderDashboardTabContent(r) {
         const publicUrl = baseDomain + '/#/r/' + r.slug;
         const qrCodeApiUrl = `/api/qr?format=image&size=300&text=${encodeURIComponent(publicUrl)}`;
         
-        // Ensure valid subscription step ('wow' or 'payment')
-        const currentStep = window.subscriptionFlowStep === 'payment' ? 'payment' : 'wow';
-
-        if (currentStep === 'wow') {
-            // STEP 1 : PRÉSENTATION DES AVANTAGES PARTENAIRES
-            panel.innerHTML = `
-                <div style="max-width: 1080px; margin: 0 auto;">
-                    
-                    <!-- Progress Step Indicator -->
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                        <div style="display: flex; align-items: center; gap: 0.45rem; padding: 0.45rem 1.1rem; border-radius: 20px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-weight: 700; font-size: 0.82rem; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);">
-                            <span>1</span> <span>Étape 1 : Présentation des Services &amp; Avantages Exclusifs</span>
+        let freePeriodHtml = '';
+        if (daysLeft > 0) {
+            freePeriodHtml = `
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: var(--text-primary); padding: 1.25rem 1.5rem; border-radius: 14px; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                            <span class="badge badge-success" style="font-size: 0.75rem;">Essai Gratuit Actif</span>
+                            <span style="font-size: 0.82rem; color: var(--text-secondary); font-weight: 600;">7 jours offerts</span>
                         </div>
-                        <i class='ri-arrow-right-s-line' style="color: var(--text-secondary); font-size: 1.2rem;"></i>
-                        <button onclick="window.setSubscriptionStep('payment')" style="background: none; border: 1px dashed var(--border); padding: 0.45rem 1.1rem; border-radius: 20px; color: var(--text-secondary); font-weight: 600; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.45rem; transition: all 0.2s;">
-                            <span>2</span> <span>Étape 2 : Formules d'Abonnement &amp; Activation <i class='ri-arrow-right-line'></i></span>
-                        </button>
+                        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.2rem; font-weight: 800; color: var(--text-primary);">Il vous reste ${daysLeft} jour(s) d'accès offert</h3>
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Choisissez votre formule à l'avance pour continuer à recevoir vos commandes sans interruption à l'issue de l'essai.</p>
                     </div>
-
-                    <!-- Hero Banner Partenaire -->
-                    <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #0369a1 100%); border-radius: 24px; padding: 2.5rem 2rem; color: white; margin-bottom: 2rem; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.1); position: relative; overflow: hidden;">
-                        <div style="position: absolute; right: -15px; bottom: -25px; font-size: 11rem; opacity: 0.04; user-select: none; pointer-events: none;"><i class='ri-store-2-line'></i></div>
-                        <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(245, 158, 11, 0.2); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.82rem; font-weight: 700; margin-bottom: 1rem; backdrop-filter: blur(4px);">
-                            <i class='ri-medal-line'></i>
-                            <span>L'IMPACT DIGITAL DE VOTRE ÉTABLISSEMENT</span>
-                        </div>
-                        <h1 style="font-size: 2.1rem; font-weight: 800; margin: 0 0 0.75rem 0; line-height: 1.25; font-family: var(--font-serif); color: white;">
-                            Développez l'activité de « ${escapeTxt(r.name)} » avec THIES Resto Pro <i class='ri-star-line'></i>
-                        </h1>
-                        <p style="margin: 0 0 1.75rem 0; font-size: 1.05rem; opacity: 0.92; max-width: 760px; line-height: 1.6; color: #e2e8f0;">
-                            Avant de régler votre abonnement, découvrez l'ensemble des services exclusifs offerts par le réseau THIES Resto pour fidéliser vos clients et accroître vos ventes sans aucune commission.
-                        </p>
-                        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
-                            <button onclick="window.setSubscriptionStep('payment')" class="btn" style="font-weight: 800; font-size: 1rem; padding: 0.85rem 1.85rem; border-radius: 14px; background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; border: none; box-shadow: 0 8px 22px rgba(245, 158, 11, 0.4); display: inline-flex; align-items: center; gap: 0.6rem; cursor: pointer;">
-                                <span><i class='ri-bank-card-line'></i> CHOISIR UNE FORMULE D'ABONNEMENT</span>
-                                <i class='ri-arrow-right-line' style="font-size: 1.2rem;"></i>
-                            </button>
-                            <a href="#/r/${r.slug}" target="_blank" class="btn" style="font-weight: 700; font-size: 0.9rem; padding: 0.85rem 1.4rem; border-radius: 14px; background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(6px); display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none;">
-                                <i class='ri-external-link-line'></i> Consulter ma page établissement en direct
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- 4 Cartes d'Impact Réel -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
-                        <!-- Carte 1 -->
-                        <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column;">
-                            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(59, 130, 246, 0.1); color: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem;">
-                                <i class='ri-smartphone-line'></i>
-                            </div>
-                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">1. Vitrine & Menu HD</h3>
-                            <p style="margin: 0 0 1rem 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; flex-grow: 1;">
-                                Plats avec photos appétissantes, descriptions, filtres par catégorie et panier intelligent instantané 24h/24.
-                            </p>
-                            <div style="background: var(--bg-secondary); padding: 0.6rem 0.85rem; border-radius: 10px; font-size: 0.78rem; font-family: monospace; color: var(--text-secondary); word-break: break-all;">
-                                thiesresto.sn/#/r/${r.slug}
-                            </div>
-                        </div>
-
-                        <!-- Carte 2 -->
-                        <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column;">
-                            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem;">
-                                <i class='ri-qr-code-line'></i>
-                            </div>
-                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">2. QR Code de Table HD</h3>
-                            <p style="margin: 0 0 1rem 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; flex-grow: 1;">
-                                Vos clients scannent sur place pour commander sans attendre les serveurs. Prêt à imprimer dès aujourd'hui.
-                            </p>
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <img src="${qrCodeApiUrl}" alt="QR" style="width: 44px; height: 44px; border-radius: 8px; border: 1px solid var(--border); background: white; padding: 2px;" />
-                                <a href="${qrCodeApiUrl}" download="QRCode_${r.slug}.png" target="_blank" class="btn btn-secondary btn-sm" style="font-weight: 700; font-size: 0.75rem; padding: 0.4rem 0.6rem;">
-                                    Télécharger
-                                </a>
-                            </div>
-                        </div>
-
-                        <!-- Carte 3 -->
-                        <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column;">
-                            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(245, 158, 11, 0.1); color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem;">
-                                <i class='ri-money-dollar-circle-line'></i>
-                            </div>
-                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">3. 0% de Commission</h3>
-                            <p style="margin: 0 0 1rem 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; flex-grow: 1;">
-                                Vous gardez 100% du montant de vos commandes. Pas de ponction de 20% à 30% sur votre travail.
-                            </p>
-                            <span class="badge badge-success" style="font-size: 0.75rem; align-self: flex-start; font-weight: 700;">100% de vos gains pour vous</span>
-                        </div>
-
-                        <!-- Carte 4 -->
-                        <div style="background: var(--bg-card); border: 1px solid var(--border); padding: 1.5rem; border-radius: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column;">
-                            <div style="width: 48px; height: 48px; border-radius: 14px; background: rgba(37, 211, 102, 0.1); color: #25D366; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem;">
-                                <i class='ri-whatsapp-line'></i>
-                            </div>
-                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1.15rem; font-weight: 800; color: var(--text-primary);">4. WhatsApp & Alertes</h3>
-                            <p style="margin: 0 0 1rem 0; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5; flex-grow: 1;">
-                                Les commandes arrivent formatées, détaillées avec choix de cuisson, adresse et numéro du client en direct.
-                            </p>
-                            <span class="badge" style="background: rgba(37,211,102,0.15); color: #16a34a; font-size: 0.75rem; align-self: flex-start; font-weight: 700;">Zéro friction client</span>
-                        </div>
-                    </div>
-
-                    <!-- Comparatif Visuel : Sans vs Avec -->
-                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 2rem; margin-bottom: 2rem; box-shadow: var(--shadow);">
-                        <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.5rem 0; text-align: center;">
-                            Pourquoi les Meilleurs Établissements de Thiès choisissent le Mode Pro :
-                        </h2>
-                        <p style="text-align: center; color: var(--text-secondary); font-size: 0.88rem; margin: 0 0 1.75rem 0;">
-                            Un outil puissant, sans engagement, rentabilisé dès vos premières commandes de la semaine.
-                        </p>
-
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
-                            <!-- Colonne Sans -->
-                            <div style="border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; background: var(--bg-secondary);">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                                    <span style="font-size: 1.25rem;"><i class='ri-close-circle-line'></i></span>
-                                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 700; color: var(--text-secondary);">Sans Thiès Resto</h3>
-                                </div>
-                                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8;">
-                                    <li>• Menus papier coûteux à imprimer et réimprimer</li>
-                                    <li>• 0 visibilité sur internet quand un client cherche à manger</li>
-                                    <li>• 20% à 30% de commission perdue sur d'autres plateformes</li>
-                                    <li>• Commandes prises au téléphone avec erreurs fréquentes</li>
-                                    <li>• Clients qui attendent les serveurs pour avoir la carte</li>
-                                </ul>
-                            </div>
-
-                            <!-- Colonne Pro -->
-                            <div style="border: 2px solid var(--primary); border-radius: 16px; padding: 1.5rem; background: rgba(var(--primary-rgb), 0.04);">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
-                                    <span style="font-size: 1.25rem;"><i class='ri-star-fill'></i></span>
-                                    <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--primary);">Avec Thiès Resto Pro</h3>
-                                </div>
-                                <ul style="list-style: none; padding: 0; margin: 0; font-size: 0.88rem; color: var(--text-primary); line-height: 1.8; font-weight: 600;">
-                                    <li><i class='ri-checkbox-circle-line'></i> <strong>Menu digital permanent & illimité</strong> modifiable en 1 clic</li>
-                                    <li><i class='ri-checkbox-circle-line'></i> <strong>QR Code HD sur vos tables</strong> pour commander en 5 secondes</li>
-                                    <li><i class='ri-checkbox-circle-line'></i> <strong>0% de commission</strong> : Vous gardez 100% de vos recettes</li>
-                                    <li><i class='ri-checkbox-circle-line'></i> <strong>Commandes WhatsApp formatées</strong> prêtes à cuisiner</li>
-                                    <li><i class='ri-checkbox-circle-line'></i> <strong>Positionnement prioritaire</strong> pour les clients de Thiès</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Grand CTA Déclencheur vers l'Affiche de Paiement -->
-                    <div style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #e11d48 100%); border-radius: 24px; padding: 2.25rem 2rem; color: white; text-align: center; box-shadow: 0 20px 40px -10px rgba(234, 88, 12, 0.4);">
-                        <div style="font-size: 2.5rem; margin-bottom: 0.5rem;"><i class='ri-award-line'></i></div>
-                        <h2 style="font-size: 1.85rem; font-weight: 800; margin: 0 0 0.5rem 0; line-height: 1.2;">
-                            Convaincu par l'Effet Waouh ?
-                        </h2>
-                        <p style="font-size: 1rem; opacity: 0.95; max-width: 580px; margin: 0 auto 1.5rem auto; line-height: 1.5;">
-                            Passez dès maintenant à la page suivante pour choisir votre formule d'abonnement et activer votre compte sans interruption.
-                        </p>
-                        <button onclick="window.setSubscriptionStep('payment')" class="btn" style="background: white; color: #ea580c; font-weight: 800; font-size: 1.05rem; padding: 0.95rem 2.25rem; border-radius: 16px; border: none; box-shadow: 0 10px 25px rgba(0,0,0,0.2); cursor: pointer; display: inline-flex; align-items: center; gap: 0.6rem; transition: transform 0.2s;">
-                            <span><i class='ri-bank-card-line'></i> VOIR LES FORMULES & L'AFFICHE DE PAIEMENT</span>
-                            <i class='ri-arrow-right-line' style="font-size: 1.2rem;"></i>
-                        </button>
-                    </div>
-
                 </div>
             `;
         } else {
-            // STEP 2 : PAGE AFFICHE DE PAIEMENT & FORMULES
-            let freePeriodHtml = '';
-            if (daysLeft > 0) {
-                freePeriodHtml = `
-                    <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(245, 158, 11, 0.12)); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--text-primary); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+            const reactivateMsg = encodeURIComponent(`Bonjour Thiès Resto \n\nMa période d'essai gratuit de 7 jours est terminée et je souhaite régler mon abonnement pour réactiver mon restaurant.\n\nRestaurant : ${r.name}\nIdentifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
+            freePeriodHtml = `
+                <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); color: var(--text-primary); padding: 1.25rem 1.5rem; border-radius: 14px; margin-bottom: 1.5rem;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
                         <div>
-                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                                <span class="badge badge-success" style="font-size: 0.75rem;">Essai Gratuit Actif</span>
-                                <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">7 jours offerts</span>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                                <span class="badge badge-danger" style="font-size: 0.75rem;">Compte Désactivé</span>
+                                <span style="font-size: 0.82rem; color: var(--danger); font-weight: 700;">Essai 7 Jours Expiré</span>
                             </div>
-                            <h3 style="margin: 0 0 0.35rem 0; font-size: 1.35rem; font-weight: 800; color: var(--text-primary);">Il vous reste ${daysLeft} jour(s) d'accès offert <i class='ri-award-line'></i></h3>
-                            <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary);">Choisissez votre formule à l'avance pour continuer à recevoir vos commandes sans interruption à l'issue de l'essai.</p>
+                            <h3 style="margin: 0 0 0.25rem 0; font-size: 1.2rem; font-weight: 800; color: var(--danger);">Période d'essai terminée <i class='ri-lock-line'></i></h3>
+                            <p style="margin: 0; font-size: 0.85rem; color: var(--text-secondary);">Vos 7 jours gratuits sont écoulés. Choisissez un abonnement ci-dessous pour réactiver votre établissement.</p>
                         </div>
-                        <button class="btn btn-secondary btn-sm" onclick="window.setSubscriptionStep('wow')" style="font-weight: 700; font-size: 0.82rem;">
-                            <i class='ri-arrow-left-line'></i> Revoir l'Effet Waouh
-                        </button>
-                    </div>
-                `;
-            } else {
-                const reactivateMsg = encodeURIComponent(`Bonjour Thiès Resto \n\nMa période d'essai gratuit de 7 jours est terminée et je souhaite activer un pack pour réactiver mon restaurant.\n\nRestaurant : ${r.name}\nIdentifiant : ${r.slug}\n\nMerci de m'indiquer la marche à suivre !`);
-                freePeriodHtml = `
-                    <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); color: var(--text-primary); padding: 1.5rem; border-radius: 16px; margin-bottom: 2rem;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 1rem;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                                    <span class="badge badge-danger" style="font-size: 0.75rem;">Compte Désactivé</span>
-                                    <span style="font-size: 0.85rem; color: var(--danger); font-weight: 700;">Essai 7 Jours Expiré</span>
-                                </div>
-                                <h3 style="margin: 0 0 0.35rem 0; font-size: 1.35rem; font-weight: 800; color: var(--danger);">Période d'essai terminée <i class='ri-lock-line'></i></h3>
-                                <p style="margin: 0; font-size: 0.88rem; color: var(--text-secondary);">Vos 7 jours gratuits sont écoulés. Choisissez un abonnement ci-dessous pour réactiver immédiatement votre établissement.</p>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                                <button class="btn btn-secondary btn-sm" onclick="window.setSubscriptionStep('wow')" style="font-weight: 700; font-size: 0.82rem;">
-                                    <i class='ri-sparkling-fill' style="color: #f59e0b;"></i> Revoir les Avantages
-                                </button>
-                                <a href="https://wa.me/${adminWhatsApp}?text=${reactivateMsg}" target="_blank" class="btn btn-success btn-sm" style="font-weight: 700; background: #25D366; border-color: #25D366; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; font-size: 0.82rem;">
-                                    <i class='ri-chat-1-line'></i> Support WhatsApp
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            panel.innerHTML = `
-                <div style="max-width: 1080px; margin: 0 auto;">
-                    
-                    <!-- Progress Step Indicator -->
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
-                        <button onclick="window.setSubscriptionStep('wow')" style="background: none; border: 1px dashed var(--border); padding: 0.45rem 1.1rem; border-radius: 20px; color: var(--text-secondary); font-weight: 600; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.45rem; transition: all 0.2s;">
-                            <span>1</span> <span>Étape 1 : Démonstration de la Valeur (Effet Waouh)</span>
-                        </button>
-                        <i class='ri-arrow-right-s-line' style="color: var(--text-secondary); font-size: 1.2rem;"></i>
-                        <div style="display: flex; align-items: center; gap: 0.45rem; padding: 0.45rem 1.1rem; border-radius: 20px; background: linear-gradient(135deg, #0284c7, #2563eb); color: white; font-weight: 700; font-size: 0.82rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);">
-                            <span>2</span> <span>Étape 2 : Affiche de Paiement & Formules Pro</span>
-                        </div>
-                    </div>
-
-                    <div style="background: var(--bg-card); padding: 2.25rem 2rem; border-radius: 24px; box-shadow: var(--shadow); border: 1px solid var(--border);">
-                        
-                        <!-- Header with return button -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border); padding-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
-                            <div>
-                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                                    <span class="badge badge-primary" style="font-size: 0.75rem;">Affiche de Paiement</span>
-                                    <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Thiès Resto Pro</span>
-                                </div>
-                                <h1 style="margin: 0; color: var(--text-primary); font-size: 1.75rem; font-weight: 800;"><i class='ri-bank-card-line'></i> Choisissez Votre Formule & Activez Votre Compte</h1>
-                            </div>
-                            <button class="btn btn-secondary btn-sm" onclick="window.setSubscriptionStep('wow')" style="font-weight: 700; font-size: 0.82rem; display: inline-flex; align-items: center; gap: 0.4rem; border-radius: 10px;">
-                                <i class='ri-arrow-left-line'></i> Revoir l'Effet Waouh
-                            </button>
-                        </div>
-                        
-                        ${freePeriodHtml}
-
-                        <!-- En-tête Moyens de Paiement Officiels Wave & Orange Money -->
-                        <div style="background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; box-shadow: var(--shadow);">
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div style="width: 50px; height: 50px; border-radius: 14px; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; flex-shrink: 0;">
-                                    <i class='ri-secure-payment-line'></i>
-                                </div>
-                                <div>
-                                    <h3 style="margin: 0 0 0.25rem 0; color: var(--text-primary); font-size: 1.25rem; font-weight: 800;">
-                                        Moyens de Paiement 100% Sénégalais Acceptés
-                                    </h3>
-                                    <p style="margin: 0; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.4;">
-                                        Réglez votre abonnement mensuel en direct avec <strong>Wave Sénégal</strong> ou <strong>Orange Money Sénégal</strong> sans aucuns frais cachés.
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <!-- Badges avec vrais logos officiels -->
-                            <div style="display: flex; align-items: center; gap: 0.85rem; flex-wrap: wrap;">
-                                <!-- Badge Wave Sénégal -->
-                                <div style="display: inline-flex; align-items: center; gap: 0.6rem; background: #E0F7FE; border: 1.5px solid #00B4D8; padding: 0.5rem 1rem; border-radius: 14px; box-shadow: 0 3px 8px rgba(0, 180, 216, 0.18);">
-                                    <img src="/images/wave_senegal.png" alt="Wave Sénégal" style="width: 26px; height: 26px; border-radius: 6px; object-fit: contain;">
-                                    <div>
-                                        <div style="font-weight: 800; color: #0077B6; font-size: 0.88rem; line-height: 1.2;">Wave Sénégal</div>
-                                        <div style="font-size: 0.7rem; color: #0284c7; font-weight: 600;">0% de commission</div>
-                                    </div>
-                                </div>
-                                <!-- Badge Orange Money Sénégal -->
-                                <div style="display: inline-flex; align-items: center; gap: 0.6rem; background: #FFF4EB; border: 1.5px solid #FF7900; padding: 0.5rem 1rem; border-radius: 14px; box-shadow: 0 3px 8px rgba(255, 121, 0, 0.18);">
-                                    <img src="/images/orange_money_senegal.png" alt="Orange Money Sénégal" style="width: 26px; height: 26px; border-radius: 6px; object-fit: contain;">
-                                    <div>
-                                        <div style="font-weight: 800; color: #D46000; font-size: 0.88rem; line-height: 1.2;">Orange Money</div>
-                                        <div style="font-size: 0.7rem; color: #ea580c; font-weight: 600;">Sénégal (#144#)</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="text-align: center; margin-bottom: 2rem;">
-                            <h3 style="margin-bottom: 0.35rem; color: var(--text-primary); font-size: 1.35rem; font-weight: 800;">Choisissez Votre Formule d'Abonnement</h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.92rem;">Règlement sécurisé par <strong>Wave</strong> et <strong>Orange Money</strong> via les <strong>liens de paiement officiels</strong>. Réactivation immédiate de votre compte par l'administrateur après paiement.</p>
-                        </div>
-                        
-                        <!-- Pricing Grid: 2 Formules Officielles -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem; margin-bottom: 2rem;">
-                            <!-- 1. Formule Mensuelle (4 900 FCFA / mois) -->
-                            <div style="border: 2px solid var(--border); border-radius: 20px; padding: 1.85rem 1.6rem; display: flex; flex-direction: column; transition: transform 0.3s ease; background: var(--bg-secondary); position: relative;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <h4 style="margin: 0; font-size: 1.35rem; color: var(--text-primary); font-weight: 800;">Abonnement Mensuel</h4>
-                                    <span class="badge" style="background: rgba(2,132,199,0.15); color: #0284c7; font-size: 0.75rem; font-weight: 700;">Formule Mensuelle</span>
-                                </div>
-                                <div style="font-size: 2.1rem; font-weight: 900; color: #0284c7; margin-bottom: 0.5rem;">
-                                    4 900 <span style="font-size: 1.05rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span>
-                                </div>
-                                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">L'accès complet et sans engagement pour diffuser votre menu en ligne et recevoir des commandes en direct.</p>
-                                
-                                <!-- Moyen de règlement direct Wave & OM -->
-                                <div style="background: rgba(0,0,0,0.03); border: 1px dashed var(--border); border-radius: 12px; padding: 0.6rem 0.85rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
-                                    <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">Moyens de règlement :</span>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 700; color: #0284c7;">
-                                             Wave
-                                        </span>
-                                        <span style="color: var(--border);">|</span>
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 700; color: #ea580c;">
-                                             Orange Money
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.92rem; line-height: 1.65;">
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Menu digital complet & illimité</strong> 24h/24</li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>0% de commission</strong> sur l'ensemble de vos commandes</li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Réception directe WhatsApp</strong> et appel téléphonique</li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>QR Code de table HD</strong> pour votre salle</li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Tableau de bord de gestion</strong>, réservations & avis</li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Historique des ventes</strong> & export comptable des clients</li>
-                                </ul>
-
-                                <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: auto;">
-                                    <!-- Bouton Principal Lien de Paiement Mensuel -->
-                                    <button onclick="window.payRestaurantSubscription('${r.id}', 'monthly')" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: 800; font-size: 0.95rem; background: linear-gradient(135deg, #0284c7, #2563eb); border: none; padding: 0.85rem 1rem; border-radius: 12px; box-shadow: 0 4px 14px rgba(37,99,235,0.3); cursor: pointer;">
-                                        <i class='ri-external-link-line' style="font-size: 1.1rem;"></i>
-                                        <span>Payer 4 900 F via le Lien Sécurisé</span>
-                                    </button>
-
-                                    <!-- Lien direct de paiement -->
-                                    <a href="javascript:void(0)" onclick="window.payRestaurantSubscription('${r.id}', 'monthly')" class="btn btn-sm" style="background: #E0F7FE; border: 1.5px solid #00B4D8; color: #0077B6; font-weight: 700; font-size: 0.82rem; padding: 0.5rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none;">
-                                        <i class='ri-link'></i> Ouvrir le lien de paiement (4 900 F)
-                                    </a>
-
-                                    <div style="font-size: 0.76rem; color: var(--text-secondary); text-align: center; margin-top: 0.2rem;">
-                                        <i class='ri-information-line'></i> Après paiement, l'admin réactivera votre compte.
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- 2. Formule Annuelle (39 900 FCFA / an) - Recommandé -->
-                            <div style="border: 2.5px solid #10b981; border-radius: 20px; padding: 1.85rem 1.6rem; display: flex; flex-direction: column; background: rgba(16, 185, 129, 0.03); position: relative; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.12);">
-                                <div style="position: absolute; top: -14px; right: 20px; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 0.25rem 0.95rem; border-radius: 20px; font-size: 0.78rem; font-weight: 800; box-shadow: 0 4px 10px rgba(16,185,129,0.35);">
-                                    <i class='ri-star-fill'></i> MEILLEURE OFFRE (~4 MOIS OFFERTS)
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                    <h4 style="margin: 0; font-size: 1.35rem; color: var(--text-primary); font-weight: 800;">Abonnement Annuel</h4>
-                                    <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #059669; font-size: 0.75rem; font-weight: 700;">12 Mois</span>
-                                </div>
-                                <div style="font-size: 2.1rem; font-weight: 900; color: #059669; margin-bottom: 0.25rem;">
-                                    39 900 <span style="font-size: 1.05rem; color: var(--text-secondary); font-weight: 600;">FCFA / an</span>
-                                </div>
-                                <div style="font-size: 0.85rem; color: #16a34a; font-weight: 700; margin-bottom: 0.85rem;">
-                                    <span style="text-decoration: line-through; opacity: 0.65; color: var(--text-secondary);">58 800 F</span> • Économisez 18 900 FCFA (soit 3 325 F/mois)
-                                </div>
-                                <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">Tranquillité absolue pendant 1 an. Visibilité maximale avec tous les avantages inclus sans souci de renouvellement mensuel.</p>
-                                
-                                <!-- Moyen de règlement direct Wave & OM -->
-                                <div style="background: rgba(0,0,0,0.03); border: 1px dashed var(--border); border-radius: 12px; padding: 0.6rem 0.85rem; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between;">
-                                    <span style="font-size: 0.78rem; font-weight: 700; color: var(--text-secondary);">Moyens de règlement :</span>
-                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 700; color: #0284c7;">
-                                             Wave
-                                        </span>
-                                        <span style="color: var(--border);">|</span>
-                                        <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 0.78rem; font-weight: 700; color: #ea580c;">
-                                             Orange Money
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-primary); font-size: 0.92rem; line-height: 1.65; font-weight: 500;">
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Tout du Pack Mensuel inclus pendant 1 an complet</strong></li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-gift-fill' style="color: #10b981;"></i> <strong>~4 mois offerts</strong> par rapport au tarif mensuel</li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-vip-crown-fill' style="color: #f59e0b;"></i> <strong>Badge Partenaire Annuel Privilège</strong> dans le catalogue</li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-rocket-fill' style="color: #10b981;"></i> <strong>Apparition prioritaire</strong> en tête de liste à Thiès</li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-customer-service-2-fill' style="color: #10b981;"></i> <strong>Support technique & commercial 7j/7 dédié</strong></li>
-                                    <li style="margin-bottom: 0.55rem;"><i class='ri-camera-fill' style="color: #10b981;"></i> <strong>Assistance à la mise à jour</strong> et valorisation du menu</li>
-                                </ul>
-
-                                <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: auto;">
-                                    <!-- Bouton Principal Lien de Paiement Annuel -->
-                                    <button onclick="window.payRestaurantSubscription('${r.id}', 'yearly')" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.6rem; font-weight: 800; font-size: 0.95rem; background: linear-gradient(135deg, #10b981, #059669); border: none; box-shadow: 0 4px 14px rgba(16,185,129,0.35); padding: 0.85rem 1rem; border-radius: 12px; cursor: pointer;">
-                                        <i class='ri-external-link-line' style="font-size: 1.1rem;"></i>
-                                        <span>Payer 39 900 F via le Lien Sécurisé</span>
-                                    </button>
-
-                                    <!-- Lien direct de paiement -->
-                                    <a href="javascript:void(0)" onclick="window.payRestaurantSubscription('${r.id}', 'yearly')" class="btn btn-sm" style="background: #ECFDF5; border: 1.5px solid #10B981; color: #047857; font-weight: 700; font-size: 0.82rem; padding: 0.5rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none;">
-                                        <i class='ri-link'></i> Ouvrir le lien de paiement (39 900 F)
-                                    </a>
-
-                                    <div style="font-size: 0.76rem; color: var(--text-secondary); text-align: center; margin-top: 0.2rem;">
-                                        <i class='ri-information-line'></i> Après paiement, l'admin réactivera votre compte.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Bannière d'instruction explicite Post-Paiement -->
-                        <div style="background: linear-gradient(135deg, rgba(2, 132, 199, 0.08), rgba(16, 185, 129, 0.08)); border: 1.5px solid #0284c7; border-radius: 18px; padding: 1.35rem 1.6rem; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(2, 132, 199, 0.15); color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0;">
-                                    <i class='ri-time-line'></i>
-                                </div>
-                                <div>
-                                    <strong style="color: #0369a1; font-size: 1rem; display: block; margin-bottom: 0.2rem;">
-                                        Validation et réactivation de votre compte :
-                                    </strong>
-                                    <p style="margin: 0; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.45;">
-                                        Après avoir effectué votre règlement via le <strong>lien de paiement</strong> (4 900 FCFA mensuel ou 39 900 FCFA annuel), <strong>veuillez patienter</strong> : l'administrateur Thiès Resto vérifie votre paiement et réactive immédiatement votre compte.
-                                    </p>
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
-                                <button type="button" onclick="window.confirmSubscriptionPayment('${r.id}', 'Abonnement Mensuel', 4900, 'Lien de Paiement')" class="btn btn-sm" style="background: #0284c7; color: white; border: none; font-weight: 700; border-radius: 8px; padding: 0.5rem 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
-                                    <i class='ri-checkbox-circle-line'></i> J'ai déjà payé via le lien (4 900 F)
-                                </button>
-                                <button type="button" onclick="window.confirmSubscriptionPayment('${r.id}', 'Abonnement Annuel', 39900, 'Lien de Paiement')" class="btn btn-sm" style="background: #10b981; color: white; border: none; font-weight: 700; border-radius: 8px; padding: 0.5rem 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem;">
-                                    <i class='ri-checkbox-circle-line'></i> J'ai déjà payé via le lien (39 900 F)
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Security & Guarantee Badge -->
-                        <div style="background: var(--bg-card); border: 1.5px solid var(--border); border-radius: 18px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap; box-shadow: var(--shadow);">
-                            <div style="display: flex; align-items: center; gap: 1rem;">
-                                <i class='ri-shield-check-fill' style="color: #10b981; font-size: 2.2rem; flex-shrink: 0;"></i>
-                                <div>
-                                    <div style="font-weight: 800; font-size: 0.98rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-                                        <span>Paiement Sécurisé & Liens Officiels</span>
-                                        <div style="display: inline-flex; align-items: center; gap: 6px;">
-                                            <span style="font-size: 0.78rem; font-weight: 700; color: #0284c7; background: rgba(2, 132, 199, 0.1); padding: 2px 8px; border-radius: 6px;">Wave</span>
-                                            <span style="font-size: 0.78rem; font-weight: 700; color: #ea580c; background: rgba(234, 88, 12, 0.1); padding: 2px 8px; border-radius: 6px;">Orange Money</span>
-                                        </div>
-                                    </div>
-                                    <div style="font-size: 0.84rem; color: var(--text-secondary); margin-top: 0.2rem; line-height: 1.4;">
-                                        Liens de paiement sécurisés certifiés par <strong>Wave Sénégal</strong> et <strong>Orange Money Sénégal</strong>. Quitus d'abonnement et historique comptable disponibles dans votre espace gérant.
-                                    </div>
-                                </div>
-                            </div>
-                            <button onclick="window.setSubscriptionStep('wow')" class="btn btn-secondary btn-sm" style="font-weight: 700; font-size: 0.84rem; border-radius: 10px; display: inline-flex; align-items: center; gap: 0.35rem;">
-                                <i class='ri-arrow-left-line'></i> Revoir l'Effet Waouh
-                            </button>
-                        </div>
-
+                        <a href="https://wa.me/${adminWhatsApp}?text=${reactivateMsg}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm" style="font-weight: 700; background: #25D366; border-color: #25D366; display: inline-flex; align-items: center; gap: 0.4rem; text-decoration: none; font-size: 0.82rem;">
+                            <i class='ri-whatsapp-line'></i> Support WhatsApp
+                        </a>
                     </div>
                 </div>
             `;
         }
+
+        panel.innerHTML = `
+            <div style="max-width: 1040px; margin: 0 auto;">
+                <div style="background: var(--bg-card); padding: 2rem 1.75rem; border-radius: 20px; box-shadow: var(--shadow); border: 1px solid var(--border);">
+                    
+                    <div style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+                            <span class="badge badge-primary" style="font-size: 0.75rem;">Formules Pro</span>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary); font-weight: 600;">Thiès Resto Partner</span>
+                        </div>
+                        <h1 style="margin: 0; color: var(--text-primary); font-size: 1.6rem; font-weight: 800;">
+                            <i class='ri-bank-card-line'></i> Choisissez Votre Formule d'Abonnement
+                        </h1>
+                    </div>
+                    
+                    ${freePeriodHtml}
+
+                    <!-- En-tête Moyens de Paiement Officiels Wave & Orange Money -->
+                    <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem 1.5rem; margin-bottom: 1.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.85rem;">
+                            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(16, 185, 129, 0.1); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">
+                                <i class='ri-shield-check-line'></i>
+                            </div>
+                            <div>
+                                <h3 style="margin: 0 0 0.15rem 0; color: var(--text-primary); font-size: 1.1rem; font-weight: 800;">
+                                    Règlement direct par Wave &amp; Orange Money
+                                </h3>
+                                <p style="margin: 0; color: var(--text-secondary); font-size: 0.84rem;">
+                                    Paiement 100% sécurisé via les liens officiels. Zéro commission prélevée sur vos ventes.
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                            <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #E0F7FE; border: 1px solid #00B4D8; padding: 0.4rem 0.85rem; border-radius: 10px;">
+                                <img src="/images/wave_senegal.png" alt="Wave" style="width: 22px; height: 22px; border-radius: 4px; object-fit: contain;">
+                                <span style="font-weight: 800; color: #0077B6; font-size: 0.82rem;">Wave Sénégal</span>
+                            </div>
+                            <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: #FFF4EB; border: 1px solid #FF7900; padding: 0.4rem 0.85rem; border-radius: 10px;">
+                                <img src="/images/orange_money_senegal.png" alt="OM" style="width: 22px; height: 22px; border-radius: 4px; object-fit: contain;">
+                                <span style="font-weight: 800; color: #D46000; font-size: 0.82rem;">Orange Money</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pricing Grid: 2 Formules Officielles -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                        <!-- 1. Formule Mensuelle (4 900 FCFA / mois) -->
+                        <div style="border: 2px solid var(--border); border-radius: 16px; padding: 1.75rem 1.5rem; display: flex; flex-direction: column; background: var(--bg-card); position: relative;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <h4 style="margin: 0; font-size: 1.25rem; color: var(--text-primary); font-weight: 800;">Abonnement Mensuel</h4>
+                                <span class="badge" style="background: rgba(2,132,199,0.12); color: #0284c7; font-size: 0.75rem; font-weight: 700;">Mensuel</span>
+                            </div>
+                            <div style="font-size: 2rem; font-weight: 900; color: #0284c7; margin-bottom: 0.5rem;">
+                                4 900 <span style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 600;">FCFA / mois</span>
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">Accès illimité sans engagement pour diffuser votre menu en ligne et recevoir des commandes en direct.</p>
+                            
+                            <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6;">
+                                <li style="margin-bottom: 0.45rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Menu digital permanent &amp; illimité</strong></li>
+                                <li style="margin-bottom: 0.45rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>0% de commission</strong> : 100% de vos recettes pour vous</li>
+                                <li style="margin-bottom: 0.45rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Réception directe WhatsApp</strong> &amp; alertes sonores</li>
+                                <li style="margin-bottom: 0.45rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>QR Code de table HD</strong> téléchargeable</li>
+                                <li style="margin-bottom: 0.45rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Tableau de bord de gestion des commandes</strong></li>
+                            </ul>
+
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: auto;">
+                                <button type="button" onclick="window.payRestaurantSubscription('${r.id}', 'monthly')" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 800; font-size: 0.95rem; background: #0284c7; border: none; padding: 0.85rem 1rem; border-radius: 12px; cursor: pointer;">
+                                    <i class='ri-external-link-line'></i>
+                                    <span>Régler 4 900 F via le Lien Sécurisé</span>
+                                </button>
+                                <a href="${window.SUBSCRIPTION_PACK_LINKS.monthly}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: #E0F7FE; border: 1.5px solid #00B4D8; color: #0077B6; font-weight: 700; font-size: 0.82rem; padding: 0.5rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none;">
+                                    <i class='ri-link'></i> Ouvrir le lien de paiement officiel
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 2. Formule Annuelle (39 900 FCFA / an) - Recommandé -->
+                        <div style="border: 2px solid #10b981; border-radius: 16px; padding: 1.75rem 1.5rem; display: flex; flex-direction: column; background: rgba(16, 185, 129, 0.02); position: relative;">
+                            <div style="position: absolute; top: -12px; right: 16px; background: #10b981; color: white; padding: 0.2rem 0.85rem; border-radius: 20px; font-size: 0.75rem; font-weight: 800;">
+                                <i class='ri-star-fill'></i> MEILLEURE OFFRE (~4 MOIS OFFERTS)
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <h4 style="margin: 0; font-size: 1.25rem; color: var(--text-primary); font-weight: 800;">Abonnement Annuel</h4>
+                                <span class="badge badge-success" style="font-size: 0.75rem; font-weight: 700;">12 Mois</span>
+                            </div>
+                            <div style="font-size: 2rem; font-weight: 900; color: #10b981; margin-bottom: 0.25rem;">
+                                39 900 <span style="font-size: 0.95rem; color: var(--text-secondary); font-weight: 600;">FCFA / an</span>
+                            </div>
+                            <div style="font-size: 0.82rem; color: #16a34a; font-weight: 700; margin-bottom: 0.75rem;">
+                                <span style="text-decoration: line-through; opacity: 0.65; color: var(--text-secondary);">58 800 F</span> • Économisez 18 900 FCFA (soit 3 325 F/mois)
+                            </div>
+                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem; line-height: 1.45;">Tranquillité absolue pendant 1 an. Visibilité maximale pour votre établissement sans renouvellement mensuel.</p>
+                            
+                            <ul style="list-style: none; padding: 0; margin: 0 0 1.5rem 0; flex-grow: 1; color: var(--text-secondary); font-size: 0.88rem; line-height: 1.6;">
+                                <li style="margin-bottom: 0.45rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Tous les avantages du Pack Mensuel inclus pendant 1 an</strong></li>
+                                <li style="margin-bottom: 0.45rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>~4 mois offerts</strong> par rapport au paiement mensuel</li>
+                                <li style="margin-bottom: 0.45rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Badge Partenaire Annuel Privilège</strong></li>
+                                <li style="margin-bottom: 0.45rem;"><i class='ri-checkbox-circle-fill' style="color: #10b981;"></i> <strong>Support technique &amp; assistance 7j/7 dédié</strong></li>
+                            </ul>
+
+                            <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: auto;">
+                                <button type="button" onclick="window.payRestaurantSubscription('${r.id}', 'yearly')" class="btn btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; font-weight: 800; font-size: 0.95rem; background: #10b981; border: none; padding: 0.85rem 1rem; border-radius: 12px; cursor: pointer;">
+                                    <i class='ri-external-link-line'></i>
+                                    <span>Régler 39 900 F via le Lien Sécurisé</span>
+                                </button>
+                                <a href="${window.SUBSCRIPTION_PACK_LINKS.yearly}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background: #ECFDF5; border: 1.5px solid #10B981; color: #047857; font-weight: 700; font-size: 0.82rem; padding: 0.5rem; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; text-decoration: none;">
+                                    <i class='ri-link'></i> Ouvrir le lien de paiement officiel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bannière d'instruction explicite Post-Paiement : Attendre validation admin sans auto-validation -->
+                    <div style="background: var(--bg-secondary); border: 1px solid var(--border); border-left: 4px solid var(--primary); border-radius: 14px; padding: 1.35rem 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="width: 44px; height: 44px; border-radius: 12px; background: rgba(var(--primary-rgb), 0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">
+                                <i class='ri-time-line'></i>
+                            </div>
+                            <div>
+                                <strong style="color: var(--text-primary); font-size: 0.98rem; display: block; margin-bottom: 0.2rem;">
+                                    Validation et réactivation administrative de votre compte
+                                </strong>
+                                <p style="margin: 0; color: var(--text-secondary); font-size: 0.86rem; line-height: 1.45;">
+                                    Dès votre règlement effectué via le lien de paiement officiel (Wave ou Orange Money), votre transaction est directement transmise à la direction Thiès Resto. <strong>Veuillez simplement patienter : l'administrateur vérifie la transaction et valide votre abonnement</strong> depuis la console d'administration. Vous n'avez aucune validation manuelle à effectuer.
+                                </p>
+                            </div>
+                        </div>
+                        <a href="https://wa.me/${adminWhatsApp}?text=${encodeURIComponent('Bonjour Thiès Resto, je viens de procéder au paiement de mon abonnement pour ' + (r.name || '') + '. Merci de valider l\'activation de mon compte.')}" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm" style="font-weight: 700; background: #25D366; border-color: #25D366; display: inline-flex; align-items: center; gap: 0.4rem; border-radius: 10px; padding: 0.55rem 1rem; text-decoration: none; font-size: 0.82rem;">
+                            <i class='ri-whatsapp-line'></i> Signaler mon paiement
+                        </a>
+                    </div>
+
+                    <!-- Security & Guarantee Badge -->
+                    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 0.85rem;">
+                            <i class='ri-shield-check-fill' style="color: #10b981; font-size: 1.8rem; flex-shrink: 0;"></i>
+                            <div>
+                                <div style="font-weight: 800; font-size: 0.92rem; color: var(--text-primary);">
+                                    Paiement Sécurisé &amp; Facture Disponible
+                                </div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                                    Liens officiels certifiés Wave et Orange Money Sénégal. Historique comptable disponible dans votre espace gérant.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        `;
     }
 }
 
@@ -3172,11 +2914,11 @@ window.openSubscriptionPaymentModal = function(restaurantId, packName, amount, i
                         <span>ACCÉDER AU LIEN DE PAIEMENT (${formattedAmount})</span>
                     </button>
                     
-                    <!-- Bouton J'ai déjà réglé -->
-                    <button type="button" onclick="window.confirmSubscriptionPayment('${r.id}', '${resolvedPack}', ${finalAmount}, 'Lien de Paiement')" class="btn btn-outline" style="width: 100%; font-weight: 700; font-size: 0.88rem; padding: 0.75rem; border-radius: 12px; display: flex; align-items: center; justify-content: center; gap: 0.4rem;">
-                        <i class='ri-checkbox-circle-line' style="color: #10b981;"></i>
-                        <span>J'ai déjà effectué le paiement via le lien</span>
-                    </button>
+                    <!-- Note d'attente validation admin sans bouton d'auto-validation -->
+                    <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 10px; padding: 0.75rem 1rem; text-align: center; font-size: 0.85rem; color: #065F46; line-height: 1.45;">
+                        <i class='ri-time-line' style="color: #10b981; font-size: 1.1rem; vertical-align: middle;"></i>
+                        <strong>Validation par l'administration :</strong> Après avoir effectué votre règlement via le lien officiel, veuillez patienter. L'administrateur Thiès Resto vérifie et valide votre abonnement depuis la console.
+                    </div>
                 </div>
 
             </div>
@@ -4205,19 +3947,29 @@ window.openCustomerDetailsModal = function(orderId) {
 };
 
 function deleteDish(dishId) {
-    adminConfirm("Supprimer le plat", "Voulez-vous vraiment supprimer ce plat de votre carte ?", () => {
+    adminConfirm("Supprimer le plat", "Voulez-vous vraiment supprimer ce plat de votre carte ?", async () => {
+        if (!currentRestaurantSession || !currentRestaurantSession.id) return;
         const r = store.getRestaurantById(currentRestaurantSession.id);
         if (!r || !r.menu) return;
         r.menu = r.menu.filter(d => d.id !== dishId);
-        store.updateRestaurant(r.id, { menu: r.menu });
-        showToast("Plat supprimé avec succès", "success");
-        const nextTab = dashboardActiveTab === 'daily-menu' ? 'daily-menu' : 'add-menu';
+        await store.updateRestaurant(r.id, { menu: r.menu });
+        try {
+            await fetch(`/api/restaurants/${encodeURIComponent(r.id)}/menu`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ menu: r.menu, dishes: r.menu })
+            });
+        } catch (e) {}
+        showToast("Plat supprimé avec succès de la base de données !", "success");
+        const nextTab = dashboardActiveTab === 'daily-menu' ? 'daily-menu' : (dashboardActiveTab === 'dishes' ? 'dishes' : 'add-menu');
         switchDashboardTab(nextTab);
     });
 }
 
-function toggleDishDailySpecial(dishId) {
+async function toggleDishDailySpecial(dishId) {
+    if (!currentRestaurantSession || !currentRestaurantSession.id) return;
     const r = store.getRestaurantById(currentRestaurantSession.id);
+    if (!r || !Array.isArray(r.menu)) return;
     const dish = r.menu.find(d => d.id === dishId);
     if (!dish) return;
     
@@ -4226,15 +3978,45 @@ function toggleDishDailySpecial(dishId) {
     dish.is_daily_special = !wasDaily;
     if (dish.isDailySpecial) {
         if (!dish.tag) dish.tag = 'Plat du jour';
-        showToast(`« ${dish.name} » est maintenant mis en avant comme Plat du Jour ! `, "success");
+        showToast(`« ${dish.name} » est maintenant mis en avant comme Plat du Jour !`, "success");
     } else {
         showToast(`« ${dish.name} » retiré des Plats du Jour.`, "info");
     }
     
-    store.updateRestaurant(r.id, { menu: r.menu });
-    const nextTab = dashboardActiveTab === 'daily-menu' ? 'daily-menu' : 'add-menu';
+    await store.updateRestaurant(r.id, { menu: r.menu });
+    try {
+        await fetch(`/api/restaurants/${encodeURIComponent(r.id)}/menu`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ menu: r.menu, dishes: r.menu })
+        });
+    } catch (e) {}
+    const nextTab = dashboardActiveTab === 'daily-menu' ? 'daily-menu' : (dashboardActiveTab === 'dishes' ? 'dishes' : 'add-menu');
     switchDashboardTab(nextTab);
 }
+
+window.toggleDishAvailability = async function(dishId, currentAvailable) {
+    if (!currentRestaurantSession || !currentRestaurantSession.id) return;
+    const r = store.getRestaurantById(currentRestaurantSession.id);
+    if (!r || !Array.isArray(r.menu)) return;
+    const dish = r.menu.find(d => d.id === dishId);
+    if (!dish) return;
+
+    dish.available = !currentAvailable;
+    dish.is_available = dish.available;
+    showToast(`« ${dish.name} » est maintenant ${dish.available ? 'Disponible' : 'en Rupture de stock'}.`, dish.available ? "success" : "warning");
+
+    await store.updateRestaurant(r.id, { menu: r.menu });
+    try {
+        await fetch(`/api/restaurants/${encodeURIComponent(r.id)}/menu`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ menu: r.menu, dishes: r.menu })
+        });
+    } catch (e) {}
+    const nextTab = dashboardActiveTab === 'daily-menu' ? 'daily-menu' : (dashboardActiveTab === 'dishes' ? 'dishes' : 'add-menu');
+    switchDashboardTab(nextTab);
+};
 
 function openEditDishForm(dishId) {
     const r = store.getRestaurantById(currentRestaurantSession.id);
@@ -4447,18 +4229,31 @@ window.handleRestaurantLogoUpload = async function(event) {
 };
 
 
-function saveDish(e) {
-    e.preventDefault();
+async function saveDish(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    if (!currentRestaurantSession || !currentRestaurantSession.id) {
+        showToast("Session expirée, veuillez vous reconnecter.", "warning");
+        return;
+    }
     
     const r = store.getRestaurantById(currentRestaurantSession.id);
+    if (!r) return;
+    if (!Array.isArray(r.menu)) r.menu = [];
     
-    const dishId = document.getElementById('dish-edit-id').value;
-    const name = document.getElementById('dish-name').value.trim();
-    const desc = document.getElementById('dish-desc').value.trim();
-    const price = parseInt(document.getElementById('dish-price').value);
+    const submitBtn = document.querySelector('#dish-editor-form button[type="submit"]') || (e && e.target && e.target.querySelector('button[type="submit"]'));
+    const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Enregistrement en base...";
+    }
+
+    const dishId = (document.getElementById('dish-edit-id')?.value || '').trim();
+    const name = (document.getElementById('dish-name')?.value || '').trim();
+    const desc = (document.getElementById('dish-desc')?.value || '').trim();
+    const price = parseInt(document.getElementById('dish-price')?.value) || 0;
     
-    const customImage = document.getElementById('dish-image-custom').value.trim();
-    const image = customImage || document.getElementById('dish-image-select').value;
+    const customImage = (document.getElementById('dish-image-custom')?.value || '').trim();
+    const image = customImage || document.getElementById('dish-image-select')?.value || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500';
     
     const isDailyElem = document.getElementById('dish-is-daily-special');
     const isDailySpecial = isDailyElem ? isDailyElem.checked : true;
@@ -4466,6 +4261,7 @@ function saveDish(e) {
     const tagElem = document.getElementById('dish-tag-select');
     const tag = tagElem ? tagElem.value : 'Plat du jour';
     
+    let actionMessage = "Plat enregistré avec succès !";
     if (dishId) {
         // Edit mode
         const dish = r.menu.find(d => d.id === dishId);
@@ -4477,7 +4273,7 @@ function saveDish(e) {
             dish.isDailySpecial = isDailySpecial;
             dish.is_daily_special = isDailySpecial;
             dish.tag = isDailySpecial ? tag : null;
-            showToast("Plat modifié avec succès !", "success");
+            actionMessage = "Plat modifié et synchronisé avec succès en base de données !";
         }
     } else {
         // Add mode
@@ -4491,14 +4287,32 @@ function saveDish(e) {
             isDailySpecial,
             is_daily_special: isDailySpecial,
             tag: isDailySpecial ? tag : null,
-            available: true
+            available: true,
+            is_available: true
         });
-        showToast("Plat ajouté au menu du jour ! ", "success");
+        actionMessage = "Nouveau plat ajouté et synchronisé en base de données !";
     }
     
-    store.updateRestaurant(r.id, { menu: r.menu });
+    try {
+        await store.updateRestaurant(r.id, { menu: r.menu });
+        // Post directly to dedicated menu API endpoint as well
+        await fetch(`/api/restaurants/${encodeURIComponent(r.id)}/menu`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ menu: r.menu, dishes: r.menu })
+        }).catch(() => {});
+    } catch (saveErr) {
+        console.warn("Save dish sync notice:", saveErr);
+    }
+
+    if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnHtml;
+    }
+
+    showToast(actionMessage, "success");
     resetDishForm();
-    const nextTab = dashboardActiveTab === 'daily-menu' ? 'daily-menu' : 'add-menu';
+    const nextTab = dashboardActiveTab === 'daily-menu' ? 'daily-menu' : (dashboardActiveTab === 'dishes' ? 'dishes' : 'add-menu');
     switchDashboardTab(nextTab);
 }
 
@@ -4871,15 +4685,11 @@ window.verifyStrictSuperAdminAuth = async function() {
         }
     }
 
-    // 2. Check signed token and active admin session in storage
-    try {
-        localStorage.removeItem('thies_admin_token');
-        localStorage.removeItem('admin_session');
-        localStorage.removeItem('thies_admin_logged');
-    } catch(e) {}
-
-    const token = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('thies_admin_token'));
-    const hasAdminSession = (typeof sessionStorage !== 'undefined' && (sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true'));
+    // 2. Check signed token and active admin session in storage (sessionStorage or localStorage)
+    const token = (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('thies_admin_token')) ||
+                  (typeof localStorage !== 'undefined' && localStorage.getItem('thies_admin_token'));
+    const hasAdminSession = (typeof sessionStorage !== 'undefined' && (sessionStorage.getItem('admin_session') === 'true' || sessionStorage.getItem('thies_admin_logged') === 'true')) ||
+                            (typeof localStorage !== 'undefined' && (localStorage.getItem('admin_session') === 'true' || localStorage.getItem('thies_admin_logged') === 'true'));
 
     if (!token && !hasAdminSession) {
         isSuperAdminSession = false;
@@ -5391,7 +5201,7 @@ function renderAdminTabTable() {
                         <div class="admin-kpi-value" style="color: #10b981;">${totalPaytechCollected.toLocaleString()} <span style="font-size: 0.95rem; font-weight: 700;">FCFA</span></div>
                     </div>
                     <div class="admin-kpi-sub">
-                        <span>MRR: <strong style="color:#10b981;">${totalMRR.toLocaleString()} F/m</strong> • <strong style="color:var(--text-primary);">${confirmedPaytechTxs.length}</strong> encaissement(s) validé(s)</span>
+                        <span>MRR: <strong style="color:#10b981;">${totalMRR.toLocaleString()} F/m</strong> • <strong style="color:var(--text-primary);">${confirmedSubTxs.length}</strong> encaissement(s) validé(s)</span>
                     </div>
                 </div>
 
@@ -5666,7 +5476,7 @@ function renderAdminTabTable() {
                                 else if (pack.includes('Mensuel') || pack.includes('4 900') || pack.includes('Standard')) monthlyFee = 4900;
                                 else if (pack.includes('Entreprise')) monthlyFee = 15000;
 
-                                const rTxs = confirmedPaytechTxs.filter(t => 
+                                const rTxs = confirmedSubTxs.filter(t => 
                                     (t.restaurantName && r.name && t.restaurantName.toLowerCase() === r.name.toLowerCase()) || 
                                     (t.orderId && r.slug && t.orderId.toLowerCase().includes(r.slug.toLowerCase()))
                                 );
@@ -7813,7 +7623,12 @@ if (typeof window !== 'undefined') {
 
         // 1. Restaurant Dashboard active session:
         if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession) {
-            const myOrders = (newOrders || []).filter(o => o.restaurantId === currentRestaurantSession.id);
+            const sessId = String(currentRestaurantSession.id || '').toLowerCase().trim();
+            const sessSlug = String(currentRestaurantSession.slug || '').toLowerCase().trim();
+            const myOrders = (newOrders || []).filter(o => {
+                const oRestoId = String(o.restaurantId || '').toLowerCase().trim();
+                return (sessId && oRestoId === sessId) || (sessSlug && oRestoId === sessSlug);
+            });
             if (myOrders.length > 0) {
                 // Play notification bell chime
                 if (typeof window.playOrderAlertSound === 'function') {
@@ -7850,23 +7665,32 @@ if (typeof window !== 'undefined') {
                     }
                 });
 
-                // Auto-refresh restaurant dashboard view if viewing orders or accounting
-                if (typeof dashboardActiveTab !== 'undefined' && (dashboardActiveTab === 'orders' || dashboardActiveTab === 'accounting' || dashboardActiveTab === 'overview')) {
-                    if (document.getElementById('dashboard-tab-panel')) {
+                // Immediate full synchronization of restaurant dashboard shell, top badges, counters, and active tab
+                const isDashboardVisible = window.location.hash.startsWith('#/dashboard') || Boolean(document.getElementById('dashboard-tab-panel'));
+                if (isDashboardVisible) {
+                    if (typeof renderDashboardShell === 'function') {
+                        renderDashboardShell();
+                    } else if (document.getElementById('dashboard-tab-panel')) {
                         const r = store.getRestaurantById(currentRestaurantSession.id);
                         if (r && typeof renderDashboardTabContent === 'function') {
                             renderDashboardTabContent(r);
                         }
                     }
-                    if (typeof renderMobileBottomNav === 'function') {
-                        renderMobileBottomNav();
-                    }
                 }
-            } else if (hasStatusChange && typeof dashboardActiveTab !== 'undefined') {
-                if (document.getElementById('dashboard-tab-panel')) {
-                    const r = store.getRestaurantById(currentRestaurantSession.id);
-                    if (r && typeof renderDashboardTabContent === 'function') {
-                        renderDashboardTabContent(r);
+                if (typeof renderMobileBottomNav === 'function') {
+                    renderMobileBottomNav();
+                }
+            } else if (hasStatusChange) {
+                // Immediate re-render on order status change
+                const isDashboardVisible = window.location.hash.startsWith('#/dashboard') || Boolean(document.getElementById('dashboard-tab-panel'));
+                if (isDashboardVisible) {
+                    if (typeof renderDashboardShell === 'function') {
+                        renderDashboardShell();
+                    } else if (document.getElementById('dashboard-tab-panel')) {
+                        const r = store.getRestaurantById(currentRestaurantSession.id);
+                        if (r && typeof renderDashboardTabContent === 'function') {
+                            renderDashboardTabContent(r);
+                        }
                     }
                 }
                 if (typeof renderMobileBottomNav === 'function') {

@@ -1068,11 +1068,29 @@ function startOrderPolling(restaurantId) {
                             store.data.orders.unshift(o);
                         });
                         store.save();
-                        if (typeof renderDashboardTabContent === 'function') {
+                        
+                        // Dispatch real-time orders event so all tabs, badges, and counters update
+                        if (typeof window !== 'undefined') {
+                            window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
+                                detail: {
+                                    newOrders: newIncoming,
+                                    hasStatusChange: false,
+                                    allOrders: store.data.orders
+                                }
+                            }));
+                        }
+
+                        // Re-render dashboard if open
+                        if (typeof renderDashboardShell === 'function' && window.location.hash.startsWith('#/dashboard')) {
+                            renderDashboardShell();
+                        } else if (document.getElementById('dashboard-tab-panel')) {
                             const r = store.getRestaurantById(restaurantId);
-                            if (r && document.getElementById('dashboard-view-orders') && document.getElementById('dashboard-view-orders').classList.contains('active')) {
+                            if (r && typeof renderDashboardTabContent === 'function') {
                                 renderDashboardTabContent(r);
                             }
+                        }
+                        if (typeof renderMobileBottomNav === 'function') {
+                            renderMobileBottomNav();
                         }
                         if (typeof renderAdminDashboard === 'function') {
                             renderAdminDashboard();
@@ -1130,13 +1148,29 @@ function startOrderPolling(restaurantId) {
                             };
                             store.data.orders.unshift(formatted);
                             store.save();
+
+                            // Dispatch real-time orders event
+                            if (typeof window !== 'undefined') {
+                                window.dispatchEvent(new CustomEvent('thies_orders_live_update', {
+                                    detail: {
+                                        newOrders: [formatted],
+                                        hasStatusChange: false,
+                                        allOrders: store.data.orders
+                                    }
+                                }));
+                            }
                             
                             // Re-render dashboard if open
-                            if (typeof renderDashboardTabContent === 'function') {
+                            if (typeof renderDashboardShell === 'function' && window.location.hash.startsWith('#/dashboard')) {
+                                renderDashboardShell();
+                            } else if (document.getElementById('dashboard-tab-panel')) {
                                 const r = store.getRestaurantById(restaurantId);
-                                if (r && document.getElementById('dashboard-view-orders') && document.getElementById('dashboard-view-orders').classList.contains('active')) {
+                                if (r && typeof renderDashboardTabContent === 'function') {
                                     renderDashboardTabContent(r);
                                 }
+                            }
+                            if (typeof renderMobileBottomNav === 'function') {
+                                renderMobileBottomNav();
                             }
                             if (typeof renderAdminDashboard === 'function') {
                                 renderAdminDashboard();
@@ -4880,20 +4914,52 @@ window.fetchOrderTracking = async function(isLiveUpdate = false) {
     let allOrders = [];
     
     try {
-        // 1. Direct query of target order ID from server API for 100% authoritative status
+        // 1. Initial baseline from local cache (optimistic fallback while fetching)
+        try {
+            const localHistory = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+            localHistory.forEach(localItem => {
+                const oPhone = cleanPhoneNumber(localItem.customerPhone || '');
+                const matchPhone = phone && oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
+                const matchId = orderIdToLookup && (String(localItem.id) === String(orderIdToLookup) || String(localItem.orderNumber) === String(orderIdToLookup));
+                if (matchPhone || matchId) {
+                    const existingIdx = allOrders.findIndex(x => String(x.id) === String(localItem.id));
+                    if (existingIdx === -1) allOrders.push({ ...localItem });
+                    else allOrders[existingIdx] = { ...allOrders[existingIdx], ...localItem };
+                }
+            });
+        } catch (e) {}
+
+        if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
+            const memoryOrders = store.data.orders.filter(o => {
+                const oPhone = cleanPhoneNumber(o.customerPhone || '');
+                const matchPhone = phone && oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
+                const matchId = orderIdToLookup && (String(o.id) === String(orderIdToLookup) || String(o.orderNumber) === String(orderIdToLookup));
+                return matchPhone || matchId;
+            });
+            memoryOrders.forEach(mo => {
+                const existingIdx = allOrders.findIndex(x => String(x.id) === String(mo.id));
+                if (existingIdx === -1) allOrders.push({ ...mo });
+                else allOrders[existingIdx] = { ...allOrders[existingIdx], ...mo };
+            });
+        }
+
+        // 2. Direct query of target order ID from server API for 100% authoritative status
         if (orderIdToLookup) {
             try {
                 const singleRes = await fetch(`/api/orders/${encodeURIComponent(orderIdToLookup)}`);
                 if (singleRes.ok) {
                     const singleData = await singleRes.json();
                     if (singleData && singleData.order) {
-                        allOrders.push(singleData.order);
+                        const so = singleData.order;
+                        const existingIdx = allOrders.findIndex(x => String(x.id) === String(so.id));
+                        if (existingIdx === -1) allOrders.push(so);
+                        else allOrders[existingIdx] = { ...allOrders[existingIdx], ...so };
                     }
                 }
             } catch (e) {}
         }
 
-        // 2. Récupération directe depuis l'API centrale en direct (synchronisation immédiate avec l'admin)
+        // 3. Récupération directe depuis l'API centrale en direct (statut autoritaire temps réel)
         try {
             const apiRes = await fetch('/api/orders');
             if (apiRes.ok) {
@@ -4913,7 +4979,7 @@ window.fetchOrderTracking = async function(isLiveUpdate = false) {
             }
         } catch (apiErr) {}
 
-        // 3. Récupération depuis Supabase si téléphone disponible
+        // 4. Récupération depuis Supabase si téléphone disponible
         if (supabaseClient && phone) {
             try {
                 const { data, error } = await supabaseClient.rpc('get_order_tracking', {
@@ -4930,35 +4996,32 @@ window.fetchOrderTracking = async function(isLiveUpdate = false) {
                 }
             } catch (err) {}
         }
-        
-        // 4. Récupération depuis la mémoire locale du store
-        if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
-            const memoryOrders = store.data.orders.filter(o => {
-                const oPhone = cleanPhoneNumber(o.customerPhone || '');
-                const matchPhone = phone && oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
-                const matchId = orderIdToLookup && (String(o.id) === String(orderIdToLookup) || String(o.orderNumber) === String(orderIdToLookup));
-                return matchPhone || matchId;
-            });
-            memoryOrders.forEach(mo => {
-                const existingIdx = allOrders.findIndex(x => String(x.id) === String(mo.id));
-                if (existingIdx === -1) allOrders.push(mo);
-                else allOrders[existingIdx] = { ...allOrders[existingIdx], ...mo };
-            });
-        }
-        
-        // 5. Récupération depuis l'historique persistent (localStorage)
+
+        // 5. Synchroniser immédiatement la mémoire locale avec les statuts autoritaires reçus du serveur
         try {
-            const localHistory = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
-            localHistory.forEach(localItem => {
-                const oPhone = cleanPhoneNumber(localItem.customerPhone || '');
-                const matchPhone = phone && oPhone && (oPhone.endsWith(phone.slice(-9)) || phone.endsWith(oPhone.slice(-9)));
-                const matchId = orderIdToLookup && (String(localItem.id) === String(orderIdToLookup) || String(localItem.orderNumber) === String(orderIdToLookup));
-                if (matchPhone || matchId) {
-                    const existingIdx = allOrders.findIndex(x => String(x.id) === String(localItem.id));
-                    if (existingIdx === -1) allOrders.push(localItem);
-                    else allOrders[existingIdx] = { ...allOrders[existingIdx], ...localItem };
+            let history = JSON.parse(localStorage.getItem('THIES_ORDER_HISTORY') || '[]');
+            let historyDirty = false;
+            allOrders.forEach(ao => {
+                const hIdx = history.findIndex(h => String(h.id) === String(ao.id));
+                if (hIdx !== -1) {
+                    if (history[hIdx].status !== ao.status) {
+                        history[hIdx].status = ao.status;
+                        if (ao.cancelReason) history[hIdx].cancelReason = ao.cancelReason;
+                        historyDirty = true;
+                    }
+                }
+                if (typeof store !== 'undefined' && store.data && Array.isArray(store.data.orders)) {
+                    const mOrder = store.data.orders.find(mo => String(mo.id) === String(ao.id));
+                    if (mOrder && mOrder.status !== ao.status) {
+                        mOrder.status = ao.status;
+                        if (ao.cancelReason) mOrder.cancelReason = ao.cancelReason;
+                    }
                 }
             });
+            if (historyDirty) {
+                localStorage.setItem('THIES_ORDER_HISTORY', JSON.stringify(history));
+                if (typeof store !== 'undefined' && typeof store.save === 'function') store.save();
+            }
         } catch (e) {}
 
         if (!allOrders || allOrders.length === 0) {

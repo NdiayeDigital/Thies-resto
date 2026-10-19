@@ -162,6 +162,13 @@ class Store {
                             if (savedOverrides[r.id].suspendedAt) r.suspendedAt = savedOverrides[r.id].suspendedAt;
                             if (savedOverrides[r.id].subscriptionStatus) r.subscriptionStatus = savedOverrides[r.id].subscriptionStatus;
                             if (savedOverrides[r.id].hasPaidSubscription !== undefined) r.hasPaidSubscription = savedOverrides[r.id].hasPaidSubscription;
+                            if (savedOverrides[r.id].menu && Array.isArray(savedOverrides[r.id].menu) && savedOverrides[r.id].menu.length > 0) {
+                                r.menu = savedOverrides[r.id].menu;
+                                r.dishes = savedOverrides[r.id].menu;
+                            }
+                            if (savedOverrides[r.id].name) r.name = savedOverrides[r.id].name;
+                            if (savedOverrides[r.id].whatsapp) r.whatsapp = savedOverrides[r.id].whatsapp;
+                            if (savedOverrides[r.id].openHours) r.openHours = savedOverrides[r.id].openHours;
                         }
                     });
                 }
@@ -582,6 +589,18 @@ class Store {
                             if (sr.subscriptionMethod) existing.subscriptionMethod = sr.subscriptionMethod;
                             if (sr.subscriptionStatus) existing.subscriptionStatus = sr.subscriptionStatus;
                             if (sr.hasPaidSubscription !== undefined) existing.hasPaidSubscription = sr.hasPaidSubscription;
+                            if (sr.menu && Array.isArray(sr.menu)) {
+                                existing.menu = sr.menu;
+                                existing.dishes = sr.menu;
+                            } else if (sr.dishes && Array.isArray(sr.dishes)) {
+                                existing.menu = sr.dishes;
+                                existing.dishes = sr.dishes;
+                            }
+                            if (sr.name) existing.name = sr.name;
+                            if (sr.address) existing.address = sr.address;
+                            if (sr.whatsapp) existing.whatsapp = sr.whatsapp;
+                            if (sr.openHours) existing.openHours = sr.openHours;
+                            if (sr.coverImage) existing.coverImage = sr.coverImage;
                         } else {
                             this.data.restaurants.push(sr);
                         }
@@ -997,6 +1016,13 @@ class Store {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ restaurant: resto })
             });
+            if (resto && resto.id && Array.isArray(resto.menu)) {
+                fetch(`/api/restaurants/${encodeURIComponent(resto.id)}/menu`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ menu: resto.menu, dishes: resto.menu })
+                }).catch(() => {});
+            }
         } catch (e) {
             console.warn("Server restaurant sync notice:", e.message);
         }
@@ -1049,49 +1075,28 @@ class Store {
                 return;
             }
 
-            // Client/Public registration (limited by RLS check: status must be pending)
-            const { error } = await supabaseClient.from('restaurants').insert({
-                id: resto.id,
+            // Direct Supabase update on restaurants table (menu, settings, photos, etc.)
+            const supabasePayload = {
                 name: resto.name,
-                slug: resto.slug,
-                rating: resto.rating,
-                reviews_count: resto.reviewsCount,
-                category: resto.category,
                 address: resto.address,
                 whatsapp: resto.whatsapp,
                 open_hours: resto.openHours,
                 closed_days: resto.closedDays,
-                is_open_manual: resto.isOpenManual,
-                status: resto.status,
-                username: resto.username,
-                password: resto.password,
+                is_open_manual: resto.isOpenManual !== undefined ? Boolean(resto.isOpenManual) : true,
                 cover_image: resto.coverImage,
-                menu: resto.menu,
-                reviews: resto.reviews,
-                subscription_pack: resto.subscriptionPack || 'Aucun (Gratuit)'
-            });
+                menu: Array.isArray(resto.menu) ? resto.menu : [],
+                reviews: Array.isArray(resto.reviews) ? resto.reviews : []
+            };
+            const { error: patchError } = await supabaseClient
+                .from('restaurants')
+                .update(supabasePayload)
+                .eq('id', resto.id);
 
-            if (error && error.code === '23505') {
-                if (typeof currentRestaurantSession !== 'undefined' && currentRestaurantSession && currentRestaurantSession.id === resto.id) {
-                    await supabaseClient.rpc('update_restaurant_data', {
-                        p_restaurant_id: resto.id,
-                        p_password: currentRestaurantSession.password,
-                        p_updates: {
-                            name: resto.name,
-                            address: resto.address,
-                            whatsapp: resto.whatsapp,
-                            open_hours: resto.openHours,
-                            closed_days: resto.closedDays,
-                            is_open_manual: resto.isOpenManual,
-                            cover_image: resto.coverImage,
-                            menu: resto.menu,
-                            reviews: resto.reviews
-                        }
-                    });
-                }
+            if (patchError) {
+                console.warn("Direct Supabase restaurant update notice:", patchError.message || patchError);
             }
         } catch (e) {
-            console.error("Failed to push restaurant to Supabase", e);
+            console.warn("Notice pushing restaurant to Supabase:", e.message || e);
         }
     }
 
@@ -1235,84 +1240,45 @@ class Store {
     }
 
     async fetchMenuForRestaurant(restaurantId) {
-        if (!supabaseClient) return [];
-        
-        // Find the restaurant in our local cache
-        const resto = this.data.restaurants.find(r => r.id === restaurantId);
-        
-        // If the menu is already loaded (and has items), return it from cache
-        if (resto && resto.menu && resto.menu.length > 0) {
+        const resto = this.data.restaurants.find(r => r.id === restaurantId || r.slug === restaurantId);
+
+        // 1. Fetch live authoritative menu from server first
+        try {
+            const srvRes = await fetch(`/api/restaurants/${encodeURIComponent(restaurantId)}/menu`);
+            if (srvRes.ok) {
+                const srvData = await srvRes.json();
+                if (srvData && Array.isArray(srvData.menu) && srvData.menu.length > 0) {
+                    if (resto) {
+                        resto.menu = srvData.menu;
+                        resto.dishes = srvData.menu;
+                        this.save();
+                    }
+                    return srvData.menu;
+                }
+            }
+        } catch (e) {
+            console.warn("Server menu fetch note:", e.message);
+        }
+
+        // 2. If the menu is already loaded in memory (and has items), return it
+        if (resto && resto.menu && Array.isArray(resto.menu) && resto.menu.length > 0) {
+            return resto.menu;
+        }
+        if (resto && resto.dishes && Array.isArray(resto.dishes) && resto.dishes.length > 0) {
+            resto.menu = resto.dishes;
             return resto.menu;
         }
 
-        try {
-            console.log(`Lazy loading menu for restaurant ${restaurantId}...`);
-            let menuItems = null;
-            let error = null;
-            try {
-                const fetchPromise = supabaseClient.rpc('get_public_menu_items', { p_restaurant_id: restaurantId });
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Menu timeout')), 3500));
-                const res = await Promise.race([fetchPromise, timeoutPromise]);
-                if (res && res.error) error = res.error;
-                else if (res && res.data) menuItems = res.data;
-            } catch (err) {
-                error = err;
-            }
-
-            if (error) {
-                console.warn(`Menu fetch notice for restaurant ${restaurantId}: using offline templates`, error.message || error);
-            }
-            
-            let parsedMenu = [];
-            if (menuItems && menuItems.length > 0) {
-                parsedMenu = menuItems.map(item => {
-                    let fallbackImg = item.image_url;
-                    if (!fallbackImg || (typeof fallbackImg === 'string' && fallbackImg.trim() === '')) {
-                        if (typeof DISH_IMAGE_OPTIONS !== 'undefined' && DISH_IMAGE_OPTIONS.length > 0) {
-                            let str = String(item.id || item.name || '');
-                            let hash = 0;
-                            for (let i = 0; i < str.length; i++) {
-                                hash = str.charCodeAt(i) + ((hash << 5) - hash);
-                            }
-                            fallbackImg = DISH_IMAGE_OPTIONS[Math.abs(hash) % DISH_IMAGE_OPTIONS.length].url;
-                        }
-                    }
-                    return {
-                        id: item.id,
-                        name: item.name,
-                        description: item.description,
-                        price: item.price,
-                        category: item.category,
-                        image: fallbackImg,
-                        isDailySpecial: item.is_daily_special !== undefined ? item.is_daily_special : (item.isDailySpecial !== undefined ? item.isDailySpecial : (item.tag === 'Plat du jour')),
-                        tag: item.tag || (item.is_daily_special ? 'Plat du jour' : (item.isDailySpecial ? 'Plat du jour' : null)),
-                        available: item.is_available !== undefined ? item.is_available : (item.available !== undefined ? item.available : true)
-                    };
-                });
-            }
-
-            // If empty or offline, fallback to category template
-            if (parsedMenu.length === 0 && resto) {
-                if (typeof MENU_TEMPLATES !== 'undefined' && MENU_TEMPLATES[resto.category]) {
-                    parsedMenu = JSON.parse(JSON.stringify(MENU_TEMPLATES[resto.category]));
-                }
-            }
-
-            // Update local cache
-            if (resto) {
-                resto.menu = parsedMenu;
-                this.save();
-            }
-
+        // 3. Fallback: only if empty and offline, use category template for initial demo
+        if (resto && typeof MENU_TEMPLATES !== 'undefined' && MENU_TEMPLATES[resto.category]) {
+            const parsedMenu = JSON.parse(JSON.stringify(MENU_TEMPLATES[resto.category]));
+            resto.menu = parsedMenu;
+            resto.dishes = parsedMenu;
+            this.save();
             return parsedMenu;
-        } catch (error) {
-            console.warn("Notice: Serving local menu items for restaurant:", error);
-            if (resto && typeof MENU_TEMPLATES !== 'undefined' && MENU_TEMPLATES[resto.category]) {
-                resto.menu = JSON.parse(JSON.stringify(MENU_TEMPLATES[resto.category]));
-                return resto.menu;
-            }
-            return [];
         }
+
+        return (resto && resto.menu) ? resto.menu : [];
     }
 
     isRestaurantVisible(resto) {
@@ -1415,12 +1381,12 @@ class Store {
         return this.data.restaurants.find(r => r.id === id);
     }
 
-    updateRestaurant(id, fields) {
+    async updateRestaurant(id, fields) {
         const idx = this.data.restaurants.findIndex(r => r.id === id);
         if (idx !== -1) {
             this.data.restaurants[idx] = { ...this.data.restaurants[idx], ...fields };
             this.save();
-            this.pushRestaurantToSupabase(this.data.restaurants[idx]);
+            await this.pushRestaurantToSupabase(this.data.restaurants[idx]);
 
             if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('thies_restaurants_live_update', {
@@ -1497,7 +1463,25 @@ class Store {
     }
 
     getOrdersByRestaurant(restaurantId) {
-        return this.data.orders.filter(o => o.restaurantId === restaurantId);
+        if (!restaurantId) return [];
+        const targetIdStr = String(restaurantId).toLowerCase().trim();
+        const resto = this.getRestaurantById(restaurantId) || (this.data.restaurants || []).find(r => 
+            String(r.id).toLowerCase() === targetIdStr || 
+            String(r.slug || '').toLowerCase() === targetIdStr ||
+            String(r.username || '').toLowerCase() === targetIdStr
+        );
+        const validIds = new Set([targetIdStr]);
+        if (resto) {
+            if (resto.id) validIds.add(String(resto.id).toLowerCase());
+            if (resto.slug) validIds.add(String(resto.slug).toLowerCase());
+            if (resto.username) validIds.add(String(resto.username).toLowerCase());
+        }
+        return this.data.orders.filter(o => {
+            const oRestoId = String(o.restaurantId || '').toLowerCase().trim();
+            if (validIds.has(oRestoId)) return true;
+            if (resto && o.restaurantName && o.restaurantName.toLowerCase().trim() === (resto.name || '').toLowerCase().trim()) return true;
+            return false;
+        });
     }
 
     addOrder(order) {
