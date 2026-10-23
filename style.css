@@ -8866,3 +8866,280 @@ html[data-theme="dark"] .mobile-bottom-nav {
 .toast-item.toast-info {
     border-left: 4px solid #3B82F6 !important;
 }
+
+/* ==========================================================================
+   ACETERNITY UI & MAGIC UI SENIOR DESIGN SYSTEM OVERLAYS
+   ========================================================================== */
+
+/* Hairline borders & subtle depth */
+.subtle-border {
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+}
+[data-theme="dark"] .subtle-border {
+    border: 1px solid rgba(255, 255, 255, 0.09) !important;
+}
+
+/* Ambient Radial Glows & Grid Mesh */
+.ambient-glow-mesh {
+    position: relative;
+    overflow: hidden;
+}
+.ambient-glow-mesh::before {
+    content: '';
+    position: absolute;
+    top: -150px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 850px;
+    height: 450px;
+    background: radial-gradient(ellipse at center, rgba(242, 107, 33, 0.14) 0%, rgba(245, 158, 11, 0.06) 45%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Live Pulse Radar Ring */
+.pulse-live-dot {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #10B981;
+    display: inline-block;
+    vertical-align: middle;
+}
+.pulse-live-dot::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid #10B981;
+    animation: pulseRing 1.8s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+}
+@keyframes pulseRing {
+    0% { transform: scale(0.8); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* Magic UI Shimmer Effect Button */
+.magic-shimmer-btn {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #F26B21 0%, #EA580C 100%) !important;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+.magic-shimmer-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -60%;
+    width: 40%;
+    height: 200%;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 100%);
+    transform: rotate(25deg);
+    animation: shimmerSlide 3.5s infinite ease-in-out;
+}
+@keyframes shimmerSlide {
+    0% { left: -60%; }
+    40% { left: 140%; }
+    100% { left: 140%; }
+}
+.magic-shimmer-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 14px 28px -6px rgba(242, 107, 33, 0.45) !important;
+}
+
+/* Asymmetric Hero Split Container (Desktop 12-col bento rhythm) */
+.hero-asymmetric-wrapper {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 2.25rem;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+}
+@media (max-width: 992px) {
+    .hero-asymmetric-wrapper {
+        grid-template-columns: 1fr;
+        gap: 1.75rem;
+    }
+    .hero-bento-visual-col {
+        display: none !important;
+    }
+}
+
+/* Bento Showcase Tile (Right Column in Hero) */
+.bento-showcase-card {
+    background: var(--bg-card);
+    border-radius: 28px;
+    border: 1px solid rgba(15, 23, 42, 0.08);
+    box-shadow: 0 20px 45px -12px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme="dark"] .bento-showcase-card {
+    background: rgba(28, 32, 43, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 24px 50px -12px rgba(0, 0, 0, 0.5);
+}
+.bento-showcase-card:hover {
+    transform: translateY(-6px) scale(1.015);
+    box-shadow: 0 30px 60px -15px rgba(242, 107, 33, 0.18), 0 0 0 1px rgba(242, 107, 33, 0.3);
+}
+
+/* Quick Chip Buttons with Floating Hover (Magic UI) */
+.quick-chip-btn {
+    background: var(--bg-card) !important;
+    border: 1px solid rgba(15, 23, 42, 0.08) !important;
+    border-radius: 30px !important;
+    padding: 0.45rem 1rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+.quick-chip-btn:hover {
+    background: rgba(242, 107, 33, 0.08) !important;
+    border-color: rgba(242, 107, 33, 0.4) !important;
+    color: var(--primary) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(242, 107, 33, 0.12);
+}
+[data-theme="dark"] .quick-chip-btn {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Asymmetric Bento 3-Box Row (Aceternity UI Style) */
+.bento-concepts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.25fr 1fr;
+    gap: 1.5rem;
+    max-width: 1200px;
+    margin: 3.5rem auto 2.5rem;
+    padding: 0 1.5rem;
+}
+@media (max-width: 860px) {
+    .bento-concepts-grid {
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+}
+.bento-box-item {
+    background: var(--bg-card);
+    border-radius: 28px;
+    border: 1px solid rgba(15, 23, 42, 0.07);
+    padding: 2.25rem 1.75rem;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+[data-theme="dark"] .bento-box-item {
+    background: rgba(28, 32, 43, 0.8);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+.bento-box-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.07);
+    border-color: rgba(242, 107, 33, 0.3);
+}
+
+/* Spotlight inner corner glow for Bento 01 */
+.bento-box-highlight {
+    background: linear-gradient(145deg, var(--bg-card) 0%, rgba(242, 107, 33, 0.04) 100%);
+    border: 1px solid rgba(242, 107, 33, 0.25);
+}
+[data-theme="dark"] .bento-box-highlight {
+    background: linear-gradient(145deg, rgba(28, 32, 43, 0.9) 0%, rgba(242, 107, 33, 0.1) 100%);
+}
+
+/* Visual Media Bento Tile */
+.bento-media-tile {
+    padding: 0 !important;
+    position: relative;
+    border-radius: 28px;
+    overflow: hidden;
+}
+.bento-media-img {
+    width: 100%;
+    height: 100%;
+    min-height: 250px;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.bento-media-tile:hover .bento-media-img {
+    transform: scale(1.05);
+}
+
+/* Filter Bar Pill Animation & Refinements */
+.filter-bar {
+    gap: 0.6rem !important;
+    padding: 0.35rem !important;
+    background: rgba(15, 23, 42, 0.03) !important;
+    border-radius: 36px !important;
+    border: 1px solid rgba(15, 23, 42, 0.06) !important;
+}
+[data-theme="dark"] .filter-bar {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+.filter-btn {
+    border-radius: 30px !important;
+    border: 1px solid transparent !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    padding: 0.55rem 1.15rem !important;
+}
+.filter-btn:hover {
+    background: var(--bg-card) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04) !important;
+}
+.filter-btn.active {
+    background: var(--bg-card) !important;
+    border-color: rgba(242, 107, 33, 0.35) !important;
+    box-shadow: 0 6px 18px rgba(242, 107, 33, 0.15), 0 0 0 1px rgba(242, 107, 33, 0.2) !important;
+    color: var(--primary) !important;
+}
+
+/* Luxury Resto Card Elevation & Spring */
+.luxury-resto-card {
+    border-radius: 26px !important;
+    border: 1px solid rgba(15, 23, 42, 0.07) !important;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease !important;
+}
+[data-theme="dark"] .luxury-resto-card {
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+.luxury-resto-card:hover {
+    transform: translateY(-6px) scale(1.012) !important;
+    box-shadow: 0 24px 48px -12px rgba(15, 23, 42, 0.09), 0 0 0 1px rgba(242, 107, 33, 0.25) !important;
+    border-color: rgba(242, 107, 33, 0.35) !important;
+}
+
+/* Magic UI Floating Bottom Dock Enhancements */
+@media (max-width: 768px) {
+    .mobile-bottom-nav {
+        background: rgba(255, 255, 255, 0.92) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border-top: 1px solid rgba(15, 23, 42, 0.08) !important;
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.06) !important;
+    }
+    [data-theme="dark"] .mobile-bottom-nav {
+        background: rgba(17, 24, 39, 0.92) !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4) !important;
+    }
+    .mobile-bottom-nav .nav-item.active .nav-icon {
+        transform: translateY(-2px) !important;
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        color: #F26B21 !important;
+    }
+}

@@ -1967,48 +1967,48 @@ window.renderDailySpecialsHomeSection = function() {
         const restaurantSlug = dish.restaurantSlug || dish.restaurantId;
         
         return `
-            <div class="daily-dish-card hover-3d" style="background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); overflow: hidden; display: flex; flex-direction: column; min-width: 240px; max-width: 260px; flex: 1 0 240px; scroll-snap-align: start; transition: transform 0.2s ease, box-shadow 0.2s ease;">
-                <div style="position: relative; width: 100%; height: 140px; overflow: hidden; background: var(--bg-secondary);">
-                    <img src="${dishImage}" alt="${dish.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.35s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'">
+            <div class="daily-dish-card hover-3d subtle-border" style="background: var(--bg-card); border-radius: 20px; overflow: hidden; display: flex; flex-direction: column; min-width: 250px; max-width: 270px; flex: 1 0 250px; scroll-snap-align: start; transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1); box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+                <div style="position: relative; width: 100%; height: 150px; overflow: hidden; background: var(--bg-secondary);">
+                    <img src="${dishImage}" alt="${dish.name}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);" onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'" onerror="this.src='https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400'">
                     
                     <!-- Tag Spécifique -->
-                    <div style="position: absolute; top: 8px; left: 8px; background: linear-gradient(135deg, #F26B21 0%, #D9531E 100%); color: #ffffff; padding: 0.2rem 0.6rem; border-radius: 16px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3px; box-shadow: 0 2px 8px rgba(242,107,33,0.35); display: flex; align-items: center; gap: 0.25rem;">
+                    <div style="position: absolute; top: 10px; left: 10px; background: linear-gradient(135deg, #F26B21 0%, #D9531E 100%); color: #ffffff; padding: 0.25rem 0.65rem; border-radius: 20px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(242,107,33,0.35); display: flex; align-items: center; gap: 0.25rem;">
                         <span><i class="ri-award-line"></i></span>
                         <span>${tagText}</span>
                     </div>
 
                     <!-- Note & Statut -->
-                    <div style="position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); backdrop-filter: blur(6px); color: #fff; padding: 0.15rem 0.45rem; border-radius: 8px; font-size: 0.7rem; font-weight: 700; display: flex; align-items: center; gap: 0.2rem;">
-                        <i class="ri-star-fill" style="color: #FFC107;"></i> ${dish.restaurantRating || '4.8'}
+                    <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(15,23,42,0.75); backdrop-filter: blur(8px); color: #fff; padding: 0.2rem 0.55rem; border-radius: 10px; font-size: 0.72rem; font-weight: 700; display: flex; align-items: center; gap: 0.25rem; border: 1px solid rgba(255,255,255,0.2);">
+                        <i class="ri-star-fill" style="color: #F59E0B;"></i> ${dish.restaurantRating || '4.8'}
                     </div>
                 </div>
 
-                <div style="padding: 0.85rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
+                <div style="padding: 1.1rem; display: flex; flex-direction: column; flex: 1; justify-content: space-between;">
                     <div>
                         <!-- Restaurant Link -->
-                        <a href="#/r/${restaurantSlug}" onclick="router.navigate('/r/${restaurantSlug}'); return false;" style="font-size: 0.78rem; color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem; margin-bottom: 0.25rem;">
+                        <a href="#/r/${restaurantSlug}" onclick="router.navigate('/r/${restaurantSlug}'); return false;" style="font-size: 0.78rem; color: var(--primary); font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.3rem; margin-bottom: 0.35rem;">
                             <span><i class="ri-store-2-line"></i></span> <span>${dish.restaurantName || 'Restaurant Thiès'}</span>
                         </a>
                         
                         <!-- Dish Name -->
-                        <h3 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin: 0 0 0.3rem 0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; color: var(--text-primary); margin: 0 0 0.35rem 0; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; letter-spacing: -0.01em;">
                             ${dish.name}
                         </h3>
 
                         <!-- Dish Description -->
-                        <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4; margin: 0 0 0.75rem 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.45; margin: 0 0 0.85rem 0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                             ${dish.description || 'Préparé aujourd\'hui avec des ingrédients frais locaux.'}
                         </p>
                     </div>
 
                     <!-- Footer / Price & Order Button -->
-                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.65rem; border-top: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid rgba(15,23,42,0.06);">
                         <div>
-                            <span style="font-size: 0.65rem; color: var(--text-secondary); display: block; font-weight: 600; text-transform: uppercase;">Prix</span>
-                            <span style="font-size: 1.05rem; font-weight: 800; color: var(--text-primary);">${priceFormatted} <small style="font-size: 0.7rem; color: var(--primary); font-weight: 700;">FCFA</small></span>
+                            <span style="font-size: 0.65rem; color: var(--text-secondary); display: block; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Tarif</span>
+                            <span style="font-size: 1.1rem; font-weight: 800; color: var(--text-primary);">${priceFormatted} <small style="font-size: 0.72rem; color: var(--primary); font-weight: 700;">FCFA</small></span>
                         </div>
 
-                        <button onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" class="btn btn-primary ripple" style="padding: 0.45rem 0.85rem; border-radius: 10px; font-size: 0.78rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem; box-shadow: 0 3px 10px rgba(242,107,33,0.3);">
+                        <button onclick="openProductModal('${dish.restaurantId}', '${dish.id}')" class="btn btn-primary ripple magic-shimmer-btn" style="padding: 0.5rem 0.95rem; border-radius: 12px; font-size: 0.8rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.35rem; border: none; cursor: pointer;">
                             <span><i class="ri-shopping-cart-line"></i></span>
                             <span>Commander</span>
                         </button>
@@ -2183,82 +2183,201 @@ router.add('#/', () => {
 
 
     container.innerHTML = `
-        <!-- ========== HERO SECTION ========== -->
-        <section class="hero-section page-transition" style="background: linear-gradient(var(--glass-bg), var(--bg-primary)), url('https://images.unsplash.com/photo-1544025162-d76694265947?w=1920&auto=format&fit=crop&q=80') center/cover fixed;">
-            <div class="hero-split-container">
-                <!-- Center Hero Card: Title, Description, Search and Actions -->
-                <div class="hero-left-col hover-3d" style="padding: 2.5rem 2rem; border-radius: 24px; background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--border); box-shadow: var(--shadow); max-width: 800px; margin: 0 auto; width: 100%;">
-                    <div class="hero-greeting-badge" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.45rem 1.1rem; border-radius: 30px; background: rgba(242, 107, 33, 0.12); border: 1px solid rgba(242, 107, 33, 0.3); color: var(--primary); font-weight: 700; font-size: 0.85rem; margin-bottom: 1.25rem; text-transform: uppercase; letter-spacing: 1.5px;">
-                        <span>${greeting}</span>
-                    </div>
-                    <h1 class="hero-title" style="color: var(--text-primary); text-shadow: 0 4px 20px rgba(0,0,0,0.8); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 1.25rem; line-height: 1.25;">Découvrez les Meilleures Tables de <span style="color: var(--primary);">Thiès</span></h1>
-                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem; max-width: 640px; margin-left: auto; margin-right: auto;">Commandez vos plats du jour locaux en direct ou réservez votre table en quelques clics. Paiement à la livraison ou sur place. Simple, rapide et sans commission.</p>
+        <!-- ========== HERO SECTION (Aceternity UI Asymmetric Layout) ========== -->
+        <section class="hero-section page-transition ambient-glow-mesh" style="padding: 3.5rem 1.5rem 2.5rem; background: linear-gradient(to bottom, var(--bg-primary) 0%, var(--bg-secondary) 100%);">
+            <div class="hero-asymmetric-wrapper">
+                
+                <!-- Left Column (Editorial & Interactive Search) -->
+                <div class="hero-editorial-col" style="text-align: left;">
                     
-                    <div class="search-container hover-3d" style="margin: 0 auto 1.25rem auto; width: 100%; max-width: 500px; position: relative;">
-                        <input type="text" id="search-input-field" class="search-input" placeholder="Rechercher un plat, un restaurant..." oninput="debouncedApplyFilters()" style="background: var(--bg-input); color: var(--text-primary); border: 1.5px solid var(--border); border-radius: 16px; padding: 1.1rem 3rem 1.1rem 1.5rem; width: 100%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); transition: var(--transition-smooth); font-size: 16px;">
-                        <button class="search-btn" style="color: var(--primary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 1.2rem; cursor: pointer;" aria-label="Rechercher"><i class="ri-search-line"></i></button>
+                    <!-- Status Eyebrow Badge (Magic UI) -->
+                    <div style="display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.45rem 1.15rem; border-radius: 40px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #059669; font-weight: 700; font-size: 0.8rem; margin-bottom: 1.25rem;">
+                        <span class="pulse-live-dot"></span>
+                        <span>Service en Direct • 20 Tables Thiessoises</span>
                     </div>
 
-                    <!-- HERO QUICK FILTER TAGS -->
-                    <div class="hero-quick-tags" style="margin-bottom: 1.5rem;">
-                        <span style="font-weight: 600; opacity: 0.85; font-size: 0.85rem;">Filtres rapides :</span>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Fast-Food')"><i class="ri-restaurant-2-line"></i> Fast-Food</button>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Dibiterie')"><i class="ri-fire-line"></i> Dibiterie</button>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Traditionnel')"><i class="ri-bowl-line"></i> Traditionnel</button>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Gastronomique')"><i class="ri-award-line"></i> Gastronomique</button>
-                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Pâtisserie')"><i class="ri-cup-line"></i> Pâtisserie</button>
+                    <!-- Main Typographic Headline -->
+                    <h1 class="hero-title" style="color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: clamp(2.1rem, 4.5vw, 3.4rem); font-weight: 800; letter-spacing: -0.035em; line-height: 1.12; margin-bottom: 1.25rem;">
+                        L'Art Culinaire de <span style="position: relative; display: inline-block; color: var(--primary);">Thiès<svg style="position: absolute; bottom: -8px; left: 0; width: 100%; height: 10px;" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0,6 Q50,0 100,6" fill="none" stroke="#F59E0B" stroke-width="4" stroke-linecap="round"/></svg></span>,<br class="hidden sm:inline"> Cuisiné avec Passion.
+                    </h1>
+
+                    <!-- Editorial Subtitle -->
+                    <p class="hero-subtitle" style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.65; margin-bottom: 1.75rem; max-width: 560px;">
+                        Thiéboudiène Penda Mbaye, Dibi agneau braisé au feu de bois, Yassa au citron frais et jus locaux pressés. Commandez en direct auprès des meilleures tables de la cité du rail.
+                    </p>
+                    
+                    <!-- Search Input Bar (Floating Capsule with Backdrop Blur) -->
+                    <div class="search-container" style="margin: 0 0 1.25rem 0; width: 100%; max-width: 520px; position: relative;">
+                        <div style="position: relative; display: flex; align-items: center;">
+                            <i class="ri-search-2-line" style="position: absolute; left: 18px; color: var(--primary); font-size: 1.25rem; pointer-events: none;"></i>
+                            <input 
+                                type="text" 
+                                id="search-input-field" 
+                                class="search-input" 
+                                placeholder="Rechercher un plat, une dibiterie, un restaurant..." 
+                                oninput="debouncedApplyFilters()" 
+                                style="background: var(--bg-card); color: var(--text-primary); border: 1px solid rgba(15, 23, 42, 0.1); border-radius: 20px; padding: 1.15rem 3.5rem 1.15rem 3.25rem; width: 100%; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.06); transition: var(--transition-smooth); font-size: 0.95rem; font-weight: 500;"
+                            >
+                            <button class="search-btn" style="position: absolute; right: 12px; background: var(--primary); color: #fff; width: 36px; height: 36px; border-radius: 12px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s;" aria-label="Rechercher" onclick="applyFilters()">
+                                <i class="ri-arrow-right-line" style="font-size: 1rem;"></i>
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="hero-actions-container" style="display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; align-items: center; margin-top: 0.5rem; width: 100%;">
-                        <button class="btn btn-primary ripple hover-3d" onclick="scrollToCatalog()" style="box-shadow: 0 10px 25px -5px rgba(242,107,33,0.5); min-height: 48px; padding: 0.9rem 2.2rem; border-radius: 14px; font-weight: 700; font-size: 1.05rem; display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;">
-                            <i class="ri-restaurant-2-line"></i>
-                            <span>Explorer nos Menus</span>
+                    <!-- Quick Filter Chips -->
+                    <div class="hero-quick-tags" style="display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
+                        <span style="font-weight: 700; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); margin-right: 0.25rem;">Envie de :</span>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Traditionnel')"><i class="ri-bowl-line" style="color: var(--primary);"></i> Thiéboudiène</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Dibiterie')"><i class="ri-fire-line" style="color: #ef4444;"></i> Dibi Agneau</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Fast-Food')"><i class="ri-restaurant-2-line" style="color: #F59E0B;"></i> Fast-Food</button>
+                        <button type="button" class="quick-chip-btn" onclick="scrollToCatalogAndFilter('Gastronomique')"><i class="ri-award-line" style="color: #8B5CF6;"></i> Gastronomique</button>
+                    </div>
+
+                    <!-- Action Button with Magic Shimmer -->
+                    <div class="hero-actions-container" style="display: flex; gap: 1rem; align-items: center;">
+                        <button class="btn btn-primary magic-shimmer-btn" onclick="scrollToCatalog()" style="min-height: 52px; padding: 0.95rem 2.25rem; border-radius: 16px; font-weight: 700; font-size: 1rem; display: inline-flex; align-items: center; gap: 0.6rem; border: none; cursor: pointer;">
+                            <i class="ri-restaurant-2-line" style="font-size: 1.15rem;"></i>
+                            <span>Découvrir la Carte Complète</span>
                         </button>
                     </div>
                 </div>
+
+                <!-- Right Column (Aceternity Bento Showcase Tile) -->
+                <div class="hero-bento-visual-col">
+                    <div class="bento-showcase-card">
+                        <div style="position: relative; height: 260px; overflow: hidden;">
+                            <img 
+                                src="https://images.unsplash.com/photo-1544025162-d76694265947?w=800&auto=format&fit=crop&q=80" 
+                                alt="Sélection Gastronomique Thiès" 
+                                style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);"
+                                onmouseover="this.style.transform='scale(1.05)'"
+                                onmouseout="this.style.transform='scale(1)'"
+                            >
+                            <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.1) 60%, transparent 100%);"></div>
+                            
+                            <!-- Badges flottants style Aceternity -->
+                            <div style="position: absolute; top: 16px; left: 16px; background: rgba(15,23,42,0.8); backdrop-filter: blur(10px); color: #F59E0B; padding: 0.35rem 0.85rem; border-radius: 30px; font-size: 0.75rem; font-weight: 800; border: 1px solid rgba(245,158,11,0.35); display: flex; align-items: center; gap: 0.35rem;">
+                                <i class="ri-fire-fill"></i> Spécialité Thiessoise
+                            </div>
+
+                            <div style="position: absolute; bottom: 16px; left: 16px; right: 16px; color: #fff;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                                    <div>
+                                        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.75); font-weight: 700; display: block;">Suggestion Signature</span>
+                                        <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0.15rem 0;">Dibi d'Agneau au Feu de Bois</h3>
+                                    </div>
+                                    <span style="background: rgba(255,255,255,0.15); backdrop-filter: blur(8px); padding: 0.3rem 0.7rem; border-radius: 12px; font-weight: 800; font-size: 0.85rem; border: 1px solid rgba(255,255,255,0.25);">
+                                        ★ 4.9
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Micro Info Footer -->
+                        <div style="padding: 1.25rem 1.5rem; display: flex; align-items: center; justify-content: space-between; background: var(--bg-card);">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 40px; height: 40px; border-radius: 14px; background: rgba(242,107,33,0.1); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700;">
+                                    <i class="ri-riding-line"></i>
+                                </div>
+                                <div>
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary); display: block; font-weight: 600;">Livraison Locale</span>
+                                    <strong style="font-size: 0.9rem; color: var(--text-primary);">Dès 500 FCFA</strong>
+                                </div>
+                            </div>
+
+                            <button onclick="scrollToCatalogAndFilter('Dibiterie')" style="background: transparent; border: 1px solid rgba(15,23,42,0.12); color: var(--text-primary); padding: 0.5rem 1rem; border-radius: 14px; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'" onmouseout="this.style.borderColor='rgba(15,23,42,0.12)'; this.style.color='var(--text-primary)'">
+                                Découvrir →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
 
         <!-- VOS DERNIERES COMMANDES PERSISTANT -->
         ${historyHtml}
 
-        <!-- ========== KEY CONCEPTS ROW (3 Cards: Text - Image - Text) ========== -->
-        <section class="presentation-section" id="presentation-section" style="margin-top: 2.5rem; padding: 3rem 1.5rem;">
-            <div class="reference-row-cards">
-                <!-- Left Card: Zero Account -->
-                <div class="ref-card-text">
-                    <div class="ref-card-icon-circle"><i class="ri-forbid-line"></i></div>
-                    <h3>Zéro Inscription</h3>
-                    <p>Commandez et réservez sans jamais avoir besoin de créer un compte. Aucun mot de passe à retenir.</p>
+        <!-- ========== KEY CONCEPTS ASYMMETRIC BENTO GRID (Aceternity UI) ========== -->
+        <section class="presentation-section" id="presentation-section" style="padding: 3rem 1.5rem 1.5rem; max-width: 1240px; margin: 0 auto;">
+            <div style="text-align: center; max-width: 600px; margin: 0 auto 2.5rem;">
+                <div style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.85rem; border-radius: 30px; background: rgba(242, 107, 33, 0.08); color: var(--primary); font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.6rem;">
+                    <span>Expérience Pensée Pour Vous</span>
+                </div>
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -0.03em; color: var(--text-primary); margin: 0;">
+                    L'Efficacité au Service de la Gastronomie
+                </h2>
+            </div>
+
+            <div class="bento-concepts-grid">
+                
+                <!-- Tile 1: Zero Account Friction (Spotlight Bento) -->
+                <div class="bento-box-item bento-box-highlight">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                        <div style="width: 52px; height: 52px; border-radius: 18px; background: rgba(242, 107, 33, 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                            <i class="ri-flashlight-line"></i>
+                        </div>
+                        <span style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.8rem; opacity: 0.15; color: var(--text-primary);">01</span>
+                    </div>
+                    <h3 style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.25rem; color: var(--text-primary); margin-bottom: 0.6rem; letter-spacing: -0.02em;">
+                        Zéro Inscription, Zéro Mot de Passe
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; margin: 0;">
+                        Commandez directement en renseignant simplement votre numéro sénégalais. Aucune création de compte obligatoire pour savourer votre plat.
+                    </p>
                 </div>
                 
-                <!-- Middle Card: Premium Dish Image -->
-                <div class="ref-card-image-box">
-                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600&auto=format&fit=crop&q=80" alt="Gourmet Bowl" loading="lazy">
+                <!-- Tile 2: Visual Culinary Media Tile -->
+                <div class="bento-box-item bento-media-tile">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=700&auto=format&fit=crop&q=80" alt="Gourmet Bowl Thiès" class="bento-media-img" loading="lazy">
+                    <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(15,23,42,0.85) 0%, rgba(15,23,42,0.15) 50%, transparent 100%);"></div>
+                    <div style="position: absolute; bottom: 20px; left: 20px; right: 20px; color: #fff;">
+                        <span style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px; color: #F59E0B; font-weight: 800;">Authenticité Garantie</span>
+                        <h4 style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; margin: 0.2rem 0; color: #fff;">Les Recettes Emblématiques</h4>
+                        <p style="font-size: 0.82rem; color: rgba(255,255,255,0.8); margin: 0;">Préparées chaque matin par les chefs de Thiès avec des ingrédients frais du terroir.</p>
+                    </div>
                 </div>
                 
-                <!-- Right Card: Direct WhatsApp -->
-                <div class="ref-card-text">
-                    <div class="ref-card-icon-circle"><i class="ri-chat-3-line"></i></div>
-                    <h3>Direct WhatsApp</h3>
-                    <p>Votre panier est transformé en un message structuré envoyé en un clic au restaurateur pour confirmation.</p>
+                <!-- Tile 3: Direct WhatsApp Instant Flow -->
+                <div class="bento-box-item" style="border-left: 3px solid #25D366;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                        <div style="width: 52px; height: 52px; border-radius: 18px; background: rgba(37, 211, 102, 0.12); color: #25D366; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                            <i class="ri-whatsapp-line"></i>
+                        </div>
+                        <span style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.8rem; opacity: 0.15; color: var(--text-primary);">02</span>
+                    </div>
+                    <h3 style="font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 1.25rem; color: var(--text-primary); margin-bottom: 0.6rem; letter-spacing: -0.02em;">
+                        Confirmation Instantanée WhatsApp
+                    </h3>
+                    <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; margin: 0;">
+                        Votre commande est immédiatement formatée et synchronisée avec la cuisine du restaurant. Un contact fluide, direct et rassurant.
+                    </p>
                 </div>
+
             </div>
         </section>
 
-        <!-- PROMO SPECIAL DEAL CARD (Ref Mockup) -->
-        <div class="promo-banner-card">
-            <div class="promo-banner-content">
-                <div class="promo-badge-tag"><i class="ri-fire-line"></i> Bon Plan Thiès</div>
-                <h2 class="promo-banner-title">Jusqu'à -40% sur vos plats préférés</h2>
-                <p class="promo-banner-desc">Découvrez les offres gourmandes du moment chez les restaurants partenaires de Thiès.</p>
-                <button type="button" class="promo-banner-btn" onclick="scrollToCatalogAndFilter('Fast-Food')">
-                    <span>Voir les offres</span>
-                    <i class="ri-arrow-right-line"></i>
-                </button>
-            </div>
-            <div class="promo-banner-visual">
-                <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=80" alt="Plat Savoureux" class="promo-food-img" loading="lazy">
+        <!-- PROMO SPECIAL DEAL CARD (Elevated Bento Rhythm) -->
+        <div style="max-width: 1200px; margin: 0 auto 2.5rem; padding: 0 1.5rem;">
+            <div class="promo-banner-card subtle-border" style="border-radius: 28px; padding: 2rem 2.25rem; background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%); border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px -10px rgba(0,0,0,0.25);">
+                <div class="promo-banner-content" style="max-width: 600px;">
+                    <div class="promo-badge-tag" style="background: rgba(242, 107, 33, 0.2); border: 1px solid rgba(242, 107, 33, 0.4); color: #FB923C;">
+                        <i class="ri-fire-fill"></i> Bon Plan de la Semaine
+                    </div>
+                    <h2 class="promo-banner-title" style="font-family: 'Outfit', sans-serif; font-size: clamp(1.4rem, 2.8vw, 2rem); font-weight: 800; letter-spacing: -0.03em; color: #fff; margin: 0.6rem 0;">
+                        Jusqu'à -40% sur Vos Menus Préférés
+                    </h2>
+                    <p class="promo-banner-desc" style="color: #94A3B8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.25rem;">
+                        Profitez des offres exclusives négociées directement avec nos restaurateurs partenaires partout à Thiès.
+                    </p>
+                    <button type="button" class="promo-banner-btn magic-shimmer-btn" onclick="scrollToCatalogAndFilter('Fast-Food')" style="border-radius: 14px; padding: 0.75rem 1.6rem; font-weight: 700; font-size: 0.9rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; color: #fff;">
+                        <span>Voir les Offres en Cours</span>
+                        <i class="ri-arrow-right-line"></i>
+                    </button>
+                </div>
+                <div class="promo-banner-visual" style="display: flex; align-items: center; justify-content: center;">
+                    <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&auto=format&fit=crop&q=80" alt="Plat Savoureux" class="promo-food-img" loading="lazy" style="box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                </div>
             </div>
         </div>
 
@@ -2891,7 +3010,7 @@ window.applyFilters = function applyFilters() {
     restos.forEach(r => {
         const isCurrentlyOpen = isRestaurantOpenNow(r);
         const statusBadge = isCurrentlyOpen 
-            ? `<span class="badge badge-success restaurant-card-badge">Ouvert</span>` 
+            ? `<span class="badge badge-success restaurant-card-badge" style="display: inline-flex; align-items: center; gap: 5px;"><span class="pulse-live-dot"></span> Ouvert</span>` 
             : `<span class="badge badge-danger restaurant-card-badge">Fermé</span>`;
         
         const coverUrl = r.coverImage || 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=600&auto=format&fit=crop&q=60';
@@ -2906,7 +3025,7 @@ window.applyFilters = function applyFilters() {
         const curatedTag = isTopRated ? 'Table d\'Exception' : 'Sélection Thiès';
             
         cardsHtml += `
-            <div class="restaurant-card luxury-resto-card hover-3d glass-panel" onclick="router.navigate('/r/${r.slug}')">
+            <div class="restaurant-card luxury-resto-card hover-3d glass-panel subtle-border" onclick="router.navigate('/r/${r.slug}')">
                 ${distanceBadge}
                 <div class="luxury-curated-badge">${curatedTag}</div>
                 <button type="button" class="card-fav-btn ${isFav ? 'is-fav active' : ''}" data-fav-resto-id="${r.id}" onclick="toggleFavorite('${r.id}', event)" aria-label="Ajouter aux favoris">
